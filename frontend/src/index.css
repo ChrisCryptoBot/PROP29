@@ -1,0 +1,376 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+  
+  * {
+    @apply border-gray-200;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-secondary-100 text-secondary-900 hover:bg-secondary-200 active:bg-secondary-300;
+  }
+  
+  .btn-danger {
+    @apply btn bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800;
+  }
+  
+  .btn-success {
+    @apply btn bg-success-600 text-white hover:bg-success-700 active:bg-success-800;
+  }
+  
+  .btn-warning {
+    @apply btn bg-warning-600 text-white hover:bg-warning-700 active:bg-warning-800;
+  }
+  
+  .btn-sm {
+    @apply h-8 px-3 text-xs;
+  }
+  
+  .btn-md {
+    @apply h-10 px-4 py-2;
+  }
+  
+  .btn-lg {
+    @apply h-12 px-6 text-base;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply px-6 py-4;
+  }
+  
+  .card-footer {
+    @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+  }
+  
+  .input {
+    @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .select {
+    @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply badge bg-success-100 text-success-800;
+  }
+  
+  .badge-warning {
+    @apply badge bg-warning-100 text-warning-800;
+  }
+  
+  .badge-danger {
+    @apply badge bg-danger-100 text-danger-800;
+  }
+  
+  .badge-info {
+    @apply badge bg-security-100 text-security-800;
+  }
+  
+  .badge-secondary {
+    @apply badge bg-secondary-100 text-secondary-800;
+  }
+  
+  .status-indicator {
+    @apply inline-flex items-center gap-2;
+  }
+  
+  .status-indicator::before {
+    content: '';
+    @apply w-2 h-2 rounded-full;
+  }
+  
+  .status-online::before {
+    @apply bg-success-500;
+  }
+  
+  .status-offline::before {
+    @apply bg-gray-400;
+  }
+  
+  .status-warning::before {
+    @apply bg-warning-500;
+  }
+  
+  .status-error::before {
+    @apply bg-danger-500;
+  }
+  
+  .pulse-animation {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .security-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/80 border border-white/20;
+  }
+  
+  .emergency-red {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+  
+  .emergency-yellow {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .emergency-green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary-600;
+}
+
+/* Emergency animations */
+@keyframes emergency-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.emergency-pulse {
+  animation: emergency-pulse 1s ease-in-out infinite;
+}
+
+/* Security camera feed effect */
+.camera-feed {
+  @apply relative overflow-hidden rounded-lg;
+}
+
+.camera-feed::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent;
+  animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Data table styles */
+.data-table {
+  @apply w-full border-collapse;
+}
+
+.data-table th {
+  @apply bg-gray-50 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200;
+}
+
+.data-table td {
+  @apply px-4 py-3 text-sm text-gray-900 border-b border-gray-200;
+}
+
+.data-table tr:hover {
+  @apply bg-gray-50;
+}
+
+/* Form styles */
+.form-group {
+  @apply space-y-2;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-700;
+}
+
+.form-error {
+  @apply text-sm text-danger-600;
+}
+
+.form-help {
+  @apply text-sm text-gray-500;
+}
+
+/* Modal styles */
+.modal-overlay {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
+}
+
+.modal-content {
+  @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto;
+}
+
+/* Dashboard grid */
+.dashboard-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+}
+
+.dashboard-card {
+  @apply card hover:shadow-md transition-shadow duration-200;
+}
+
+/* Navigation styles */
+.nav-link {
+  @apply flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200;
+}
+
+.nav-link-active {
+  @apply nav-link bg-primary-100 text-primary-700;
+}
+
+.nav-link-inactive {
+  @apply nav-link text-gray-600 hover:text-gray-900 hover:bg-gray-100;
+}
+
+/* Sidebar styles */
+.sidebar {
+  @apply fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out;
+}
+
+.sidebar-open {
+  @apply translate-x-0;
+}
+
+.sidebar-closed {
+  @apply -translate-x-full;
+}
+
+/* Header styles */
+.header {
+  @apply bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between;
+}
+
+/* Main content area */
+.main-content {
+  @apply flex-1 overflow-auto bg-gray-50;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .dashboard-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .card {
+    @apply rounded-none border-l-0 border-r-0;
+  }
+}
+
+/* === PROPER 2.9 Dashboard Custom Styles (from homepage_ui.txt) === */
+:root {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-nav: linear-gradient(135deg, #1e40af, #3b82f6);
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-nav: #ffffff;
+    --card-border: #e2e8f0;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --metric-accent: var(--accent-color);
+    --ai-section-bg: #ffffff;
+    --risk-factor-bg: #f8fafc;
+    --activity-bg: #ffffff;
+    --quick-action-bg: #ffffff;
+    --status-online: #10b981;
+    --status-offline: #ef4444;
+    --cyber-accent: #8b5cf6;
+    --biometric-accent: #06b6d4;
+}
+
+.dark-mode {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-nav: linear-gradient(135deg, #0c4a6e, #1e40af);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-nav: #e2e8f0;
+    --card-border: #334155;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --metric-accent: var(--accent-color-dark);
+    --ai-section-bg: #1e293b;
+    --risk-factor-bg: #0f172a;
+    --activity-bg: #1e293b;
+    --quick-action-bg: #1e293b;
+    --status-online: #10b981;
+    --status-offline: #ef4444;
+    --cyber-accent: #a78bfa;
+    --biometric-accent: #22d3ee;
+}
+
+/* ... (rest of the dashboard CSS from homepage_ui.txt goes here) ... */ 

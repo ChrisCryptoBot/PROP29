@@ -1,0 +1,64 @@
+{
+  "name": "proper-2.9",
+  "version": "1.0.0",
+  "description": "AI-Enhanced Hotel Security Platform - Desktop Application",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "concurrently \"npm run dev:backend\" \"npm run dev:frontend-and-electron\"",
+    "dev:backend": "cd backend && python -m uvicorn main:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:frontend-and-electron": "cd frontend && npm start && cross-env NODE_ENV=development ELECTRON_START_URL=http://localhost:3000 wait-on http://localhost:3000 && electron .",
+    "build": "npm run build:frontend && npm run build:electron",
+    "build:frontend": "cd frontend && npm run build",
+    "build:electron": "electron-builder",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
+    "setup": "npm run install:all && npm run setup:database",
+    "setup:database": "cd backend && python setup_database.py"
+  },
+  "keywords": [
+    "hotel",
+    "security",
+    "AI",
+    "management",
+    "desktop"
+  ],
+  "author": "PROPER 2.9 Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.proper29.desktop",
+    "productName": "PROPER 2.9",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "frontend/build/**/*",
+      "backend/**/*",
+      "!**/node_modules/**/*",
+      "!**/*.pyc",
+      "!**/__pycache__/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  },
+  "dependencies": {
+    "electron-is-dev": "^3.0.1"
+  }
+}

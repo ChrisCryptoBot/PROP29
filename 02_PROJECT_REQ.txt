@@ -1,0 +1,675 @@
+# Technical Requirements Blueprint - PROPER 2.9
+
+## Purpose
+Define comprehensive technical specifications, architecture decisions, database design, infrastructure requirements, and security standards for the PROPER 2.9 AI-Enhanced Hotel Security Platform.
+
+## Project Technical Overview
+
+### Core Technical Information
+```
+Project Name: PROPER 2.9 AI-Enhanced Hotel Security Platform
+Technical Complexity: Very High (AI/ML, real-time processing, multi-system integration)
+Expected User Load: 100,000+ concurrent users across 1,000+ properties
+Data Volume: 500TB+ annually (video, IoT sensors, operational data, analytics)
+Performance Requirements: <200ms dashboard response, <100ms emergency alerts, 99.9% uptime
+Availability Requirements: 99.9% general availability, 99.99% for emergency systems
+Security Level: Enterprise-grade with PCI DSS, SOC 2, ISO 27001 compliance
+Compliance Requirements: GDPR, CCPA, PCI DSS, SOC 2, ISO 27001, local hospitality regulations
+```
+
+### Platform Architecture
+
+#### Technology Stack Selection
+```
+Frontend Framework: React 18+ with TypeScript
+- Options: React, Vue.js, Angular, Svelte, Flutter, React Native
+- Reasoning: React's ecosystem maturity, TypeScript for type safety, excellent real-time capabilities, extensive charting libraries, mobile-responsive design patterns
+
+Backend Framework: Python FastAPI with Node.js microservices
+- Options: FastAPI, Express.js, Django, Spring Boot, ASP.NET Core
+- Reasoning: FastAPI for AI/ML integration and high-performance APIs, Node.js for real-time WebSocket handling, Python ecosystem for data science and machine learning
+
+Database Primary: PostgreSQL 15+ with TimescaleDB extension
+- Options: PostgreSQL, MySQL, MongoDB, Cassandra, DynamoDB
+- Reasoning: ACID compliance for critical security data, excellent JSON support, TimescaleDB for time-series IoT data, mature ecosystem, strong consistency guarantees
+
+Database Secondary: Redis 7+ for caching and real-time features
+- Options: Redis, Elasticsearch, InfluxDB, Neo4j
+- Reasoning: Sub-millisecond response times, pub/sub for real-time updates, session storage, rate limiting, distributed caching
+
+Programming Languages:
+- Primary: Python 3.11+ (Backend AI/ML services, data processing)
+- Secondary: TypeScript (Frontend, Node.js services), SQL (Database operations)
+- Reasoning: Python for AI/ML libraries, TypeScript for type safety and developer productivity, SQL for complex analytics queries
+```
+
+#### Infrastructure Strategy
+```
+Hosting Platform: Amazon Web Services (AWS) with multi-region deployment
+- Options: AWS, Google Cloud, Azure, DigitalOcean, Self-hosted
+- Reasoning: Comprehensive AI/ML services, global infrastructure, compliance certifications, security features, hotel industry presence
+
+Container Strategy: Docker containers with Amazon EKS (Kubernetes)
+- Options: Docker, Kubernetes, Docker Swarm, Serverless
+- Reasoning: Microservices architecture, auto-scaling capabilities, service mesh for security, rolling deployments, disaster recovery
+
+CI/CD Platform: GitHub Actions with AWS CodePipeline
+- Options: GitHub Actions, GitLab CI, Jenkins, CircleCI
+- Reasoning: Integrated with source control, AWS native integration, security scanning, compliance automation, cost-effective
+
+Monitoring & Logging: Datadog with custom hospitality metrics
+- Options: Prometheus/Grafana, Datadog, New Relic, ELK Stack
+- Reasoning: Real-time alerting, APM integration, custom dashboards, hotel-specific metrics, incident correlation
+```
+
+## Database Design
+
+### Core Database Schema
+
+#### User Management Tables
+```
+Users Table:
+- user_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- email: VARCHAR(255) UNIQUE NOT NULL
+- username: VARCHAR(100) UNIQUE NOT NULL
+- password_hash: VARCHAR(255) NOT NULL (bcrypt with 12 rounds)
+- first_name: VARCHAR(100) NOT NULL
+- last_name: VARCHAR(100) NOT NULL
+- phone: VARCHAR(20) NULLABLE
+- created_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- updated_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- last_login: TIMESTAMP WITH TIME ZONE NULLABLE
+- status: ENUM('active', 'inactive', 'suspended') DEFAULT 'active'
+- profile_image_url: VARCHAR(500) NULLABLE
+- preferred_language: VARCHAR(5) DEFAULT 'en'
+- timezone: VARCHAR(50) DEFAULT 'UTC'
+
+User Roles Table:
+- role_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- user_id: UUID REFERENCES users(user_id) ON DELETE CASCADE
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- role_name: ENUM('admin', 'security_manager', 'guard', 'front_desk', 'manager', 'viewer')
+- permissions: JSONB NOT NULL (detailed permission matrix)
+- assigned_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- assigned_by: UUID REFERENCES users(user_id)
+- expires_at: TIMESTAMP WITH TIME ZONE NULLABLE
+- is_active: BOOLEAN DEFAULT TRUE
+
+User Sessions Table:
+- session_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- user_id: UUID REFERENCES users(user_id) ON DELETE CASCADE
+- token: VARCHAR(500) UNIQUE NOT NULL
+- refresh_token: VARCHAR(500) UNIQUE NOT NULL
+- expires_at: TIMESTAMP WITH TIME ZONE NOT NULL
+- created_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- ip_address: INET NOT NULL
+- user_agent: TEXT NOT NULL
+- device_info: JSONB NULLABLE
+- is_mobile: BOOLEAN DEFAULT FALSE
+- last_activity: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+```
+
+#### Core Business Tables
+```
+Properties Table:
+- property_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- property_name: VARCHAR(200) NOT NULL
+- property_type: ENUM('hotel', 'resort', 'casino', 'cruise', 'venue') DEFAULT 'hotel'
+- address: JSONB NOT NULL (street, city, state, country, postal_code)
+- contact_info: JSONB NOT NULL (phone, email, emergency_contact)
+- room_count: INTEGER NOT NULL
+- capacity: INTEGER NOT NULL
+- timezone: VARCHAR(50) NOT NULL
+- created_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- updated_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- settings: JSONB NOT NULL (AI preferences, alert thresholds, integrations)
+- subscription_tier: ENUM('starter', 'professional', 'enterprise') DEFAULT 'starter'
+- is_active: BOOLEAN DEFAULT TRUE
+
+Incidents Table:
+- incident_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- incident_type: ENUM('theft', 'disturbance', 'medical', 'fire', 'flood', 'cyber', 'guest_complaint', 'other')
+- severity: ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium'
+- status: ENUM('open', 'investigating', 'resolved', 'closed') DEFAULT 'open'
+- title: VARCHAR(200) NOT NULL
+- description: TEXT NOT NULL
+- location: JSONB NOT NULL (building, floor, room, coordinates)
+- reported_by: UUID REFERENCES users(user_id)
+- assigned_to: UUID REFERENCES users(user_id) NULLABLE
+- created_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- updated_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- resolved_at: TIMESTAMP WITH TIME ZONE NULLABLE
+- evidence: JSONB NULLABLE (photos, videos, documents)
+- witnesses: JSONB NULLABLE (contact information)
+- ai_confidence: DECIMAL(5,2) NULLABLE (AI prediction confidence 0-100)
+- follow_up_required: BOOLEAN DEFAULT FALSE
+- insurance_claim: BOOLEAN DEFAULT FALSE
+
+Security_Patrols Table:
+- patrol_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- guard_id: UUID REFERENCES users(user_id)
+- patrol_type: ENUM('scheduled', 'ai_optimized', 'emergency', 'custom') DEFAULT 'scheduled'
+- route: JSONB NOT NULL (waypoints, checkpoints, estimated_duration)
+- status: ENUM('planned', 'active', 'completed', 'interrupted') DEFAULT 'planned'
+- started_at: TIMESTAMP WITH TIME ZONE NULLABLE
+- completed_at: TIMESTAMP WITH TIME ZONE NULLABLE
+- created_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- ai_priority_score: DECIMAL(5,2) NULLABLE (AI calculated priority 0-100)
+- checkpoints: JSONB NOT NULL (checkpoint locations and completion status)
+- observations: TEXT NULLABLE
+- incidents_found: UUID[] NULLABLE (array of incident IDs)
+- efficiency_score: DECIMAL(5,2) NULLABLE (route efficiency 0-100)
+
+Access_Control_Events Table:
+- event_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- user_id: UUID REFERENCES users(user_id) NULLABLE
+- guest_id: UUID REFERENCES guests(guest_id) NULLABLE
+- access_point: VARCHAR(100) NOT NULL (door/gate identifier)
+- access_method: ENUM('keycard', 'biometric', 'mobile', 'pin', 'manual') NOT NULL
+- event_type: ENUM('granted', 'denied', 'forced', 'propped', 'alarm') NOT NULL
+- timestamp: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- location: JSONB NOT NULL (building, floor, room details)
+- device_info: JSONB NULLABLE (reader info, biometric data)
+- is_authorized: BOOLEAN NOT NULL
+- alert_triggered: BOOLEAN DEFAULT FALSE
+- photo_capture: VARCHAR(500) NULLABLE (security photo URL)
+```
+
+#### Analytics & Logging Tables
+```
+User_Activities Table:
+- activity_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- user_id: UUID REFERENCES users(user_id) ON DELETE SET NULL
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- action_type: VARCHAR(50) NOT NULL (login, logout, view_incident, create_patrol, etc.)
+- resource_type: VARCHAR(50) NULLABLE (incident, patrol, report, etc.)
+- resource_id: UUID NULLABLE
+- metadata: JSONB NULLABLE (additional context, parameters)
+- timestamp: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- ip_address: INET NOT NULL
+- user_agent: TEXT NOT NULL
+- session_id: UUID REFERENCES user_sessions(session_id) ON DELETE SET NULL
+- duration: INTERVAL NULLABLE (for timed activities)
+
+System_Logs Table:
+- log_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- log_level: ENUM('debug', 'info', 'warning', 'error', 'critical') NOT NULL
+- message: TEXT NOT NULL
+- component: VARCHAR(100) NOT NULL (service/module name)
+- function_name: VARCHAR(100) NULLABLE
+- error_code: VARCHAR(50) NULLABLE
+- stack_trace: TEXT NULLABLE
+- timestamp: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- property_id: UUID REFERENCES properties(property_id) ON DELETE SET NULL
+- user_id: UUID REFERENCES users(user_id) ON DELETE SET NULL
+- request_id: UUID NULLABLE (for request tracing)
+- environment: VARCHAR(20) DEFAULT 'production'
+
+AI_Predictions Table:
+- prediction_id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- model_type: VARCHAR(50) NOT NULL (incident_prediction, patrol_optimization, etc.)
+- model_version: VARCHAR(20) NOT NULL
+- prediction_type: VARCHAR(50) NOT NULL (risk_score, incident_probability, etc.)
+- input_data: JSONB NOT NULL (features used for prediction)
+- prediction_result: JSONB NOT NULL (model output, confidence scores)
+- confidence_score: DECIMAL(5,2) NOT NULL (0-100)
+- created_at: TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+- actual_outcome: JSONB NULLABLE (for model training feedback)
+- feedback_provided: BOOLEAN DEFAULT FALSE
+- accuracy_score: DECIMAL(5,2) NULLABLE (when outcome known)
+
+IoT_Sensor_Data Table (TimescaleDB hypertable):
+- sensor_id: VARCHAR(100) NOT NULL
+- property_id: UUID REFERENCES properties(property_id) ON DELETE CASCADE
+- sensor_type: VARCHAR(50) NOT NULL (fire, flood, motion, temperature, etc.)
+- location: JSONB NOT NULL (building, floor, room, coordinates)
+- timestamp: TIMESTAMP WITH TIME ZONE NOT NULL
+- value: JSONB NOT NULL (sensor readings, status)
+- status: ENUM('normal', 'warning', 'alarm', 'offline') DEFAULT 'normal'
+- battery_level: INTEGER NULLABLE (0-100 for battery-powered sensors)
+- signal_strength: INTEGER NULLABLE (-100 to 0 dBm)
+- last_maintenance: TIMESTAMP WITH TIME ZONE NULLABLE
+- PRIMARY KEY (sensor_id, timestamp)
+```
+
+### Database Optimization
+
+#### Indexing Strategy
+```
+Primary Indexes:
+- users.email: UNIQUE B-tree index for login performance
+- users.username: UNIQUE B-tree index for profile lookups
+- incidents.property_id: B-tree index for property-specific queries
+- incidents.created_at: B-tree index for temporal queries
+- security_patrols.guard_id: B-tree index for guard assignments
+- access_control_events.timestamp: B-tree index for time-based analysis
+- iot_sensor_data(timestamp): Time-series index for efficient queries
+
+Composite Indexes:
+- incidents(property_id, status, created_at): Multi-column for dashboard queries
+- security_patrols(property_id, status, started_at): Patrol management optimization
+- user_activities(user_id, timestamp): User behavior analysis
+- access_control_events(property_id, timestamp, event_type): Security analysis
+
+Full-Text Indexes:
+- incidents.description: GIN index for incident search functionality
+- incidents.title: GIN index for quick incident title searches
+- system_logs.message: GIN index for log analysis and debugging
+```
+
+#### Caching Strategy
+```
+Application-Level Caching:
+- Cache Store: Redis Cluster with 6 nodes (3 master, 3 replica)
+- Cache Policies: LRU eviction, TTL-based expiration, write-through for critical data
+- TTL Strategy: User sessions (24h), dashboard data (5min), static data (1h)
+- Invalidation Strategy: Event-driven invalidation, cache tags for group invalidation
+
+Database-Level Caching:
+- Query Result Caching: PostgreSQL shared_buffers 4GB, effective_cache_size 16GB
+- Connection Pooling: PgBouncer with 100 connections per service, transaction pooling
+- Read Replicas: 3 read replicas for analytics and reporting workloads
+```
+
+## API Design
+
+### RESTful API Structure
+```
+API Version: v1 (with v2 beta for new features)
+Base URL: https://api.proper29.com/v1
+Authentication: JWT Bearer tokens with refresh token rotation
+Rate Limiting: 1000 requests/hour per user, 10000/hour for enterprise
+
+Core Endpoints:
+
+Authentication:
+- POST /auth/login: Email/password authentication with MFA support
+- POST /auth/logout: Token invalidation and session cleanup
+- POST /auth/refresh: Access token refresh using refresh token
+- POST /auth/register: New user registration with email verification
+- POST /auth/forgot-password: Password reset initiation
+- POST /auth/reset-password: Password reset completion
+- POST /auth/mfa/setup: Multi-factor authentication setup
+- POST /auth/mfa/verify: MFA token verification
+
+Property Management:
+- GET /properties: List all properties for authenticated user
+- POST /properties: Create new property (admin only)
+- GET /properties/{id}: Get specific property details
+- PUT /properties/{id}: Update property information
+- DELETE /properties/{id}: Deactivate property (soft delete)
+- GET /properties/{id}/stats: Property-specific security statistics
+- GET /properties/{id}/dashboard: Real-time dashboard data
+
+Incident Management:
+- GET /incidents: List incidents with filtering and pagination
+- POST /incidents: Create new incident report
+- GET /incidents/{id}: Get detailed incident information
+- PUT /incidents/{id}: Update incident details and status
+- DELETE /incidents/{id}: Soft delete incident (audit trail preserved)
+- POST /incidents/{id}/evidence: Upload incident evidence (photos/videos)
+- GET /incidents/{id}/timeline: Get incident activity timeline
+- POST /incidents/{id}/assign: Assign incident to security personnel
+
+Patrol Operations:
+- GET /patrols: List all patrols with status filtering
+- POST /patrols: Create new patrol assignment
+- GET /patrols/{id}: Get patrol details and checkpoint status
+- PUT /patrols/{id}: Update patrol status and observations
+- POST /patrols/ai-optimize: Generate AI-optimized patrol route
+- GET /patrols/{id}/tracking: Real-time patrol tracking data
+- POST /patrols/{id}/checkpoint: Mark checkpoint completion
+- GET /patrols/analytics: Patrol efficiency analytics
+
+Guest Safety:
+- POST /guest-safety/panic: Emergency panic button activation
+- GET /guest-safety/status: Guest safety system status
+- POST /guest-safety/locations: Update guest location for safety
+- GET /guest-safety/history: Guest safety interaction history
+- POST /guest-safety/feedback: Guest safety experience feedback
+
+Access Control:
+- GET /access-control/events: List access control events
+- POST /access-control/grant: Grant temporary access permissions
+- DELETE /access-control/revoke: Revoke access permissions
+- GET /access-control/audit: Access control audit trail
+- POST /access-control/bulk-update: Bulk permission updates
+
+AI & Analytics:
+- GET /ai/predictions: Current AI security predictions
+- POST /ai/feedback: Provide feedback on AI predictions
+- GET /analytics/dashboard: Executive analytics dashboard
+- GET /analytics/reports: Generate custom security reports
+- GET /analytics/trends: Security trend analysis
+- POST /analytics/export: Export analytics data
+
+Admin Operations:
+- GET /admin/users: User management (admin only)
+- POST /admin/users: Create new user account
+- PUT /admin/users/{id}: Update user permissions and roles
+- GET /admin/logs: System audit logs
+- GET /admin/health: System health and performance metrics
+- POST /admin/maintenance: Schedule maintenance windows
+```
+
+### Real-time Communication
+```
+WebSocket Implementation:
+- WebSocket Endpoint: wss://ws.proper29.com/v1/realtime
+- Connection Management: Heartbeat every 30 seconds, automatic reconnection
+- Message Types: alerts, patrol_updates, incident_updates, dashboard_refresh
+- Authentication: JWT token validation on connection upgrade
+
+Real-time Features:
+- Emergency Alerts: Instant notification to all relevant personnel
+- Patrol Tracking: Live GPS updates of security patrol locations
+- Dashboard Updates: Real-time metric updates and status changes
+- Incident Notifications: Immediate alerts for new incidents or status changes
+- System Status: Real-time system health and component status updates
+
+Push Notifications:
+- Platform: Firebase Cloud Messaging (FCM) for mobile apps
+- Types: Emergency alerts, incident assignments, patrol reminders, system alerts
+- Targeting: Role-based targeting, property-specific, user preferences
+```
+
+## Security Architecture
+
+### Authentication & Authorization
+```
+Authentication Method: JWT with refresh token rotation
+- Options: JWT, OAuth 2.0, SAML, Custom Session
+- Implementation: Access tokens (15min TTL), refresh tokens (7 days), secure HTTP-only cookies
+
+Authorization Model: Role-Based Access Control (RBAC) with attribute-based extensions
+- Options: RBAC, ABAC, ACL, Custom
+- Implementation: Hierarchical roles, property-specific permissions, feature-level access control
+
+Session Management:
+- Session Storage: Redis with encrypted session data
+- Session Duration: 24 hours with automatic extension on activity
+- Refresh Strategy: Sliding expiration with automatic token rotation
+
+Multi-Factor Authentication:
+- MFA Methods: TOTP (Google Authenticator), SMS, email verification
+- Enforcement: Required for admin roles, optional for standard users, emergency bypass procedures
+```
+
+### Data Protection
+```
+Encryption at Rest:
+- Database Encryption: AWS RDS encryption with KMS keys (AES-256)
+- File Storage Encryption: S3 server-side encryption with customer-managed keys
+- Backup Encryption: Automated encrypted backups with cross-region replication
+
+Encryption in Transit:
+- HTTPS/TLS Version: TLS 1.3 minimum, certificate pinning for mobile apps
+- Certificate Strategy: Automated certificate management with Let's Encrypt and AWS ACM
+- API Security: mTLS for service-to-service communication, API key rotation
+
+Data Privacy:
+- PII Handling: Data classification, field-level encryption, access logging
+- Data Retention: Automated data lifecycle management, configurable retention periods
+- Data Deletion: Right to deletion implementation, secure data wiping
+- Consent Management: Granular consent tracking, preference management system
+```
+
+### Security Monitoring
+```
+Intrusion Detection:
+- IDS/IPS: AWS GuardDuty with custom threat intelligence feeds
+- Log Monitoring: Real-time log analysis with Datadog Security Monitoring
+- Anomaly Detection: ML-based user behavior analytics, API usage pattern analysis
+
+Security Auditing:
+- Audit Logging: Comprehensive audit trail for all user actions and system events
+- Compliance Reporting: Automated SOC 2, ISO 27001, and PCI DSS reporting
+- Security Scanning: Daily vulnerability scans, dependency monitoring, code analysis
+- Penetration Testing: Quarterly external penetration testing, continuous internal testing
+```
+
+## Performance Requirements
+
+### Response Time Targets
+```
+API Response Times:
+- Authentication: <200ms (login/logout/token refresh)
+- Data Retrieval: <300ms (dashboard data, incident lists)
+- Data Creation: <500ms (incident creation, patrol assignment)
+- Data Updates: <400ms (status updates, profile changes)
+- Complex Queries: <2000ms (analytics, reporting, search)
+- Emergency Alerts: <100ms (panic button, emergency notifications)
+
+Frontend Performance:
+- Initial Page Load: <2000ms (first contentful paint)
+- Route Transitions: <200ms (client-side navigation)
+- Form Submissions: <500ms (user feedback and validation)
+- Search Results: <800ms (incident search, user lookup)
+- Dashboard Refresh: <300ms (real-time data updates)
+```
+
+### Scalability Requirements
+```
+Concurrent Users:
+- Current: 5,000 concurrent users across 50 properties
+- 6 Months: 15,000 users across 150 properties
+- 1 Year: 35,000 users across 350 properties
+- 3 Years: 100,000 users across 1,000+ properties
+
+Data Growth:
+- Current Size: 10TB (videos, images, operational data)
+- Monthly Growth: 5TB/month average, 15TB/month peak seasons
+- Storage Strategy: Intelligent tiering with lifecycle policies (hot/warm/cold)
+
+Traffic Patterns:
+- Peak Usage Times: 6-10 AM and 6-10 PM local time (shift changes)
+- Geographic Distribution: Global with regional data centers (US, EU, APAC)
+- Seasonal Variations: 3x traffic increase during holiday and conference seasons
+```
+
+### Resource Optimization
+```
+Database Optimization:
+- Query Optimization: Automated query analysis, index recommendations, execution plan monitoring
+- Connection Pooling: Dynamic connection pooling with load balancing across read replicas
+- Partitioning Strategy: Time-based partitioning for large tables (monthly partitions)
+- Archiving Strategy: Automated archival of old data to cold storage after 2 years
+
+Application Optimization:
+- Code Optimization: Profiling-driven optimization, async processing, caching layers
+- Memory Management: Connection pooling, object pooling, garbage collection tuning
+- CPU Optimization: Multi-threading for AI processing, queue-based task processing
+- I/O Optimization: CDN for static assets, edge caching, compression
+```
+
+## Integration Requirements
+
+### Third-Party Integrations
+```
+Property Management Systems (PMS):
+- Provider: Opera, Fidelio, Protel, RoomMaster, Cloudbeds
+- Integration Method: REST APIs, webhook subscriptions, real-time sync
+- Supported Methods: Guest check-in/out, room status, guest preferences
+- Webhook Handling: Async processing, retry logic, duplicate detection
+
+Access Control Hardware:
+- Provider: HID, ASSA ABLOY, Dormakaba, Allegion, Kaba
+- Integration Method: TCP/IP protocols, Wiegand, SDK integration
+- Data Types: Card reads, biometric scans, door status, alarms
+- Real-time Processing: Sub-second event processing, offline capability
+
+IoT Sensor Networks:
+- Provider: Honeywell, Siemens, Johnson Controls, Bosch, Axis
+- Integration Method: MQTT, HTTP APIs, proprietary protocols
+- Sensor Types: Fire, smoke, flood, motion, temperature, air quality
+- Data Processing: Edge computing, anomaly detection, predictive maintenance
+
+Video Management Systems:
+- Provider: Milestone, Genetec, Avigilon, Hikvision, Axis
+- Integration Method: ONVIF standard, vendor APIs, RTSP streams
+- Features: Live viewing, recorded playback, motion detection, analytics
+- AI Integration: Object detection, facial recognition, behavior analysis
+
+Payment & Financial Systems:
+- Provider: Stripe, Square, PayPal, Adyen for payment processing
+- Integration Method: REST APIs with webhook notifications
+- Use Cases: Subscription billing, usage tracking, payment processing
+- Security: PCI DSS compliance, tokenization, fraud detection
+
+Communication Systems:
+- Provider: Twilio (SMS), SendGrid (email), Firebase (push notifications)
+- Integration Method: REST APIs with template management
+- Message Types: Emergency alerts, incident notifications, system updates
+- Delivery Tracking: Read receipts, delivery confirmations, bounce handling
+```
+
+### API Gateway Configuration
+```
+Gateway Platform: AWS API Gateway with Lambda integration
+- Options: AWS API Gateway, Kong, Zuul, Nginx
+- Features: Request routing, rate limiting, authentication, monitoring
+
+Rate Limiting:
+- Default Limits: 1000 requests/hour per authenticated user
+- Tier-based Limits: Starter (500/hour), Professional (2000/hour), Enterprise (10000/hour)
+- Burst Handling: Allow 10x burst for 1 minute, then throttle
+
+API Versioning:
+- Versioning Strategy: URL path versioning (/v1/, /v2/) with backwards compatibility
+- Deprecation Policy: 12-month notice, 6-month parallel support, gradual migration
+- Migration Strategy: Automated client updates, migration guides, support assistance
+```
+
+## Development & Deployment
+
+### Development Environment
+```
+Local Development:
+- Setup Method: Docker Compose with all services, automated database seeding
+- Database: PostgreSQL with sample data, Redis for caching
+- Dependencies: Poetry for Python, npm for Node.js, automated environment setup
+- Hot Reloading: FastAPI auto-reload, React HMR, database migration automation
+
+Development Tools:
+- IDE Recommendations: VS Code with extensions, PyCharm for Python, WebStorm for frontend
+- Debugging Tools: Python debugger, Chrome DevTools, Datadog APM
+- Testing Tools: pytest, Jest, Cypress for E2E, Postman for API testing
+- Code Quality: Black, ESLint, SonarQube, pre-commit hooks
+```
+
+### CI/CD Pipeline
+```
+Source Control:
+- Platform: GitHub Enterprise with branch protection rules
+- Branching Strategy: GitFlow with feature branches, develop, and main
+- Merge Strategy: Squash and merge with automated testing requirements
+
+Build Pipeline:
+- Build Tools: Docker multi-stage builds, GitHub Actions workflows
+- Test Automation: Unit tests (95% coverage), integration tests, E2E tests
+- Code Quality Checks: SonarQube analysis, security scanning, dependency checks
+- Security Scanning: SAST with CodeQL, dependency vulnerability scanning
+
+Deployment Pipeline:
+- Staging Environment: Automated deployment on develop branch merge
+- Production Deployment: Blue-green deployment with manual approval gates
+- Rollback Strategy: Automated rollback on health check failures, manual rollback capability
+- Blue-Green Deployment: Zero-downtime deployments with traffic switching
+```
+
+### Monitoring & Observability
+```
+Application Monitoring:
+- APM Tool: Datadog APM with custom hotel security metrics
+- Custom Metrics: Incident response times, patrol efficiency, user engagement
+- Error Tracking: Automated error collection with context and stack traces
+- Performance Monitoring: Response time percentiles, throughput, error rates
+
+Infrastructure Monitoring:
+- Infrastructure Tool: Datadog Infrastructure with AWS integration
+- Resource Monitoring: CPU, memory, disk, network utilization across all services
+- Alerting Strategy: Tiered alerting (info, warning, critical) with escalation
+- Dashboard Configuration: Executive dashboards, operational dashboards, debug views
+
+Logging Strategy:
+- Log Aggregation: Centralized logging with Datadog Logs
+- Log Retention: 90 days for application logs, 2 years for audit logs
+- Log Analysis: Real-time log analysis with automated pattern detection
+- Structured Logging: JSON formatted logs with consistent field naming
+```
+
+## Disaster Recovery & Business Continuity
+
+### Backup Strategy
+```
+Database Backups:
+- Schedule: Continuous backup with point-in-time recovery (35-day retention)
+- Cross-region Replication: Automated replication to secondary AWS region
+- Testing: Monthly backup restoration tests with verification procedures
+- Encryption: All backups encrypted at rest with customer-managed keys
+
+Application Backups:
+- Code Repository: Distributed Git with multiple remotes
+- Configuration: Infrastructure as Code with version control
+- Secrets Management: AWS Secrets Manager with automatic rotation
+- Documentation: Version-controlled documentation with regular updates
+```
+
+### High Availability Configuration
+```
+Multi-Region Setup:
+- Primary Region: US East (N. Virginia) for North American customers
+- Secondary Regions: EU West (Ireland), Asia Pacific (Singapore)
+- Failover Strategy: Automated DNS failover with health checks
+- Data Synchronization: Cross-region database replication with conflict resolution
+
+Load Balancing:
+- Application Load Balancer: AWS ALB with health checks and auto-scaling
+- Database Load Balancing: Read replica load balancing with automatic failover
+- CDN: CloudFront for global content delivery and DDoS protection
+- Auto-scaling: Horizontal pod autoscaling based on CPU and custom metrics
+```
+
+---
+
+## Security Compliance Framework
+
+### Data Protection Standards
+```
+Encryption Standards:
+- At Rest: AES-256 encryption for all stored data
+- In Transit: TLS 1.3 for all communications
+- Key Management: AWS KMS with regular key rotation
+- Certificate Management: Automated certificate lifecycle management
+
+Access Control Standards:
+- Authentication: Multi-factor authentication for privileged accounts
+- Authorization: Principle of least privilege with regular access reviews
+- Session Management: Secure session handling with timeout controls
+- Audit Logging: Comprehensive logging of all access and actions
+```
+
+### Regulatory Compliance
+```
+GDPR Compliance:
+- Data Mapping: Complete inventory of personal data processing
+- Consent Management: Granular consent with easy withdrawal
+- Right to Access: Automated data export capabilities
+- Right to Deletion: Secure data deletion with verification
+
+PCI DSS Compliance:
+- Network Segmentation: Isolated cardholder data environment
+- Access Controls: Role-based access with regular reviews
+- Monitoring: Real-time monitoring of cardholder data access
+- Testing: Regular penetration testing and vulnerability assessments
+
+SOC 2 Type II:
+- Security: Comprehensive security controls and monitoring
+- Availability: High availability with disaster recovery testing
+- Processing Integrity: Data validation and error handling
+- Confidentiality: Data classification and protection controls
+```

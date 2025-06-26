@@ -1,0 +1,662 @@
+# Integration Guides for PROPER 2.9 AI-Enhanced Hotel Security Platform
+
+This document provides detailed guides for integrating the PROPER 2.9 platform with various third-party systems, hardware, and services. These integrations are crucial for the platform's functionality, enabling seamless connectivity with property management systems, access control devices, IoT sensors, and more.
+
+Each integration guide includes environment-specific configurations to ensure proper setup across development, testing, staging, and production environments.
+
+## Supported Integrations
+
+The following integrations are supported by the PROPER 2.9 platform:
+
+1. **Property Management System (PMS) Integration**
+2. **Access Control System Integration**
+3. **IoT Sensor Integration**
+4. **Video Management System Integration**
+5. **Emergency Services Integration**
+6. **Cybersecurity Tool Integration**
+
+Each section below provides specific instructions for setting up and configuring each integration, with notes on how configurations differ across environments.
+
+## 1. Property Management System (PMS) Integration
+
+### Overview
+
+The PMS integration allows the PROPER 2.9 platform to synchronize data with hotel property management systems, such as guest information, room assignments, and reservation details. This integration is essential for features like guest safety and access control.
+
+### Prerequisites
+
+- Access to a supported PMS (e.g., Opera, Amadeus)
+- API credentials or access tokens for the PMS, specific to each environment
+- Network connectivity between the PROPER 2.9 platform and the PMS
+
+### Configuration
+
+The configuration varies depending on the environment:
+
+- **Development**: Use a mock PMS or a test instance provided by the PMS vendor. For example, Opera might offer a sandbox environment for testing.
+
+- **Testing**: Use a staging or test environment of the PMS, which should mimic the production environment as closely as possible.
+
+- **Staging**: Connect to the staging environment of the PMS, which is typically used for pre-production testing.
+
+- **Production**: Connect to the live production environment of the PMS, using production API credentials.
+
+Steps to configure:
+
+1. **Identify Supported PMS**: Confirm that your PMS is supported by PROPER 2.9. Currently, supported systems include Opera, Amadeus, and others.
+
+2. **Obtain API Credentials**: From your PMS provider, obtain the necessary API keys, tokens, or credentials required for integration. Ensure you have the correct credentials for the respective environment (dev, test, stage, prod).
+
+3. **Configure Integration Service**: In the PROPER 2.9 platform, navigate to the Integration Service settings. Select "PMS Integration" and choose your PMS vendor from the list.
+
+4. **Enter Credentials**: Input the API credentials provided by your PMS for the current environment.
+
+5. **Set Up Data Mapping**: Configure how data from the PMS should be mapped to the PROPER 2.9 platform. For example, map guest IDs, room numbers, etc. This mapping should be consistent across environments, but ensure that test data is used in non-production environments.
+
+6. **Test Connection**: Verify the integration by testing the connection to the PMS. Ensure that data can be successfully exchanged. In development and testing environments, use test data to avoid affecting live operations.
+
+### API Documentation
+
+The PMS integration uses the following API endpoints, which may vary by environment:
+
+- `GET /pms/guests`: Retrieve guest information
+
+- `GET /pms/rooms`: Retrieve room assignments
+
+- `POST /pms/reservations`: Create or update reservations
+
+( Note: Actual API endpoints may vary based on the PMS vendor and environment. )
+
+### Troubleshooting
+
+- **Connection Errors**: Check network connectivity and ensure that firewall rules allow communication between the platforms. In production, ensure that the network is secure and that there are no restrictions blocking the connection.
+
+- **Authentication Issues**: Verify that the API credentials are correct and not expired for the current environment.
+
+- **Data Mapping Errors**: Ensure that the data fields are correctly mapped between the two systems. In non-production environments, use test data to verify mappings.
+
+### Examples
+
+For Opera PMS in production, the configuration might look like this:
+
+```json
+{
+  "pms_vendor": "opera",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_production_api_key",
+  "data_mapping": {
+    "guest_id": "opera_guest_id",
+    "room_number": "opera_room_number"
+  }
+}
+
+For development, it might be:
+json
+
+{
+  "pms_vendor": "opera",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_dev_api_key",
+  "data_mapping": {
+    "guest_id": "opera_guest_id",
+    "room_number": "opera_room_number"
+  }
+}
+
+2. Access Control System Integration
+Overview
+The access control integration connects the PROPER 2.9 platform with physical access control systems, enabling features like biometric authentication, digital keys, and real-time access monitoring.
+Prerequisites
+Access to an access control system (e.g., HID, Honeywell)
+
+API access or direct hardware interface
+
+Network connectivity
+
+Configuration
+The configuration varies by environment:
+Development: Use simulated access control events or mock hardware.
+
+Testing: Use a test setup with actual hardware if possible, or continue with simulation.
+
+Staging: Connect to staging hardware or a subset of production hardware.
+
+Production: Connect to live production hardware.
+
+Steps to configure:
+Identify Supported Systems: Confirm that your access control system is supported. Currently, supported systems include HID, Honeywell, and others.
+
+Obtain Integration Details: From your access control provider, obtain the necessary integration details, such as API endpoints or hardware connection instructions for the respective environment.
+
+Configure Integration Service: In the PROPER 2.9 platform, navigate to the Integration Service settings. Select "Access Control Integration" and choose your system vendor.
+
+Enter Configuration: Input the required configuration details, such as API URLs, credentials, or hardware settings for the current environment.
+
+Set Up Access Rules: Define access control rules and policies within the platform, such as time-based access, role-based access, etc. These rules should be tested in development and refined in testing and staging before going live.
+
+Test Integration: Verify that the platform can communicate with the access control system and that access events are being logged correctly. In non-production environments, use test scenarios to simulate various access events.
+
+API Documentation
+The access control integration uses the following API endpoints, which may vary by environment:
+POST /access/grant: Grant access to a user
+
+POST /access/revoke: Revoke access from a user
+
+GET /access/events: Retrieve access event logs
+
+( Note: Actual API endpoints may vary based on the vendor and environment. )
+Troubleshooting
+Communication Failures: Ensure that the network connection is stable and that the access control system is online. In production, check for any network issues or hardware failures.
+
+Authentication Problems: Check that the credentials are correct and that the API keys are valid for the current environment.
+
+Rule Enforcement Issues: Verify that the access rules are correctly configured and that there are no conflicts. Test thoroughly in development and testing environments.
+
+Examples
+For HID access control in production, the configuration might include:
+json
+
+{
+  "vendor": "hid",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_production_hid_api_key",
+  "door_controllers": [
+    {"id": "controller1", "ip": "192.168.1.100"},
+    {"id": "controller2", "ip": "192.168.1.101"}
+  ]
+}
+
+For development, it might be:
+json
+
+{
+  "vendor": "hid",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_dev_hid_api_key",
+  "door_controllers": [
+    {"id": "dev_controller1", "ip": "127.0.0.1"}
+  ]
+}
+
+3. IoT Sensor Integration
+Overview
+The IoT sensor integration allows the platform to receive real-time data from various sensors, such as fire detectors, flood sensors, motion detectors, and environmental monitors. This data is used for predictive analytics and automated alerts.
+Prerequisites
+IoT sensors deployed in the hotel property
+
+Connectivity to the sensors (e.g., Wi-Fi, Zigbee, MQTT)
+
+Sensor data formats and protocols
+
+Configuration
+The configuration varies by environment:
+Development: Use simulated sensor data or mock sensors for testing.
+
+Testing: Use a test setup with actual sensors, if possible, or continue with simulation.
+
+Staging: Connect to staging sensors or a subset of production sensors.
+
+Production: Connect to live production sensors.
+
+Steps to configure:
+Identify Sensor Types: Determine the types of sensors you have, such as fire, flood, motion, temperature, etc.
+
+Set Up Sensor Network: Ensure that the sensors are properly installed and connected to the network for the current environment.
+
+Configure Integration Service: In the PROPER 2.9 platform, navigate to the Integration Service settings. Select "IoT Sensor Integration" and configure the sensor types and connection details for the environment.
+
+Define Data Streams: Specify how data from each sensor should be processed and what actions to take based on the data (e.g., trigger alerts for high temperatures). Use test data in non-production environments.
+
+Test Sensor Data: Verify that the platform is receiving data from the sensors and that it is being correctly interpreted. In development, ensure simulated data is realistic.
+
+API Documentation
+The IoT sensor integration typically involves subscribing to data streams or receiving messages from the sensors. For example, using MQTT, which may vary by environment:
+Subscribe to topics like /sensors/fire/property123
+
+Receive messages with sensor data, such as { "timestamp": "2023-10-01T12:00:00Z", "value": 25.0, "status": "normal" }
+
+Troubleshooting
+Data Reception Issues: Check that the sensors are online and transmitting data. Ensure that the network connection is stable. In production, verify hardware health.
+
+Data Format Errors: Verify that the data format matches what the platform expects. Adjust sensor settings if necessary, especially in testing environments.
+
+Alert Configuration: Make sure that alert thresholds are correctly set and that the platform is configured to trigger alerts appropriately. Test thoroughly in non-production environments.
+
+Examples
+For a fire sensor using MQTT in production, the configuration might be:
+json
+
+{
+  "sensor_type": "fire",
+  "protocol": "mqtt",
+  "broker_url": "mqtt://broker.example.com",
+  "topic": "/sensors/fire/property123",
+  "alert_threshold": 50.0  // Trigger alert if value > 50.0
+}
+
+For development, it might be:
+json
+
+{
+  "sensor_type": "fire",
+  "protocol": "mqtt",
+  "broker_url": "mqtt://localhost:1883",
+  "topic": "/sensors/fire/dev123",
+  "alert_threshold": 50.0
+}
+
+4. Video Management System Integration
+Overview
+The video management system integration connects the platform with video surveillance systems, allowing for real-time monitoring, recording, and analysis of video feeds.
+Prerequisites
+Video management system (e.g., Milestone, Genetec)
+
+API access or direct integration
+
+Network connectivity
+
+Configuration
+The configuration varies by environment:
+Development: Use simulated video feeds or mock camera data.
+
+Testing: Use a test setup with actual cameras, if possible, or continue with simulation.
+
+Staging: Connect to staging cameras or a subset of production cameras.
+
+Production: Connect to live production cameras.
+
+Steps to configure:
+Identify Supported Systems: Confirm that your video management system is supported. Currently, supported systems include Milestone, Genetec, and others.
+
+Obtain Integration Details: From your video management provider, obtain the necessary integration details, such as API endpoints or SDKs for the respective environment.
+
+Configure Integration Service: In the PROPER 2.9 platform, navigate to the Integration Service settings. Select "Video Management Integration" and choose your system vendor.
+
+Enter Configuration: Input the required configuration details, such as API URLs, credentials, or camera IDs for the current environment.
+
+Set Up Video Streams: Define which video streams to monitor and how to handle them (e.g., record on alert, live streaming). Use test streams in non-production environments.
+
+Test Integration: Verify that the platform can access the video feeds and that video data is being correctly processed. In development, ensure simulated feeds are realistic.
+
+API Documentation
+The video management integration uses APIs to control cameras and retrieve video data, which may vary by environment. For example:
+GET /video/cameras: List available cameras
+
+GET /video/stream/{camera_id}: Get live video stream
+
+POST /video/record: Start recording on a camera
+
+( Note: Actual API endpoints may vary based on the vendor and environment. )
+Troubleshooting
+Connection Issues: Ensure that the network connection is stable and that the video management system is online. In production, check for any network issues.
+
+Authentication Errors: Verify that the API credentials are correct and valid for the current environment.
+
+Video Stream Problems: Check that the camera feeds are accessible and that the platform can process the video data. Test thoroughly in non-production environments.
+
+Examples
+For Milestone video management in production, the configuration might include:
+json
+
+{
+  "vendor": "milestone",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_production_milestone_api_key",
+  "cameras": [
+    {"id": "camera1", "ip": "192.168.1.200"},
+    {"id": "camera2", "ip": "192.168.1.201"}
+  ]
+}
+
+For development, it might be:
+json
+
+{
+  "vendor": "milestone",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_dev_milestone_api_key",
+  "cameras": [
+    {"id": "dev_camera1", "ip": "127.0.0.1"}
+  ]
+}
+
+5. Emergency Services Integration
+Overview
+The emergency services integration enables the platform to automatically notify and coordinate with emergency services, such as 911, police, or fire departments, during critical incidents.
+Prerequisites
+Access to emergency services APIs or contact details
+
+Network connectivity for real-time alerts
+
+Compliance with local regulations for emergency notifications
+
+Configuration
+The configuration varies by environment:
+Development: Use mock emergency services or test numbers for alerts.
+
+Testing: Use test environments for emergency services, if available, or continue with simulation.
+
+Staging: Connect to staging emergency services or use test contacts.
+
+Production: Connect to live emergency services with production credentials.
+
+Steps to configure:
+Identify Emergency Services: Determine the emergency services available in your region, such as 911, local police, or fire departments.
+
+Obtain Integration Details: From the emergency services provider, obtain the necessary API endpoints or contact methods for automated alerts for the respective environment.
+
+Configure Integration Service: In the PROPER 2.9 platform, navigate to the Integration Service settings. Select "Emergency Services Integration" and enter the contact details or API credentials for the current environment.
+
+Set Up Alert Rules: Define when and how alerts should be sent to emergency services, such as during fire alarms or medical emergencies. Use test scenarios in non-production environments.
+
+Test Integration: Verify that the platform can successfully send alerts to emergency services and receive acknowledgments. In development, ensure mock services respond appropriately.
+
+API Documentation
+The emergency services integration may use APIs for automated alerts, which may vary by environment. For example:
+POST /emergency/alert: Send an emergency alert with incident details
+
+GET /emergency/status: Check the status of an emergency alert
+
+( Note: Actual API endpoints may vary based on the provider and region. )
+Troubleshooting
+Alert Delivery Issues: Ensure that the network connection is stable and that the emergency services API is accessible. In production, verify service availability.
+
+Compliance Problems: Verify that the integration complies with local regulations for emergency notifications, especially in production.
+
+Response Delays: Check that the emergency services are responding within the expected time frame. Test thoroughly in non-production environments.
+
+Examples
+For a 911 integration in production, the configuration might be:
+json
+
+{
+  "service": "911",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_production_911_api_key",
+  "contact_number": "+1-800-555-0199"
+}
+
+For development, it might be:
+json
+
+{
+  "service": "911",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_dev_911_api_key",
+  "contact_number": "+1-800-555-0199"
+}
+
+6. Cybersecurity Tool Integration
+Overview
+The cybersecurity tool integration connects the platform with cybersecurity systems, such as threat intelligence feeds, intrusion detection systems, and vulnerability scanners, to enhance network security.
+Prerequisites
+Access to cybersecurity tools (e.g., Splunk, CrowdStrike)
+
+API access or integration capabilities
+
+Network connectivity
+
+Configuration
+The configuration varies by environment:
+Development: Use mock cybersecurity events or test tools for simulation.
+
+Testing: Use test environments for cybersecurity tools, if available, or continue with simulation.
+
+Staging: Connect to staging tools or a subset of production tools.
+
+Production: Connect to live production cybersecurity tools.
+
+Steps to configure:
+Identify Supported Tools: Confirm that your cybersecurity tool is supported. Currently, supported tools include Splunk, CrowdStrike, and others.
+
+Obtain Integration Details: From your cybersecurity provider, obtain the necessary API endpoints or integration instructions for the respective environment.
+
+Configure Integration Service: In the PROPER 2.9 platform, navigate to the Integration Service settings. Select "Cybersecurity Tool Integration" and choose your tool vendor.
+
+Enter Configuration: Input the required configuration details, such as API URLs, credentials, or event types to monitor for the current environment.
+
+Set Up Monitoring Rules: Define how the platform should process cybersecurity events, such as triggering alerts for detected threats. Use test events in non-production environments.
+
+Test Integration: Verify that the platform can receive and process cybersecurity events from the tool. In development, ensure simulated events are realistic.
+
+API Documentation
+The cybersecurity tool integration uses APIs to receive security events, which may vary by environment. For example:
+GET /cybersecurity/events: Retrieve security events
+
+POST /cybersecurity/alert: Send a security alert to the platform
+
+( Note: Actual API endpoints may vary based on the tool and environment. )
+Troubleshooting
+Data Reception Issues: Ensure that the cybersecurity tool is transmitting data and that the network connection is stable. In production, verify tool health.
+
+Event Processing Errors: Verify that the platform is correctly processing the security events and triggering appropriate actions. Test thoroughly in non-production environments.
+
+Authentication Problems: Check that the API credentials are correct and valid for the current environment.
+
+Examples
+For Splunk cybersecurity in production, the configuration might include:
+json
+
+{
+  "vendor": "splunk",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_production_splunk_api_key",
+  "event_types": ["intrusion", "malware", "phishing"]
+}
+
+For development, it might be:
+json
+
+{
+  "vendor": "splunk",
+  "api_url": "[invalid url, do not cite]
+  "api_key": "your_dev_splunk_api_key",
+  "event_types": ["intrusion", "malware", "phishing"]
+}
+
+Adding Custom Integrations
+If you need to integrate with a system not listed above, the PROPER 2.9 platform supports custom integrations through the Integration Service. Contact your system administrator for details on how to extend the platform with custom API endpoints or protocols.
+This guide ensures that all integrations are set up correctly for optimal performance and security across all environments.
+
+beginning start from this sp[ecific line
+
+Environment
+
+Purpose
+
+Access Level
+
+Data Classification
+
+Uptime
+
+Backup Strategy
+
+Development
+
+Local and shared dev, security tests
+
+Developers with 2FA, VPN
+
+Anonymized, synthetic
+
+95% business hours
+
+Daily snapshots, 7-day retention
+
+Testing
+
+Automated testing, compliance
+
+CI/CD, security, compliance teams
+
+Synthetic, production-like
+
+90%, ephemeral
+
+Test snapshots, 14-day retention
+
+Staging
+
+Production-like testing
+
+QA, DevOps, security, limited dev
+
+Anonymized PII
+
+99%, 4-hour SLA
+
+Daily backups, 30-day, cross-region
+
+Production
+
+Live operations, 24/7 emergency
+
+Operations team only, emergency
+
+Live customer data
+
+99.9%, <5-min recovery
+
+Continuous, 7-year, geo-distributed
+
+Integration Checklist
+To ensure successful integration across all environments, follow this checklist for each integration:
+Pre-Implementation:
+Verify environment-specific prerequisites (e.g., API keys for production, mock services for development).
+
+Confirm network connectivity and firewall settings for the target environment.
+
+Set up environment variables in .env files as per the configuration examples.
+
+Install necessary dependencies or SDKs for the integration.
+
+Review compliance requirements, especially for production (e.g., GDPR, PCI DSS).
+
+Implementation:
+Configure the Integration Service with environment-specific settings.
+
+Implement data mapping and rules tailored to the environment (e.g., synthetic data in testing).
+
+Set up monitoring and logging to capture integration events, using tools like Datadog in production.
+
+Test API endpoints or hardware connections in the target environment.
+
+Document any environment-specific deviations or customizations.
+
+Testing:
+Run unit tests for API integrations in development and testing environments.
+
+Perform integration tests to verify end-to-end functionality, using mock data in non-production environments.
+
+Simulate error scenarios (e.g., network failures, invalid credentials) to ensure robust error handling.
+
+Validate performance metrics, such as response times, in staging and production.
+
+Conduct security tests, especially in production, to ensure compliance with standards like SOC 2 and ISO 27001.
+
+Deployment:
+Deploy integration configurations to the target environment using CI/CD pipelines.
+
+Verify production credentials and secure storage (e.g., AWS Parameter Store, Vault).
+
+Enable monitoring and alerting for integration health in production (e.g., Datadog, CloudWatch).
+
+Update documentation with environment-specific details and troubleshooting steps.
+
+Train operations teams on monitoring and managing integrations in production.
+
+Troubleshooting Common Issues Across Environments
+Development Environment:
+Issue: Mock services not responding.
+Solution: Ensure mock server is running (e.g., local MQTT broker for IoT sensors) and check configuration URLs.
+
+Issue: Data inconsistencies in tests.
+Solution: Reset synthetic data between tests to avoid state conflicts.
+
+Testing Environment:
+Issue: Test hardware unavailable.
+Solution: Use simulated hardware or request test instances from vendors (e.g., HID test controllers).
+
+Issue: Integration tests failing due to timeouts.
+Solution: Adjust timeout settings in test configurations or optimize test data volume.
+
+Staging Environment:
+Issue: Partial data availability.
+Solution: Ensure anonymized PII is correctly populated and mapped in staging PMS or access control systems.
+
+Issue: Performance degradation.
+Solution: Scale staging resources to match production-like conditions and analyze bottlenecks.
+
+Production Environment:
+Issue: Live service outages.
+Solution: Check vendor status pages (e.g., Splunk, Milestone) and verify network connectivity.
+
+Issue: Compliance violations detected.
+Solution: Review audit logs and ensure all data handling complies with GDPR, CCPA, and PCI DSS.
+
+Example Environment Configurations
+The following .env snippets illustrate how integration settings differ across environments, based on the provided environment configuration template:
+Development (.env.development):
+env
+
+# PMS Integration
+PMS_INTEGRATION_ENABLED=true
+PMS_API_URL=[invalid url, do not cite]
+PMS_API_KEY=dev_pms_key
+
+# Access Control
+ACCESS_CONTROL_API_URL=[invalid url, do not cite]
+ACCESS_CONTROL_API_KEY=dev_access_key
+
+# IoT Sensors
+IOT_MQTT_BROKER=mqtt://localhost:1883
+IOT_MQTT_TOPIC=/sensors/dev
+
+# Video Management
+VIDEO_API_URL=[invalid url, do not cite]
+VIDEO_API_KEY=dev_video_key
+
+# Emergency Services
+EMERGENCY_API_URL=[invalid url, do not cite]
+EMERGENCY_CONTACT=+1-800-555-0199
+
+# Cybersecurity
+CYBERSECURITY_API_URL=[invalid url, do not cite]
+CYBERSECURITY_API_KEY=dev_splunk_key
+
+Production (.env.production):
+env
+
+# PMS Integration
+PMS_INTEGRATION_ENABLED=true
+PMS_API_URL=[invalid url, do not cite]
+PMS_API_KEY=prod_pms_key
+
+# Access Control
+ACCESS_CONTROL_API_URL=[invalid url, do not cite]
+ACCESS_CONTROL_API_KEY=prod_access_key
+
+# IoT Sensors
+IOT_MQTT_BROKER=mqtt://broker.example.com
+IOT_MQTT_TOPIC=/sensors/prod
+
+# Video Management
+VIDEO_API_URL=[invalid url, do not cite]
+VIDEO_API_KEY=prod_video_key
+
+# Emergency Services
+EMERGENCY_API_URL=[invalid url, do not cite]
+EMERGENCY_CONTACT=+1-800-555-0199
+
+# Cybersecurity
+CYBERSECURITY_API_URL=[invalid url, do not cite]
+CYBERSECURITY_API_KEY=prod_splunk_key
+
+Conclusion
+The "08_INTERGRATION_GUIDES.txt" file has been completed, providing comprehensive guides for six key integrations (PMS, Access Control, IoT Sensors, Video Management, Emergency Services, and Cybersecurity Tools) tailored for the PROPER 2.9 AI-Enhanced Hotel Security Platform. Each guide includes environment-specific configurations, ensuring seamless setup across development, testing, staging, and production environments. The content is designed for clarity and usability, with detailed steps, API documentation, troubleshooting tips, and examples. The provided file can be copied and pasted directly, and further refinements can be made if specific vendor details or additional integrations are required.
+
+IoT sensor protocols
+
+cloud security solutions
+

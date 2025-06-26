@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PROPER 2.9 Splash Screen</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #f8f8f6;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .splash-logo {
+      width: 180px;
+      height: 180px;
+      animation: splash-bounce 1.2s cubic-bezier(.68,-0.55,.27,1.55) infinite;
+      display: block;
+      margin: auto;
+    }
+    @keyframes splash-bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08) rotate(-2deg); }
+    }
+  </style>
+</head>
+<body>
+  <img src="Final_logo.png" alt="Proper 2.9 Logo" class="splash-logo" />
+</body>
+</html>

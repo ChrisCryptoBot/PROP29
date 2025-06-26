@@ -1,0 +1,3109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proper 2.9 - AI-Enhanced Security Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.min.js"></script>
+    <style>
+        /* CSS Variables for Light Mode */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-nav: linear-gradient(135deg, #1e40af, #3b82f6);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-nav: #ffffff;
+            --card-border: #e2e8f0;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --metric-accent: var(--accent-color);
+            --ai-section-bg: #ffffff;
+            --risk-factor-bg: #f8fafc;
+            --activity-bg: #ffffff;
+            --quick-action-bg: #ffffff;
+            --status-online: #10b981;
+            --status-offline: #ef4444;
+            --cyber-accent: #8b5cf6;
+            --biometric-accent: #06b6d4;
+        }
+
+        /* CSS Variables for Dark Mode */
+        .dark-mode {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-nav: linear-gradient(135deg, #0c4a6e, #1e40af);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-nav: #e2e8f0;
+            --card-border: #334155;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --metric-accent: var(--accent-color-dark);
+            --ai-section-bg: #1e293b;
+            --risk-factor-bg: #0f172a;
+            --activity-bg: #1e293b;
+            --quick-action-bg: #1e293b;
+            --status-online: #10b981;
+            --status-offline: #ef4444;
+            --cyber-accent: #a78bfa;
+            --biometric-accent: #22d3ee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .navbar {
+            background: var(--bg-nav);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(30, 64, 175, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-shield {
+            width: 52px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffffff, #e2e8f0);
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-shield::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 26px solid transparent;
+            border-right: 26px solid transparent;
+            border-top: 16px solid #ffffff;
+        }
+
+        .keyhole {
+            width: 18px;
+            height: 18px;
+            background: #1e40af;
+            border-radius: 50%;
+            position: relative;
+            margin-top: -4px;
+        }
+
+        .keyhole::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 12px;
+            background: #1e40af;
+            border-radius: 0 0 3px 3px;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-main {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-nav);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-sub {
+            font-size: 11px;
+            color: #dbeafe;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: var(--text-nav);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: #dbeafe;
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.25);
+            border-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #dbeafe;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--status-online);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-text {
+            color: var(--text-nav);
+            font-weight: 600;
+        }
+
+        .nav-item {
+            color: #dbeafe;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ffffff, #e2e8f0);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e40af;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            color: var(--text-nav);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            color: #dbeafe;
+            font-size: 12px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .time-info {
+            text-align: right;
+            color: var(--text-secondary);
+        }
+
+        .current-time {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .current-date {
+            font-size: 0.9rem;
+        }
+
+        .dashboard-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.75rem 1rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .dark-mode .control-btn {
+            background: #334155;
+            border: 1px solid #475569;
+            color: #94a3b8;
+        }
+
+        .control-btn:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .dark-mode .control-btn:hover {
+            background: #475569;
+            color: #e2e8f0;
+        }
+
+        .control-btn.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        /* Enhanced Alert Banner */
+        .smart-alert-banner {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(239, 68, 68, 0.3);
+            animation: slideDown 0.3s ease;
+            display: none;
+            max-width: 90%;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .alert-text {
+            flex: 1;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-alert-action, .btn-alert-dismiss {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-alert-action {
+            background: white;
+            color: #ef4444;
+        }
+
+        .btn-alert-action:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-alert-dismiss {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-alert-dismiss:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .metrics-overview {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .main-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--metric-accent);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-bg);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--metric-accent);
+            font-size: 1rem;
+        }
+
+        .metric-trend {
+            color: #10b981;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .metric-trend.down {
+            color: #ef4444;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: fit-content;
+            box-shadow: var(--card-shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-period {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            background: #f1f5f9;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+        }
+
+        .dark-mode .chart-period {
+            background: #334155;
+            color: #94a3b8;
+        }
+
+        /* Risk Assessment Panel */
+        .risk-assessment {
+            background: var(--bg-secondary);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .risk-level {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .risk-level.medium {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fbbf24;
+        }
+
+        .dark-mode .risk-level.medium {
+            background: #422006;
+            color: #fbbf24;
+            border: 1px solid #d97706;
+        }
+
+        .risk-factors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .risk-factor {
+            padding: 1rem;
+            background: var(--risk-factor-bg);
+            border-radius: 6px;
+            border-left: 3px solid var(--risk-color);
+        }
+
+        .risk-factor.high {
+            --risk-color: #ef4444;
+        }
+
+        .risk-factor.medium {
+            --risk-color: #f59e0b;
+        }
+
+        .risk-factor.low {
+            --risk-color: #10b981;
+        }
+
+        .risk-factor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .risk-factor-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .risk-factor-score {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .risk-factor-score.high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .dark-mode .risk-factor-score.high {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .risk-factor-score.medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .dark-mode .risk-factor-score.medium {
+            background: #422006;
+            color: #fbbf24;
+        }
+
+        .risk-factor-score.low {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .dark-mode .risk-factor-score.low {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        .risk-factor-desc {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Enhanced AI Section */
+        .ai-intelligence-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--ai-section-bg);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            position: relative;
+            box-shadow: var(--card-shadow);
+        }
+
+        .ai-intelligence-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .ai-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .ai-confidence {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #eff6ff;
+            border-radius: 6px;
+            color: #3b82f6;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .dark-mode .ai-confidence {
+            background: #1e3a8a;
+            color: #93c5fd;
+        }
+
+        .confidence-meter {
+            width: 60px;
+            height: 4px;
+            background: #dbeafe;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .dark-mode .confidence-meter {
+            background: #1e3a8a;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: #3b82f6;
+            width: 87%;
+            border-radius: 2px;
+        }
+
+        .dark-mode .confidence-fill {
+            background: #93c5fd;
+        }
+
+        .ai-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .ai-card {
+            background: var(--risk-factor-bg);
+            border-radius: 6px;
+            padding: 1.5rem;
+            border: 1px solid var(--card-border);
+            transition: all 0.3s ease;
+        }
+
+        .ai-card:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .ai-card-header h3 {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-status.active {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .dark-mode .ai-status.active {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        .hotspot-count {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .dark-mode .hotspot-count {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .btn-configure {
+            background: #eff6ff;
+            color: #3b82f6;
+            border: 1px solid #dbeafe;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode .btn-configure {
+            background: #1e3a8a;
+            color: #93c5fd;
+            border: 1px solid #3b82f6;
+        }
+
+        .btn-configure:hover {
+            background: #dbeafe;
+        }
+
+        .dark-mode .btn-configure:hover {
+            background: #3b82f6;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #fef2f2;
+            border-radius: 6px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .dark-mode .suggestion-item {
+            background: #7f1d1d;
+        }
+
+        .suggestion-icon {
+            width: 40px;
+            height: 40px;
+            background: #fee2e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            font-size: 1.2rem;
+        }
+
+        .dark-mode .suggestion-icon {
+            background: #450a0a;
+            color: #fca5a5;
+        }
+
+        .suggestion-content {
+            flex: 1;
+        }
+
+        .suggestion-content strong {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .suggestion-content p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin: 0.25rem 0;
+        }
+
+        .suggestion-time {
+            color: #dc2626;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .dark-mode .suggestion-time {
+            color: #fca5a5;
+        }
+
+        .hotspot-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            border: 1px solid var(--card-border);
+        }
+
+        .hotspot-location {
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .location-icon {
+            width: 24px;
+            height: 24px;
+            background: #fee2e2;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            font-size: 0.8rem;
+        }
+
+        .dark-mode .location-icon {
+            background: #450a0a;
+            color: #fca5a5;
+        }
+
+        .hotspot-level {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .hotspot-level.high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .dark-mode .hotspot-level.high {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .hotspot-level.medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .dark-mode .hotspot-level.medium {
+            background: #422006;
+            color: #fbbf24;
+        }
+
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #fffbeb;
+            border-radius: 6px;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .dark-mode .event-item {
+            background: #422006;
+        }
+
+        .event-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .event-icon {
+            width: 40px;
+            height: 40px;
+            background: #fef3c7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d97706;
+            font-size: 1.2rem;
+        }
+
+        .dark-mode .event-icon {
+            background: #422006;
+            color: #fbbf24;
+        }
+
+        .event-details strong {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .event-details p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin: 0.25rem 0;
+        }
+
+        .impact-level.high {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .dark-mode .impact-level.high {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        /* NEW: Cybersecurity Dashboard Section */
+        .cybersecurity-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--ai-section-bg);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            position: relative;
+            box-shadow: var(--card-shadow);
+        }
+
+        .cybersecurity-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyber-accent), #ec4899);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .cyber-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .cyber-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .cyber-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f3e8ff;
+            border-radius: 6px;
+            color: var(--cyber-accent);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .dark-mode .cyber-status {
+            background: #4c1d95;
+            color: var(--cyber-accent);
+        }
+
+        .cyber-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .cyber-metric {
+            background: var(--risk-factor-bg);
+            border-radius: 6px;
+            padding: 1rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .cyber-metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .cyber-metric-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .cyber-metric-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .cyber-metric-status.secure {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .dark-mode .cyber-metric-status.secure {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        .cyber-metric-status.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .dark-mode .cyber-metric-status.warning {
+            background: #422006;
+            color: #fbbf24;
+        }
+
+        .cyber-metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .cyber-metric-desc {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* NEW: Guest Safety Section */
+        .guest-safety-section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--ai-section-bg);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            position: relative;
+            box-shadow: var(--card-shadow);
+        }
+
+        .guest-safety-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--biometric-accent), #10b981);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .guest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .guest-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .guest-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .guest-metric {
+            background: var(--risk-factor-bg);
+            border-radius: 6px;
+            padding: 1rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .guest-metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .guest-metric-title {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .guest-metric-icon {
+            width: 24px;
+            height: 24px;
+            background: #cffafe;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--biometric-accent);
+            font-size: 0.8rem;
+        }
+
+        .dark-mode .guest-metric-icon {
+            background: #164e63;
+            color: var(--biometric-accent);
+        }
+
+        .guest-metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .guest-metric-desc {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .modules-section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: #3b82f6;
+        }
+
+        .dark-mode .section-title i {
+            color: #93c5fd;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .module-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--metric-accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .module-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-bg);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--metric-accent);
+            font-size: 1.5rem;
+        }
+
+        /* Enhanced Patrol Module */
+        .module-card.patrol.enhanced {
+            border: 1px solid #dbeafe;
+            background: #fefefe;
+        }
+
+        .dark-mode .module-card.patrol.enhanced {
+            border: 1px solid #1e3a8a;
+            background: #1e293b;
+        }
+
+        .ai-indicator {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .ai-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .next-suggestion {
+            margin-top: 0.75rem;
+            padding: 0.5rem;
+            background: #eff6ff;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .dark-mode .next-suggestion {
+            background: #1e3a8a;
+        }
+
+        .next-suggestion small {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .next-suggestion strong {
+            color: #3b82f6;
+        }
+
+        .dark-mode .next-suggestion strong {
+            color: #93c5fd;
+        }
+
+        /* Enhanced Module Indicators */
+        .enhancement-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .enhancement-badge.biometric {
+            background: #cffafe;
+            color: var(--biometric-accent);
+        }
+
+        .dark-mode .enhancement-badge.biometric {
+            background: #164e63;
+            color: var(--biometric-accent);
+        }
+
+        .enhancement-badge.iot {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .dark-mode .enhancement-badge.iot {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        .enhancement-badge.predictive {
+            background: #f3e8ff;
+            color: var(--cyber-accent);
+        }
+
+        .dark-mode .enhancement-badge.predictive {
+            background: #4c1d95;
+            color: var(--cyber-accent);
+        }
+
+        /* Module Color Variables */
+        .event-log {
+            --accent-color: #ef4444;
+            --accent-color-dark: #f87171;
+            --accent-bg: #fee2e2;
+        }
+
+        .dark-mode .event-log {
+            --accent-bg: #7f1d1d;
+        }
+
+        .lost-found {
+            --accent-color: #10b981;
+            --accent-color-dark: #34d399;
+            --accent-bg: #dcfce7;
+        }
+
+        .dark-mode .lost-found {
+            --accent-bg: #14532d;
+        }
+
+        .packages {
+            --accent-color: #f59e0b;
+            --accent-color-dark: #fbbf24;
+            --accent-bg: #fef3c7;
+        }
+
+        .dark-mode .packages {
+            --accent-bg: #422006;
+        }
+
+        .admin {
+            --accent-color: #64748b;
+            --accent-color-dark: #94a3b8;
+            --accent-bg: #f1f5f9;
+        }
+
+        .dark-mode .admin {
+            --accent-bg: #334155;
+        }
+
+        .keys {
+            --accent-color: #8b5cf6;
+            --accent-color-dark: #a78bfa;
+            --accent-bg: #f3e8ff;
+        }
+
+        .dark-mode .keys {
+            --accent-bg: #4c1d95;
+        }
+
+        .visitors {
+            --accent-color: #06b6d4;
+            --accent-color-dark: #22d3ee;
+            --accent-bg: #cffafe;
+        }
+
+        .dark-mode .visitors {
+            --accent-bg: #164e63;
+        }
+
+        .banned {
+            --accent-color: #ef4444;
+            --accent-color-dark: #f87171;
+            --accent-bg: #fee2e2;
+        }
+
+        .dark-mode .banned {
+            --accent-bg: #7f1d1d;
+        }
+
+        .lockers {
+            --accent-color: #8b5cf6;
+            --accent-color-dark: #a78bfa;
+            --accent-bg: #f3e8ff;
+        }
+
+        .dark-mode .lockers {
+            --accent-bg: #4c1d95;
+        }
+
+        .parking {
+            --accent-color: #3b82f6;
+            --accent-color-dark: #93c5fd;
+            --accent-bg: #dbeafe;
+        }
+
+        .dark-mode .parking {
+            --accent-bg: #1e3a8a;
+        }
+
+        .patrol {
+            --accent-color: #10b981;
+            --accent-color-dark: #34d399;
+            --accent-bg: #dcfce7;
+        }
+
+        .dark-mode .patrol {
+            --accent-bg: #14532d;
+        }
+
+        .handover {
+            --accent-color: #f59e0b;
+            --accent-color-dark: #fbbf24;
+            --accent-bg: #fef3c7;
+        }
+
+        .dark-mode .handover {
+            --accent-bg: #422006;
+        }
+
+        .reports {
+            --accent-color: #64748b;
+            --accent-color-dark: #94a3b8;
+            --accent-bg: #f1f5f9;
+        }
+
+        .dark-mode .reports {
+            --accent-bg: #334155;
+        }
+
+        .cybersecurity {
+            --accent-color: #8b5cf6;
+            --accent-color-dark: #a78bfa;
+            --accent-bg: #f3e8ff;
+        }
+
+        .dark-mode .cybersecurity {
+            --accent-bg: #4c1d95;
+        }
+
+        .guest-safety {
+            --accent-color: #06b6d4;
+            --accent-color-dark: #22d3ee;
+            --accent-bg: #cffafe;
+        }
+
+        .dark-mode .guest-safety {
+            --accent-bg: #164e63;
+        }
+
+        .iot-monitoring {
+            --accent-color: #10b981;
+            --accent-color-dark: #34d399;
+            --accent-bg: #dcfce7;
+        }
+
+        .dark-mode .iot-monitoring {
+            --accent-bg: #14532d;
+        }
+
+        /* Metrics color schemes */
+        .incidents {
+            --accent-color: #ef4444;
+            --accent-color-dark: #f87171;
+            --accent-bg: #fee2e2;
+        }
+
+        .dark-mode .incidents {
+            --accent-bg: #7f1d1d;
+        }
+
+        .guards {
+            --accent-color: #3b82f6;
+            --accent-color-dark: #93c5fd;
+            --accent-bg: #dbeafe;
+        }
+
+        .dark-mode .guards {
+            --accent-bg: #1e3a8a;
+        }
+
+        .patrols {
+            --accent-color: #10b981;
+            --accent-color-dark: #34d399;
+            --accent-bg: #dcfce7;
+        }
+
+        .dark-mode .patrols {
+            --accent-bg: #14532d;
+        }
+
+        .alerts {
+            --accent-color: #f59e0b;
+            --accent-color-dark: #fbbf24;
+            --accent-bg: #fef3c7;
+        }
+
+        .dark-mode .alerts {
+            --accent-bg: #422006;
+        }
+
+        .compliance {
+            --accent-color: #06b6d4;
+            --accent-color-dark: #22d3ee;
+            --accent-bg: #cffafe;
+        }
+
+        .dark-mode .compliance {
+            --accent-bg: #164e63;
+        }
+
+        .cyber-threats {
+            --accent-color: #8b5cf6;
+            --accent-color-dark: #a78bfa;
+            --accent-bg: #f3e8ff;
+        }
+
+        .dark-mode .cyber-threats {
+            --accent-bg: #4c1d95;
+        }
+
+        .module-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .module-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .module-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .module-stat {
+            color: var(--text-secondary);
+        }
+
+        .module-stat strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .recent-activity {
+            background: var(--activity-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            background: #dbeafe;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3b82f6;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            margin-top: 0.25rem;
+        }
+
+        .dark-mode .activity-icon {
+            background: #1e3a8a;
+            color: #93c5fd;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--quick-action-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .quick-action-btn:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            color: var(--text-primary);
+        }
+
+        .quick-action-btn.emergency {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+        .dark-mode .quick-action-btn.emergency {
+            background: #7f1d1d;
+            border-color: #b91c1c;
+            color: #fca5a5;
+        }
+
+        .quick-action-btn.emergency:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .dark-mode .quick-action-btn.emergency:hover {
+            background: #b91c1c;
+            color: #fee2e2;
+        }
+
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .toggle-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dbeafe;
+        }
+
+        .toggle-text {
+            color: #dbeafe;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .metrics-overview {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-metrics {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .quick-actions {
+                gap: 0.5rem;
+            }
+
+            .quick-action-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .cybersecurity-section,
+            .guest-safety-section {
+                padding: 1rem;
+            }
+
+            .cyber-metrics,
+            .guest-metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Smart Alert Banner -->
+    <div class="smart-alert-banner" id="smartAlert">
+        <div class="alert-content">
+            <div class="alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="alert-text">
+                <strong>AI Security Recommendation:</strong> Increase patrol frequency in East Wing - Unusual activity pattern detected
+            </div>
+            <div class="alert-actions">
+                <button class="btn-alert-action" onclick="deployPatrol()">Deploy Patrol</button>
+                <button class="btn-alert-dismiss" onclick="dismissAlert()">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="logo-section">
+            <div class="logo-shield">
+                <div class="keyhole"></div>
+            </div>
+            <div class="logo-text">
+                <div class="logo-main">PROPER 2.9</div>
+                <div class="logo-sub">AI-Enhanced Security for Hotels</div>
+            </div>
+        </div>
+        
+        <div class="nav-center">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Search incidents, locations, staff, threats..." />
+            </div>
+        </div>
+        
+        <div class="nav-actions">
+            <div class="system-status">
+                <div class="status-indicator"></div>
+                <span class="status-text">All Systems Online</span>
+            </div>
+            
+            <!-- Dark Mode Toggle -->
+            <div class="dark-mode-toggle" id="darkModeToggle">
+                <div class="toggle-icon">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="toggle-text">Dark Mode</div>
+            </div>
+            
+            <a href="#" class="nav-item">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">5</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+            </a>
+            <div class="user-profile">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-role">Security Manager</div>
+                </div>
+                <i class="fas fa-chevron-down" style="color: #dbeafe; font-size: 12px;"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h1 class="dashboard-title">Security Command Center</h1>
+                <p class="dashboard-subtitle">Monitor, manage, and secure your property with intelligent oversight, predictive analytics, and comprehensive cybersecurity</p>
+            </div>
+            <div class="header-right">
+                <div class="dashboard-controls">
+                    <button class="control-btn active">Live</button>
+                    <button class="control-btn">Today</button>
+                    <button class="control-btn">Week</button>
+                </div>
+                <div class="time-info">
+                    <div class="current-time">14:25:36</div>
+                    <div class="current-date">Tuesday, June 25, 2025</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="quick-action-btn emergency">
+                <i class="fas fa-exclamation-triangle"></i>
+                Emergency Alert
+            </button>
+            <button class="quick-action-btn">
+                <i class="fas fa-shield-alt"></i>
+                Deploy Guards
+            </button>
+            <button class="quick-action-btn">
+                <i class="fas fa-camera"></i>
+                View Cameras
+            </button>
+            <button class="quick-action-btn">
+                <i class="fas fa-route"></i>
+                Track Patrols
+            </button>
+            <button class="quick-action-btn">
+                <i class="fas fa-mobile-alt"></i>
+                Guest Panic Alerts
+            </button>
+            <button class="quick-action-btn">
+                <i class="fas fa-chart-line"></i>
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Enhanced Metrics Overview -->
+        <div class="metrics-overview">
+            <div class="main-metrics">
+                <div class="metric-card incidents">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="metric-trend down">
+                            <i class="fas fa-arrow-down"></i> 12%
+                        </div>
+                    </div>
+                    <div class="metric-value">23</div>
+                    <div class="metric-label">Active Incidents</div>
+                </div>
+
+                <div class="metric-card guards">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="metric-trend">
+                            <i class="fas fa-arrow-up"></i> 8%
+                        </div>
+                    </div>
+                    <div class="metric-value">12</div>
+                    <div class="metric-label">Guards On Duty</div>
+                </div>
+
+                <div class="metric-card patrols">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="metric-trend">
+                            <i class="fas fa-arrow-up"></i> 5%
+                        </div>
+                    </div>
+                    <div class="metric-value">87</div>
+                    <div class="metric-label">AI-Optimized Patrols</div>
+                </div>
+
+                <div class="metric-card alerts">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="metric-trend down">
+                            <i class="fas fa-arrow-down"></i> 3%
+                        </div>
+                    </div>
+                    <div class="metric-value">156</div>
+                    <div class="metric-label">Security Alerts Today</div>
+                </div>
+
+                <div class="metric-card compliance">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="metric-trend">
+                            <i class="fas fa-arrow-up"></i> 3%
+                        </div>
+                    </div>
+                    <div class="metric-value">94%</div>
+                    <div class="metric-label">Patrol Efficiency Score</div>
+                </div>
+
+                <div class="metric-card cyber-threats">
+                    <div class="metric-header">
+                        <div class="metric-icon">
+                            <i class="fas fa-virus"></i>
+                        </div>
+                        <div class="metric-trend down">
+                            <i class="fas fa-arrow-down"></i> 45%
+                        </div>
+                    </div>
+                    <div class="metric-value">7</div>
+                    <div class="metric-label">Cyber Threats Blocked</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Incident Trends</h3>
+                    <span class="chart-period">Last 7 Days</span>
+                </div>
+                <canvas id="incidentChart" width="300" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Risk Assessment Panel -->
+        <div class="risk-assessment">
+            <div class="risk-header">
+                <h2 class="section-title">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    AI Risk Assessment
+                </h2>
+                <div class="risk-level medium">
+                    <i class="fas fa-shield-alt"></i>
+                    Medium Risk Level
+                </div>
+            </div>
+            <div class="risk-factors">
+                <div class="risk-factor high">
+                    <div class="risk-factor-header">
+                        <span class="risk-factor-title">Peak Activity Hours</span>
+                        <span class="risk-factor-score high">High</span>
+                    </div>
+                    <p class="risk-factor-desc">Increased security risk during busy periods (2-6 PM) - AI recommends 30% more patrols</p>
+                </div>
+                <div class="risk-factor medium">
+                    <div class="risk-factor-header">
+                        <span class="risk-factor-title">Staff Coverage</span>
+                        <span class="risk-factor-score medium">Medium</span>
+                    </div>
+                    <p class="risk-factor-desc">Pool area understaffed - Biometric access logs show gaps in coverage</p>
+                </div>
+                <div class="risk-factor high">
+                    <div class="risk-factor-header">
+                        <span class="risk-factor-title">Equipment Status</span>
+                        <span class="risk-factor-score high">High</span>
+                    </div>
+                    <p class="risk-factor-desc">IoT sensors detect camera malfunction in East Wing - immediate attention required</p>
+                </div>
+                <div class="risk-factor low">
+                    <div class="risk-factor-header">
+                        <span class="risk-factor-title">Access Control</span>
+                        <span class="risk-factor-score low">Low</span>
+                    </div>
+                    <p class="risk-factor-desc">All biometric access points secured, system operating normally</p>
+                </div>
+                <div class="risk-factor medium">
+                    <div class="risk-factor-header">
+                        <span class="risk-factor-title">Guest Behavior Analytics</span>
+                        <span class="risk-factor-score medium">Medium</span>
+                    </div>
+                    <p class="risk-factor-desc">Unusual loitering patterns detected in lobby - predictive AI suggests enhanced monitoring</p>
+                </div>
+                <div class="risk-factor low">
+                    <div class="risk-factor-header">
+                        <span class="risk-factor-title">Cybersecurity Posture</span>
+                        <span class="risk-factor-score low">Low</span>
+                    </div>
+                    <p class="risk-factor-desc">Network security optimal, no active threats detected by AI monitoring</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced AI Intelligence Section -->
+        <div class="ai-intelligence-section">
+            <div class="ai-header">
+                <h2 class="ai-title">
+                    <i class="fas fa-brain"></i>
+                    AI Security Intelligence
+                </h2>
+                <div class="ai-confidence">
+                    <span>Confidence: 92%</span>
+                    <div class="confidence-meter">
+                        <div class="confidence-fill" style="width: 92%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ai-cards-grid">
+                <!-- Smart Patrol Suggestions -->
+                <div class="ai-card patrol-suggestions">
+                    <div class="ai-card-header">
+                        <h3><i class="fas fa-route"></i> Predictive Patrol AI</h3>
+                        <span class="ai-status active">Enhanced</span>
+                    </div>
+                    <div class="suggestion-item priority-high">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="suggestion-content">
+                            <strong>Pool Area Patrol - AI Priority</strong>
+                            <p>Concert event + social media sentiment analysis indicates 85% incident probability</p>
+                            <span class="suggestion-time">Deploy: 15:30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enhanced Hotspot Detection -->
+                <div class="ai-card hotspot-alerts">
+                    <div class="ai-card-header">
+                        <h3><i class="fas fa-fire"></i> Behavioral Analytics</h3>
+                        <span class="hotspot-count">4 Active</span>
+                    </div>
+                    <div class="hotspot-map">
+                        <div class="hotspot-item">
+                            <div class="hotspot-location">
+                                <div class="location-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                Lobby - Loitering Pattern
+                            </div>
+                            <span class="hotspot-level high">AI Alert</span>
+                        </div>
+                        <div class="hotspot-item">
+                            <div class="hotspot-location">
+                                <div class="location-icon">
+                                    <i class="fas fa-fingerprint"></i>
+                                </div>
+                                Staff Access Anomaly
+                            </div>
+                            <span class="hotspot-level medium">Biometric</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Intelligence -->
+                <div class="ai-card event-intelligence">
+                    <div class="ai-card-header">
+                        <h3><i class="fas fa-calendar-alt"></i> Predictive Event Intel</h3>
+                        <button class="btn-configure">Configure</button>
+                    </div>
+                    <div class="event-item">
+                        <div class="event-info">
+                            <div class="event-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="event-details">
+                                <strong>Music Festival Tonight</strong>
+                                <p>AI predicts 40% traffic increase + weather data analysis</p>
+                            </div>
+                        </div>
+                        <div class="event-impact">
+                            <span class="impact-level high">High Impact</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Guest Safety Monitoring -->
+                <div class="ai-card guest-safety">
+                    <div class="ai-card-header">
+                        <h3><i class="fas fa-mobile-alt"></i> Guest Safety AI</h3>
+                        <span class="ai-status active">Live</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="suggestion-content">
+                            <strong>3 Active Panic Buttons</strong>
+                            <p>Guest safety app connected, 247 registered guests</p>
+                            <span class="suggestion-time">Response: <2min avg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Cybersecurity Dashboard Section -->
+        <div class="cybersecurity-section">
+            <div class="cyber-header">
+                <h2 class="cyber-title">
+                    <i class="fas fa-shield-virus"></i>
+                    Cybersecurity Command Center
+                </h2>
+                <div class="cyber-status">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Protected</span>
+                </div>
+            </div>
+            
+            <div class="cyber-metrics">
+                <div class="cyber-metric">
+                    <div class="cyber-metric-header">
+                        <span class="cyber-metric-title">Network Security</span>
+                        <span class="cyber-metric-status secure">Secure</span>
+                    </div>
+                    <div class="cyber-metric-value">99.8%</div>
+                    <p class="cyber-metric-desc">AI monitoring all network traffic</p>
+                </div>
+
+                <div class="cyber-metric">
+                    <div class="cyber-metric-header">
+                        <span class="cyber-metric-title">Threat Detection</span>
+                        <span class="cyber-metric-status secure">Active</span>
+                    </div>
+                    <div class="cyber-metric-value">24/7</div>
+                    <p class="cyber-metric-desc">Real-time threat intelligence</p>
+                </div>
+
+                <div class="cyber-metric">
+                    <div class="cyber-metric-header">
+                        <span class="cyber-metric-title">Guest Data Protection</span>
+                        <span class="cyber-metric-status secure">Encrypted</span>
+                    </div>
+                    <div class="cyber-metric-value">AES-256</div>
+                    <p class="cyber-metric-desc">End-to-end encryption active</p>
+                </div>
+
+                <div class="cyber-metric">
+                    <div class="cyber-metric-header">
+                        <span class="cyber-metric-title">Phishing Attempts</span>
+                        <span class="cyber-metric-status warning">Blocked</span>
+                    </div>
+                    <div class="cyber-metric-value">7</div>
+                    <p class="cyber-metric-desc">Attempts blocked today</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Guest Safety Dashboard Section -->
+        <div class="guest-safety-section">
+            <div class="guest-header">
+                <h2 class="guest-title">
+                    <i class="fas fa-heart-pulse"></i>
+                    Guest Safety & Experience
+                </h2>
+            </div>
+            
+            <div class="guest-metrics">
+                <div class="guest-metric">
+                    <div class="guest-metric-header">
+                        <span class="guest-metric-title">Mobile App Users</span>
+                        <div class="guest-metric-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                    </div>
+                    <div class="guest-metric-value">247</div>
+                    <p class="guest-metric-desc">Active guest safety app users</p>
+                </div>
+
+                <div class="guest-metric">
+                    <div class="guest-metric-header">
+                        <span class="guest-metric-title">Digital Key Access</span>
+                        <div class="guest-metric-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                    </div>
+                    <div class="guest-metric-value">892</div>
+                    <p class="guest-metric-desc">Secure room accesses today</p>
+                </div>
+
+                <div class="guest-metric">
+                    <div class="guest-metric-header">
+                        <span class="guest-metric-title">Panic Button Response</span>
+                        <div class="guest-metric-icon">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                    </div>
+                    <div class="guest-metric-value">1.2m</div>
+                    <p class="guest-metric-desc">Average response time</p>
+                </div>
+
+                <div class="guest-metric">
+                    <div class="guest-metric-header">
+                        <span class="guest-metric-title">Safety Feedback Score</span>
+                        <div class="guest-metric-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="guest-metric-value">4.8/5</div>
+                    <p class="guest-metric-desc">Guest safety satisfaction</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Security Modules -->
+        <div class="modules-section">
+            <h2 class="section-title">
+                <i class="fas fa-th-large"></i>
+                Enhanced Security Modules
+            </h2>
+            
+            <div class="modules-grid">
+                <div class="module-card event-log">
+                    <div class="enhancement-badge predictive">
+                        <i class="fas fa-brain"></i>
+                        AI Enhanced
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Event Log</h3>
+                        <p>AI-powered incident prediction and automated reporting with pattern recognition</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Today: <strong>23</strong></span>
+                            <span class="module-stat">AI Predicted: <strong>3</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card lost-found">
+                    <div class="enhancement-badge iot">
+                        <i class="fas fa-camera"></i>
+                        Image AI
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Lost & Found</h3>
+                        <p>Image recognition AI for automatic item matching and guest notification system</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Items: <strong>47</strong></span>
+                            <span class="module-stat">AI Matched: <strong>18</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card packages">
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Packages</h3>
+                        <p>Smart tracking with guest mobile app integration and delivery notifications</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Pending: <strong>18</strong></span>
+                            <span class="module-stat">Delivered: <strong>34</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card keys">
+                    <div class="enhancement-badge biometric">
+                        <i class="fas fa-fingerprint"></i>
+                        Biometric
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Access Control</h3>
+                        <p>Biometric authentication with digital keys and real-time access monitoring</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Digital Keys: <strong>892</strong></span>
+                            <span class="module-stat">Biometric: <strong>156</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card visitors">
+                    <div class="enhancement-badge biometric">
+                        <i class="fas fa-face-viewfinder"></i>
+                        Facial AI
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Visitors</h3>
+                        <p>Facial recognition for banned individuals and automated guest verification</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Today: <strong>127</strong></span>
+                            <span class="module-stat">AI Verified: <strong>98</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card admin">
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Admin</h3>
+                        <p>System configuration with integrated training modules and compliance tracking</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Users: <strong>45</strong></span>
+                            <span class="module-stat">Trained: <strong>42</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card banned">
+                    <div class="enhancement-badge biometric">
+                        <i class="fas fa-eye"></i>
+                        Auto-Detect
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Banned Individuals</h3>
+                        <p>Automated facial recognition alerts with real-time security notifications</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Active: <strong>15</strong></span>
+                            <span class="module-stat">Detected: <strong>0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card lockers">
+                    <div class="enhancement-badge iot">
+                        <i class="fas fa-wifi"></i>
+                        IoT
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Smart Lockers</h3>
+                        <p>IoT-enabled lockers with remote monitoring and automated maintenance alerts</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Occupied: <strong>67</strong></span>
+                            <span class="module-stat">IoT Status: <strong>100%</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card parking">
+                    <div class="enhancement-badge iot">
+                        <i class="fas fa-car-side"></i>
+                        Smart
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-parking"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Smart Parking</h3>
+                        <p>IoT sensors for real-time availability with guest mobile app integration</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Occupied: <strong>184</strong></span>
+                            <span class="module-stat">Sensors: <strong>210</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card patrol enhanced">
+                    <div class="ai-indicator">
+                        <i class="fas fa-brain"></i>
+                        <span>AI Enhanced</span>
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-walking"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Patrol <span class="ai-badge">AI</span></h3>
+                        <p>Predictive AI routing with real-time staff tracking and wearable device integration</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Active: <strong>12</strong></span>
+                            <span class="module-stat">AI Routes: <strong>8</strong></span>
+                        </div>
+                        <div class="next-suggestion">
+                            <small>Next AI optimization in: <strong>8 min</strong></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card handover">
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Digital Handover</h3>
+                        <p>Automated shift transitions with AI-generated briefings and priority alerts</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Current: <strong>Day Shift</strong></span>
+                            <span class="module-stat">Next: <strong>18:00</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card reports">
+                    <div class="enhancement-badge predictive">
+                        <i class="fas fa-chart-area"></i>
+                        Analytics
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Advanced Reports</h3>
+                        <p>AI-powered analytics with predictive insights and automated compliance reporting</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Generated: <strong>24</strong></span>
+                            <span class="module-stat">AI Insights: <strong>12</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW MODULES -->
+                <div class="module-card cybersecurity">
+                    <div class="enhancement-badge predictive">
+                        <i class="fas fa-shield-virus"></i>
+                        Live
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-shield-virus"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Cybersecurity Hub</h3>
+                        <p>24/7 threat monitoring with AI-powered attack prevention and guest data protection</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Threats Blocked: <strong>7</strong></span>
+                            <span class="module-stat">Status: <strong>Secure</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card guest-safety">
+                    <div class="enhancement-badge biometric">
+                        <i class="fas fa-mobile-alt"></i>
+                        App
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-heart-pulse"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>Guest Safety</h3>
+                        <p>Mobile panic buttons, emergency response, and real-time guest communication system</p>
+                        <div class="module-stats">
+                            <span class="module-stat">App Users: <strong>247</strong></span>
+                            <span class="module-stat">Response: <strong>1.2m</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="module-card iot-monitoring">
+                    <div class="enhancement-badge iot">
+                        <i class="fas fa-satellite-dish"></i>
+                        Live
+                    </div>
+                    <div class="module-header">
+                        <div class="module-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                    </div>
+                    <div class="module-content">
+                        <h3>IoT Environmental</h3>
+                        <p>Smart sensors for fire, flood, gas detection with automated emergency response protocols</p>
+                        <div class="module-stats">
+                            <span class="module-stat">Sensors: <strong>342</strong></span>
+                            <span class="module-stat">Online: <strong>339</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="modules-section">
+            <h2 class="section-title">
+                <i class="fas fa-history"></i>
+                Enhanced Activity Stream
+            </h2>
+            
+            <div class="recent-activity">
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">AI predicted and prevented potential incident in Pool Area - 94% accuracy</div>
+                        <div class="activity-time">30 seconds ago</div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Guest panic button activated - Security responded in 52 seconds</div>
+                        <div class="activity-time">2 minutes ago</div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Biometric access anomaly detected - Staff member verified via secondary authentication</div>
+                        <div class="activity-time">3 minutes ago</div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-shield-virus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Cybersecurity AI blocked phishing attempt targeting front desk</div>
+                        <div class="activity-time">5 minutes ago</div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Image recognition AI matched lost item - Guest notified automatically</div>
+                        <div class="activity-time">8 minutes ago</div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">IoT sensors detected maintenance issue in HVAC system - Work order created</div>
+                        <div class="activity-time">12 minutes ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Chart Implementation
+        const ctx = document.getElementById('incidentChart').getContext('2d');
+        const incidentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Incidents',
+                    data: [12, 8, 15, 10, 18, 25, 14],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'Resolved',
+                    data: [8, 6, 12, 8, 14, 20, 11],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'AI Predicted',
+                    data: [3, 2, 4, 2, 5, 7, 3],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderDash: [5, 5]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#64748b'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: 'rgba(100, 116, 139, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#64748b'
+                        },
+                        grid: {
+                            color: 'rgba(100, 116, 139, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update time every second
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.querySelector('.current-time').textContent = timeString;
+            document.querySelector('.current-date').textContent = dateString;
+        }
+
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // Enhanced AI Patrol System
+        class EnhancedAIPatrolSystem {
+            constructor() {
+                this.initializeAI();
+                this.startPatrolSuggestions();
+                this.monitorHotspots();
+                this.suggestions = [
+                    { area: "Pool Deck", priority: "high", reason: "Concert event + social sentiment analysis", time: "15:30", confidence: 92 },
+                    { area: "Parking Garage", priority: "medium", reason: "IoT sensor anomaly detected", time: "16:00", confidence: 78 },
+                    { area: "East Wing", priority: "high", reason: "Behavioral pattern analysis", time: "16:30", confidence: 89 },
+                    { area: "Rooftop Bar", priority: "medium", reason: "Predictive crowd modeling", time: "17:00", confidence: 85 }
+                ];
+                this.currentSuggestionIndex = 0;
+            }
+
+            initializeAI() {
+                // Show initial alert after 5 seconds
+                setTimeout(() => {
+                    this.showSmartAlert();
+                }, 5000);
+
+                // Generate new suggestions every 2 minutes for demo
+                setInterval(() => {
+                    this.updatePatrolSuggestion();
+                }, 120000);
+                
+                // Enhanced event triggers
+                this.checkEventTriggers();
+                this.monitorCyberThreats();
+                this.trackGuestSafety();
+            }
+
+            generatePatrolSuggestion() {
+                const suggestion = this.suggestions[this.currentSuggestionIndex];
+                this.currentSuggestionIndex = (this.currentSuggestionIndex + 1) % this.suggestions.length;
+                return suggestion;
+            }
+
+            showSmartAlert() {
+                const suggestion = this.generatePatrolSuggestion();
+                const alertBanner = document.getElementById('smartAlert');
+                const alertText = alertBanner.querySelector('.alert-text');
+                alertText.innerHTML = `<strong>AI Security Recommendation:</strong> Deploy patrol to ${suggestion.area} - ${suggestion.reason} (${suggestion.confidence}% confidence)`;
+                alertBanner.style.display = 'block';
+                
+                // Auto-hide after 30 seconds
+                setTimeout(() => {
+                    if (alertBanner.style.display === 'block') {
+                        alertBanner.style.display = 'none';
+                    }
+                }, 30000);
+            }
+
+            updatePatrolSuggestion() {
+                const suggestion = this.generatePatrolSuggestion();
+                const suggestionElement = document.querySelector('.suggestion-item');
+                if (suggestionElement) {
+                    suggestionElement.querySelector('strong').textContent = `${suggestion.area} Patrol - AI Priority`;
+                    suggestionElement.querySelector('p').textContent = suggestion.reason;
+                    suggestionElement.querySelector('.suggestion-time').textContent = `Deploy: ${suggestion.time}`;
+                }
+
+                // Update confidence level
+                const confidenceElement = document.querySelector('.confidence-fill');
+                if (confidenceElement) {
+                    confidenceElement.style.width = `${suggestion.confidence}%`;
+                }
+
+                // Update next suggestion timer
+                const nextSuggestionElement = document.querySelector('.next-suggestion strong');
+                if (nextSuggestionElement) {
+                    let minutes = 8;
+                    const timer = setInterval(() => {
+                        minutes--;
+                        nextSuggestionElement.textContent = `${minutes} min`;
+                        if (minutes <= 0) {
+                            clearInterval(timer);
+                            minutes = 8;
+                            nextSuggestionElement.textContent = `${minutes} min`;
+                        }
+                    }, 60000);
+                }
+            }
+
+            checkEventTriggers() {
+                console.log('Enhanced AI monitoring for event triggers...');
+            }
+
+            monitorHotspots() {
+                console.log('AI monitoring security hotspots with behavioral analytics...');
+            }
+
+            monitorCyberThreats() {
+                console.log('AI cybersecurity monitoring active...');
+            }
+
+            trackGuestSafety() {
+                console.log('Guest safety monitoring active...');
+            }
+        }
+
+        // Alert Functions
+        function deployPatrol() {
+            const alertBanner = document.getElementById('smartAlert');
+            alertBanner.style.display = 'none';
+            
+            // Show success notification
+            showNotification('AI-optimized patrol deployment initiated', 'success');
+            
+            // Add to activity feed
+            addToActivityFeed('AI-optimized patrol deployed based on predictive analysis');
+        }
+
+        function dismissAlert() {
+            const alertBanner = document.getElementById('smartAlert');
+            alertBanner.style.display = 'none';
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create a temporary notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 6px;
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function addToActivityFeed(activity) {
+            const activityFeed = document.querySelector('.recent-activity');
+            const newActivity = document.createElement('div');
+            newActivity.className = 'activity-item';
+            newActivity.innerHTML = `
+                <div class="activity-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">${activity}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            activityFeed.insertBefore(newActivity, activityFeed.firstChild);
+
+            // Remove the last item to keep the list manageable
+            const activities = activityFeed.querySelectorAll('.activity-item');
+            if (activities.length > 6) {
+                activities[activities.length - 1].remove();
+            }
+        }
+
+        // Add click handlers to module cards
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const moduleType = this.className.split(' ').find(c => c !== 'module-card' && c !== 'enhanced');
+                console.log('Navigate to:', moduleType);
+                showNotification(`Opening enhanced ${moduleType} module...`);
+            });
+        });
+
+        // Enhanced Search Functionality
+        document.querySelector('.search-input').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            if (query.length > 2) {
+                // Simulate advanced search suggestions
+                console.log('AI-powered search for:', query);
+            }
+        });
+
+        // Quick Action Handlers
+        document.querySelectorAll('.quick-action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.textContent.trim();
+                if (action.includes('Emergency')) {
+                    showNotification('Emergency alert broadcast to all security personnel + law enforcement', 'success');
+                } else if (action.includes('Panic')) {
+                    showNotification('Guest panic alert system status displayed', 'info');
+                } else {
+                    showNotification(`${action} initiated with AI optimization`, 'info');
+                }
+            });
+        });
+
+        // Period control handlers
+        document.querySelectorAll('.control-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update chart data based on selected period
+                const period = this.textContent;
+                console.log('Updating AI analytics for period:', period);
+            });
+        });
+
+        // Initialize Enhanced AI system
+        const enhancedAiPatrol = new EnhancedAIPatrolSystem();
+
+        // Enhanced real-time updates
+        setInterval(() => {
+            // Update random metrics slightly
+            const metrics = document.querySelectorAll('.metric-value');
+            metrics.forEach(metric => {
+                if (Math.random() > 0.95) { // 5% chance to update
+                    const currentValue = parseInt(metric.textContent.replace(/\D/g, ''));
+                    const change = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+                    if (currentValue + change > 0) {
+                        if (metric.textContent.includes('%')) {
+                            metric.textContent = `${currentValue + change}%`;
+                        } else {
+                            metric.textContent = currentValue + change;
+                        }
+                    }
+                }
+            });
+
+            // Update cyber metrics
+            const cyberMetrics = document.querySelectorAll('.cyber-metric-value');
+            cyberMetrics.forEach(metric => {
+                if (Math.random() > 0.98) { // 2% chance to update
+                    if (metric.textContent.includes('%')) {
+                        const current = parseFloat(metric.textContent);
+                        const newValue = Math.max(95, Math.min(100, current + (Math.random() - 0.5) * 0.2));
+                        metric.textContent = `${newValue.toFixed(1)}%`;
+                    }
+                }
+            });
+        }, 5000);
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+        
+        // Check for saved preference
+        const isDarkMode = false; // Removed localStorage for browser compatibility
+        if (isDarkMode) {
+            body.classList.add('dark-mode');
+            darkModeToggle.querySelector('.toggle-icon').innerHTML = '<i class="fas fa-sun"></i>';
+            darkModeToggle.querySelector('.toggle-text').textContent = 'Light Mode';
+        }
+        
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                darkModeToggle.querySelector('.toggle-icon').innerHTML = '<i class="fas fa-sun"></i>';
+                darkModeToggle.querySelector('.toggle-text').textContent = 'Light Mode';
+            } else {
+                darkModeToggle.querySelector('.toggle-icon').innerHTML = '<i class="fas fa-moon"></i>';
+                darkModeToggle.querySelector('.toggle-text').textContent = 'Dark Mode';
+            }
+            
+            // Update chart colors based on mode
+            updateChartColors();
+        });
+        
+        function updateChartColors() {
+            if (body.classList.contains('dark-mode')) {
+                incidentChart.options.plugins.legend.labels.color = '#94a3b8';
+                incidentChart.options.scales.y.ticks.color = '#94a3b8';
+                incidentChart.options.scales.y.grid.color = 'rgba(148, 163, 184, 0.1)';
+                incidentChart.options.scales.x.ticks.color = '#94a3b8';
+                incidentChart.options.scales.x.grid.color = 'rgba(148, 163, 184, 0.1)';
+            } else {
+                incidentChart.options.plugins.legend.labels.color = '#64748b';
+                incidentChart.options.scales.y.ticks.color = '#64748b';
+                incidentChart.options.scales.y.grid.color = 'rgba(100, 116, 139, 0.1)';
+                incidentChart.options.scales.x.ticks.color = '#64748b';
+                incidentChart.options.scales.x.grid.color = 'rgba(100, 116, 139, 0.1)';
+            }
+            incidentChart.update();
+        }
+    </script>
+</body>
+</html>
