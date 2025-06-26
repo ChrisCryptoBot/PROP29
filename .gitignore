@@ -70,4 +70,20 @@ app/
 
 # Temporary files
 tmp/
-temp/ 
+temp/
+
+# Security and sensitive data
+secrets/
+config/secrets.json
+*.key
+*.pem
+*.p12
+*.pfx
+api_keys.txt
+credentials.txt
+passwords.txt
+
+# Local development data
+local_data/
+sample_data/
+test_data/ 
