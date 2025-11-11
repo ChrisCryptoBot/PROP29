@@ -8,6 +8,8 @@
 
 ## 🎯 Overview
 
+Proper 2.9 — an intelligent hotel loss-prevention and incident-management platform designed to streamline security operations, automate reporting, and centralize communication between management, staff, and law enforcement. Built for safety, efficiency, and accountability.
+
 PROPER 2.9 is a comprehensive AI-enhanced hotel security platform that revolutionizes hospitality security management through predictive analytics, real-time monitoring, and intelligent automation. Built with modern technologies and enterprise-grade architecture, it provides a unified solution for hotel security operations.
 
 ### ✨ Key Features
