@@ -1,54 +1,48 @@
 {
-  "name": "proper-29-frontend",
-  "version": "1.0.0",
+  "name": "proper-2.9-frontend",
+  "version": "2.9.0",
   "private": true,
   "dependencies": {
-    "@heroicons/react": "^2.2.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^14.5.2",
+    "@reduxjs/toolkit": "^1.9.5",
+    "@tailwindcss/forms": "^0.5.10",
     "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.68",
-    "@types/react": "^18.2.42",
-    "@types/react-datepicker": "^4.19.4",
-    "@types/react-dom": "^18.2.17",
-    "@types/react-virtualized": "^9.21.29",
-    "axios": "^1.6.2",
+    "@types/node": "^16.18.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "axios": "^1.4.0",
     "chart.js": "^4.5.0",
-    "clsx": "^2.0.0",
-    "date-fns": "^2.30.0",
-    "framer-motion": "^10.16.16",
-    "lucide-react": "^0.294.0",
+    "lucide-react": "^0.525.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.0",
-    "react-datepicker": "^4.25.0",
     "react-dom": "^18.2.0",
-    "react-dropzone": "^14.2.3",
-    "react-hook-form": "^7.48.2",
     "react-hot-toast": "^2.5.2",
-    "react-intersection-observer": "^9.5.3",
     "react-query": "^3.39.3",
-    "react-router-dom": "^6.20.1",
-    "react-scripts": "5.0.1",
-    "react-select": "^5.8.0",
-    "react-virtualized": "^9.22.5",
-    "recharts": "^2.8.0",
-    "tailwind-merge": "^2.0.0",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4",
-    "zustand": "^4.4.7"
+    "react-redux": "^8.1.0",
+    "react-router-dom": "^6.14.0",
+    "recharts": "^3.1.0",
+    "redux-persist": "^6.0.0",
+    "typescript": "^4.9.0",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/**/*.{ts,tsx,js,jsx,json,css,md}",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "module:create": "node scripts/create-module.js",
+    "module:validate": "node scripts/validate-modules.js",
+    "perf:audit": "node scripts/performance-audit.js",
+    "perf:analyze": "npm run analyze",
+    "quality:check": "npm run lint && npm run type-check && npm run module:validate",
+    "quality:fix": "npm run lint:fix && npm run format",
+    "dev:setup": "npm install && npm run quality:fix",
+    "build:prod": "npm run build && npm run perf:audit",
+    "deploy:check": "npm run quality:check && npm run perf:audit && npm run test"
   },
   "browserslist": {
     "production": [
@@ -63,12 +57,16 @@
     ]
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.10",
-    "autoprefixer": "^10.4.16",
-    "cross-env": "^7.0.3",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^3.3.6"
-  },
-  "proxy": "http://localhost:8000"
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jsdom": "^27.0.1",
+    "prettier": "^2.8.8",
+    "react-scripts": "^5.0.1",
+    "vitest": "^3.2.4",
+    "webpack-bundle-analyzer": "^4.8.0"
+  }
 }

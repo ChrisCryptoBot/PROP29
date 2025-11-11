@@ -1,0 +1,32 @@
+
+backend path:
+
+
+cd "C:\Users\14698\OneDrive\Desktop\Proper 2.9\backend"
+.\.venv\Scripts\Activate
+$env:SECRET_KEY="dev-secret-key-change-in-production-1234567890abcdef"
+uvicorn main:app --reload
+
+frontend path:
+
+cd "C:\Users\14698\OneDrive\Desktop\Proper 2.9\frontend"
+npm install
+npm start
+
+
+
+
+provide all context, info, knowledge and details necessary for Claude ai in a new conversation to understand what we've done so far, what we're making, what we've solved, what we're encountering. what suggestions we need based on immediate and next problems for best optimized solutions also ask in  your prompt if it needs any copies of any specific files to read and run/repair for optimal solution
+
+clean up, apply fixes in best order you propose, run fully and provide update
+
+
+Provide percentage of what's completed and percentage update on whats left while you continue working
+
+proceed to next once 100% completed and implemented and show me each file structure
+
+admin@proper29.com
+
+admin123
+
+make the

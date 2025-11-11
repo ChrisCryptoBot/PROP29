@@ -1,0 +1,364 @@
+version: '3.8'
+
+services:
+  # PROPER 2.9 Backend API
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-production}
+    container_name: proper29-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql://proper29:proper29@postgres:5432/proper29
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+      - ai_models_data:/app/ai_models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - proper29-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PROPER 2.9 Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: proper29-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_ENVIRONMENT=${ENVIRONMENT:-development}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - proper29-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: proper29-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=proper29
+      - POSTGRES_USER=proper29
+      - POSTGRES_PASSWORD=proper29
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - proper29-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U proper29 -d proper29"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: proper29-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - proper29-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Celery Worker for Background Tasks
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: proper29-celery-worker
+    restart: unless-stopped
+    command: celery -A tasks worker --loglevel=info --concurrency=4
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql://proper29:proper29@postgres:5432/proper29
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+    volumes:
+      - ./backend:/app
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - proper29-network
+
+  # Celery Beat for Scheduled Tasks
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: proper29-celery-beat
+    restart: unless-stopped
+    command: celery -A tasks beat --loglevel=info
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql://proper29:proper29@postgres:5432/proper29
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+    volumes:
+      - ./backend:/app
+      - logs_data:/app/logs
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - proper29-network
+
+  # Flower for Celery Monitoring
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: proper29-flower
+    restart: unless-stopped
+    command: celery -A tasks flower --port=5555
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql://proper29:proper29@postgres:5432/proper29
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "5555:5555"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - proper29-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: proper29-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - logs_data:/var/log/nginx
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - proper29-network
+
+  # Prometheus for Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: proper29-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - proper29-network
+
+  # Grafana for Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: proper29-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - proper29-network
+
+  # Elasticsearch for Logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: proper29-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - proper29-network
+
+  # Kibana for Log Visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: proper29-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - proper29-network
+
+  # Filebeat for Log Collection
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: proper29-filebeat
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./monitoring/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - logs_data:/var/log/proper29:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - proper29-network
+
+  # Mailhog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: proper29-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - proper29-network
+
+  # MinIO for Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: proper29-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - proper29-network
+
+  # pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: proper29-pgadmin
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@proper29.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - proper29-network
+
+  # Redis Commander for Redis Management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: proper29-redis-commander
+    restart: unless-stopped
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - proper29-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
+  logs_data:
+    driver: local
+  ai_models_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  minio_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  proper29-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16 

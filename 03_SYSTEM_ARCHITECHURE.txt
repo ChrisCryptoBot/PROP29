@@ -5,38 +5,42 @@ Define the complete system architecture including component relationships, data 
 
 ## Architecture Overview
 
-### System Context
+### System Context (ACTUAL IMPLEMENTATION)
 ```
 System Name: PROPER 2.9 AI-Enhanced Hotel Security Platform
-Architecture Pattern: Event-Driven Microservices with CQRS
+Architecture Pattern: Event-Driven Microservices with WebSocket Real-time Communication
 - Options: Monolithic, Microservices, Serverless, Event-Driven, Layered
-- Reasoning: Microservices for scalability, event-driven for real-time responses, CQRS for performance
+- Reasoning: Microservices for scalability, event-driven for real-time responses, WebSocket for live updates
+- Status: IMPLEMENTED with 25 service modules and WebSocket connections
 
-Deployment Model: Cloud-Native Multi-Region with Edge Computing
+Deployment Model: Docker Compose (Development) + AWS EKS (Production Ready)
 - Options: Single Server, Multi-Server, Cloud-Native, Hybrid, Edge
-- Reasoning: Global hotel chains require multi-region deployment, edge computing for IoT processing
+- Reasoning: Docker Compose for development simplicity, AWS EKS for production scalability
+- Status: IMPLEMENTED with Docker Compose, AWS EKS deployment ready
 
-Communication Style: Hybrid (Synchronous APIs + Asynchronous Events)
+Communication Style: Hybrid (Synchronous APIs + WebSocket Real-time)
 - Options: Synchronous, Asynchronous, Event-Driven, Hybrid
-- Reasoning: Real-time alerts require async events, user operations need sync responses
+- Reasoning: Real-time alerts via WebSocket, user operations via REST APIs
+- Status: IMPLEMENTED with REST APIs and WebSocket endpoints
 
-Data Flow Pattern: Event Sourcing with CQRS for Analytics
+Data Flow Pattern: Request-Response with Real-time Updates
 - Options: Request-Response, Pub-Sub, CQRS, Event Sourcing
-- Reasoning: Audit trail requirements, complex analytics, real-time processing needs
+- Reasoning: Simple data flow for development, real-time updates via WebSocket
+- Status: IMPLEMENTED with 1046-line main.py and WebSocket handlers
 ```
 
-### High-Level Architecture Diagram
+### High-Level Architecture Diagram (ACTUAL IMPLEMENTATION)
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   WEB DASHBOARD │    │   MOBILE APPS   │    │   IOT SENSORS   │
-│  (React + TS)   │    │ (Staff & Guest) │    │ (Fire/Security) │
+│   WEB DASHBOARD │    │   ELECTRON APP  │    │   IOT SENSORS   │
+│  (React + TS)   │    │ (Desktop App)   │    │ (Fire/Security) │
 └─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
           │                      │                      │
           └──────────────────────┼──────────────────────┘
                                  │
          ┌─────────────────────────┴─────────────────────────┐
-         │         AWS API GATEWAY + CLOUDFRONT CDN         │
-         │    (Rate Limiting, Auth, Caching, DDoS)          │
+         │         FASTAPI BACKEND + WEBSOCKET              │
+         │    (Rate Limiting, Auth, Real-time Updates)      │
          └─────────────────────┬─────────────────────────────┘
                                │
     ┌──────────────────────────┼──────────────────────────┐
@@ -44,22 +48,23 @@ Data Flow Pattern: Event Sourcing with CQRS for Analytics
 ┌───▼────┐              ┌─────▼─────┐              ┌─────▼─────┐
 │SECURITY│              │AI/ML CORE │              │GUEST SAFETY│
 │SERVICE │              │ SERVICES  │              │ SERVICE   │
-│(Python)│              │(Python ML)│              │(Node.js)  │
+│(Python)│              │(Python ML)│              │(Python)   │
 └───┬────┘              └─────┬─────┘              └─────┬─────┘
     │                         │                          │
     └─────────────────────────┼──────────────────────────┘
                               │
          ┌────────────────────┴────────────────────┐
-         │        EVENT BUS (AWS EventBridge)      │
-         │     + MESSAGE QUEUE (AWS SQS/SNS)       │
+         │        WEBSOCKET CONNECTION MANAGER     │
+         │     + REAL-TIME EVENT BROADCASTING      │
          └─────────────────────────────────────────┘
                               │
     ┌─────────────────────────┼─────────────────────────┐
     │                         │                         │
 ┌───▼────┐              ┌─────▼─────┐              ┌───▼────┐
-│POSTGRES│              │   REDIS   │              │   S3   │
-│(Primary)│              │  (Cache)  │              │(Files) │
-│TimescaleDB│            │(Sessions) │              │(Videos)│
+│SQLITE  │              │   REDIS   │              │  FILES │
+│(Dev DB)│              │  (Cache)  │              │(Local) │
+│PostgreSQL│            │(Sessions) │              │(Uploads)│
+│(Prod)  │              │           │              │        │
 └────────┘              └───────────┘              └────────┘
 ```
 

@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es6"
-    ],
+    "target": "es2015",
+    "lib": ["dom", "dom.iterable", "es6"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -18,9 +14,20 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "downlevelIteration": true,
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"],
+      "@app/*": ["app/*"],
+      "@shared/*": ["shared/*"],
+      "@components/*": ["components/*"],
+      "@pages/*": ["pages/*"],
+      "@services/*": ["services/*"],
+      "@types/*": ["types/*"],
+      "@utils/*": ["utils/*"]
+    }
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src", "src/types/globals.d.ts"],
+  "exclude": ["node_modules"]
 } 

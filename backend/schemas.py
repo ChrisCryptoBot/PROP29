@@ -59,6 +59,95 @@ class UserRoleEnum(str, enum.Enum):
     MANAGER = "manager"
     VIEWER = "viewer"
 
+# Additional enums for new models
+class GuestSafetyEventType(str, enum.Enum):
+    PANIC_BUTTON = "panic_button"
+    MEDICAL_EMERGENCY = "medical_emergency"
+    FALL_DETECTION = "fall_detection"
+    DISTRESS_SIGNAL = "distress_signal"
+    SAFETY_CHECK = "safety_check"
+
+class GuestSafetySeverity(str, enum.Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+    EMERGENCY = "emergency"
+
+class ResolutionStatus(str, enum.Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    RESOLVED = "resolved"
+    ESCALATED = "escalated"
+
+class ShiftType(str, enum.Enum):
+    DAY_SHIFT = "day_shift"
+    EVENING_SHIFT = "evening_shift"
+    NIGHT_SHIFT = "night_shift"
+    CUSTOM = "custom"
+
+class HandoverStatus(str, enum.Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    ACKNOWLEDGED = "acknowledged"
+
+class SensorType(str, enum.Enum):
+    TEMPERATURE = "temperature"
+    HUMIDITY = "humidity"
+    SMOKE = "smoke"
+    WATER = "water"
+    GAS = "gas"
+    AIR_QUALITY = "air_quality"
+    PRESSURE = "pressure"
+    VIBRATION = "vibration"
+
+class CybersecurityThreatType(str, enum.Enum):
+    PHISHING = "phishing"
+    MALWARE = "malware"
+    DDOS = "ddos"
+    UNAUTHORIZED_ACCESS = "unauthorized_access"
+    DATA_BREACH = "data_breach"
+    RANSOMWARE = "ransomware"
+
+class ThreatSeverity(str, enum.Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class LockerStatus(str, enum.Enum):
+    AVAILABLE = "available"
+    OCCUPIED = "occupied"
+    MAINTENANCE = "maintenance"
+    OUT_OF_SERVICE = "out_of_service"
+
+class ParkingStatus(str, enum.Enum):
+    AVAILABLE = "available"
+    OCCUPIED = "occupied"
+    RESERVED = "reserved"
+    MAINTENANCE = "maintenance"
+
+class PackageStatus(str, enum.Enum):
+    PENDING = "pending"
+    RECEIVED = "received"
+    NOTIFIED = "notified"
+    DELIVERED = "delivered"
+    EXPIRED = "expired"
+
+class LostFoundStatus(str, enum.Enum):
+    LOST = "lost"
+    FOUND = "found"
+    CLAIMED = "claimed"
+    DONATED = "donated"
+
+class VisitorStatus(str, enum.Enum):
+    EXPECTED = "expected"
+    ARRIVED = "arrived"
+    CHECKED_IN = "checked_in"
+    CHECKED_OUT = "checked_out"
+    DENIED = "denied"
+
 # Base schemas
 class BaseSchema(BaseModel):
     class Config:
@@ -198,7 +287,6 @@ class PatrolBase(BaseModel):
 class PatrolCreate(PatrolBase):
     property_id: UUID
     guard_id: UUID
-    observations: Optional[str] = None
 
 class PatrolUpdate(BaseModel):
     patrol_type: Optional[PatrolType] = None
@@ -307,6 +395,19 @@ class EmergencyAlertResponse(BaseModel):
     response_time: Optional[float] = None
 
 # Access Control schemas
+class AccessControlEventCreate(BaseModel):
+    property_id: UUID
+    user_id: Optional[UUID] = None
+    guest_id: Optional[UUID] = None
+    access_point: str
+    access_method: str
+    event_type: str
+    location: Dict[str, Any]
+    device_info: Optional[Dict[str, Any]] = None
+    is_authorized: bool
+    alert_triggered: bool = False
+    photo_capture: Optional[str] = None
+
 class AccessControlEventResponse(BaseModel):
     event_id: UUID
     property_id: UUID
@@ -323,6 +424,360 @@ class AccessControlEventResponse(BaseModel):
     photo_capture: Optional[str] = None
     user_name: Optional[str] = None
     guest_name: Optional[str] = None
+
+class DigitalKeyCreate(BaseModel):
+    user_id: Optional[UUID] = None
+    guest_id: Optional[UUID] = None
+    property_id: UUID
+    access_points: List[str]
+    validity_hours: int = 24
+
+class DigitalKeyResponse(BaseModel):
+    key_id: str
+    key_token: str
+    user_id: Optional[UUID] = None
+    guest_id: Optional[UUID] = None
+    property_id: UUID
+    access_points: List[str]
+    created_at: datetime
+    expires_at: datetime
+    is_active: bool
+
+# Guest Safety schemas
+class GuestSafetyEventCreate(BaseModel):
+    property_id: UUID
+    guest_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    event_type: GuestSafetyEventType
+    severity_level: GuestSafetySeverity = GuestSafetySeverity.MEDIUM
+    location: Dict[str, Any]
+    description: Optional[str] = None
+    coordinates: Optional[Dict[str, Any]] = None
+    device_info: Optional[Dict[str, Any]] = None
+    emergency_contacts_notified: bool = False
+    response_time_minutes: Optional[float] = None
+    resolution_status: ResolutionStatus = ResolutionStatus.PENDING
+
+class GuestSafetyEventResponse(BaseModel):
+    event_id: UUID
+    property_id: UUID
+    guest_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    event_type: GuestSafetyEventType
+    severity_level: GuestSafetySeverity
+    timestamp: datetime
+    location: Dict[str, Any]
+    description: Optional[str] = None
+    coordinates: Optional[Dict[str, Any]] = None
+    device_info: Optional[Dict[str, Any]] = None
+    emergency_contacts_notified: bool
+    response_time_minutes: Optional[float] = None
+    resolution_status: ResolutionStatus
+
+class EmergencyContactCreate(BaseModel):
+    guest_id: UUID
+    name: str
+    relationship: str
+    phone: str
+    email: Optional[str] = None
+    is_primary: bool = False
+
+# IoT Environmental schemas
+class IoTEnvironmentalDataCreate(BaseModel):
+    property_id: UUID
+    sensor_id: str
+    sensor_type: SensorType
+    location: Dict[str, Any]
+    temperature: Optional[float] = None
+    humidity: Optional[float] = None
+    air_quality: Optional[float] = None
+    smoke_level: Optional[float] = None
+    water_level: Optional[float] = None
+    gas_level: Optional[float] = None
+    pressure: Optional[float] = None
+    vibration: Optional[float] = None
+    battery_level: Optional[float] = None
+    signal_strength: Optional[float] = None
+
+class IoTEnvironmentalDataResponse(BaseModel):
+    data_id: UUID
+    property_id: UUID
+    sensor_id: str
+    sensor_type: SensorType
+    location: Dict[str, Any]
+    timestamp: datetime
+    temperature: Optional[float] = None
+    humidity: Optional[float] = None
+    air_quality: Optional[float] = None
+    smoke_level: Optional[float] = None
+    water_level: Optional[float] = None
+    gas_level: Optional[float] = None
+    pressure: Optional[float] = None
+    vibration: Optional[float] = None
+    battery_level: Optional[float] = None
+    signal_strength: Optional[float] = None
+    alerts_triggered: Optional[List[str]] = None
+    status: str
+
+class SensorAlertCreate(BaseModel):
+    property_id: UUID
+    sensor_id: str
+    alert_type: str
+    severity: ThreatSeverity = ThreatSeverity.MEDIUM
+    description: str
+    location: Dict[str, Any]
+
+# Digital Handover schemas
+class DigitalHandoverCreate(BaseModel):
+    property_id: UUID
+    from_user_id: UUID
+    to_user_id: UUID
+    shift_type: ShiftType
+    priority_alerts: Optional[List[str]] = None
+    pending_incidents: Optional[List[str]] = None
+    active_patrols: Optional[List[str]] = None
+    system_status: Optional[Dict[str, Any]] = None
+    notes: Optional[str] = None
+
+class DigitalHandoverResponse(BaseModel):
+    handover_id: UUID
+    property_id: UUID
+    from_user_id: UUID
+    to_user_id: UUID
+    shift_type: ShiftType
+    handover_time: datetime
+    ai_briefing: Optional[str] = None
+    priority_alerts: Optional[List[str]] = None
+    pending_incidents: Optional[List[str]] = None
+    active_patrols: Optional[List[str]] = None
+    system_status: Optional[Dict[str, Any]] = None
+    notes: Optional[str] = None
+    status: HandoverStatus
+
+class ShiftBriefingResponse(BaseModel):
+    briefing_id: str
+    property_id: UUID
+    shift_type: ShiftType
+    generated_at: datetime
+    summary: str
+    priority_items: List[str]
+    active_incidents: List[Dict[str, Any]]
+    pending_patrols: List[Dict[str, Any]]
+    system_alerts: List[Dict[str, Any]]
+    recommendations: List[str]
+
+# Cybersecurity schemas
+class CybersecurityEventCreate(BaseModel):
+    property_id: UUID
+    threat_type: CybersecurityThreatType
+    severity: ThreatSeverity = ThreatSeverity.MEDIUM
+    source_ip: Optional[str] = None
+    target_system: Optional[str] = None
+    description: str
+    threat_indicators: Optional[Dict[str, Any]] = None
+    ai_confidence: Optional[float] = None
+
+class CybersecurityEventResponse(BaseModel):
+    event_id: UUID
+    property_id: UUID
+    threat_type: CybersecurityThreatType
+    severity: ThreatSeverity
+    timestamp: datetime
+    source_ip: Optional[str] = None
+    target_system: Optional[str] = None
+    description: str
+    threat_indicators: Optional[Dict[str, Any]] = None
+    ai_confidence: Optional[float] = None
+    blocked: bool
+    response_time_seconds: Optional[float] = None
+    resolved_at: Optional[datetime] = None
+    resolved_by: Optional[UUID] = None
+    notes: Optional[str] = None
+
+# Smart Locker schemas
+class SmartLockerCreate(BaseModel):
+    property_id: UUID
+    locker_number: str
+    location: Dict[str, Any]
+    size: str
+    current_guest_id: Optional[UUID] = None
+
+class SmartLockerResponse(BaseModel):
+    locker_id: UUID
+    property_id: UUID
+    locker_number: str
+    location: Dict[str, Any]
+    status: LockerStatus
+    size: str
+    current_guest_id: Optional[UUID] = None
+    check_in_time: Optional[datetime] = None
+    check_out_time: Optional[datetime] = None
+    iot_sensor_data: Optional[Dict[str, Any]] = None
+    last_maintenance: Optional[datetime] = None
+    next_maintenance: Optional[datetime] = None
+    battery_level: Optional[float] = None
+    signal_strength: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+
+# Smart Parking schemas
+class SmartParkingCreate(BaseModel):
+    property_id: UUID
+    spot_number: str
+    location: Dict[str, Any]
+    spot_type: str
+    current_guest_id: Optional[UUID] = None
+
+class SmartParkingResponse(BaseModel):
+    parking_id: UUID
+    property_id: UUID
+    spot_number: str
+    location: Dict[str, Any]
+    status: ParkingStatus
+    spot_type: str
+    current_guest_id: Optional[UUID] = None
+    check_in_time: Optional[datetime] = None
+    check_out_time: Optional[datetime] = None
+    iot_sensor_data: Optional[Dict[str, Any]] = None
+    last_maintenance: Optional[datetime] = None
+    next_maintenance: Optional[datetime] = None
+    battery_level: Optional[float] = None
+    signal_strength: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+
+# Banned Individual schemas
+class BannedIndividualCreate(BaseModel):
+    property_id: UUID
+    first_name: str
+    last_name: str
+    date_of_birth: Optional[datetime] = None
+    photo_url: Optional[str] = None
+    facial_recognition_data: Optional[Dict[str, Any]] = None
+    reason_for_ban: str
+    ban_end_date: Optional[datetime] = None
+    is_permanent: bool = False
+    notes: Optional[str] = None
+
+class BannedIndividualResponse(BaseModel):
+    banned_id: UUID
+    property_id: UUID
+    first_name: str
+    last_name: str
+    date_of_birth: Optional[datetime] = None
+    photo_url: Optional[str] = None
+    facial_recognition_data: Optional[Dict[str, Any]] = None
+    reason_for_ban: str
+    ban_start_date: datetime
+    ban_end_date: Optional[datetime] = None
+    is_permanent: bool
+    added_by: UUID
+    detection_count: int
+    last_detection: Optional[datetime] = None
+    notes: Optional[str] = None
+    is_active: bool
+
+# Package schemas
+class PackageCreate(BaseModel):
+    property_id: UUID
+    guest_id: Optional[UUID] = None
+    tracking_number: Optional[str] = None
+    sender_name: Optional[str] = None
+    sender_contact: Optional[str] = None
+    description: Optional[str] = None
+    size: Optional[str] = None
+    weight: Optional[float] = None
+    location: Optional[Dict[str, Any]] = None
+    notes: Optional[str] = None
+    photo_url: Optional[str] = None
+
+class PackageResponse(BaseModel):
+    package_id: UUID
+    property_id: UUID
+    guest_id: Optional[UUID] = None
+    tracking_number: Optional[str] = None
+    sender_name: Optional[str] = None
+    sender_contact: Optional[str] = None
+    description: Optional[str] = None
+    size: Optional[str] = None
+    weight: Optional[float] = None
+    status: PackageStatus
+    received_at: datetime
+    notified_at: Optional[datetime] = None
+    delivered_at: Optional[datetime] = None
+    delivered_to: Optional[str] = None
+    location: Optional[Dict[str, Any]] = None
+    notes: Optional[str] = None
+    photo_url: Optional[str] = None
+    received_by: Optional[UUID] = None
+
+# Lost & Found schemas
+class LostFoundItemCreate(BaseModel):
+    property_id: UUID
+    item_type: str
+    description: str
+    location_found: Optional[Dict[str, Any]] = None
+    location_lost: Optional[Dict[str, Any]] = None
+    lost_date: Optional[datetime] = None
+    photo_url: Optional[str] = None
+    notes: Optional[str] = None
+    value_estimate: Optional[float] = None
+
+class LostFoundItemResponse(BaseModel):
+    item_id: UUID
+    property_id: UUID
+    item_type: str
+    description: str
+    location_found: Optional[Dict[str, Any]] = None
+    location_lost: Optional[Dict[str, Any]] = None
+    found_date: datetime
+    lost_date: Optional[datetime] = None
+    status: LostFoundStatus
+    photo_url: Optional[str] = None
+    ai_matched_guest_id: Optional[UUID] = None
+    claimed_by_guest_id: Optional[UUID] = None
+    claimed_at: Optional[datetime] = None
+    found_by: Optional[UUID] = None
+    notes: Optional[str] = None
+    value_estimate: Optional[float] = None
+
+# Visitor schemas
+class VisitorCreate(BaseModel):
+    property_id: UUID
+    guest_id: Optional[UUID] = None
+    first_name: str
+    last_name: str
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    purpose: Optional[str] = None
+    expected_arrival: Optional[datetime] = None
+    photo_url: Optional[str] = None
+    facial_recognition_data: Optional[Dict[str, Any]] = None
+    access_level: Optional[str] = None
+    escorted_by: Optional[UUID] = None
+    notes: Optional[str] = None
+
+class VisitorResponse(BaseModel):
+    visitor_id: UUID
+    property_id: UUID
+    guest_id: Optional[UUID] = None
+    first_name: str
+    last_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    purpose: Optional[str] = None
+    expected_arrival: Optional[datetime] = None
+    actual_arrival: Optional[datetime] = None
+    check_out: Optional[datetime] = None
+    status: VisitorStatus
+    photo_url: Optional[str] = None
+    facial_recognition_data: Optional[Dict[str, Any]] = None
+    access_level: Optional[str] = None
+    escorted_by: Optional[UUID] = None
+    notes: Optional[str] = None
+    created_by: UUID
 
 # Guest schemas
 class GuestBase(BaseModel):
@@ -384,4 +839,13 @@ class UserActivityResponse(BaseModel):
     session_id: Optional[UUID] = None
     duration: Optional[int] = None
     user_name: Optional[str] = None
-    property_name: Optional[str] = None 
+    property_name: Optional[str] = None
+
+class VisitorLogCreate(BaseModel):
+    visitor_id: str
+    property_id: str
+    event_type: str
+    timestamp: Optional[datetime] = None
+    location: Optional[str] = None
+    processed_by: Optional[str] = None
+    notes: Optional[str] = None 

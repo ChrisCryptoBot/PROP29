@@ -1,1 +1,0 @@
-# security_service package for patrols, incidents, and user management 

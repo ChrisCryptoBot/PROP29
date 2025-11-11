@@ -1,0 +1,1380 @@
+🏗️ Enhanced PROPER 2.9 Modular Architecture
+🌟 Enhanced Architecture Tree
+frontend/src/
+├── app/                                # App-level configuration
+│   ├── App.tsx                         # Root App component
+│   ├── providers/                      # Global providers
+│   │   ├── AuthProvider.tsx
+│   │   ├── ThemeProvider.tsx
+│   │   ├── ModuleProvider.tsx          # NEW: Module loading provider
+│   │   ├── ErrorTrackingProvider.tsx   # NEW: Global error tracking
+│   │   └── index.ts
+│   ├── router/                         # Enhanced routing system
+│   │   ├── AppRouter.tsx
+│   │   ├── ModuleRouter.tsx            # NEW: Dynamic module routing
+│   │   ├── routes.ts
+│   │   ├── guards.ts                   # NEW: Route guards
+│   │   └── index.ts
+│   ├── store/                          # Global state (Redux Toolkit)
+│   │   ├── rootStore.ts                # Enhanced with module state
+│   │   ├── authSlice.ts
+│   │   ├── themeSlice.ts
+│   │   ├── notificationSlice.ts
+│   │   ├── moduleSlice.ts              # NEW: Module loading state
+│   │   └── index.ts
+│   └── registry/                       # NEW: Module registry system
+│       ├── ModuleRegistry.ts
+│       ├── moduleManifests.ts
+│       └── index.ts
+├── shared/                             # Enhanced shared resources
+│   ├── components/                     # Shared UI components
+│   │   ├── base/                       # Basic building blocks
+│   │   │   ├── Button/
+│   │   │   │   ├── Button.tsx
+│   │   │   │   ├── Button.test.tsx
+│   │   │   │   ├── Button.stories.tsx
+│   │   │   │   ├── Button.module.css
+│   │   │   │   ├── Button.types.ts     # NEW: Component-specific types
+│   │   │   │   └── index.ts
+│   │   │   ├── Input/
+│   │   │   ├── Modal/
+│   │   │   ├── ErrorBoundary/          # ENHANCED: Module-aware error handling
+│   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   ├── ModuleErrorFallback.tsx
+│   │   │   │   └── index.ts
+│   │   │   └── index.ts
+│   │   ├── composite/                  # Complex shared components
+│   │   │   ├── DataTable/
+│   │   │   │   ├── DataTable.tsx
+│   │   │   │   ├── DataTableProvider.tsx  # NEW: Context for complex components
+│   │   │   │   ├── hooks/
+│   │   │   │   │   ├── useDataTable.ts
+│   │   │   │   │   ├── useSorting.ts
+│   │   │   │   │   └── index.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── SearchFilter/
+│   │   │   ├── ModuleLoader/           # NEW: Dynamic module loading
+│   │   │   └── index.ts
+│   │   ├── layout/                     # Layout components
+│   │   │   ├── Header/
+│   │   │   ├── Sidebar/
+│   │   │   │   ├── Sidebar.tsx
+│   │   │   │   ├── ModuleNavigation.tsx  # NEW: Dynamic module nav
+│   │   │   │   └── index.ts
+│   │   │   ├── PageContainer/
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   ├── hooks/                          # Enhanced shared hooks
+│   │   ├── useApi.ts                   # ENHANCED: Unified API client
+│   │   ├── useLocalStorage.ts
+│   │   ├── useDebounce.ts
+│   │   ├── useModuleState.ts           # NEW: Module state management
+│   │   ├── useModuleEvents.ts          # NEW: Event bus integration
+│   │   ├── usePerformanceMonitor.ts    # NEW: Performance tracking
+│   │   └── index.ts
+│   ├── services/                       # Enhanced services
+│   │   ├── api/
+│   │   │   ├── ApiClient.ts            # ENHANCED: Unified client
+│   │   │   ├── QueryKeyFactory.ts      # NEW: Consistent query keys
+│   │   │   ├── cacheStrategies.ts      # NEW: Cache management
+│   │   │   ├── endpoints.ts
+│   │   │   └── index.ts
+│   │   ├── auth/
+│   │   │   ├── authService.ts
+│   │   │   ├── permissionService.ts    # NEW: Module permissions
+│   │   │   └── index.ts
+│   │   ├── events/                     # NEW: Module event system
+│   │   │   ├── ModuleEventBus.ts
+│   │   │   ├── eventTypes.ts
+│   │   │   └── index.ts
+│   │   ├── performance/                # NEW: Performance monitoring
+│   │   │   ├── PerformanceMonitor.ts
+│   │   │   ├── moduleMetrics.ts
+│   │   │   └── index.ts
+│   │   └── index.ts
+│   ├── utils/                          # Enhanced utilities
+│   │   ├── formatters.ts
+│   │   ├── validators.ts
+│   │   ├── constants.ts
+│   │   ├── moduleHelpers.ts            # NEW: Module utility functions
+│   │   ├── performanceUtils.ts         # NEW: Performance utilities
+│   │   └── index.ts
+│   ├── types/                          # Enhanced type system
+│   │   ├── api.types.ts
+│   │   ├── auth.types.ts
+│   │   ├── common.types.ts
+│   │   ├── module.types.ts             # NEW: Module system types
+│   │   ├── events.types.ts             # NEW: Event system types
+│   │   └── index.ts
+│   ├── styles/                         # Enhanced styling system
+│   │   ├── globals.css
+│   │   ├── variables.css
+│   │   ├── components.css
+│   │   ├── designTokens.ts             # NEW: Design system tokens
+│   │   ├── moduleThemes.ts             # NEW: Module theming
+│   │   └── themes/
+│   │       ├── light.css
+│   │       ├── dark.css
+│   │       └── hotel-brand.css         # NEW: Brand-specific themes
+│   └── constants/                      # NEW: Shared constants
+│       ├── moduleConstants.ts
+│       ├── apiConstants.ts
+│       └── index.ts
+├── modules/                            # Enhanced feature modules
+│   ├── _template/                      # NEW: Module template
+│   │   ├── README.md
+│   │   ├── index.ts
+│   │   ├── Template.tsx
+│   │   ├── Template.test.tsx
+│   │   ├── Template.module.css
+│   │   ├── manifest.ts                 # NEW: Module manifest
+│   │   ├── types/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── store/
+│   │   ├── utils/
+│   │   ├── routes/                     # NEW: Module routing
+│   │   ├── guards/                     # NEW: Module-specific guards
+│   │   ├── tabs/
+│   │   ├── modals/
+│   │   └── __tests__/
+│   ├── AccessControl/                  # Enhanced example module
+│   │   ├── index.ts                    # Enhanced barrel export
+│   │   ├── manifest.ts                 # NEW: Module manifest
+│   │   ├── AccessControl.tsx           # Enhanced main component
+│   │   ├── AccessControl.test.tsx
+│   │   ├── AccessControl.module.css
+│   │   ├── types/                      # Module-specific types
+│   │   │   ├── accessControl.types.ts
+│   │   │   ├── device.types.ts
+│   │   │   ├── events.types.ts
+│   │   │   └── index.ts
+│   │   ├── components/                 # Module components
+│   │   │   ├── DevicePanel/
+│   │   │   │   ├── DevicePanel.tsx
+│   │   │   │   ├── DevicePanel.test.tsx
+│   │   │   │   ├── DevicePanel.module.css
+│   │   │   │   ├── DevicePanel.types.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── AccessLog/
+│   │   │   ├── DeviceStatus/           # NEW: Real-time status
+│   │   │   └── index.ts
+│   │   ├── hooks/                      # Enhanced hooks
+│   │   │   ├── useAccessControl.ts
+│   │   │   ├── useDeviceStatus.ts
+│   │   │   ├── useAccessEvents.ts      # NEW: Event handling
+│   │   │   ├── useDeviceMetrics.ts     # NEW: Performance metrics
+│   │   │   └── index.ts
+│   │   ├── services/                   # Enhanced services
+│   │   │   ├── accessControlApi.ts
+│   │   │   ├── deviceApi.ts
+│   │   │   ├── eventHandlers.ts        # NEW: Event handling
+│   │   │   └── index.ts
+│   │   ├── store/                      # Enhanced state management
+│   │   │   ├── accessControlSlice.ts
+│   │   │   ├── deviceSlice.ts
+│   │   │   ├── selectors.ts            # NEW: Reusable selectors
+│   │   │   └── index.ts
+│   │   ├── utils/                      # Module utilities
+│   │   │   ├── deviceHelpers.ts
+│   │   │   ├── constants.ts
+│   │   │   ├── validators.ts           # NEW: Module validation
+│   │   │   └── index.ts
+│   │   ├── routes/                     # NEW: Module routing
+│   │   │   ├── AccessControl.routes.tsx
+│   │   │   ├── routeConfig.ts
+│   │   │   └── index.ts
+│   │   ├── guards/                     # NEW: Route guards
+│   │   │   ├── DeviceAccessGuard.tsx
+│   │   │   └── index.ts
+│   │   ├── tabs/                       # Module tabs
+│   │   │   ├── OverviewTab/
+│   │   │   ├── DevicesTab/
+│   │   │   ├── LogsTab/
+│   │   │   ├── AnalyticsTab/           # NEW: Module analytics
+│   │   │   └── index.ts
+│   │   ├── modals/                     # Module modals
+│   │   │   ├── AddDeviceModal/
+│   │   │   ├── EditDeviceModal/
+│   │   │   ├── ConfirmDeleteModal/     # NEW: Consistent modals
+│   │   │   └── index.ts
+│   │   └── __tests__/                  # Enhanced testing
+│   │       ├── AccessControl.integration.test.tsx
+│   │       ├── AccessControl.e2e.test.tsx
+│   │       ├── __mocks__/
+│   │       └── testUtils.ts
+│   ├── LostAndFound/                   # To be migrated
+│   ├── SmartParking/                   # To be migrated
+│   ├── Admin/                          # To be migrated
+│   └── index.ts                        # Module registry
+├── assets/                             # Static assets
+│   ├── images/
+│   ├── icons/
+│   ├── fonts/
+│   └── brand/                          # NEW: Brand assets
+│       ├── logos/
+│       └── themes/
+├── config/                             # NEW: Configuration
+│   ├── moduleConfig.ts
+│   ├── environmentConfig.ts
+│   └── featureFlags.ts
+├── __tests__/                          # Global test utilities
+│   ├── setup.ts
+│   ├── mocks/
+│   │   ├── moduleRegistry.mock.ts      # NEW: Module mocking
+│   │   └── api.mock.ts
+│   ├── utils/
+│   │   ├── testUtils.tsx
+│   │   ├── moduleTestUtils.tsx         # NEW: Module testing
+│   │   └── performanceTestUtils.ts     # NEW: Performance testing
+│   └── fixtures/                       # NEW: Test data
+│       ├── modules/
+│       └── api/
+└── scripts/                            # Enhanced automation
+    ├── create-module.js                # Enhanced module generator
+    ├── migrate-module.js               # NEW: Migration helper
+    ├── validate-modules.js             # NEW: Module validation
+    ├── performance-audit.js            # NEW: Performance auditing
+    └── bundle-analyzer.js              # NEW: Bundle analysis
+
+🚀 Enhanced Key Components
+1. Module Registry System
+typescript// shared/registry/ModuleRegistry.ts
+export interface ModuleManifest {
+  name: string;
+  displayName: string;
+  version: string;
+  description: string;
+  dependencies: string[];
+  permissions: Permission[];
+  routes: RouteConfig[];
+  lazy: () => Promise<{ default: React.ComponentType }>;
+  preload?: () => Promise<void>;
+  metadata: {
+    category: string;
+    tags: string[];
+    author: string;
+    bundle: {
+      maxSize: string; // e.g., "500KB"
+      loadPriority: 'high' | 'medium' | 'low';
+    };
+  };
+}
+
+export class ModuleRegistry {
+  private static modules = new Map<string, ModuleManifest>();
+  private static loadingStates = new Map<string, Promise<any>>();
+  
+  static async register(manifest: ModuleManifest) {
+    // Validate dependencies
+    await this.validateDependencies(manifest.dependencies);
+    
+    // Validate permissions
+    this.validatePermissions(manifest.permissions);
+    
+    // Register module
+    this.modules.set(manifest.name, manifest);
+    
+    console.log(`✅ Module registered: ${manifest.name} v${manifest.version}`);
+  }
+
+  static async loadModule(name: string): Promise<React.ComponentType> {
+    if (this.loadingStates.has(name)) {
+      return this.loadingStates.get(name)!;
+    }
+
+    const manifest = this.modules.get(name);
+    if (!manifest) {
+      throw new Error(`Module not found: ${name}`);
+    }
+
+    // Check permissions
+    if (!this.hasRequiredPermissions(manifest.permissions)) {
+      throw new Error(`Insufficient permissions for module: ${name}`);
+    }
+
+    const loadPromise = this.performModuleLoad(manifest);
+    this.loadingStates.set(name, loadPromise);
+    
+    return loadPromise;
+  }
+
+  private static async performModuleLoad(manifest: ModuleManifest) {
+    const startTime = performance.now();
+    
+    try {
+      // Preload if specified
+      if (manifest.preload) {
+        await manifest.preload();
+      }
+
+      // Load the module
+      const module = await manifest.lazy();
+      
+      // Performance tracking
+      const loadTime = performance.now() - startTime;
+      PerformanceMonitor.recordModuleLoad(manifest.name, loadTime);
+      
+      return module.default;
+    } catch (error) {
+      console.error(`Failed to load module ${manifest.name}:`, error);
+      throw error;
+    }
+  }
+
+  static getAvailableModules(): ModuleManifest[] {
+    return Array.from(this.modules.values())
+      .filter(module => this.hasRequiredPermissions(module.permissions));
+  }
+
+  static getModulesByCategory(category: string): ModuleManifest[] {
+    return this.getAvailableModules()
+      .filter(module => module.metadata.category === category);
+  }
+
+  private static async validateDependencies(dependencies: string[]) {
+    for (const dep of dependencies) {
+      if (!this.modules.has(dep)) {
+        throw new Error(`Missing dependency: ${dep}`);
+      }
+    }
+  }
+
+  private static validatePermissions(permissions: Permission[]): boolean {
+    return permissions.every(permission => 
+      AuthService.hasPermission(permission)
+    );
+  }
+
+  private static hasRequiredPermissions(permissions: Permission[]): boolean {
+    return permissions.every(permission => 
+      AuthService.hasPermission(permission)
+    );
+  }
+}
+2. Enhanced State Management
+typescript// app/store/rootStore.ts
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { authSlice } from './authSlice';
+import { themeSlice } from './themeSlice';
+import { notificationSlice } from './notificationSlice';
+import { moduleSlice } from './moduleSlice';
+
+// Global state only
+const globalReducers = {
+  auth: authSlice.reducer,
+  theme: themeSlice.reducer,
+  notifications: notificationSlice.reducer,
+  moduleSystem: moduleSlice.reducer,
+};
+
+// Module state (dynamically loaded)
+const moduleReducers = {};
+
+// Dynamic module reducer registration
+export const registerModuleReducer = (moduleName: string, reducer: any) => {
+  moduleReducers[moduleName] = reducer;
+  // Hot reload the store with new reducer
+  store.replaceReducer(combineReducers({
+    ...globalReducers,
+    modules: combineReducers(moduleReducers)
+  }));
+};
+
+export const store = configureStore({
+  reducer: combineReducers({
+    ...globalReducers,
+    modules: combineReducers(moduleReducers)
+  }),
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST'],
+      },
+    }),
+  devTools: process.env.NODE_ENV !== 'production',
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+// Module state selectors
+export const createModuleSelector = <T>(moduleName: string) => 
+  (state: RootState): T => state.modules[moduleName] as T;
+3. Module Event Bus
+typescript// shared/services/events/ModuleEventBus.ts
+export interface ModuleEvent {
+  type: string;
+  module: string;
+  data: any;
+  timestamp: number;
+  id: string;
+}
+
+export class ModuleEventBus {
+  private static instance: ModuleEventBus;
+  private listeners = new Map<string, Array<(event: ModuleEvent) => void>>();
+  private eventHistory: ModuleEvent[] = [];
+  private readonly maxHistorySize = 100;
+
+  static getInstance(): ModuleEventBus {
+    if (!ModuleEventBus.instance) {
+      ModuleEventBus.instance = new ModuleEventBus();
+    }
+    return ModuleEventBus.instance;
+  }
+
+  emit(type: string, data: any, moduleName: string) {
+    const event: ModuleEvent = {
+      type,
+      module: moduleName,
+      data,
+      timestamp: Date.now(),
+      id: crypto.randomUUID()
+    };
+
+    // Store in history
+    this.eventHistory.push(event);
+    if (this.eventHistory.length > this.maxHistorySize) {
+      this.eventHistory.shift();
+    }
+
+    // Notify listeners
+    const eventListeners = this.listeners.get(type) || [];
+    const globalListeners = this.listeners.get('*') || [];
+    
+    [...eventListeners, ...globalListeners].forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error(`Event listener error for ${type}:`, error);
+      }
+    });
+
+    // Log for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📡 Module Event: ${type}`, { module: moduleName, data });
+    }
+  }
+
+  subscribe(eventType: string, listener: (event: ModuleEvent) => void): () => void {
+    if (!this.listeners.has(eventType)) {
+      this.listeners.set(eventType, []);
+    }
+    
+    this.listeners.get(eventType)!.push(listener);
+
+    // Return unsubscribe function
+    return () => {
+      const listeners = this.listeners.get(eventType);
+      if (listeners) {
+        const index = listeners.indexOf(listener);
+        if (index > -1) {
+          listeners.splice(index, 1);
+        }
+      }
+    };
+  }
+
+  getEventHistory(moduleName?: string): ModuleEvent[] {
+    if (moduleName) {
+      return this.eventHistory.filter(event => event.module === moduleName);
+    }
+    return [...this.eventHistory];
+  }
+
+  clear() {
+    this.eventHistory = [];
+    this.listeners.clear();
+  }
+}
+
+// shared/hooks/useModuleEvents.ts
+export const useModuleEvents = (moduleName: string) => {
+  const eventBus = ModuleEventBus.getInstance();
+
+  const emit = useCallback((type: string, data: any) => {
+    eventBus.emit(type, data, moduleName);
+  }, [moduleName, eventBus]);
+
+  const subscribe = useCallback((eventType: string, handler: (event: ModuleEvent) => void) => {
+    return eventBus.subscribe(eventType, handler);
+  }, [eventBus]);
+
+  return { emit, subscribe };
+};
+4. Enhanced API Client
+typescript// shared/services/api/ApiClient.ts
+export class ApiClient {
+  private static instance: ApiClient;
+  private queryClient: QueryClient;
+  private baseURL: string;
+
+  constructor() {
+    this.baseURL = process.env.REACT_APP_API_BASE_URL || '/api/v1';
+    this.queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 30000,
+          cacheTime: 300000,
+          retry: (failureCount, error: any) => {
+            if (error?.status === 404 || error?.status === 401) {
+              return false;
+            }
+            return failureCount < 3;
+          },
+        },
+        mutations: {
+          retry: 1,
+        }
+      }
+    });
+  }
+
+  static getInstance(): ApiClient {
+    if (!ApiClient.instance) {
+      ApiClient.instance = new ApiClient();
+    }
+    return ApiClient.instance;
+  }
+
+  // Module-specific API factory
+  createModuleApi(moduleName: string) {
+    const baseUrl = `${this.baseURL}/${moduleName}`;
+    
+    return {
+      // GET with query key management
+      get: <T>(endpoint: string, params?: any): Promise<T> => {
+        const queryKey = QueryKeyFactory.create(moduleName, endpoint, params);
+        return this.queryClient.fetchQuery({
+          queryKey,
+          queryFn: () => this.request('GET', `${baseUrl}${endpoint}`, { params })
+        });
+      },
+
+      // GET with React Query integration
+      useQuery: <T>(endpoint: string, params?: any, options?: any) => {
+        const queryKey = QueryKeyFactory.create(moduleName, endpoint, params);
+        return useQuery({
+          queryKey,
+          queryFn: () => this.request('GET', `${baseUrl}${endpoint}`, { params }),
+          ...options
+        });
+      },
+
+      // POST with optimistic updates
+      post: <T>(endpoint: string, data?: any): Promise<T> =>
+        this.request('POST', `${baseUrl}${endpoint}`, { data }),
+
+      // PUT with cache invalidation
+      put: <T>(endpoint: string, data?: any): Promise<T> => {
+        return this.request('PUT', `${baseUrl}${endpoint}`, { data }).then(result => {
+          // Invalidate related queries
+          this.queryClient.invalidateQueries({ 
+            queryKey: [moduleName] 
+          });
+          return result;
+        });
+      },
+
+      // DELETE with cache removal
+      delete: <T>(endpoint: string): Promise<T> => {
+        return this.request('DELETE', `${baseUrl}${endpoint}`).then(result => {
+          this.queryClient.invalidateQueries({ 
+            queryKey: [moduleName] 
+          });
+          return result;
+        });
+      },
+
+      // Bulk operations
+      bulk: {
+        get: async <T>(endpoints: string[]): Promise<T[]> => {
+          return Promise.all(
+            endpoints.map(endpoint => 
+              this.request('GET', `${baseUrl}${endpoint}`)
+            )
+          );
+        },
+        
+        post: async <T>(operations: Array<{endpoint: string, data: any}>): Promise<T[]> => {
+          return Promise.all(
+            operations.map(op => 
+              this.request('POST', `${baseUrl}${op.endpoint}`, { data: op.data })
+            )
+          );
+        }
+      },
+
+      // Cache management
+      cache: {
+        invalidate: (endpoint?: string) => {
+          const queryKey = endpoint 
+            ? QueryKeyFactory.create(moduleName, endpoint)
+            : [moduleName];
+          this.queryClient.invalidateQueries({ queryKey });
+        },
+        
+        prefetch: (endpoint: string, params?: any) => {
+          const queryKey = QueryKeyFactory.create(moduleName, endpoint, params);
+          return this.queryClient.prefetchQuery({
+            queryKey,
+            queryFn: () => this.request('GET', `${baseUrl}${endpoint}`, { params })
+          });
+        },
+
+        setData: <T>(endpoint: string, data: T, params?: any) => {
+          const queryKey = QueryKeyFactory.create(moduleName, endpoint, params);
+          this.queryClient.setQueryData(queryKey, data);
+        }
+      }
+    };
+  }
+
+  private async request(method: string, url: string, options: any = {}) {
+    const config = {
+      method,
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${AuthService.getToken()}`,
+        ...options.headers
+      },
+      ...options
+    };
+
+    try {
+      const response = await axios(config);
+      return response.data;
+    } catch (error: any) {
+      // Enhanced error handling
+      if (error.response?.status === 401) {
+        AuthService.logout();
+        window.location.href = '/login';
+      }
+      
+      throw {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        data: error.response?.data
+      };
+    }
+  }
+}
+
+// shared/services/api/QueryKeyFactory.ts
+export class QueryKeyFactory {
+  static create(module: string, endpoint: string, params?: any): string[] {
+    const key = [module, endpoint];
+    
+    if (params) {
+      // Normalize params for consistent cache keys
+      const normalizedParams = this.normalizeParams(params);
+      if (Object.keys(normalizedParams).length > 0) {
+        key.push(normalizedParams);
+      }
+    }
+    
+    return key;
+  }
+
+  private static normalizeParams(params: any): any {
+    if (!params || typeof params !== 'object') return {};
+    
+    // Sort keys for consistent cache keys
+    const sorted = {};
+    Object.keys(params)
+      .sort()
+      .forEach(key => {
+        if (params[key] !== undefined && params[key] !== null) {
+          sorted[key] = params[key];
+        }
+      });
+    
+    return sorted;
+  }
+
+  static getModuleKeys(module: string): string[] {
+    return [module];
+  }
+
+  static getResourceKeys(module: string, resource: string): string[] {
+    return [module, resource];
+  }
+}
+5. Module Manifest Example
+typescript// modules/AccessControl/manifest.ts
+import type { ModuleManifest } from '@shared/registry';
+
+export const accessControlManifest: ModuleManifest = {
+  name: 'AccessControl',
+  displayName: 'Access Control',
+  version: '1.0.0',
+  description: 'Manage building access and security devices',
+  dependencies: [], // No dependencies
+  permissions: [
+    'security.access_control.read',
+    'security.access_control.write',
+    'security.devices.manage'
+  ],
+  routes: [
+    {
+      path: '/access-control',
+      children: [
+        { path: '', component: 'OverviewTab' },
+        { path: 'devices', component: 'DevicesTab' },
+        { path: 'logs', component: 'LogsTab' },
+        { path: 'analytics', component: 'AnalyticsTab' }
+      ]
+    }
+  ],
+  lazy: () => import('./AccessControl'),
+  preload: async () => {
+    // Preload critical data
+    const api = ApiClient.getInstance().createModuleApi('access-control');
+    await api.cache.prefetch('/devices');
+  },
+  metadata: {
+    category: 'security',
+    tags: ['access', 'devices', 'security', 'monitoring'],
+    author: 'PROPER 2.9 Team',
+    bundle: {
+      maxSize: '500KB',
+      loadPriority: 'high'
+    }
+  }
+};
+
+// Auto-register on module import
+ModuleRegistry.register(accessControlManifest);
+
+📋 Complete Implementation Plan
+Phase 1: Foundation Setup (Week 1)
+Day 1-2: Core Infrastructure
+bash# 1. Create new directory structure
+mkdir -p src/{app/{providers,router,store,registry},shared/{components/{base,composite,layout},hooks,services/{api,auth,events,performance},utils,types,styles,constants},modules/_template,config,scripts}
+
+# 2. Set up TypeScript configuration
+json// tsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "paths": {
+      "@app/*": ["app/*"],
+      "@shared/*": ["shared/*"],
+      "@modules/*": ["modules/*"],
+      "@config/*": ["config/*"]
+    },
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  }
+}
+javascript// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@app': path.resolve(__dirname, 'src/app'),
+      '@shared': path.resolve(__dirname, 'src/shared'),
+      '@modules': path.resolve(__dirname, 'src/modules'),
+      '@config': path.resolve(__dirname, 'src/config')
+    }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Split modules into separate chunks
+          if (id.includes('src/modules/')) {
+            const moduleName = id.split('src/modules/')[1].split('/')[0];
+            return `module-${moduleName.toLowerCase()}`;
+          }
+          
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+          
+          if (id.includes('src/shared')) {
+            return 'shared';
+          }
+          
+          return 'main';
+        }
+      }
+    }
+  }
+});
+Day 3-4: Module Registry & Event System
+
+Implement ModuleRegistry class
+Create ModuleEventBus
+Set up performance monitoring
+Create module loading provider
+
+Day 5-7: Enhanced API Client & State Management
+
+Implement unified ApiClient
+Set up enhanced Redux store
+Create query key factory
+Implement module state patterns
+
+Phase 2: Pilot Module Implementation (Week 2)
+Day 1-3: Access Control Module Enhancement
+typescript// modules/AccessControl/AccessControl.tsx - Enhanced version
+import React, { Suspense, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from '@shared/components/base';
+import { PageContainer, LoadingSpinner } from '@shared/components/layout';
+import { useModuleEvents, usePerformanceMonitor } from '@shared/hooks';
+import { OverviewTab, DevicesTab, LogsTab, AnalyticsTab } from './tabs';
+import { AddDeviceModal, EditDeviceModal } from './modals';
+import { useAccessControl } from './hooks';
+import styles from './AccessControl.module.css';
+
+const AccessControl: React.FC = () => {
+  const { emit } = useModuleEvents('AccessControl');
+  const performanceMonitor = usePerformanceMonitor('AccessControl');
+  const { devices, isLoading, error, refreshDevices } = useAccessControl();
+
+  useEffect(() => {
+    performanceMonitor.startTiming('module-load');
+    
+    // Emit module loaded event
+    emit('module.loaded', {
+      deviceCount: devices.length,
+      timestamp: Date.now()
+    });
+
+    performanceMonitor.endTiming('module-load');
+
+    return () => {
+      emit('module.unloaded', { timestamp: Date.now() });
+    };
+  }, []);
+
+  if (isLoading) {
+    return <LoadingSpinner size="large" message="Loading Access Control..." />;
+  }
+
+  if (error) {
+    return (
+      <div className={styles.errorContainer}>
+        <h2>Access Control System Error</h2>
+        <p>{error.message}</p>
+        <button onClick={refreshDevices} className={styles.retryButton}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary 
+      moduleName="AccessControl" 
+      onError={(error, errorInfo) => {
+        emit('module.error', { error: error.message, errorInfo });
+      }}
+    >
+      <PageContainer
+        title="Access Control"
+        subtitle="Manage building access and security devices"
+        className={styles.container}
+      >
+        <div className={styles.content}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route index element={<OverviewTab />} />
+              <Route path="devices" element={<DevicesTab />} />
+              <Route path="logs" element={<LogsTab />} />
+              <Route path="analytics" element={<AnalyticsTab />} />
+            </Routes>
+          </Suspense>
+        </div>
+        
+        {/* Module-specific modals */}
+        <AddDeviceModal />
+        <EditDeviceModal />
+      </PageContainer>
+    </ErrorBoundary>
+  );
+};
+
+export default AccessControl;
+Day 4-5: Enhanced Hooks and Services
+typescript// modules/AccessControl/hooks/useAccessControl.ts - Enhanced version
+import { useCallback } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useModuleEvents, useModuleState } from '@shared/hooks';
+import { ApiClient } from '@shared/services/api';
+import type { AccessControlDevice, AccessEvent } from '../types';
+
+export const useAccessControl = () => {
+  const api = ApiClient.getInstance().createModuleApi('access-control');
+  const { emit } = useModuleEvents('AccessControl');
+  const [moduleState, setModuleState] = useModuleState('AccessControl');
+
+  // Enhanced device query with real-time updates
+  const {
+    data: devices = [],
+    isLoading,
+    error,
+    refetch: refreshDevices
+  } = api.useQuery('/devices', null, {
+    staleTime: 30000,
+    refetchInterval: 60000,
+    onSuccess: (data: AccessControlDevice[]) => {
+      emit('devices.updated', { 
+        deviceCount: data.length,
+        onlineCount: data.filter(d => d.status === 'online').length
+      });
+    },
+    onError: (error: any) => {
+      emit('devices.error', { error: error.message });
+    }
+  });
+
+  // Enhanced create device with optimistic updates
+  const createDeviceMutation = useMutation({
+    mutationFn: api.post('/devices'),
+    onMutate: async (newDevice) => {
+      // Cancel outgoing refetches
+      await api.cache.invalidate('/devices');
+      
+      // Snapshot previous value
+      const previousDevices = devices;
+      
+      // Optimistically update
+      const optimisticDevice = {
+        ...newDevice,
+        id: `temp-${Date.now()}`,
+        status: 'pending'
+      };
+      
+      api.cache.setData('/devices', [...devices, optimisticDevice]);
+      
+      return { previousDevices };
+    },
+    onError: (err, newDevice, context) => {
+      // Rollback on error
+      if (context?.previousDevices) {
+        api.cache.setData('/devices', context.previousDevices);
+      }
+      emit('device.create.error', { error: err.message });
+    },
+    onSuccess: (data) => {
+      emit('device.created', { device: data });
+    }
+  });
+
+  // Device statistics with memoization
+  const deviceStats = useMemo(() => ({
+    total: devices.length,
+    online: devices.filter(d => d.status === 'online').length,
+    offline: devices.filter(d => d.status === 'offline').length,
+    maintenance: devices.filter(d => d.status === 'maintenance').length,
+    error: devices.filter(d => d.status === 'error').length,
+    batteryLow: devices.filter(d => d.batteryLevel && d.batteryLevel < 20).length
+  }), [devices]);
+
+  return {
+    // Data
+    devices,
+    deviceStats,
+    
+    // Loading states
+    isLoading,
+    isCreating: createDeviceMutation.isPending,
+    
+    // Errors
+    error,
+    createError: createDeviceMutation.error,
+    
+    // Actions
+    refreshDevices,
+    createDevice: createDeviceMutation.mutateAsync,
+  };
+};
+Day 6-7: Testing & Validation
+
+Create comprehensive test suite for pilot module
+Validate performance benchmarks
+Test error boundaries and recovery
+Validate event system functionality
+
+Phase 3: Module Template & Automation (Week 3)
+Enhanced Module Creation Script
+javascript// scripts/create-module.js
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const askQuestion = (question) => {
+  return new Promise((resolve) => {
+    rl.question(question, resolve);
+  });
+};
+
+async function createModule() {
+  console.log('🚀 PROPER 2.9 Module Generator\n');
+  
+  const moduleName = await askQuestion('Module name (PascalCase): ');
+  const displayName = await askQuestion('Display name: ');
+  const description = await askQuestion('Description: ');
+  const category = await askQuestion('Category (security/operations/admin): ');
+  const hasRouting = await askQuestion('Needs routing? (y/n): ');
+  const hasModals = await askQuestion('Needs modals? (y/n): ');
+  const hasRealtime = await askQuestion('Needs real-time updates? (y/n): ');
+  
+  rl.close();
+
+  const modulePath = path.join(__dirname, '../src/modules', moduleName);
+  
+  // Create directory structure
+  const dirs = [
+    '', 'types', 'components', 'hooks', 'services', 'store', 'utils',
+    '__tests__', 'routes', 'guards', 'tabs', 'modals'
+  ];
+
+  dirs.forEach(dir => {
+    fs.mkdirSync(path.join(modulePath, dir), { recursive: true });
+  });
+
+  // Generate files
+  const files = {
+    'index.ts': generateIndexTemplate(moduleName),
+    'manifest.ts': generateManifestTemplate(moduleName, displayName, description, category),
+    [`${moduleName}.tsx`]: generateMainComponentTemplate(moduleName, hasRealtime === 'y'),
+    [`${moduleName}.test.tsx`]: generateTestTemplate(moduleName),
+    [`${moduleName}.module.css`]: generateStyleTemplate(moduleName),
+    'types/index.ts': generateTypesTemplate(moduleName),
+    'hooks/index.ts': generateHooksTemplate(moduleName),
+    'services/index.ts': generateServicesTemplate(moduleName),
+    'store/index.ts': generateStoreTemplate(moduleName),
+    'utils/index.ts': generateUtilsTemplate(),
+    '__tests__/testUtils.ts': generateTestUtilsTemplate(moduleName),
+    'README.md': generateReadmeTemplate(moduleName, displayName, description)
+  };
+
+  if (hasRouting === 'y') {
+    files['routes/index.ts'] = generateRoutesTemplate(moduleName);
+    files['guards/index.ts'] = generateGuardsTemplate(moduleName);
+  }
+
+  if (hasModals === 'y') {
+    files['modals/index.ts'] = generateModalsTemplate(moduleName);
+  }
+
+  // Write all files
+  Object.entries(files).forEach(([filename, content]) => {
+    fs.writeFileSync(path.join(modulePath, filename), content);
+  });
+
+  // Update module registry
+  updateModuleRegistry(moduleName);
+
+  console.log(`\n✅ Module "${moduleName}" created successfully!`);
+  console.log(`📁 Location: src/modules/${moduleName}`);
+  console.log(`\n📝 Next steps:`);
+  console.log(`1. Implement your module logic`);
+  console.log(`2. Add to routing configuration`);
+  console.log(`3. Run tests: npm test -- ${moduleName}`);
+  console.log(`4. Start development: npm run dev\n`);
+}
+
+function generateManifestTemplate(moduleName, displayName, description, category) {
+  return `import type { ModuleManifest } from '@shared/registry';
+
+export const ${moduleName.toLowerCase()}Manifest: ModuleManifest = {
+  name: '${moduleName}',
+  displayName: '${displayName}',
+  version: '1.0.0',
+  description: '${description}',
+  dependencies: [],
+  permissions: [
+    '${category}.${moduleName.toLowerCase()}.read',
+    '${category}.${moduleName.toLowerCase()}.write'
+  ],
+  routes: [
+    {
+      path: '/${moduleName.toLowerCase()}',
+      children: [
+        { path: '', component: 'OverviewTab' }
+      ]
+    }
+  ],
+  lazy: () => import('./${moduleName}'),
+  metadata: {
+    category: '${category}',
+    tags: ['${moduleName.toLowerCase()}'],
+    author: 'PROPER 2.9 Team',
+    bundle: {
+      maxSize: '500KB',
+      loadPriority: 'medium'
+    }
+  }
+};
+
+// Auto-register
+import { ModuleRegistry } from '@shared/registry';
+ModuleRegistry.register(${moduleName.toLowerCase()}Manifest);
+`;
+}
+
+// Additional template generators...
+function generateMainComponentTemplate(moduleName, hasRealtime) {
+  const realtimeHook = hasRealtime ? `
+  const { emit, subscribe } = useModuleEvents('${moduleName}');
+  
+  useEffect(() => {
+    emit('module.loaded', { timestamp: Date.now() });
+    return () => emit('module.unloaded', { timestamp: Date.now() });
+  }, []);` : '';
+
+  return `import React, { Suspense${hasRealtime ? ', useEffect' : ''} } from 'react';
+import { ErrorBoundary } from '@shared/components/base';
+import { PageContainer, LoadingSpinner } from '@shared/components/layout';${hasRealtime ? `
+import { useModuleEvents } from '@shared/hooks';` : ''}
+import styles from './${moduleName}.module.css';
+
+const ${moduleName}: React.FC = () => {${realtimeHook}
+
+  return (
+    <ErrorBoundary moduleName="${moduleName}">
+      <PageContainer
+        title="${moduleName.replace(/([A-Z])/g, ' $1').trim()}"
+        subtitle="Module description"
+        className={styles.container}
+      >
+        <div className={styles.content}>
+          <h2>Welcome to ${moduleName}</h2>
+          <p>Start building your module here!</p>
+        </div>
+      </PageContainer>
+    </ErrorBoundary>
+  );
+};
+
+export default ${moduleName};`;
+}
+
+createModule().catch(console.error);
+Phase 4: Migration Execution (Weeks 4-6)
+Week 4: Smart Parking Module
+
+Convert SmartParking.tsx to full module structure
+Implement module-specific hooks and services
+Add proper error boundaries and loading states
+Create comprehensive tests
+
+Week 5: Lost and Found Module
+
+Refactor LostAndFound.tsx to module architecture
+Implement event system integration
+Add performance monitoring
+Validate bundle size and loading performance
+
+Week 6: Admin Module
+
+Break down large Admin.tsx into sub-modules
+Implement role-based access controls
+Add admin-specific error handling
+Create admin module test suite
+
+Phase 5: Optimization & Polish (Week 7)
+Performance Optimization
+typescript// scripts/performance-audit.js
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+class PerformanceAuditor {
+  static async auditModules() {
+    const modulesDir = path.join(__dirname, '../src/modules');
+    const modules = fs.readdirSync(modulesDir)
+      .filter(name => !name.startsWith('_'))
+      .filter(name => fs.statSync(path.join(modulesDir, name)).isDirectory());
+
+    const results = [];
+
+    for (const moduleName of modules) {
+      const moduleResult = await this.auditModule(moduleName);
+      results.push(moduleResult);
+    }
+
+    this.generateReport(results);
+  }
+
+  static async auditModule(moduleName) {
+    const modulePath = path.join(__dirname, '../src/modules', moduleName);
+    
+    // Calculate bundle size estimate
+    const bundleSize = this.calculateBundleSize(modulePath);
+    
+    // Count components
+    const componentCount = this.countComponents(modulePath);
+    
+    // Check for common issues
+    const issues = this.checkForIssues(modulePath);
+    
+    return {
+      name: moduleName,
+      bundleSize,
+      componentCount,
+      issues,
+      score: this.calculateScore(bundleSize, componentCount, issues.length)
+    };
+  }
+
+  static calculateBundleSize(modulePath) {
+    let totalSize = 0;
+    
+    function walkDir(dir) {
+      const files = fs.readdirSync(dir);
+      files.forEach(file => {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        
+        if (stat.isDirectory()) {
+          walkDir(filePath);
+        } else if (file.endsWith('.tsx') || file.endsWith('.ts')) {
+          totalSize += stat.size;
+        }
+      });
+    }
+    
+    walkDir(modulePath);
+    return totalSize;
+  }
+
+  static generateReport(results) {
+    console.log('\n📊 Module Performance Audit Report\n');
+    console.log('='.repeat(60));
+    
+    results.forEach(result => {
+      console.log(`\n📦 ${result.name}`);
+      console.log(`   Bundle Size: ${(result.bundleSize / 1024).toFixed(1)}KB`);
+      console.log(`   Components: ${result.componentCount}`);
+      console.log(`   Issues: ${result.issues.length}`);
+      console.log(`   Score: ${result.score}/100`);
+      
+      if (result.issues.length > 0) {
+        console.log('   ⚠️  Issues:');
+        result.issues.forEach(issue => {
+          console.log(`      - ${issue}`);
+        });
+      }
+    });
+
+    // Overall summary
+    const avgScore = results.reduce((sum, r) => sum + r.score, 0) / results.length;
+    const totalSize = results.reduce((sum, r) => sum + r.bundleSize, 0);
+    
+    console.log('\n' + '='.repeat(60));
+    console.log(`📈 Overall Score: ${avgScore.toFixed(1)}/100`);
+    console.log(`📦 Total Size: ${(totalSize / 1024).toFixed(1)}KB`);
+    console.log(`🎯 Modules: ${results.length}`);
+  }
+}
+
+PerformanceAuditor.auditModules();
+Bundle Analysis Script
+javascript// scripts/bundle-analyzer.js
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+
+module.exports = {
+  webpack: (config) => {
+    if (process.env.ANALYZE) {
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'server',
+          openAnalyzer: true,
+        })
+      );
+    }
+    return config;
+  },
+};
+
+✅ Success Metrics & Validation
+Performance Benchmarks
+typescript// Performance targets for each module
+const PERFORMANCE_TARGETS = {
+  bundleSize: '500KB',     // Maximum bundle size per module
+  loadTime: '200ms',       // Time to interactive
+  renderTime: '16ms',      // React render time
+  cacheHitRate: '90%',     // API cache efficiency
+  errorRate: '<1%',        // Error boundary triggers
+};
+
+// Automated performance monitoring
+export class ModulePerformanceTracker {
+  static track(moduleName: string, metrics: PerformanceMetrics) {
+    const results = {
+      module: moduleName,
+      timestamp: Date.now(),
+      metrics,
+      passed: this.validateMetrics(metrics),
+    };
+    
+    // Store results for reporting
+    this.storeResults(results);
+    
+    // Alert if thresholds exceeded
+    if (!results.passed) {
+      this.alertPerformanceIssue(results);
+    }
+  }
+}
+Quality Gates
+
+Bundle Size: Each module < 500KB
+Load Time: Module load < 200ms
+Test Coverage: > 90% per module
+Error Rate: < 1% error boundary triggers
+Cache Hit Rate: > 90% API cache efficiency
+
+Developer Experience Metrics
+
+New Module Creation: < 30 minutes using template
+Module Isolation: 0 cross-module dependencies
+Import Consistency: 100% absolute imports for shared code
+Test Isolation: 100% independent module tests
+
+
+🎯 Final Architecture Benefits
+✅ Immediate Wins
+
+True module isolation - no accidental cross-dependencies
+Consistent developer experience - same pattern everywhere
+Automated module creation - 30-minute setup for new modules
+Performance optimization - lazy loading and code splitting built-in
+
+✅ Long-term Scalability
+
+100+ module support without architectural changes
+Micro-frontend ready - easy module extraction
+Team scaling - clear ownership boundaries
+Technology flexibility - easy to swap UI libraries or frameworks
+
+✅ Maintenance & Quality
+
+Predictable testing - consistent test patterns per module
+Clear debugging - module-scoped error boundaries
+Performance monitoring - per-module metrics and alerts
+Automated validation - scripts catch issues early
+
+This enhanced architecture provides a bulletproof foundation for PROPER 2.9's continued growth and success! 🚀

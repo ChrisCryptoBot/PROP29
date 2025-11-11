@@ -2,10 +2,24 @@ import React from 'react';
 
 const Incidents: React.FC = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Incident Management</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">Incident management functionality will be implemented here.</p>
+    <div className="admin-container">
+      <div className="admin-header">
+        <h1 className="section-title">
+          <i className="fas fa-exclamation-triangle"></i>
+          Incident Management
+        </h1>
+      </div>
+
+      <div className="admin-main">
+        <div className="admin-section">
+          <h2 className="section-title">
+            <i className="fas fa-clipboard-list"></i>
+            Active Incidents
+          </h2>
+          <p className="section-description">
+            Monitor and manage security incidents with AI-powered prediction and automated response protocols.
+          </p>
+        </div>
       </div>
     </div>
   );

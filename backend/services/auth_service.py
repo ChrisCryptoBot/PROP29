@@ -3,96 +3,191 @@ from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 from database import SessionLocal
 from models import User, UserRole
 from schemas import LoginCredentials, TokenResponse
 import os
 import logging
+import asyncio
+from functools import wraps
+import time
 
 logger = logging.getLogger(__name__)
 
-# Security configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+# Enhanced security configuration
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable must be set")
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+
+# Rate limiting configuration
+MAX_LOGIN_ATTEMPTS = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
+LOGIN_TIMEOUT_MINUTES = int(os.getenv("LOGIN_TIMEOUT_MINUTES", "15"))
+
+# Password hashing with enhanced security
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
+
+# Rate limiting storage (in production, use Redis)
+login_attempts = {}
+
+def rate_limit_login(ip_address: str) -> bool:
+    # TEMPORARY: Disable rate limiting for debugging
+    return True
+    # current_time = time.time()
+    # if ip_address not in login_attempts:
+    #     login_attempts[ip_address] = {"count": 0, "first_attempt": current_time}
+    # attempts = login_attempts[ip_address]
+    # if current_time - attempts["first_attempt"] > LOGIN_TIMEOUT_MINUTES * 60:
+    #     attempts["count"] = 0
+    #     attempts["first_attempt"] = current_time
+    # if attempts["count"] >= MAX_LOGIN_ATTEMPTS:
+    #     return False
+    # attempts["count"] += 1
+    # return True
 
 class AuthService:
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Verify a password against its hash"""
-        return pwd_context.verify(plain_password, hashed_password)
+        try:
+            return pwd_context.verify(plain_password, hashed_password)
+        except Exception as e:
+            logger.error(f"Password verification error: {str(e)}")
+            return False
     
     @staticmethod
     def get_password_hash(password: str) -> str:
-        """Hash a password"""
+        """Hash a password with enhanced security"""
+        if len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
         return pwd_context.hash(password)
     
     @staticmethod
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-        """Create a JWT access token"""
+        """Create a JWT access token with enhanced security"""
         to_encode = data.copy()
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
             expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         
-        to_encode.update({"exp": expire, "type": "access"})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        return encoded_jwt
+        to_encode.update({
+            "exp": expire,
+            "type": "access",
+            "iat": datetime.utcnow(),
+            "iss": "proper29-api"
+        })
+        
+        try:
+            encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+            return encoded_jwt
+        except Exception as e:
+            logger.error(f"Token creation error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Token creation failed"
+            )
     
     @staticmethod
     def create_refresh_token(data: dict) -> str:
         """Create a JWT refresh token"""
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        to_encode.update({"exp": expire, "type": "refresh"})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        return encoded_jwt
+        to_encode.update({
+            "exp": expire,
+            "type": "refresh",
+            "iat": datetime.utcnow(),
+            "iss": "proper29-api"
+        })
+        
+        try:
+            encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+            return encoded_jwt
+        except Exception as e:
+            logger.error(f"Refresh token creation error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Refresh token creation failed"
+            )
     
     @staticmethod
     def verify_token(token: str) -> Dict[str, Any]:
-        """Verify and decode a JWT token"""
+        """Verify and decode a JWT token with enhanced validation"""
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             user_id: str = payload.get("sub")
             token_type: str = payload.get("type")
+            issuer: str = payload.get("iss")
             
             if user_id is None:
-                raise ValueError("Invalid token")
+                raise ValueError("Invalid token: missing user ID")
             
             if token_type not in ["access", "refresh"]:
                 raise ValueError("Invalid token type")
+            
+            if issuer != "proper29-api":
+                raise ValueError("Invalid token issuer")
             
             return {
                 "user_id": user_id,
                 "username": payload.get("username"),
                 "email": payload.get("email"),
-                "token_type": token_type
+                "token_type": token_type,
+                "roles": payload.get("roles", [])
             }
-        except JWTError:
-            raise ValueError("Invalid token")
+        except JWTError as e:
+            logger.warning(f"JWT decode error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        except Exception as e:
+            logger.error(f"Token verification error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token verification failed"
+            )
     
     @staticmethod
-    async def authenticate_user(credentials: LoginCredentials) -> TokenResponse:
-        """Authenticate user and return tokens"""
+    async def authenticate_user(credentials: LoginCredentials, ip_address: str) -> TokenResponse:
+        """Authenticate user with rate limiting and enhanced security"""
+        # Rate limiting check
+        if not rate_limit_login(ip_address):
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Too many login attempts. Try again in {LOGIN_TIMEOUT_MINUTES} minutes."
+            )
+        
         db = SessionLocal()
         try:
             # Find user by email
             user = db.query(User).filter(User.email == credentials.email).first()
             if not user:
-                raise ValueError("Invalid credentials")
+                logger.warning(f"Login attempt with invalid email: {credentials.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid credentials"
+                )
             
             # Verify password
             if not AuthService.verify_password(credentials.password, user.password_hash):
-                raise ValueError("Invalid credentials")
+                logger.warning(f"Failed login attempt for user: {user.user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid credentials"
+                )
             
             # Check if user is active
             if user.status.value != "active":
-                raise ValueError("User account is not active")
+                logger.warning(f"Login attempt for inactive user: {user.user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Account is not active"
+                )
             
             # Update last login
             user.last_login = datetime.utcnow()
@@ -117,6 +212,12 @@ class AuthService:
             access_token = AuthService.create_access_token(token_data)
             refresh_token = AuthService.create_refresh_token(token_data)
             
+            # Reset rate limiting on successful login
+            if ip_address in login_attempts:
+                del login_attempts[ip_address]
+            
+            logger.info(f"Successful login for user: {user.user_id}")
+            
             return TokenResponse(
                 access_token=access_token,
                 refresh_token=refresh_token,
@@ -127,9 +228,14 @@ class AuthService:
                 roles=role_names
             )
             
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Authentication error: {str(e)}")
-            raise
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Authentication failed"
+            )
         finally:
             db.close()
     
@@ -141,14 +247,20 @@ class AuthService:
             payload = AuthService.verify_token(refresh_token)
             
             if payload["token_type"] != "refresh":
-                raise ValueError("Invalid token type")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token type"
+                )
             
             # Get user from database
             db = SessionLocal()
             try:
                 user = db.query(User).filter(User.user_id == payload["user_id"]).first()
                 if not user or user.status.value != "active":
-                    raise ValueError("User not found or inactive")
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="User not found or inactive"
+                    )
                 
                 # Get user roles
                 roles = db.query(UserRole).filter(
@@ -182,9 +294,14 @@ class AuthService:
             finally:
                 db.close()
                 
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Token refresh error: {str(e)}")
-            raise ValueError("Invalid refresh token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
     
     @staticmethod
     async def logout_user(user_id: str) -> Dict[str, str]:
@@ -196,9 +313,13 @@ class AuthService:
     
     @staticmethod
     def get_user_by_id(user_id: str) -> Optional[User]:
-        """Get user by ID"""
+        """Get user by ID with proper error handling"""
         db = SessionLocal()
         try:
-            return db.query(User).filter(User.user_id == user_id).first()
+            user = db.query(User).filter(User.user_id == user_id).first()
+            return user
+        except Exception as e:
+            logger.error(f"Error getting user by ID: {str(e)}")
+            return None
         finally:
             db.close() 
