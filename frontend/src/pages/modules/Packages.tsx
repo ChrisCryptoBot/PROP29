@@ -840,7 +840,7 @@ const Packages: React.FC = () => {
         )}
 
         {/* Tab Content for other tabs */}
-        {activeTab !== 'overview' && (
+        {currentTab !== 'overview' && (
           <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
             <CardHeader>
               <CardTitle className="text-xl">
