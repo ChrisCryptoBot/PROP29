@@ -1782,171 +1782,168 @@ const EvacuationModule: React.FC = () => {
 
       {activeTab === 'settings' && (
         <div className="space-y-6">
-          <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                <SettingsIcon className="mr-3 text-slate-600" size={24} />
+          <div className="glass-card-strong p-6">
+            <div className="mb-6">
+              <h3 className="flex items-center text-lg font-semibold text-slate-900">
+                <i className="fas fa-cog mr-3 text-slate-600"></i>
                 Evacuation System Settings
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Automation Settings */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Automation Settings</h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <div>
-                        <span className="text-gray-900 font-medium">Auto-Evacuation</span>
-                        <p className="text-sm text-gray-600">Automatically initiate evacuation on fire alarm</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={settings.autoEvacuation}
-                        onChange={(e) => setSettings({...settings, autoEvacuation: e.target.checked})}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                    </label>
-                    <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <div>
-                        <span className="text-gray-900 font-medium">Emergency Services Contact</span>
-                        <p className="text-sm text-gray-600">Automatically contact emergency services</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={settings.emergencyServicesContact}
-                        onChange={(e) => setSettings({...settings, emergencyServicesContact: e.target.checked})}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                    </label>
-                    <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <div>
-                        <span className="text-gray-900 font-medium">Guest Notifications</span>
-                        <p className="text-sm text-gray-600">Send mobile app notifications to guests</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={settings.guestNotifications}
-                        onChange={(e) => setSettings({...settings, guestNotifications: e.target.checked})}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* System Control */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">System Control</h3>
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <div>
-                        <span className="text-gray-900 font-medium">Sound Alarms</span>
-                        <p className="text-sm text-gray-600">Activate audible evacuation alarms</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={settings.soundAlarms}
-                        onChange={(e) => setSettings({...settings, soundAlarms: e.target.checked})}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                    </label>
-                    <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <div>
-                        <span className="text-gray-900 font-medium">Unlock Exits</span>
-                        <p className="text-sm text-gray-600">Automatically unlock all emergency exits</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={settings.unlockExits}
-                        onChange={(e) => setSettings({...settings, unlockExits: e.target.checked})}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                    </label>
-                    <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <div>
-                        <span className="text-gray-900 font-medium">Elevator Shutdown</span>
-                        <p className="text-sm text-gray-600">Disable elevators during evacuation</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={settings.elevatorShutdown}
-                        onChange={(e) => setSettings({...settings, elevatorShutdown: e.target.checked})}
-                        className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Configuration */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Configuration</h3>
-                  <div className="space-y-4">
+              </h3>
+            </div>
+            <div className="space-y-6">
+              {/* Automation Settings */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Automation Settings</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Announcement Volume</label>
-                      <select
-                        value={settings.announcementVolume}
-                        onChange={(e) => setSettings({...settings, announcementVolume: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="50">50%</option>
-                        <option value="60">60%</option>
-                        <option value="70">70%</option>
-                        <option value="80">80%</option>
-                        <option value="90">90%</option>
-                        <option value="100">100%</option>
-                      </select>
+                      <span className="text-gray-900 font-medium">Auto-Evacuation</span>
+                      <p className="text-sm text-gray-600">Automatically initiate evacuation on fire alarm</p>
                     </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.autoEvacuation}
+                      onChange={(e) => setSettings({...settings, autoEvacuation: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Evacuation Timeout (minutes)</label>
-                      <select
-                        value={settings.evacuationTimeout}
-                        onChange={(e) => setSettings({...settings, evacuationTimeout: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="15">15 minutes</option>
-                        <option value="20">20 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="45">45 minutes</option>
-                        <option value="60">60 minutes</option>
-                      </select>
+                      <span className="text-gray-900 font-medium">Emergency Services Contact</span>
+                      <p className="text-sm text-gray-600">Automatically contact emergency services</p>
                     </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.emergencyServicesContact}
+                      onChange={(e) => setSettings({...settings, emergencyServicesContact: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Drill Frequency (days)</label>
-                      <select
-                        value={settings.drillFrequency}
-                        onChange={(e) => setSettings({...settings, drillFrequency: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="30">30 days (Monthly)</option>
-                        <option value="60">60 days (Bi-monthly)</option>
-                        <option value="90">90 days (Quarterly)</option>
-                        <option value="180">180 days (Semi-annually)</option>
-                      </select>
+                      <span className="text-gray-900 font-medium">Guest Notifications</span>
+                      <p className="text-sm text-gray-600">Send mobile app notifications to guests</p>
                     </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-                  <Button
-                    variant="outline"
-                    onClick={handleResetSettings}
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
-                  >
-                    Reset to Defaults
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      handleSaveSettings();
-                      showSuccess('Settings saved successfully');
-                    }}
-                    className="bg-[#2563eb] hover:bg-blue-700 text-white"
-                  >
-                    Save Settings
-                  </Button>
+                    <input
+                      type="checkbox"
+                      checked={settings.guestNotifications}
+                      onChange={(e) => setSettings({...settings, guestNotifications: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                  </label>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* System Control */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">System Control</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <div>
+                      <span className="text-gray-900 font-medium">Sound Alarms</span>
+                      <p className="text-sm text-gray-600">Activate audible evacuation alarms</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.soundAlarms}
+                      onChange={(e) => setSettings({...settings, soundAlarms: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <div>
+                      <span className="text-gray-900 font-medium">Unlock Exits</span>
+                      <p className="text-sm text-gray-600">Automatically unlock all emergency exits</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.unlockExits}
+                      onChange={(e) => setSettings({...settings, unlockExits: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <div>
+                      <span className="text-gray-900 font-medium">Elevator Shutdown</span>
+                      <p className="text-sm text-gray-600">Disable elevators during evacuation</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={settings.elevatorShutdown}
+                      onChange={(e) => setSettings({...settings, elevatorShutdown: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 rounded"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Configuration */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Configuration</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Announcement Volume</label>
+                    <select
+                      value={settings.announcementVolume}
+                      onChange={(e) => setSettings({...settings, announcementVolume: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="50">50%</option>
+                      <option value="60">60%</option>
+                      <option value="70">70%</option>
+                      <option value="80">80%</option>
+                      <option value="90">90%</option>
+                      <option value="100">100%</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Evacuation Timeout (minutes)</label>
+                    <select
+                      value={settings.evacuationTimeout}
+                      onChange={(e) => setSettings({...settings, evacuationTimeout: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="15">15 minutes</option>
+                      <option value="20">20 minutes</option>
+                      <option value="30">30 minutes</option>
+                      <option value="45">45 minutes</option>
+                      <option value="60">60 minutes</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Drill Frequency (days)</label>
+                    <select
+                      value={settings.drillFrequency}
+                      onChange={(e) => setSettings({...settings, drillFrequency: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="30">30 days (Monthly)</option>
+                      <option value="60">60 days (Bi-monthly)</option>
+                      <option value="90">90 days (Quarterly)</option>
+                      <option value="180">180 days (Semi-annually)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                <button
+                  onClick={handleResetSettings}
+                  className="btn btn-secondary"
+                >
+                  Reset to Defaults
+                </button>
+                <button
+                  onClick={() => {
+                    handleSaveSettings();
+                    showSuccess('Settings saved successfully');
+                  }}
+                  className="btn btn-primary"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1958,14 +1955,14 @@ const EvacuationModule: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <Megaphone size={24} className="mr-3 text-blue-600" />
+                <i className="fas fa-bullhorn mr-3 text-blue-600"></i>
                 Make All-Call Announcement
               </h2>
               <button
                 onClick={() => setShowAnnouncementModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <X size={20} />
+                <i className="fas fa-times"></i>
               </button>
             </div>
             <div className="p-6">
@@ -1988,20 +1985,19 @@ const EvacuationModule: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
-              <Button
-                variant="outline"
+              <button
                 onClick={() => setShowAnnouncementModal(false)}
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className="btn btn-secondary"
               >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={handleSendAnnouncement}
-                className="bg-[#2563eb] hover:bg-blue-700 text-white"
+                className="btn btn-primary"
               >
-                <Megaphone size={16} className="mr-2" />
+                <i className="fas fa-bullhorn mr-2"></i>
                 Broadcast Announcement
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -2013,29 +2009,29 @@ const EvacuationModule: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <Navigation size={24} className="mr-3 text-blue-600" />
+                <i className="fas fa-route mr-3 text-blue-600"></i>
                 {selectedRoute.name}
               </h2>
               <button
                 onClick={() => setShowRouteModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <X size={20} />
+                <i className="fas fa-times"></i>
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
                 <h3 className="font-semibold text-slate-900 mb-2">Route Status</h3>
-                <Badge 
-                  variant={
-                    selectedRoute.status === 'clear' ? 'default' :
-                    selectedRoute.status === 'congested' ? 'warning' :
-                    'destructive'
-                  }
-                  className="capitalize text-lg px-4 py-2"
+                <span
+                  className={cn(
+                    "badge capitalize text-lg px-4 py-2",
+                    selectedRoute.status === 'clear' ? 'badge-glass' :
+                    selectedRoute.status === 'congested' ? 'badge-warning' :
+                    'badge-danger'
+                  )}
                 >
                   {selectedRoute.status}
-                </Badge>
+                </span>
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 mb-2">Description</h3>
@@ -2053,7 +2049,12 @@ const EvacuationModule: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 mb-2">Capacity Utilization</h3>
-                <Progress value={(selectedRoute.currentOccupancy / selectedRoute.capacity) * 100} className="h-3" />
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${(selectedRoute.currentOccupancy / selectedRoute.capacity) * 100}%` }}
+                  ></div>
+                </div>
                 <p className="text-sm text-slate-600 mt-1">
                   {Math.round((selectedRoute.currentOccupancy / selectedRoute.capacity) * 100)}% utilized
                 </p>
@@ -2066,19 +2067,18 @@ const EvacuationModule: React.FC = () => {
                 <h3 className="font-semibold text-slate-900 mb-2">Serves Floors</h3>
                 <div className="flex flex-wrap gap-2">
                   {selectedRoute.floors.map((floor, index) => (
-                    <Badge key={index} variant="outline">{floor}</Badge>
+                    <span key={index} className="badge badge-outline">{floor}</span>
                   ))}
                 </div>
               </div>
             </div>
             <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
-              <Button
-                variant="outline"
+              <button
                 onClick={() => setShowRouteModal(false)}
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className="btn btn-secondary"
               >
                 Close
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -2094,10 +2094,10 @@ const EvacuationModule: React.FC = () => {
                 onClick={() => setShowSettingsModal(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <X size={20} />
+                <i className="fas fa-times"></i>
               </button>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {/* Automation Settings */}
               <div>
@@ -2160,27 +2160,25 @@ const EvacuationModule: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-              <Button
-                variant="outline"
+              <button
                 onClick={handleResetSettings}
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className="btn btn-secondary"
               >
                 Reset to Defaults
-              </Button>
+              </button>
               <div className="flex items-center space-x-3">
-                <Button
-                  variant="outline"
+                <button
                   onClick={() => setShowSettingsModal(false)}
-                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                  className="btn btn-secondary"
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleSaveSettings}
-                  className="bg-[#2563eb] hover:bg-blue-700 text-white"
+                  className="btn btn-primary"
                 >
                   Save Settings
-                </Button>
+                </button>
               </div>
             </div>
           </div>
