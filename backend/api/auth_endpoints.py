@@ -22,37 +22,49 @@ class LoginResponse(BaseModel):
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
     # Simple mock authentication for development
-    # Accept either username or email
-    identifier = request.username or request.email
-    
-    # Debug logging
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"🔐 Login attempt received:")
-    logger.info(f"   username: {request.username}")
-    logger.info(f"   email: {request.email}")
-    logger.info(f"   identifier: {identifier}")
-    logger.info(f"   password provided: {bool(request.password)}")
+    
+    # Debug logging - log everything
+    logger.info("=" * 50)
+    logger.info("🔐 LOGIN ATTEMPT RECEIVED")
+    logger.info(f"   Raw request.username: {repr(request.username)}")
+    logger.info(f"   Raw request.email: {repr(request.email)}")
+    logger.info(f"   Raw request.password: {repr(request.password)}")
+    logger.info(f"   Password length: {len(request.password) if request.password else 0}")
+    
+    # Accept either username or email
+    identifier = request.username or request.email
+    logger.info(f"   Extracted identifier: {repr(identifier)}")
     
     # Accept multiple email variations for development
     valid_emails = ["admin@proper29.com", "admin@proper.com", "admin"]
     valid_password = "admin123"
     
-    # Check if identifier exists and matches, and password matches
+    # Check if identifier exists
     if not identifier:
-        logger.warning("❌ No identifier provided (neither username nor email)")
+        logger.error("❌ No identifier provided (neither username nor email)")
         raise HTTPException(status_code=401, detail="Invalid credentials. Use: admin@proper.com / admin123")
     
+    # Normalize identifier
     identifier_lower = identifier.lower().strip()
+    logger.info(f"   Normalized identifier: {repr(identifier_lower)}")
+    
+    # Check password
     password_match = request.password == valid_password
+    logger.info(f"   Password match: {password_match}")
+    logger.info(f"   Expected password: {repr(valid_password)}")
+    logger.info(f"   Received password: {repr(request.password)}")
+    
+    # Check email
     email_match = identifier_lower in [e.lower() for e in valid_emails]
+    logger.info(f"   Email match: {email_match}")
+    logger.info(f"   Valid emails: {valid_emails}")
     
-    logger.info(f"   identifier_lower: {identifier_lower}")
-    logger.info(f"   password_match: {password_match}")
-    logger.info(f"   email_match: {email_match}")
-    
+    # Final check
     if email_match and password_match:
-        logger.info("✅ Login successful!")
+        logger.info("✅ LOGIN SUCCESSFUL!")
+        logger.info("=" * 50)
         return LoginResponse(
             access_token="mock-token-12345",
             token_type="bearer",
@@ -71,6 +83,9 @@ async def login(request: LoginRequest):
             }
         )
     else:
+        logger.error("❌ LOGIN FAILED")
+        logger.error(f"   Email match: {email_match}, Password match: {password_match}")
+        logger.info("=" * 50)
         raise HTTPException(status_code=401, detail="Invalid credentials. Use: admin@proper.com / admin123")
 
 @router.get("/me")

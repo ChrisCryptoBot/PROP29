@@ -25,7 +25,7 @@
   "scripts": {
     "start": "cd frontend && react-scripts start",
     "start:frontend": "cd frontend && npm start",
-    "start:backend": "cd backend && python start_backend.py",
+    "start:backend": "cd backend && python main.py",
     "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run start:backend\" \"npm run start:frontend\"",
     "build": "cd frontend && react-scripts build",
     "test": "cd frontend && react-scripts test",
