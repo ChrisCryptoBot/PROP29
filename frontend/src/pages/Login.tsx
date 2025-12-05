@@ -91,6 +91,9 @@ const Login: React.FC = () => {
             <p className="text-sm text-gray-600">
               Demo credentials: admin@proper.com / admin123
             </p>
+            <p className="text-xs text-gray-500 mt-1">
+              (Also accepts: admin@proper29.com or admin)
+            </p>
           </div>
         </form>
       </div>

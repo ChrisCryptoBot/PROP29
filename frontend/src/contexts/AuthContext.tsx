@@ -59,24 +59,35 @@ class AuthAPI {
     };
 
     try {
+      console.log('🌐 Fetching:', url);
+      console.log('🌐 Config:', { method: config.method, headers: config.headers, body: config.body });
       const response = await fetch(url, config);
+      console.log('📥 Response status:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Error response:', errorData);
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ Response data:', data);
+      return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error('❌ API request failed:', error);
       throw error;
     }
   }
 
   static async login(credentials: LoginCredentials): Promise<{ user: User } & AuthTokens> {
+    console.log('📤 AuthAPI.login called with:', credentials);
+    const payload = JSON.stringify(credentials);
+    console.log('📤 Sending payload:', payload);
+    console.log('📤 API Base URL:', API_BASE_URL);
+    console.log('📤 Full URL:', `${API_BASE_URL}/auth/login`);
     return this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      body: payload,
     });
   }
 

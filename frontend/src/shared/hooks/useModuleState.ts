@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../app/store';
+import type { RootState } from '../../app/store/store';
 import { ModuleEventBus } from '../services/events';
 
 interface ModuleState {

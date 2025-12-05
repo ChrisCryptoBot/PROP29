@@ -25,7 +25,34 @@ async def login(request: LoginRequest):
     # Accept either username or email
     identifier = request.username or request.email
     
-    if identifier == "admin@proper29.com" and request.password == "admin123":
+    # Debug logging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"🔐 Login attempt received:")
+    logger.info(f"   username: {request.username}")
+    logger.info(f"   email: {request.email}")
+    logger.info(f"   identifier: {identifier}")
+    logger.info(f"   password provided: {bool(request.password)}")
+    
+    # Accept multiple email variations for development
+    valid_emails = ["admin@proper29.com", "admin@proper.com", "admin"]
+    valid_password = "admin123"
+    
+    # Check if identifier exists and matches, and password matches
+    if not identifier:
+        logger.warning("❌ No identifier provided (neither username nor email)")
+        raise HTTPException(status_code=401, detail="Invalid credentials. Use: admin@proper.com / admin123")
+    
+    identifier_lower = identifier.lower().strip()
+    password_match = request.password == valid_password
+    email_match = identifier_lower in [e.lower() for e in valid_emails]
+    
+    logger.info(f"   identifier_lower: {identifier_lower}")
+    logger.info(f"   password_match: {password_match}")
+    logger.info(f"   email_match: {email_match}")
+    
+    if email_match and password_match:
+        logger.info("✅ Login successful!")
         return LoginResponse(
             access_token="mock-token-12345",
             token_type="bearer",
@@ -44,7 +71,7 @@ async def login(request: LoginRequest):
             }
         )
     else:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Invalid credentials. Use: admin@proper.com / admin123")
 
 @router.get("/me")
 async def get_current_user():
