@@ -605,60 +605,60 @@ const Patrols: React.FC = () => {
             {/* Metrics Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <CardContent className="p-8">
+                  <div className="flex items-center justify-between mb-6 pl-1">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-sm">
                       <i className="fas fa-route text-white text-xl"></i>
-        </div>
-              </div>
+                    </div>
+                  </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{metrics.activePatrols}</h3>
+                    <h3 className="text-2xl font-bold text-blue-700">{metrics.activePatrols}</h3>
                     <p className="text-slate-600 text-sm">Currently in progress</p>
-            </div>
+                  </div>
                 </CardContent>
               </Card>
               
               <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <CardContent className="p-8">
+                  <div className="flex items-center justify-between mb-6 pl-1">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-sm">
                       <i className="fas fa-user-shield text-white text-xl"></i>
-                </div>
-              </div>
-              <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{metrics.onDutyOfficers}</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-bold text-blue-700">{metrics.onDutyOfficers}</h3>
                     <p className="text-slate-600 text-sm">Out of {metrics.totalOfficers} total</p>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <CardContent className="p-8">
+                  <div className="flex items-center justify-between mb-6 pl-1">
+                    <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-sm">
                       <i className="fas fa-map-marked-alt text-white text-xl"></i>
-                </div>
-              </div>
-              <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{metrics.activeRoutes}</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-bold text-blue-700">{metrics.activeRoutes}</h3>
                     <p className="text-slate-600 text-sm">Active patrol routes</p>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <CardContent className="p-8">
+                  <div className="flex items-center justify-between mb-6 pl-1">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm">
                       <i className="fas fa-check-circle text-white text-xl"></i>
-                </div>
-              </div>
-              <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{metrics.checkpointCompletionRate}%</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-bold text-blue-700">{metrics.checkpointCompletionRate}%</h3>
                     <p className="text-slate-600 text-sm">Checkpoint completion rate</p>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Enhanced Dashboard Components */}
