@@ -1844,53 +1844,57 @@ const IncidentLogModule: React.FC = () => {
                   />
                 </div>
 
-                {/* AI Suggestion Button */}
-                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-600 rounded-lg">
-                      <i className="fas fa-robot text-white"></i>
+                {/* AI Suggestion Button - Gold Standard Design */}
+                <div className="glass-card p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="duotone-overlay duotone-primary">
+                        <i className="fas fa-robot"></i>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">AI-Powered Classification</p>
+                        <p className="text-xs text-slate-600">Get instant suggestions for incident type and severity</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">AI-Powered Classification</p>
-                      <p className="text-xs text-slate-600">Get instant suggestions for incident type and severity</p>
-                    </div>
+                    <Button
+                      onClick={handleGetAISuggestion}
+                      disabled={isLoadingAI}
+                      className="btn btn-primary"
+                    >
+                      {isLoadingAI ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin mr-2"></i>
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-magic mr-2"></i>
+                          Get AI Suggestion
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Button
-                    onClick={handleGetAISuggestion}
-                    disabled={isLoadingAI}
-                    className="!bg-blue-600 hover:!bg-blue-700 text-white"
-                  >
-                    {isLoadingAI ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-magic mr-2"></i>
-                        Get AI Suggestion
-                      </>
-                    )}
-                  </Button>
                 </div>
 
-                {/* AI Suggestion Display */}
+                {/* AI Suggestion Display - Gold Standard Design */}
                 {showAISuggestion && aiSuggestion && (
-                  <div className="p-4 bg-white border-2 border-blue-200 rounded-lg shadow-sm">
+                  <div className="glass-card-strong p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center space-x-2">
-                        <i className="fas fa-lightbulb text-yellow-500 text-lg"></i>
+                        <div className="duotone-overlay duotone-warning">
+                          <i className="fas fa-lightbulb"></i>
+                        </div>
                         <h4 className="font-semibold text-slate-900">AI Suggestion</h4>
                         <Badge className={cn(
-                          "text-xs",
-                          aiSuggestion.confidence >= 0.8 ? "!bg-green-100 !text-green-800" :
-                          aiSuggestion.confidence >= 0.6 ? "!bg-yellow-100 !text-yellow-800" :
-                          "!bg-orange-100 !text-orange-800"
+                          "badge",
+                          aiSuggestion.confidence >= 0.8 ? "badge-success" :
+                          aiSuggestion.confidence >= 0.6 ? "badge-warning" :
+                          "badge-danger"
                         )}>
                           {(aiSuggestion.confidence * 100).toFixed(0)}% Confidence
                         </Badge>
                         {aiSuggestion.fallback_used && (
-                          <Badge className="!bg-gray-100 !text-gray-800 text-xs">
+                          <Badge className="badge badge-glass">
                             Keyword-based
                           </Badge>
                         )}
@@ -1904,25 +1908,27 @@ const IncidentLogModule: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div className="p-3 bg-blue-50 rounded-lg">
+                      <div className="glass-card p-3">
                         <p className="text-xs text-slate-600 mb-1">Suggested Type</p>
-                        <p className="font-semibold text-slate-900 capitalize">{aiSuggestion.incident_type.replace('_', ' ')}</p>
+                        <p className="font-semibold text-slate-900 capitalize">
+                          {aiSuggestion.incident_type.replace('_', ' ')}
+                        </p>
                       </div>
-                      <div className="p-3 bg-purple-50 rounded-lg">
+                      <div className="glass-card p-3">
                         <p className="text-xs text-slate-600 mb-1">Suggested Severity</p>
                         <Badge className={cn(
-                          "!text-white font-semibold",
-                          aiSuggestion.severity.toLowerCase() === 'critical' ? "!bg-red-600" :
-                          aiSuggestion.severity.toLowerCase() === 'high' ? "!bg-orange-600" :
-                          aiSuggestion.severity.toLowerCase() === 'medium' ? "!bg-yellow-600" :
-                          "!bg-green-600"
+                          "badge",
+                          aiSuggestion.severity.toLowerCase() === 'critical' ? "badge-danger" :
+                          aiSuggestion.severity.toLowerCase() === 'high' ? "badge-warning" :
+                          aiSuggestion.severity.toLowerCase() === 'medium' ? "badge-info" :
+                          "badge-success"
                         )}>
                           {aiSuggestion.severity.toUpperCase()}
                         </Badge>
                       </div>
                     </div>
 
-                    <div className="p-3 bg-slate-50 rounded-lg mb-3">
+                    <div className="glass-card p-3 mb-3">
                       <p className="text-xs text-slate-600 mb-1">AI Reasoning</p>
                       <p className="text-sm text-slate-700">{aiSuggestion.reasoning}</p>
                     </div>
@@ -1930,13 +1936,13 @@ const IncidentLogModule: React.FC = () => {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => setShowAISuggestion(false)}
-                        className="px-3 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md"
+                        className="btn btn-ghost"
                       >
                         Dismiss
                       </button>
                       <Button
                         onClick={handleApplyAISuggestion}
-                        className="!bg-green-600 hover:!bg-green-700 text-white"
+                        className="btn btn-success"
                       >
                         <i className="fas fa-check mr-2"></i>
                         Apply Suggestion

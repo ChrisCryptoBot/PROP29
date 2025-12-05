@@ -4,9 +4,9 @@ Core AI and machine learning services for predictive analytics, pattern recognit
 """
 
 from .llm_service import LLMService, get_llm_service
-from .transcription_service import TranscriptionService, get_transcription_service
 
 # Future imports (commented out until implemented)
+# from .transcription_service import TranscriptionService, get_transcription_service
 # from .prediction_service import PredictionService
 # from .optimization_service import OptimizationService
 # from .analytics_service import AnalyticsService
@@ -15,8 +15,8 @@ from .transcription_service import TranscriptionService, get_transcription_servi
 __all__ = [
     'LLMService',
     'get_llm_service',
-    'TranscriptionService',
-    'get_transcription_service',
+    # 'TranscriptionService',
+    # 'get_transcription_service',
     # 'PredictionService',
     # 'OptimizationService',
     # 'AnalyticsService',

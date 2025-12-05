@@ -25,6 +25,13 @@
   
   .btn-primary {
     @apply btn bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
   }
   
   .btn-secondary {
@@ -37,6 +44,11 @@
   
   .btn-success {
     @apply btn bg-success-600 text-white hover:bg-success-700 active:bg-success-800;
+    background: linear-gradient(135deg, #10b981, #059669);
+  }
+  
+  .btn-success:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669, #047857);
   }
   
   .btn-warning {
@@ -101,6 +113,57 @@
   
   .badge-secondary {
     @apply badge bg-secondary-100 text-secondary-800;
+  }
+  
+  .badge-glass {
+    @apply badge bg-slate-100/50 text-slate-700 border border-slate-200/50;
+  }
+  
+  /* Glass card styles - Gold Standard */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .glass-card-strong {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Duotone overlay icons - Gold Standard */
+  .duotone-overlay {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .duotone-overlay i {
+    font-size: 18px;
+    color: white;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .duotone-primary {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  }
+  
+  .duotone-warning {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  }
+  
+  .btn-ghost {
+    @apply btn bg-transparent text-slate-600 border border-slate-200 hover:bg-slate-50;
   }
   
   .status-indicator {

@@ -86,4 +86,15 @@ passwords.txt
 # Local development data
 local_data/
 sample_data/
-test_data/ 
+test_data/
+
+# Generated files
+file_inventory.csv
+*.csv
+
+# Media files (too large for git)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wmv 
