@@ -137,6 +137,17 @@ const IncidentLogModule: React.FC = () => {
   const [itemsPerPage] = useState(10);
   const [sortBy, setSortBy] = useState<'timestamp' | 'severity' | 'status' | 'title'>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // AI Classification state
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    incident_type: string;
+    severity: string;
+    confidence: number;
+    reasoning: string;
+    fallback_used: boolean;
+  } | null>(null);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [showAISuggestion, setShowAISuggestion] = useState(false);
   
   // Settings state management
   const [settings, setSettings] = useState({
@@ -261,13 +272,84 @@ const IncidentLogModule: React.FC = () => {
   }, []);
 
   // Enhanced handler functions
+  // AI Classification Handler
+  const handleGetAISuggestion = useCallback(async () => {
+    const title = (document.getElementById('incident-title') as HTMLInputElement)?.value;
+    const description = (document.getElementById('incident-description') as HTMLTextAreaElement)?.value;
+    const location = (document.getElementById('incident-location') as HTMLInputElement)?.value;
+
+    if (!description || description.trim().length < 10) {
+      showError('Please enter a detailed description (at least 10 characters) before requesting AI suggestions');
+      return;
+    }
+
+    setIsLoadingAI(true);
+    setAiSuggestion(null);
+    setShowAISuggestion(false);
+
+    try {
+      const response = await fetch('http://localhost:8000/incidents/ai-classify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+        },
+        body: JSON.stringify({
+          title: title || '',
+          description: description,
+          location: location ? { area: location } : null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setAiSuggestion(data);
+      setShowAISuggestion(true);
+      showSuccess('AI analysis complete!');
+    } catch (error) {
+      console.error('AI classification error:', error);
+      showError('Failed to get AI suggestions. Using manual classification.');
+    } finally {
+      setIsLoadingAI(false);
+    }
+  }, []);
+
+  // Apply AI Suggestion to form
+  const handleApplyAISuggestion = useCallback(() => {
+    if (!aiSuggestion) return;
+
+    const typeSelect = document.getElementById('incident-type') as HTMLSelectElement;
+    const severitySelect = document.getElementById('incident-severity') as HTMLSelectElement;
+
+    // Map AI incident type to form options
+    const typeMapping: Record<string, string> = {
+      'theft': 'Security',
+      'disturbance': 'Security',
+      'medical': 'Emergency',
+      'fire': 'Emergency',
+      'flood': 'Maintenance',
+      'cyber': 'System',
+      'guest_complaint': 'Guest Service',
+      'other': 'Security'
+    };
+
+    const mappedType = typeMapping[aiSuggestion.incident_type] || 'Security';
+    if (typeSelect) typeSelect.value = mappedType;
+    if (severitySelect) severitySelect.value = aiSuggestion.severity.toUpperCase();
+
+    showSuccess('AI suggestion applied!');
+  }, [aiSuggestion]);
+
   const handleCreateIncident = useCallback(async (incidentData: Partial<Incident>) => {
     let toastId: string | undefined;
     try {
       toastId = showLoading('Creating incident...');
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const newIncident: Incident = {
         id: Math.max(...incidents.map(i => i.id)) + 1,
         title: incidentData.title || 'New Incident',
@@ -277,12 +359,15 @@ const IncidentLogModule: React.FC = () => {
         status: 'active',
         description: incidentData.description || '',
         timestamp: new Date().toISOString(),
+        aiClassification: aiSuggestion ? `${aiSuggestion.incident_type} (${(aiSuggestion.confidence * 100).toFixed(0)}% confidence)` : undefined,
         ...incidentData
       };
-      
+
       setIncidents(prev => [newIncident, ...prev]);
       setShowCreateModal(false);
-      
+      setAiSuggestion(null);
+      setShowAISuggestion(false);
+
       if (toastId) {
         dismissLoadingAndShowSuccess(toastId, 'Incident created successfully');
       }
@@ -291,7 +376,7 @@ const IncidentLogModule: React.FC = () => {
         dismissLoadingAndShowError(toastId, 'Failed to create incident');
       }
     }
-  }, [incidents]);
+  }, [incidents, aiSuggestion]);
 
   const handleEditIncident = useCallback(async (incidentId: number, updates: Partial<Incident>) => {
     let toastId: string | undefined;
@@ -1758,7 +1843,108 @@ const IncidentLogModule: React.FC = () => {
                     placeholder="Enter incident description"
                   />
                 </div>
-                
+
+                {/* AI Suggestion Button */}
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <i className="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">AI-Powered Classification</p>
+                      <p className="text-xs text-slate-600">Get instant suggestions for incident type and severity</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={handleGetAISuggestion}
+                    disabled={isLoadingAI}
+                    className="!bg-blue-600 hover:!bg-blue-700 text-white"
+                  >
+                    {isLoadingAI ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Analyzing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-magic mr-2"></i>
+                        Get AI Suggestion
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* AI Suggestion Display */}
+                {showAISuggestion && aiSuggestion && (
+                  <div className="p-4 bg-white border-2 border-blue-200 rounded-lg shadow-sm">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <i className="fas fa-lightbulb text-yellow-500 text-lg"></i>
+                        <h4 className="font-semibold text-slate-900">AI Suggestion</h4>
+                        <Badge className={cn(
+                          "text-xs",
+                          aiSuggestion.confidence >= 0.8 ? "!bg-green-100 !text-green-800" :
+                          aiSuggestion.confidence >= 0.6 ? "!bg-yellow-100 !text-yellow-800" :
+                          "!bg-orange-100 !text-orange-800"
+                        )}>
+                          {(aiSuggestion.confidence * 100).toFixed(0)}% Confidence
+                        </Badge>
+                        {aiSuggestion.fallback_used && (
+                          <Badge className="!bg-gray-100 !text-gray-800 text-xs">
+                            Keyword-based
+                          </Badge>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setShowAISuggestion(false)}
+                        className="text-slate-400 hover:text-slate-600"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <p className="text-xs text-slate-600 mb-1">Suggested Type</p>
+                        <p className="font-semibold text-slate-900 capitalize">{aiSuggestion.incident_type.replace('_', ' ')}</p>
+                      </div>
+                      <div className="p-3 bg-purple-50 rounded-lg">
+                        <p className="text-xs text-slate-600 mb-1">Suggested Severity</p>
+                        <Badge className={cn(
+                          "!text-white font-semibold",
+                          aiSuggestion.severity.toLowerCase() === 'critical' ? "!bg-red-600" :
+                          aiSuggestion.severity.toLowerCase() === 'high' ? "!bg-orange-600" :
+                          aiSuggestion.severity.toLowerCase() === 'medium' ? "!bg-yellow-600" :
+                          "!bg-green-600"
+                        )}>
+                          {aiSuggestion.severity.toUpperCase()}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-slate-50 rounded-lg mb-3">
+                      <p className="text-xs text-slate-600 mb-1">AI Reasoning</p>
+                      <p className="text-sm text-slate-700">{aiSuggestion.reasoning}</p>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => setShowAISuggestion(false)}
+                        className="px-3 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md"
+                      >
+                        Dismiss
+                      </button>
+                      <Button
+                        onClick={handleApplyAISuggestion}
+                        className="!bg-green-600 hover:!bg-green-700 text-white"
+                      >
+                        <i className="fas fa-check mr-2"></i>
+                        Apply Suggestion
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="incident-assigned" className="block text-sm font-medium text-slate-700 mb-2">Assign To</label>
