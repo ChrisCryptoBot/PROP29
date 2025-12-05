@@ -1,0 +1,25 @@
+# Git Safety Configuration
+# Add these to your global git config or local .git/config
+
+[core]
+    # Prevent accidental force push to main
+    hooksPath = .git/hooks
+
+[push]
+    # Warn before force push
+    default = simple
+    
+[alias]
+    # Safety aliases
+    safe-status = !git status && git branch && git log --oneline -5
+    safe-push = !git fetch origin && git pull origin $(git branch --show-current) && git push origin $(git branch --show-current)
+    safe-start = !git fetch origin && git checkout main && git pull origin main && echo "Ready to create feature branch"
+    whoami = !git config user.name && git config user.email
+
+[init]
+    defaultBranch = main
+
+[branch]
+    # Auto-setup tracking
+    autoSetupMerge = true
+
