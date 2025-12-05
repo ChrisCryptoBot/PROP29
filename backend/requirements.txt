@@ -30,6 +30,7 @@ tensorflow==2.15.0
 torch==2.1.1
 transformers==4.36.2
 openai==1.3.7
+anthropic==0.39.0
 
 # Data Processing
 python-dateutil==2.8.2

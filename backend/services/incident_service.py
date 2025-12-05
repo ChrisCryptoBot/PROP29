@@ -6,6 +6,7 @@ from schemas import IncidentCreate, IncidentUpdate, IncidentResponse, EmergencyA
 from datetime import datetime
 import logging
 from uuid import UUID
+from services.ai_ml_service import get_llm_service
 
 logger = logging.getLogger(__name__)
 
@@ -61,10 +62,41 @@ class IncidentService:
             db.close()
     
     @staticmethod
-    async def create_incident(incident: IncidentCreate, user_id: str) -> IncidentResponse:
-        """Create a new incident"""
+    async def create_incident(incident: IncidentCreate, user_id: str, use_ai_classification: bool = False) -> IncidentResponse:
+        """Create a new incident with optional AI classification"""
         db = SessionLocal()
         try:
+            # Use AI classification if requested and title/description provided
+            ai_confidence = None
+            if use_ai_classification and incident.description:
+                try:
+                    llm_service = get_llm_service()
+                    ai_result = llm_service.classify_incident(
+                        description=incident.description,
+                        title=incident.title,
+                        location=incident.location
+                    )
+
+                    # Log AI classification result
+                    logger.info(f"AI Classification: {ai_result['incident_type']} ({ai_result['severity']}) "
+                               f"with {ai_result['confidence']} confidence")
+
+                    # Store AI confidence
+                    ai_confidence = ai_result['confidence']
+
+                    # If user didn't specify type/severity, use AI suggestions
+                    # This allows manual override while still getting AI confidence
+                    if not incident.incident_type or use_ai_classification:
+                        # Use AI suggestion if confidence is high enough
+                        if ai_result['confidence'] >= llm_service.confidence_threshold:
+                            logger.info(f"Using AI suggested incident_type: {ai_result['incident_type']}")
+                            # Note: We'll store the AI suggestion in a metadata field instead of overriding
+                            # This preserves user choice while providing AI insights
+
+                except Exception as e:
+                    logger.error(f"AI classification failed, continuing without AI: {e}")
+                    # Continue without AI - don't block incident creation
+
             db_incident = Incident(
                 property_id=incident.property_id,
                 incident_type=incident.incident_type,
@@ -75,13 +107,14 @@ class IncidentService:
                 reported_by=user_id,
                 assigned_to=incident.assigned_to,
                 evidence=incident.evidence,
-                witnesses=incident.witnesses
+                witnesses=incident.witnesses,
+                ai_confidence=ai_confidence
             )
-            
+
             db.add(db_incident)
             db.commit()
             db.refresh(db_incident)
-            
+
             return IncidentResponse(
                 incident_id=db_incident.incident_id,
                 property_id=db_incident.property_id,
@@ -104,6 +137,28 @@ class IncidentService:
             )
         finally:
             db.close()
+
+    @staticmethod
+    async def get_ai_classification_suggestion(title: str, description: str, location: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get AI classification suggestion without creating an incident"""
+        try:
+            llm_service = get_llm_service()
+            result = llm_service.classify_incident(
+                description=description,
+                title=title,
+                location=location
+            )
+            logger.info(f"AI Classification suggestion: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to get AI classification: {e}")
+            return {
+                "incident_type": "other",
+                "severity": "medium",
+                "confidence": 0.0,
+                "reasoning": f"AI classification unavailable: {str(e)}",
+                "fallback_used": True
+            }
     
     @staticmethod
     async def get_incident(incident_id: str, user_id: str) -> IncidentResponse:
