@@ -603,58 +603,58 @@ const Patrols: React.FC = () => {
   return (
           <div className="space-y-6">
             {/* Metrics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6 pl-1">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                       <i className="fas fa-route text-white text-xl"></i>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-blue-700">{metrics.activePatrols}</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{metrics.activePatrols}</h3>
                     <p className="text-slate-600 text-sm">Currently in progress</p>
                   </div>
                 </CardContent>
               </Card>
               
               <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6 pl-1">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                       <i className="fas fa-user-shield text-white text-xl"></i>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-blue-700">{metrics.onDutyOfficers}</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{metrics.onDutyOfficers}</h3>
                     <p className="text-slate-600 text-sm">Out of {metrics.totalOfficers} total</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6 pl-1">
-                    <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                       <i className="fas fa-map-marked-alt text-white text-xl"></i>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-blue-700">{metrics.activeRoutes}</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{metrics.activeRoutes}</h3>
                     <p className="text-slate-600 text-sm">Active patrol routes</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-8">
-                  <div className="flex items-center justify-between mb-6 pl-1">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                       <i className="fas fa-check-circle text-white text-xl"></i>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-blue-700">{metrics.checkpointCompletionRate}%</h3>
+                    <h3 className="text-2xl font-bold text-slate-900">{metrics.checkpointCompletionRate}%</h3>
                     <p className="text-slate-600 text-sm">Checkpoint completion rate</p>
                   </div>
                 </CardContent>
@@ -1856,23 +1856,21 @@ const Patrols: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* HEADER - GOLD STANDARD LAYOUT */}
-      <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        
-        {/* Title Section - CENTER */}
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+      <div className="relative w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg">
+        <div className="relative max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-slate-600 to-slate-700 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-route text-white text-2xl" />
               </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-900">
-                Patrol Command Center
-              </h1>
-              <p className="text-slate-600 font-medium">
-                Advanced patrol management and security operations
-              </p>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">
+                  Patrol Command Center
+                </h1>
+                <p className="text-slate-600 font-medium">
+                  Advanced patrol management and security operations
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -1902,7 +1900,7 @@ const Patrols: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {renderTabContent()}
       </div>
 

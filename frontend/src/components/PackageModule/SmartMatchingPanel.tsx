@@ -15,8 +15,9 @@ interface Package {
   recipient_room?: string;
   sender_name: string;
   package_type: 'parcel' | 'document' | 'food' | 'equipment' | 'other';
+  package_size: 'small' | 'medium' | 'large' | 'oversized';
   description: string;
-  status: string;
+  status: 'received' | 'notified' | 'delivered' | 'picked_up' | 'expired' | 'returned';
   received_date: string;
   location: string;
 }
