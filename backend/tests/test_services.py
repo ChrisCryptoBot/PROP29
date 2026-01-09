@@ -6,12 +6,10 @@ from unittest.mock import Mock, patch
 from services.access_control_service import AccessControlService
 from services.guest_safety_service import GuestSafetyService
 from services.iot_environmental_service import IoTEnvironmentalService
-from services.cybersecurity_service import CybersecurityService
 from services.smart_parking_service import SmartParkingService
 from services.smart_lockers_service import SmartLockersService
 from services.banned_individuals_service import BannedIndividualsService
 from services.digital_handover_service import DigitalHandoverService
-from services.advanced_reports_service import AdvancedReportsService
 from services.event_log_service import EventLogService
 from services.visitors_service import VisitorsService
 from services.packages_service import PackagesService
@@ -158,47 +156,6 @@ class TestIoTEnvironmentalService:
         assert "temperature" in report
         assert "humidity" in report
         assert "air_quality" in report
-
-class TestCybersecurityService:
-    """Test Cybersecurity Service functionality."""
-    
-    def test_detect_threat(self, db_session):
-        """Test threat detection."""
-        service = CybersecurityService(db_session)
-        
-        threat_data = {
-            "threat_type": "brute_force",
-            "source_ip": "192.168.1.100",
-            "severity": "high",
-            "description": "Multiple failed login attempts"
-        }
-        
-        result = service.detect_threat(**threat_data)
-        assert result["threat_type"] == threat_data["threat_type"]
-        assert result["status"] == "detected"
-    
-    def test_block_ip(self, db_session):
-        """Test IP blocking functionality."""
-        service = CybersecurityService(db_session)
-        
-        result = service.block_ip(
-            ip_address="192.168.1.100",
-            reason="suspicious_activity",
-            duration_hours=24
-        )
-        assert result["blocked"] is True
-    
-    def test_get_security_report(self, db_session):
-        """Test security report generation."""
-        service = CybersecurityService(db_session)
-        
-        report = service.get_security_report(
-            start_date=datetime.now() - timedelta(days=7),
-            end_date=datetime.now()
-        )
-        assert "threats" in report
-        assert "blocked_ips" in report
-        assert "security_score" in report
 
 class TestSmartParkingService:
     """Test Smart Parking Service functionality."""
@@ -349,49 +306,6 @@ class TestDigitalHandoverService:
             end_date=datetime.now()
         )
         assert isinstance(history, list)
-
-class TestAdvancedReportsService:
-    """Test Advanced Reports Service functionality."""
-    
-    def test_generate_custom_report(self, db_session):
-        """Test generating custom reports."""
-        service = AdvancedReportsService(db_session)
-        
-        report_config = {
-            "report_type": "security_summary",
-            "date_range": "last_7_days",
-            "filters": {"location": "lobby"},
-            "format": "pdf"
-        }
-        
-        result = service.generate_custom_report(**report_config)
-        assert result["status"] == "generated"
-        assert "report_url" in result
-    
-    def test_get_analytics_dashboard(self, db_session):
-        """Test getting analytics dashboard data."""
-        service = AdvancedReportsService(db_session)
-        
-        dashboard = service.get_analytics_dashboard(
-            date_range="last_30_days"
-        )
-        assert "incidents" in dashboard
-        assert "access_logs" in dashboard
-        assert "visitors" in dashboard
-    
-    def test_export_data(self, db_session):
-        """Test data export functionality."""
-        service = AdvancedReportsService(db_session)
-        
-        export_config = {
-            "data_type": "access_logs",
-            "format": "csv",
-            "date_range": "last_7_days"
-        }
-        
-        result = service.export_data(**export_config)
-        assert result["status"] == "exported"
-        assert "download_url" in result
 
 class TestEventLogService:
     """Test Event Log Service functionality."""

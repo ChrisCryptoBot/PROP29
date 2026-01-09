@@ -54,7 +54,7 @@ Start-Process powershell -ArgumentList @"
     Set-Location '$FrontendDir'
     Write-Host '🎨 PROPER 2.9 Frontend' -ForegroundColor Green
     Write-Host '🌐 App: http://localhost:3000' -ForegroundColor Cyan
-    Write-Host '⏳ Compiling... (this may take 30-60 seconds)' -ForegroundColor Yellow
+    Write-Host "⏳ Compiling... (this may take 30-60 seconds)" -ForegroundColor Yellow
     Write-Host ''
     npm start
 "@ -WindowStyle Normal

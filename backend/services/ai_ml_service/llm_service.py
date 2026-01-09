@@ -191,7 +191,6 @@ Incident Types:
 - medical: Medical emergencies, injuries
 - fire: Fire hazards or alarms
 - flood: Water damage, flooding
-- cyber: Cybersecurity incidents
 - guest_complaint: General guest complaints
 - other: Other incidents
 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/UI/Card';
-import { Button } from '../components/UI/Button';
-import { Badge } from '../components/UI/Badge';
-import { Progress } from '../components/UI/Progress';
-import { cn } from '../utils/cn';
-import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showSuccess, showError } from '../utils/toast';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/UI/Card';
+import { Button } from '../../components/UI/Button';
+import { Badge } from '../../components/UI/Badge';
+import { Progress } from '../../components/UI/Progress';
+import { cn } from '../../utils/cn';
+import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showSuccess, showError } from '../../utils/toast';
 
 // Types
 interface CameraEntry {
@@ -139,7 +139,7 @@ const initialEvidence: EvidenceItem[] = [
   }
 ];
 
-const CameraMonitoring: React.FC = () => {
+const SecurityOperationsCenter: React.FC = () => {
   const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -2343,4 +2343,4 @@ const CameraMonitoring: React.FC = () => {
   );
 };
 
-export default CameraMonitoring;
+export default SecurityOperationsCenter;

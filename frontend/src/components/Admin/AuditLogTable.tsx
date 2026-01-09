@@ -42,36 +42,17 @@ const AuditLogTable: React.FC = () => {
   const loadAuditLogs = async () => {
     try {
       setLoading(true);
-      // Mock data for now - replace with actual API call
-      const mockData: AuditLog[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          user_name: 'admin@example.com',
-          action: 'LOGIN',
-          resource_type: 'AUTH',
-          resource_id: 'auth1',
-          timestamp: new Date().toISOString(),
-          ip_address: '192.168.1.100',
-          user_agent: 'Mozilla/5.0...',
-          details: { success: true }
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          user_name: 'security@example.com',
-          action: 'ACCESS',
-          resource_type: 'SECURITY',
-          resource_id: 'sec1',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          ip_address: '192.168.1.101',
-          user_agent: 'Mozilla/5.0...',
-          details: { module: 'cybersecurity' }
-        }
-      ];
-      setAuditLogs(mockData);
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/audit-logs');
+      if (response.ok) {
+        const data = await response.json();
+        setAuditLogs(data);
+      } else {
+        setAuditLogs([]);
+      }
     } catch (error) {
       showError('Failed to load audit logs');
+      setAuditLogs([]);
       console.error('Audit log error:', error);
     } finally {
       setLoading(false);

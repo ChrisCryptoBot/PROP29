@@ -42,142 +42,6 @@ interface LostItem {
   managerApprovedDate?: string;
 }
 
-const mockLostItems: LostItem[] = [
-  {
-    id: 1,
-    name: 'iPhone 14 Pro',
-    category: 'Electronics',
-    description: 'Black iPhone 14 Pro with clear case, found near pool area',
-    location: 'Pool Deck',
-    dateFound: '2025-01-27 14:30',
-    status: 'found',
-    value: 999,
-    photos: ['iphone_14_pro_1.jpg', 'iphone_14_pro_2.jpg'],
-    guestInfo: {
-      name: 'John Smith',
-      room: '302',
-      phone: '+1-555-0123',
-      email: 'john.smith@email.com',
-      checkInDate: '2025-01-25',
-      checkOutDate: '2025-01-28'
-    },
-    storageLocation: 'Storage Room A - Shelf 3',
-    qrCode: 'LOST_ITEM_001_QR',
-    aiMatchConfidence: 94.2,
-    expirationDate: '2025-02-27',
-    notificationsSent: 2,
-    lastNotificationDate: '2025-01-27 16:00',
-    legalCompliance: {
-      retentionPeriod: 90,
-      disposalDate: undefined,
-      disposalMethod: undefined
-    }
-  },
-  {
-    id: 2,
-    name: 'Gold Wedding Ring',
-    category: 'Jewelry',
-    description: '18k gold wedding band, size 7, found in lobby bathroom',
-    location: 'Main Lobby - Restroom',
-    dateFound: '2025-01-26 09:15',
-    status: 'claimed',
-    value: 2500,
-    photos: ['wedding_ring_1.jpg'],
-    guestInfo: {
-      name: 'Sarah Johnson',
-      room: '415',
-      phone: '+1-555-0456',
-      email: 'sarah.j@email.com',
-      checkInDate: '2025-01-24',
-      checkOutDate: '2025-01-27'
-    },
-    storageLocation: 'Storage Room A - Safe 1',
-    qrCode: 'LOST_ITEM_002_QR',
-    aiMatchConfidence: 98.7,
-    expirationDate: '2025-02-26',
-    notificationsSent: 1,
-    lastNotificationDate: '2025-01-26 10:30',
-    legalCompliance: {
-      retentionPeriod: 90,
-      disposalDate: undefined,
-      disposalMethod: undefined
-    }
-  },
-  {
-    id: 3,
-    name: 'Leather Wallet',
-    category: 'Personal Items',
-    description: 'Brown leather wallet with credit cards and ID',
-    location: 'Parking Garage Level 2',
-    dateFound: '2025-01-25 18:45',
-    status: 'found',
-    value: 150,
-    photos: ['wallet_1.jpg', 'wallet_2.jpg'],
-    storageLocation: 'Storage Room B - Drawer 2',
-    qrCode: 'LOST_ITEM_003_QR',
-    aiMatchConfidence: 87.3,
-    expirationDate: '2025-02-25',
-    notificationsSent: 0,
-    legalCompliance: {
-      retentionPeriod: 90,
-      disposalDate: undefined,
-      disposalMethod: undefined
-    }
-  },
-  {
-    id: 4,
-    name: 'Sunglasses - Ray-Ban',
-    category: 'Accessories',
-    description: 'Black Ray-Ban aviator sunglasses',
-    location: 'Restaurant - Table 12',
-    dateFound: '2025-01-24 12:30',
-    status: 'expired',
-    value: 200,
-    photos: ['sunglasses_1.jpg'],
-    storageLocation: 'Storage Room A - Shelf 1',
-    qrCode: 'LOST_ITEM_004_QR',
-    aiMatchConfidence: 92.1,
-    expirationDate: '2025-01-24',
-    notificationsSent: 3,
-    lastNotificationDate: '2025-01-24 14:00',
-    legalCompliance: {
-      retentionPeriod: 90,
-      disposalDate: '2025-01-25',
-      disposalMethod: 'Donated to local charity'
-    }
-  },
-  {
-    id: 5,
-    name: 'Laptop Bag - Tumi',
-    category: 'Accessories',
-    description: 'Black leather laptop bag with laptop inside',
-    location: 'Conference Room B',
-    dateFound: '2025-01-27 10:20',
-    status: 'found',
-    value: 800,
-    photos: ['laptop_bag_1.jpg'],
-    guestInfo: {
-      name: 'Michael Chen',
-      room: '208',
-      phone: '+1-555-0789',
-      email: 'm.chen@email.com',
-      checkInDate: '2025-01-26',
-      checkOutDate: '2025-01-29'
-    },
-    storageLocation: 'Storage Room A - Secure Area',
-    qrCode: 'LOST_ITEM_005_QR',
-    aiMatchConfidence: 96.5,
-    expirationDate: '2025-02-27',
-    notificationsSent: 1,
-    lastNotificationDate: '2025-01-27 11:00',
-    legalCompliance: {
-      retentionPeriod: 90,
-      disposalDate: undefined,
-      disposalMethod: undefined
-    }
-  }
-];
-
 const tabs = [
   { id: 'overview', label: 'Overview', path: '/modules/lost-and-found' },
   { id: 'storage', label: 'Storage Management', path: '/modules/storage-management' },
@@ -186,7 +50,7 @@ const tabs = [
 ];
 
 const LostAndFound: React.FC = () => {
-  const [items, setItems] = useState<LostItem[]>(mockLostItems);
+  const [items, setItems] = useState<LostItem[]>([]);
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [filter, setFilter] = useState<'all' | 'found' | 'claimed' | 'expired' | 'donated'>('all');
   const [selectedItem, setSelectedItem] = useState<LostItem | null>(null);
@@ -354,6 +218,17 @@ const LostAndFound: React.FC = () => {
     }
   }, [items.length, registerForm]);
 
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'found': return 'text-blue-800 bg-blue-100';
+      case 'claimed': return 'text-green-800 bg-green-100';
+      case 'expired': return 'text-yellow-800 bg-yellow-100';
+      case 'donated': return 'text-slate-800 bg-slate-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  // Legacy function for compatibility
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'found': return 'default';
@@ -396,7 +271,7 @@ const LostAndFound: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-search text-white text-2xl" />
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
@@ -435,19 +310,19 @@ const LostAndFound: React.FC = () => {
       </div>
 
       {/* Main Content - GOLD STANDARD LAYOUT */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {/* Key Metrics - GOLD STANDARD 4-CARD LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Items */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-box text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.total}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -459,14 +334,14 @@ const LostAndFound: React.FC = () => {
 
           {/* Found Items */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-search text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.found}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -478,14 +353,14 @@ const LostAndFound: React.FC = () => {
 
           {/* Claimed Items */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-check-circle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.claimed}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -497,14 +372,14 @@ const LostAndFound: React.FC = () => {
 
           {/* Expired Items */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-clock text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.expired}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -521,13 +396,15 @@ const LostAndFound: React.FC = () => {
         {currentTab === 'overview' && (
           <>
             {/* Item Management */}
-            <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl mb-8">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm mb-8">
+              <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-box-open mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-box-open text-white" />
+                  </div>
                   Item Management
                 </CardTitle>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
                   {['all', 'found', 'claimed', 'expired', 'donated'].map(filterType => (
                     <Button
                       key={filterType}
@@ -547,7 +424,7 @@ const LostAndFound: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredItems.map(item => (
                     <Card 
                       key={item.id}
@@ -569,9 +446,9 @@ const LostAndFound: React.FC = () => {
                               <p className="text-slate-600 text-sm">{item.category}</p>
                             </div>
                           </div>
-                          <Badge variant={getStatusColor(item.status)}>
+                          <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getStatusBadgeClass(item.status)}`}>
                             {item.status.toUpperCase()}
-                          </Badge>
+                          </span>
                         </div>
                         
                         <div className="space-y-2 mb-4">
@@ -673,7 +550,9 @@ const LostAndFound: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-exclamation-triangle mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-exclamation-triangle text-white" />
+                  </div>
                   Emergency Actions
                 </CardTitle>
               </CardHeader>
@@ -709,7 +588,7 @@ const LostAndFound: React.FC = () => {
         {currentTab === 'storage' && (
           <div className="space-y-6">
             {/* Storage Location Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {['Storage A', 'Storage B', 'Storage C', 'Storage D'].map((location, idx) => {
                 const itemCount = items.filter(i => i.storageLocation === location).length;
                 const capacity = 20;
@@ -726,7 +605,7 @@ const LostAndFound: React.FC = () => {
                         <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg flex items-center justify-center">
                           <i className="fas fa-warehouse text-slate-600" />
                         </div>
-                        <Badge variant="outline" className="text-slate-700">{location}</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-slate-800 bg-slate-100">{location}</span>
                       </div>
                       <h3 className="text-3xl font-bold text-slate-900 mb-1">{itemCount}</h3>
                       <p className="text-sm text-slate-600 mb-3">Items Stored</p>
@@ -793,9 +672,9 @@ const LostAndFound: React.FC = () => {
                                   <p className="text-sm font-medium text-slate-900 truncate">{item.name}</p>
                                   <p className="text-xs text-slate-600">{item.category}</p>
                                 </div>
-                                <Badge variant={getStatusColor(item.status)} className="flex-shrink-0">
+                                <span className={`px-2.5 py-1 text-xs font-semibold rounded flex-shrink-0 ${getStatusBadgeClass(item.status)}`}>
                                   {item.status}
-                                </Badge>
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -865,7 +744,7 @@ const LostAndFound: React.FC = () => {
         {currentTab === 'analytics' && (
           <div className="space-y-6">
             {/* Key Performance Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
@@ -918,12 +797,14 @@ const LostAndFound: React.FC = () => {
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Recovery Rate Trend */}
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <i className="fas fa-chart-line text-slate-600 mr-2" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                      <i className="fas fa-chart-line text-white" />
+                    </div>
                     Recovery Rate Trend
               </CardTitle>
             </CardHeader>
@@ -959,9 +840,11 @@ const LostAndFound: React.FC = () => {
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <i className="fas fa-chart-bar text-slate-600 mr-2" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                      <i className="fas fa-chart-bar text-white" />
+                    </div>
                     Most Common Items
-                  </CardTitle>
+              </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -990,14 +873,16 @@ const LostAndFound: React.FC = () => {
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Status Distribution */}
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <i className="fas fa-chart-pie text-slate-600 mr-2" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                      <i className="fas fa-chart-pie text-white" />
+                    </div>
                     Status Distribution
-                  </CardTitle>
+              </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -1124,7 +1009,7 @@ const LostAndFound: React.FC = () => {
                 <p className="text-sm text-slate-600 mt-1">Configure general system preferences</p>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-700">
                       Default Retention Period (days)
@@ -1361,7 +1246,7 @@ const LostAndFound: React.FC = () => {
                 <p className="text-sm text-slate-600 mt-1">Configure disposal and legal compliance settings</p>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-700">
                       Default Disposal Method
@@ -1443,11 +1328,11 @@ const LostAndFound: React.FC = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between py-2 border-b border-slate-100">
                         <span className="text-sm text-slate-600">Category</span>
-                        <Badge variant="outline">{selectedItem.category}</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-slate-800 bg-slate-100">{selectedItem.category}</span>
                       </div>
                       <div className="flex items-center justify-between py-2 border-b border-slate-100">
                         <span className="text-sm text-slate-600">Status</span>
-                        <Badge variant={getStatusColor(selectedItem.status)}>{selectedItem.status.toUpperCase()}</Badge>
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getStatusBadgeClass(selectedItem.status)}`}>{selectedItem.status.toUpperCase()}</span>
                       </div>
                       <div className="flex items-center justify-between py-2 border-b border-slate-100">
                         <span className="text-sm text-slate-600">Estimated Value</span>
@@ -1549,7 +1434,7 @@ const LostAndFound: React.FC = () => {
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm text-slate-600">Notifications Sent</span>
-                          <Badge variant="outline">{selectedItem.notificationsSent}</Badge>
+                          <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">{selectedItem.notificationsSent}</span>
                         </div>
                         {selectedItem.lastNotificationDate && (
                           <div className="flex items-center justify-between mb-4">

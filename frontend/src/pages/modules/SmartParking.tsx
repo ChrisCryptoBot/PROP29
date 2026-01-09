@@ -187,52 +187,9 @@ const SmartParking: React.FC = () => {
     notes: ''
   });
 
-  // Mock data initialization
+  // Data will be loaded from API
   useEffect(() => {
-    const mockSpaces: ParkingSpace[] = Array.from({ length: 200 }, (_, i) => ({
-      id: `space-${i + 1}`,
-      number: `P${String(i + 1).padStart(3, '0')}`,
-      type: i < 80 ? 'guest' : i < 140 ? 'staff' : i < 170 ? 'valet' : i < 185 ? 'handicap' : 'ev',
-      status: Math.random() > 0.3 ? 'occupied' : 'available',
-      floor: Math.floor(i / 50) + 1,
-      zone: ['A', 'B', 'C', 'D'][Math.floor(i / 50)],
-      ...(Math.random() > 0.3 && {
-        guestId: `guest-${Math.floor(Math.random() * 100)}`,
-        vehicleInfo: {
-          make: ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Audi'][Math.floor(Math.random() * 5)],
-          model: ['Camry', 'Civic', 'X3', 'C-Class', 'A4'][Math.floor(Math.random() * 5)],
-          color: ['White', 'Black', 'Silver', 'Blue', 'Red'][Math.floor(Math.random() * 5)],
-          plate: `ABC-${Math.floor(Math.random() * 1000)}`
-        },
-        checkInTime: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-        duration: Math.floor(Math.random() * 8) + 1,
-        cost: Math.floor(Math.random() * 50) + 10
-      })
-    }));
-
-    const mockGuests: GuestParking[] = Array.from({ length: 50 }, (_, i) => ({
-      id: `guest-parking-${i + 1}`,
-      guestId: `guest-${i + 1}`,
-      guestName: `Guest ${i + 1}`,
-      roomNumber: `${Math.floor(Math.random() * 20) + 100}`,
-      vehicleInfo: {
-        make: ['Toyota', 'Honda', 'BMW', 'Mercedes', 'Audi'][Math.floor(Math.random() * 5)],
-        model: ['Camry', 'Civic', 'X3', 'C-Class', 'A4'][Math.floor(Math.random() * 5)],
-        color: ['White', 'Black', 'Silver', 'Blue', 'Red'][Math.floor(Math.random() * 5)],
-        plate: `ABC-${Math.floor(Math.random() * 1000)}`
-      },
-      spaceId: `space-${i + 1}`,
-      spaceNumber: `P${String(i + 1).padStart(3, '0')}`,
-      checkInTime: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-      expectedCheckOut: new Date(Date.now() + Math.random() * 86400000).toISOString(),
-      status: Math.random() > 0.2 ? 'active' : 'completed',
-      cost: Math.floor(Math.random() * 50) + 10,
-      valetRequested: Math.random() > 0.7,
-      notes: Math.random() > 0.8 ? 'Special requirements' : undefined
-    }));
-
-    setSpaces(mockSpaces);
-    setGuestParkings(mockGuests);
+    // Initialize empty - data will come from API
   }, []);
 
   // Memoized calculations
@@ -463,43 +420,43 @@ const SmartParking: React.FC = () => {
   return (
           <div className="space-y-6">
             {/* Key Metrics - GOLD STANDARD 4-CARD LAYOUT */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-4">
+                <CardContent className="pt-6 px-6 pb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mb-4 mt-2 shadow-lg">
                     <i className="fas fa-parking text-white text-xl" />
                   </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">{analytics.totalSpaces}</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{analytics.totalSpaces}</div>
                   <div className="text-sm text-slate-600">Total Spaces</div>
                 </CardContent>
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-4">
+                <CardContent className="pt-6 px-6 pb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mb-4 mt-2 shadow-lg">
                     <i className="fas fa-check-circle text-white text-xl" />
         </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">{analytics.availableSpaces}</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{analytics.availableSpaces}</div>
                   <div className="text-sm text-slate-600">Available</div>
                 </CardContent>
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-4">
+                <CardContent className="pt-6 px-6 pb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mb-4 mt-2 shadow-lg">
                     <i className="fas fa-users text-white text-xl" />
               </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">{activeGuestParkings.length}</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">{activeGuestParkings.length}</div>
                   <div className="text-sm text-slate-600">Active Guests</div>
                 </CardContent>
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-4">
+                <CardContent className="pt-6 px-6 pb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mb-4 mt-2 shadow-lg">
                     <i className="fas fa-dollar-sign text-white text-xl" />
               </div>
-                  <div className="text-2xl font-bold text-slate-900 mb-1">${analytics.revenue.today}</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">${analytics.revenue.today}</div>
                   <div className="text-sm text-slate-600">Today's Revenue</div>
                 </CardContent>
               </Card>
@@ -509,7 +466,9 @@ const SmartParking: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <h3 className="flex items-center text-xl font-semibold text-slate-900">
-                  <i className="fas fa-exclamation-triangle mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-exclamation-triangle text-white" />
+                  </div>
                   Emergency Actions
                 </h3>
               </CardHeader>
@@ -520,7 +479,7 @@ const SmartParking: React.FC = () => {
                       const overdueVehicles = guestParkings.filter(g => g.status === 'overdue');
                       showSuccess(`${overdueVehicles.length} vehicles have exceeded their time limit`);
                     }}
-                    className="!bg-red-600 hover:!bg-red-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                   >
                     <i className="fas fa-exclamation-triangle mr-2" />
                     Overdue Alert
@@ -530,7 +489,7 @@ const SmartParking: React.FC = () => {
                       const activeVehicles = guestParkings.filter(g => g.status === 'active');
                       showSuccess(`${activeVehicles.length} vehicles currently parked`);
                     }}
-                    className="!bg-orange-600 hover:!bg-orange-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                   >
                     <i className="fas fa-car mr-2" />
                     Active Vehicles
@@ -542,7 +501,12 @@ const SmartParking: React.FC = () => {
             {/* Recent Activity */}
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Recent Parking Activity</h3>
+                <h3 className="flex items-center text-lg font-semibold text-slate-900">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-history text-white" />
+                  </div>
+                  Recent Parking Activity
+                </h3>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -582,55 +546,55 @@ const SmartParking: React.FC = () => {
             </div>
 
             {/* Space Status Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-check-circle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{availableSpaces.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{availableSpaces.length}</h3>
                     <p className="text-slate-600 text-sm">Available</p>
               </div>
             </CardContent>
           </Card>
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-parking text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{occupiedSpaces.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{occupiedSpaces.length}</h3>
                     <p className="text-slate-600 text-sm">Occupied</p>
               </div>
             </CardContent>
           </Card>
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-clock text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{reservedSpaces.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{reservedSpaces.length}</h3>
                     <p className="text-slate-600 text-sm">Reserved</p>
               </div>
             </CardContent>
           </Card>
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-tools text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{maintenanceSpaces.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{maintenanceSpaces.length}</h3>
                     <p className="text-slate-600 text-sm">Maintenance</p>
               </div>
             </CardContent>
@@ -727,42 +691,42 @@ const SmartParking: React.FC = () => {
                             </div>
 
             {/* Guest Status Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-users text-white text-xl" />
                             </div>
                           </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{activeGuestParkings.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{activeGuestParkings.length}</h3>
                     <p className="text-slate-600 text-sm">Active</p>
                         </div>
                 </CardContent>
               </Card>
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-check-circle text-white text-xl" />
                           </div>
                           </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{completedGuestParkings.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{completedGuestParkings.length}</h3>
                     <p className="text-slate-600 text-sm">Completed</p>
                         </div>
                       </CardContent>
                     </Card>
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-exclamation-triangle text-white text-xl" />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{overdueGuestParkings.length}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{overdueGuestParkings.length}</h3>
                     <p className="text-slate-600 text-sm">Overdue</p>
                 </div>
               </CardContent>
@@ -772,7 +736,12 @@ const SmartParking: React.FC = () => {
             {/* Guest List */}
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
-                <h3 className="text-lg font-semibold text-slate-900">Guest Parking Records</h3>
+                <h3 className="flex items-center text-lg font-semibold text-slate-900">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-list text-white" />
+                  </div>
+                  Guest Parking Records
+                </h3>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -861,58 +830,58 @@ const SmartParking: React.FC = () => {
         return (
           <div className="space-y-6">
             {/* Analytics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-chart-line text-white text-xl" />
                           </div>
                           </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">{analytics.occupancyRate}%</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">{analytics.occupancyRate}%</h3>
                     <p className="text-slate-600 text-sm">Occupancy Rate</p>
                           </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-dollar-sign text-white text-xl" />
                           </div>
                         </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">${analytics.revenue.today}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">${analytics.revenue.today}</h3>
                     <p className="text-slate-600 text-sm">Today's Revenue</p>
                   </div>
                 </CardContent>
               </Card>
 
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-calendar-week text-white text-xl" />
                             </div>
                           </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">${analytics.revenue.thisWeek}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">${analytics.revenue.thisWeek}</h3>
                     <p className="text-slate-600 text-sm">This Week</p>
                   </div>
                       </CardContent>
                     </Card>
 
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mt-2 shadow-lg">
                       <i className="fas fa-calendar-alt text-white text-xl" />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">${analytics.revenue.thisMonth}</h3>
+                    <h3 className="text-2xl font-bold text-blue-600">${analytics.revenue.thisMonth}</h3>
                     <p className="text-slate-600 text-sm">This Month</p>
                 </div>
               </CardContent>
@@ -927,23 +896,23 @@ const SmartParking: React.FC = () => {
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                   <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <div className="text-2xl font-bold text-slate-900">{guestSpaces.length}</div>
+                    <div className="text-2xl font-bold text-blue-600">{guestSpaces.length}</div>
                     <div className="text-sm text-slate-600">Guest Spaces</div>
                   </div>
                   <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <div className="text-2xl font-bold text-slate-900">{staffSpaces.length}</div>
+                    <div className="text-2xl font-bold text-blue-600">{staffSpaces.length}</div>
                     <div className="text-sm text-slate-600">Staff Spaces</div>
                   </div>
                   <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <div className="text-2xl font-bold text-slate-900">{valetSpaces.length}</div>
+                    <div className="text-2xl font-bold text-blue-600">{valetSpaces.length}</div>
                     <div className="text-sm text-slate-600">Valet Spaces</div>
                   </div>
                   <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <div className="text-2xl font-bold text-slate-900">{handicapSpaces.length}</div>
+                    <div className="text-2xl font-bold text-blue-600">{handicapSpaces.length}</div>
                     <div className="text-sm text-slate-600">Handicap Spaces</div>
                   </div>
                   <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <div className="text-2xl font-bold text-slate-900">{evSpaces.length}</div>
+                    <div className="text-2xl font-bold text-blue-600">{evSpaces.length}</div>
                     <div className="text-sm text-slate-600">EV Spaces</div>
                   </div>
               </div>
@@ -1199,7 +1168,7 @@ const SmartParking: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-parking text-white text-2xl" />
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
@@ -1244,7 +1213,7 @@ const SmartParking: React.FC = () => {
       </div>
 
       {/* Main Content - GOLD STANDARD LAYOUT */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {renderTabContent()}
       </div>
 

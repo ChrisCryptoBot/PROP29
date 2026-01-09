@@ -83,12 +83,6 @@ export interface SecurityChartData {
   }[];
 }
 
-export interface CybersecurityMetrics {
-  threatLevel: number;
-  incidentCount: number;
-  systemHealth: number;
-  lastScan: string;
-}
 
 export interface EventLogEntry {
   id: string;

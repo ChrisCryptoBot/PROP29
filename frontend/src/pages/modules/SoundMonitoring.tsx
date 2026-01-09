@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
-import { Badge } from '../../components/UI/Badge';
 import { cn } from '../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../utils/toast';
 import { ModuleService } from '../../services/ModuleService';
@@ -57,126 +56,30 @@ interface AudioVisualization {
   timestamp: string;
 }
 
-const mockSoundAlerts: SoundAlert[] = [
-  {
-    id: 1,
-    type: 'Glass Break',
-    location: 'Building A - Floor 1',
-    timestamp: '2024-01-15T11:15:00Z',
-    decibelLevel: 85,
-    status: 'investigating',
-    severity: 'high',
-    frequency: 2000,
-    duration: 0.5,
-    description: 'Glass break detected in lobby area',
-    assignedTo: 'Security Team Alpha',
-    responseTime: 120
-  },
-  {
-    id: 2,
-    type: 'Gunshot Detection',
-    location: 'Parking Lot',
-    timestamp: '2024-01-15T10:45:00Z',
-    decibelLevel: 120,
-    status: 'false_positive',
-    severity: 'critical',
-    frequency: 3000,
-    duration: 0.2,
-    description: 'Potential gunshot detected - verified as vehicle backfire',
-    assignedTo: 'Security Team Bravo',
-    responseTime: 60
-  },
-  {
-    id: 3,
-    type: 'Excessive Noise',
-    location: 'Pool Area',
-    timestamp: '2024-01-15T09:30:00Z',
-    decibelLevel: 95,
-    status: 'resolved',
-    severity: 'medium',
-    frequency: 500,
-    duration: 300,
-    description: 'Pool party noise exceeded threshold',
-    assignedTo: 'Pool Security',
-    responseTime: 180
-  }
-];
-
-const mockSoundZones: SoundZone[] = [
-  {
-    id: '1',
-    name: 'Main Lobby',
-    location: 'Building A - Floor 1',
-    type: 'public',
-    status: 'active',
-    currentDecibelLevel: 45,
-    threshold: 80,
-    lastAlert: '2024-01-15T11:15:00Z',
-    sensorCount: 4,
-    coverage: 100
-  },
-  {
-    id: '2',
-    name: 'Pool Area',
-    location: 'Recreation Center',
-    type: 'recreation',
-    status: 'active',
-    currentDecibelLevel: 35,
-    threshold: 90,
-    lastAlert: '2024-01-15T09:30:00Z',
-    sensorCount: 6,
-    coverage: 95
-  },
-  {
-    id: '3',
-    name: 'Guest Rooms Floor 2',
-    location: 'Building A - Floor 2',
-    type: 'private',
-    status: 'active',
-    currentDecibelLevel: 25,
-    threshold: 60,
-    sensorCount: 8,
-    coverage: 100
-  }
-];
-
-const mockSoundMetrics: SoundMetrics = {
-  totalAlerts: 15,
-  activeAlerts: 1,
-  resolvedToday: 8,
-  averageDecibelLevel: 42,
-  peakDecibelLevel: 120,
-  systemUptime: 99.2,
-  falsePositiveRate: 12.5,
-  responseTime: 2.5,
-  zonesMonitored: 12,
-  sensorsActive: 45
-};
-
-const mockAudioVisualization: AudioVisualization = {
-  waveform: [0.2, 0.5, 0.8, 0.6, 0.3, 0.7, 0.9, 0.4, 0.6, 0.8, 0.3, 0.5, 0.7, 0.2, 0.4, 0.6],
-  spectrum: [
-    { frequency: 20, amplitude: 0.1 },
-    { frequency: 50, amplitude: 0.3 },
-    { frequency: 100, amplitude: 0.6 },
-    { frequency: 200, amplitude: 0.8 },
-    { frequency: 500, amplitude: 0.4 },
-    { frequency: 1000, amplitude: 0.7 },
-    { frequency: 2000, amplitude: 0.5 },
-    { frequency: 5000, amplitude: 0.2 }
-  ],
-  realTimeLevel: 45,
-  isRecording: true,
-  timestamp: '2024-01-15T12:00:00Z'
-};
-
 const SoundMonitoring: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [soundAlerts, setSoundAlerts] = useState<SoundAlert[]>([]);
   const [soundZones, setSoundZones] = useState<SoundZone[]>([]);
-  const [metrics, setMetrics] = useState<SoundMetrics>(mockSoundMetrics);
-  const [audioVisualization, setAudioVisualization] = useState<AudioVisualization>(mockAudioVisualization);
+  const [metrics, setMetrics] = useState<SoundMetrics>({
+    totalAlerts: 0,
+    activeAlerts: 0,
+    resolvedToday: 0,
+    averageDecibelLevel: 0,
+    peakDecibelLevel: 0,
+    systemUptime: 0,
+    falsePositiveRate: 0,
+    responseTime: 0,
+    zonesMonitored: 0,
+    sensorsActive: 0
+  });
+  const [audioVisualization, setAudioVisualization] = useState<AudioVisualization>({
+    waveform: [],
+    spectrum: [],
+    realTimeLevel: 0,
+    isRecording: false,
+    timestamp: new Date().toISOString()
+  });
   const [loading, setLoading] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<SoundAlert | null>(null);
   
@@ -192,43 +95,39 @@ const SoundMonitoring: React.FC = () => {
   ];
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setSoundAlerts(mockSoundAlerts);
-      setSoundZones(mockSoundZones);
-      setLoading(false);
-    }, 500);
+    // Data will be loaded from API
+    setLoading(false);
   }, []);
 
-  // Helper functions
-  const getSeverityBadgeVariant = (severity: string) => {
+  // Gold Standard Badge Helper Functions
+  const getSeverityBadgeClass = (severity: string): string => {
     switch (severity) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'warning';
-      case 'low': return 'default';
-      default: return 'secondary';
+      case 'critical': return 'text-red-800 bg-red-100';
+      case 'high': return 'text-orange-800 bg-orange-100';
+      case 'medium': return 'text-yellow-800 bg-yellow-100';
+      case 'low': return 'text-blue-800 bg-blue-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeClass = (status: string): string => {
     switch (status) {
-      case 'active': return 'destructive';
-      case 'investigating': return 'warning';
-      case 'resolved': return 'default';
-      case 'false_positive': return 'secondary';
-      default: return 'secondary';
+      case 'active': return 'text-red-800 bg-red-100';
+      case 'investigating': return 'text-blue-800 bg-blue-100';
+      case 'resolved': return 'text-green-800 bg-green-100';
+      case 'false_positive': return 'text-slate-800 bg-slate-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
-  const getZoneTypeBadgeVariant = (type: string) => {
+  const getZoneTypeBadgeClass = (type: string): string => {
     switch (type) {
-      case 'public': return 'default';
-      case 'guest': return 'secondary';
-      case 'recreation': return 'warning';
-      case 'private': return 'destructive';
-      case 'dining': return 'outline';
-      default: return 'secondary';
+      case 'public': return 'text-blue-800 bg-blue-100';
+      case 'guest': return 'text-green-800 bg-green-100';
+      case 'recreation': return 'text-yellow-800 bg-yellow-100';
+      case 'private': return 'text-red-800 bg-red-100';
+      case 'dining': return 'text-purple-800 bg-purple-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
@@ -294,19 +193,19 @@ const SoundMonitoring: React.FC = () => {
         return (
           <div className="space-y-8">
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-exclamation-triangle text-white text-xl" />
                     </div>
-                    <Badge variant="destructive" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">
                       Active
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.activeAlerts}
                     </h3>
                     <p className="text-slate-600 font-medium">Active Alerts</p>
@@ -315,17 +214,17 @@ const SoundMonitoring: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-volume-up text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">
                       {metrics.averageDecibelLevel}dB
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.averageDecibelLevel}
                     </h3>
                     <p className="text-slate-600 font-medium">Avg. Decibel Level</p>
@@ -334,17 +233,17 @@ const SoundMonitoring: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-map-marker-alt text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">
                       Zones
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.zonesMonitored}
                     </h3>
                     <p className="text-slate-600 font-medium">Zones Monitored</p>
@@ -353,17 +252,17 @@ const SoundMonitoring: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-microchip text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">
                       Sensors
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.sensorsActive}
                     </h3>
                     <p className="text-slate-600 font-medium">Active Sensors</p>
@@ -376,7 +275,9 @@ const SoundMonitoring: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-bell mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-bell text-white text-lg" />
+                  </div>
                   Recent Sound Alerts
                 </CardTitle>
               </CardHeader>
@@ -399,12 +300,12 @@ const SoundMonitoring: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                           {alert.severity}
-                        </Badge>
-                        <Badge variant={getStatusBadgeVariant(alert.status)}>
+                        </span>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(alert.status))}>
                           {alert.status}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -416,7 +317,9 @@ const SoundMonitoring: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-bolt mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-bolt text-white text-lg" />
+                  </div>
                   Quick Actions
                 </CardTitle>
               </CardHeader>
@@ -531,7 +434,9 @@ const SoundMonitoring: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-map mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-map text-white text-lg" />
+                  </div>
                   Sound Zones Status
                 </CardTitle>
               </CardHeader>
@@ -541,9 +446,9 @@ const SoundMonitoring: React.FC = () => {
                     <div key={zone.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-slate-900">{zone.name}</h3>
-                        <Badge variant={getZoneTypeBadgeVariant(zone.type)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getZoneTypeBadgeClass(zone.type))}>
                           {zone.type}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div>
@@ -591,7 +496,9 @@ const SoundMonitoring: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-exclamation-triangle mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-exclamation-triangle text-white text-lg" />
+                  </div>
                   Sound Alerts
                 </CardTitle>
               </CardHeader>
@@ -617,12 +524,12 @@ const SoundMonitoring: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                           {alert.severity}
-                        </Badge>
-                        <Badge variant={getStatusBadgeVariant(alert.status)}>
+                        </span>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(alert.status))}>
                           {alert.status}
-                        </Badge>
+                        </span>
                         {alert.status === 'active' && (
                           <Button
                             size="sm"
@@ -662,28 +569,30 @@ const SoundMonitoring: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-chart-bar mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-chart-bar text-white text-lg" />
+                  </div>
                   Sound Analytics
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <i className="fas fa-clock text-white text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">Response Time</h3>
                     <p className="text-slate-600">{metrics.responseTime} minutes</p>
                   </div>
                   <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <i className="fas fa-shield-alt text-white text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">System Uptime</h3>
                     <p className="text-slate-600">{metrics.systemUptime}%</p>
                   </div>
                   <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <i className="fas fa-bullseye text-white text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">False Positive Rate</h3>
@@ -698,7 +607,7 @@ const SoundMonitoring: React.FC = () => {
       case 'settings':
         return (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">
               <i className="fas fa-cogs text-white text-2xl" />
             </div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Sound Monitoring Settings</h3>
@@ -720,11 +629,11 @@ const SoundMonitoring: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-volume-up text-white text-2xl" />
               </div>
               {audioVisualization.isRecording && (
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center animate-pulse">
                   <i className="fas fa-microphone text-white text-xs" />
                 </div>
               )}
@@ -761,7 +670,7 @@ const SoundMonitoring: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-[1800px] mx-auto px-6 py-8">
         {renderTabContent()}
       </div>
     </div>

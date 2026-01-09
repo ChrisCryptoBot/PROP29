@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
 import { Badge } from '../../components/UI/Badge';
+import { cn } from '../../utils/cn';
 
 interface User {
   id: number;
@@ -71,6 +72,27 @@ const SystemAdministration = () => {
     { id: 'security', label: 'Security' },
     { id: 'audit', label: 'Audit Log' }
   ];
+
+  // Badge helper functions
+  const getBadgeClass = (variant: string) => {
+    switch (variant) {
+      case 'success': return 'text-green-800 bg-green-100';
+      case 'destructive': return 'text-red-800 bg-red-100';
+      case 'warning': return 'text-yellow-800 bg-yellow-100';
+      case 'secondary': return 'text-slate-800 bg-slate-100';
+      case 'outline': return 'text-slate-600 bg-white border border-slate-300';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  const getSeverityBadgeClass = (severity: string) => {
+    switch (severity) {
+      case 'high': return 'text-red-800 bg-red-100';
+      case 'medium': return 'text-yellow-800 bg-yellow-100';
+      case 'low': return 'text-green-800 bg-green-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
 
   // Validation functions
   const validateEmail = (email: string): boolean => {
@@ -327,16 +349,16 @@ const SystemAdministration = () => {
             )}
 
             {/* Key Metrics - Enhanced Gold Standard Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {/* Total Users with Enhanced Metrics */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-users text-white text-lg"></i>
               </div>
-                  <Badge variant="success" className="text-xs">+12%</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">+12%</span>
               </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">{systemMetrics.totalUsers}</div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{systemMetrics.totalUsers}</div>
                 <div className="text-slate-600 font-medium">Total Users</div>
                 <div className="text-sm text-slate-500 mt-1">{systemMetrics.activeUsers} active, {systemMetrics.inactiveUsers} inactive</div>
                 <div className="mt-3 flex items-center text-xs text-green-600">
@@ -346,14 +368,14 @@ const SystemAdministration = () => {
             </div>
 
               {/* Active Integrations with Status */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-plug text-white text-lg"></i>
                   </div>
-                  <Badge variant="success" className="text-xs">All Online</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">All Online</span>
                 </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">{systemMetrics.activeIntegrations}</div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{systemMetrics.activeIntegrations}</div>
                 <div className="text-slate-600 font-medium">Active Integrations</div>
                 <div className="text-sm text-slate-500 mt-1">{systemMetrics.inactiveIntegrations} offline</div>
                 <div className="mt-3 flex items-center text-xs text-blue-600">
@@ -363,14 +385,14 @@ const SystemAdministration = () => {
         </div>
 
               {/* System Health with Real-time Metrics */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-heartbeat text-white text-lg"></i>
                   </div>
-                  <Badge variant="success" className="text-xs">Excellent</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Excellent</span>
                 </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">{systemMetrics.systemHealth}%</div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{systemMetrics.systemHealth}%</div>
                 <div className="text-slate-600 font-medium">System Health</div>
                 <div className="text-sm text-slate-500 mt-1">Uptime: {systemMetrics.uptime}</div>
                 <div className="mt-3 flex items-center text-xs text-green-600">
@@ -380,14 +402,14 @@ const SystemAdministration = () => {
               </div>
 
               {/* Security Score with Compliance */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-shield-alt text-white text-lg"></i>
                 </div>
-                  <Badge variant="success" className="text-xs">{systemMetrics.complianceStatus}</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">{systemMetrics.complianceStatus}</span>
               </div>
-                <div className="text-3xl font-bold text-slate-800 mb-1">{systemMetrics.securityScore}</div>
+                <div className="text-3xl font-bold text-blue-600 mb-1">{systemMetrics.securityScore}</div>
                 <div className="text-slate-600 font-medium">Security Score</div>
                 <div className="text-sm text-slate-500 mt-1">Response time: {systemMetrics.responseTime}</div>
                 <div className="mt-3 flex items-center text-xs text-green-600">
@@ -398,16 +420,16 @@ const SystemAdministration = () => {
       </div>
 
             {/* System Performance Metrics - Enhanced Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               {/* Database Performance */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-database text-white text-lg"></i>
                 </div>
-                  <Badge variant="success" className="text-xs">Optimal</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Optimal</span>
               </div>
-                <div className="text-2xl font-bold text-slate-800 mb-1">{systemMetrics.responseTime}</div>
+                <div className="text-2xl font-bold text-blue-600 mb-1">{systemMetrics.responseTime}</div>
                 <div className="text-slate-600 font-medium">Response Time</div>
                 <div className="text-sm text-slate-500 mt-1">Memory: {systemMetrics.memoryUsage}%</div>
                 <div className="mt-3 flex items-center text-xs text-green-600">
@@ -417,14 +439,14 @@ const SystemAdministration = () => {
               </div>
 
               {/* API Performance */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-code text-white text-lg"></i>
                 </div>
-                  <Badge variant="success" className="text-xs">Healthy</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Healthy</span>
               </div>
-                <div className="text-2xl font-bold text-slate-800 mb-1">{systemMetrics.networkLatency}</div>
+                <div className="text-2xl font-bold text-blue-600 mb-1">{systemMetrics.networkLatency}</div>
                 <div className="text-slate-600 font-medium">Network Latency</div>
                 <div className="text-sm text-slate-500 mt-1">Uptime: {systemMetrics.uptime}</div>
                 <div className="mt-3 flex items-center text-xs text-blue-600">
@@ -434,14 +456,14 @@ const SystemAdministration = () => {
               </div>
 
               {/* Backup & Recovery */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-cloud-upload-alt text-white text-lg"></i>
                 </div>
-                  <Badge variant="success" className="text-xs">Current</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Current</span>
               </div>
-                <div className="text-2xl font-bold text-slate-800 mb-1">{systemMetrics.lastBackup}</div>
+                <div className="text-2xl font-bold text-blue-600 mb-1">{systemMetrics.lastBackup}</div>
                 <div className="text-slate-600 font-medium">Last Backup</div>
                 <div className="text-sm text-slate-500 mt-1">Disk usage: {systemMetrics.diskUsage}%</div>
                 <div className="mt-3 flex items-center text-xs text-green-600">
@@ -451,14 +473,14 @@ const SystemAdministration = () => {
               </div>
 
           {/* System Resources */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                     <i className="fas fa-tachometer-alt text-white text-lg"></i>
                 </div>
-                  <Badge variant="success" className="text-xs">Normal</Badge>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Normal</span>
               </div>
-                <div className="text-2xl font-bold text-slate-800 mb-1">{systemMetrics.cpuUsage}%</div>
+                <div className="text-2xl font-bold text-blue-600 mb-1">{systemMetrics.cpuUsage}%</div>
                 <div className="text-slate-600 font-medium">CPU Usage</div>
                 <div className="text-sm text-slate-500 mt-1">Memory: {systemMetrics.memoryUsage}%</div>
                 <div className="mt-3 flex items-center text-xs text-green-600">
@@ -471,7 +493,7 @@ const SystemAdministration = () => {
             {/* Recent System Activity & Alerts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Recent Activity */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-800">Recent Activity</h3>
                   <Button 
@@ -504,7 +526,7 @@ const SystemAdministration = () => {
               </div>
 
               {/* System Alerts */}
-              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl p-6">
+              <div className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-slate-800">System Alerts</h3>
                   <Button 
@@ -531,12 +553,9 @@ const SystemAdministration = () => {
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <Badge variant={
-                          alert.severity === 'high' ? 'destructive' :
-                          alert.severity === 'medium' ? 'warning' : 'success'
-                        } className="text-xs">
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                           {alert.severity}
-                      </Badge>
+                      </span>
                         <div className="text-xs text-slate-500 mt-1">{alert.timestamp}</div>
                       </div>
                     </div>
@@ -589,9 +608,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                             <div>
                     <p className="text-sm text-slate-600">Total Users</p>
-                    <p className="text-2xl font-bold text-slate-800">{users.length}</p>
+                    <p className="text-2xl font-bold text-blue-600">{users.length}</p>
                             </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-users text-white"></i>
                   </div>
                 </div>
@@ -600,9 +619,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Active Users</p>
-                    <p className="text-2xl font-bold text-slate-800">{activeUsersCount}</p>
+                    <p className="text-2xl font-bold text-blue-600">{activeUsersCount}</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-user-check text-white"></i>
                   </div>
                 </div>
@@ -611,9 +630,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Online Now</p>
-                    <p className="text-2xl font-bold text-slate-800">{Math.floor(activeUsersCount * 0.3)}</p>
+                    <p className="text-2xl font-bold text-blue-600">{Math.floor(activeUsersCount * 0.3)}</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-circle text-white text-xs"></i>
                   </div>
                 </div>
@@ -622,9 +641,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">New This Week</p>
-                    <p className="text-2xl font-bold text-slate-800">+{Math.floor(users.length * 0.1)}</p>
+                    <p className="text-2xl font-bold text-blue-600">+{Math.floor(users.length * 0.1)}</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-user-plus text-white"></i>
                   </div>
                 </div>
@@ -705,9 +724,9 @@ const SystemAdministration = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className="text-slate-600 border-slate-300">
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getBadgeClass('outline'))}>
                             {user.role}
-                            </Badge>
+                            </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{user.department}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -715,9 +734,9 @@ const SystemAdministration = () => {
                             <div className={`w-2 h-2 rounded-full mr-2 ${
                               user.status === 'active' ? 'bg-green-500' : 'bg-red-500'
                             }`}></div>
-                            <Badge variant={user.status === 'active' ? 'success' : 'destructive'}>
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getBadgeClass(user.status === 'active' ? 'success' : 'destructive'))}>
                               {user.status}
-                            </Badge>
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{user.lastLogin}</td>
@@ -826,9 +845,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Total Roles</p>
-                    <p className="text-2xl font-bold text-slate-800">3</p>
+                    <p className="text-2xl font-bold text-blue-600">3</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-shield-alt text-white"></i>
                   </div>
                 </div>
@@ -837,9 +856,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Active Roles</p>
-                    <p className="text-2xl font-bold text-slate-800">3</p>
+                    <p className="text-2xl font-bold text-blue-600">3</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-check-circle text-white"></i>
                   </div>
                 </div>
@@ -848,9 +867,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Custom Roles</p>
-                    <p className="text-2xl font-bold text-slate-800">0</p>
+                    <p className="text-2xl font-bold text-blue-600">0</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-cog text-white"></i>
                   </div>
                 </div>
@@ -859,9 +878,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Permission Sets</p>
-                    <p className="text-2xl font-bold text-slate-800">12</p>
+                    <p className="text-2xl font-bold text-blue-600">12</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-key text-white"></i>
                   </div>
                 </div>
@@ -874,7 +893,7 @@ const SystemAdministration = () => {
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-crown text-white text-lg"></i>
                     </div>
                     <Badge variant="destructive">Critical</Badge>
@@ -922,7 +941,7 @@ const SystemAdministration = () => {
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-user-tie text-white text-lg"></i>
                     </div>
                     <Badge variant="success">Active</Badge>
@@ -970,7 +989,7 @@ const SystemAdministration = () => {
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-eye text-white text-lg"></i>
           </div>
                     <Badge variant="secondary">Read Only</Badge>
@@ -1046,14 +1065,14 @@ const SystemAdministration = () => {
                           <Badge variant="success">Full</Badge>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <Badge variant={module === 'System' || module === 'Security' ? 'secondary' : 'success'}>
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getBadgeClass(module === 'System' || module === 'Security' ? 'secondary' : 'success'))}>
                             {module === 'System' || module === 'Security' ? 'Limited' : 'Full'}
-                          </Badge>
+                          </span>
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <Badge variant={module === 'Dashboard' || module === 'Users' ? 'success' : 'secondary'}>
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getBadgeClass(module === 'Dashboard' || module === 'Users' ? 'success' : 'secondary'))}>
                             {module === 'Dashboard' || module === 'Users' ? 'Read' : 'None'}
-                          </Badge>
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -1098,9 +1117,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Total Properties</p>
-                    <p className="text-2xl font-bold text-slate-800">3</p>
+                    <p className="text-2xl font-bold text-blue-600">3</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-building text-white"></i>
                   </div>
                 </div>
@@ -1109,9 +1128,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Active Properties</p>
-                    <p className="text-2xl font-bold text-slate-800">3</p>
+                    <p className="text-2xl font-bold text-blue-600">3</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-check-circle text-white"></i>
                   </div>
                 </div>
@@ -1120,9 +1139,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Total Rooms</p>
-                    <p className="text-2xl font-bold text-slate-800">450</p>
+                    <p className="text-2xl font-bold text-blue-600">450</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-bed text-white"></i>
                   </div>
                 </div>
@@ -1131,9 +1150,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Occupancy Rate</p>
-                    <p className="text-2xl font-bold text-slate-800">78%</p>
+                    <p className="text-2xl font-bold text-blue-600">78%</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-chart-pie text-white"></i>
                   </div>
                 </div>
@@ -1145,7 +1164,7 @@ const SystemAdministration = () => {
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-building text-white text-lg"></i>
                     </div>
                     <Badge variant="success">Operational</Badge>
@@ -1193,7 +1212,7 @@ const SystemAdministration = () => {
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-umbrella-beach text-white text-lg"></i>
                     </div>
                     <Badge variant="success">Operational</Badge>
@@ -1241,7 +1260,7 @@ const SystemAdministration = () => {
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-briefcase text-white text-lg"></i>
           </div>
                     <Badge variant="success">Operational</Badge>
@@ -1340,9 +1359,9 @@ const SystemAdministration = () => {
                         </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="outline" className="text-slate-600 border-slate-300">
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getBadgeClass('outline'))}>
                             {integration.type}
-                          </Badge>
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-mono">
                           {integration.endpoint}
@@ -1352,9 +1371,9 @@ const SystemAdministration = () => {
                             <div className={`w-2 h-2 rounded-full mr-2 ${
                               integration.status === 'active' ? 'bg-green-500' : 'bg-red-500'
                             }`}></div>
-                            <Badge variant={integration.status === 'active' ? 'success' : 'destructive'}>
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getBadgeClass(integration.status === 'active' ? 'success' : 'destructive'))}>
                               {integration.status}
-                          </Badge>
+                          </span>
                         </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
@@ -1464,9 +1483,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">System Uptime</p>
-                    <p className="text-2xl font-bold text-slate-800">99.9%</p>
+                    <p className="text-2xl font-bold text-blue-600">99.9%</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-server text-white"></i>
                   </div>
                 </div>
@@ -1475,9 +1494,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">CPU Usage</p>
-                    <p className="text-2xl font-bold text-slate-800">23%</p>
+                    <p className="text-2xl font-bold text-blue-600">23%</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-microchip text-white"></i>
                   </div>
                 </div>
@@ -1486,9 +1505,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Memory Usage</p>
-                    <p className="text-2xl font-bold text-slate-800">62%</p>
+                    <p className="text-2xl font-bold text-blue-600">62%</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-memory text-white"></i>
                   </div>
                 </div>
@@ -1497,9 +1516,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Disk Usage</p>
-                    <p className="text-2xl font-bold text-slate-800">38%</p>
+                    <p className="text-2xl font-bold text-blue-600">38%</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-hdd text-white"></i>
                   </div>
                 </div>
@@ -1696,9 +1715,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Security Score</p>
-                    <p className="text-2xl font-bold text-slate-800">95</p>
+                    <p className="text-2xl font-bold text-blue-600">95</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-shield-alt text-white"></i>
                         </div>
                 </div>
@@ -1707,9 +1726,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Active Sessions</p>
-                    <p className="text-2xl font-bold text-slate-800">12</p>
+                    <p className="text-2xl font-bold text-blue-600">12</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-users text-white"></i>
                   </div>
                 </div>
@@ -1718,9 +1737,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Failed Logins</p>
-                    <p className="text-2xl font-bold text-slate-800">3</p>
+                    <p className="text-2xl font-bold text-blue-600">3</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-exclamation-triangle text-white"></i>
                   </div>
                 </div>
@@ -1729,9 +1748,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">Last Scan</p>
-                    <p className="text-2xl font-bold text-slate-800">2h</p>
+                    <p className="text-2xl font-bold text-blue-600">2h</p>
                   </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-search text-white"></i>
                   </div>
                 </div>
@@ -1920,9 +1939,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Total Events</p>
-                    <p className="text-2xl font-bold text-slate-800">1,247</p>
+                    <p className="text-2xl font-bold text-blue-600">1,247</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-list text-white"></i>
                   </div>
                 </div>
@@ -1931,9 +1950,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">Security Events</p>
-                    <p className="text-2xl font-bold text-slate-800">23</p>
+                    <p className="text-2xl font-bold text-blue-600">23</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-shield-alt text-white"></i>
                   </div>
                 </div>
@@ -1942,9 +1961,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">User Actions</p>
-                    <p className="text-2xl font-bold text-slate-800">856</p>
+                    <p className="text-2xl font-bold text-blue-600">856</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-user text-white"></i>
                   </div>
                 </div>
@@ -1953,9 +1972,9 @@ const SystemAdministration = () => {
                 <div className="flex items-center justify-between">
                           <div>
                     <p className="text-sm text-slate-600">System Events</p>
-                    <p className="text-2xl font-bold text-slate-800">368</p>
+                    <p className="text-2xl font-bold text-blue-600">368</p>
                           </div>
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                     <i className="fas fa-cog text-white"></i>
                         </div>
                 </div>
@@ -2112,7 +2131,7 @@ const SystemAdministration = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-cogs text-white text-2xl" />
               </div>
             </div>
@@ -2152,7 +2171,7 @@ const SystemAdministration = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center">

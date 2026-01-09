@@ -122,43 +122,6 @@ class TestIoTEnvironmentalEndpoints:
         data = response.json()
         assert "temperature" in data
 
-class TestCybersecurityEndpoints:
-    """Test Cybersecurity API endpoints."""
-    
-    def test_detect_threat(self, client, auth_headers):
-        """Test threat detection endpoint."""
-        threat_data = {
-            "threat_type": "brute_force",
-            "source_ip": "192.168.1.100",
-            "severity": "high",
-            "description": "Multiple failed login attempts"
-        }
-        
-        response = client.post("/cybersecurity/threats", json=threat_data, headers=auth_headers)
-        assert response.status_code == status.HTTP_201_CREATED
-        data = response.json()
-        assert data["threat_type"] == threat_data["threat_type"]
-    
-    def test_block_ip(self, client, auth_headers):
-        """Test IP blocking endpoint."""
-        block_data = {
-            "ip_address": "192.168.1.100",
-            "reason": "suspicious_activity",
-            "duration_hours": 24
-        }
-        
-        response = client.post("/cybersecurity/block-ip", json=block_data, headers=auth_headers)
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["blocked"] is True
-    
-    def test_get_security_report(self, client, auth_headers):
-        """Test getting security report endpoint."""
-        response = client.get("/cybersecurity/reports", headers=auth_headers)
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert "threats" in data
-
 class TestSmartParkingEndpoints:
     """Test Smart Parking API endpoints."""
     
@@ -301,34 +264,6 @@ class TestDigitalHandoverEndpoints:
         data = response.json()
         assert isinstance(data, list)
 
-class TestAdvancedReportsEndpoints:
-    """Test Advanced Reports API endpoints."""
-    
-    def test_generate_custom_report(self, client, auth_headers):
-        """Test generating custom report endpoint."""
-        report_config = {
-            "report_type": "security_summary",
-            "date_range": "last_7_days",
-            "filters": {"location": "lobby"},
-            "format": "pdf"
-        }
-        
-        response = client.post("/reports/generate", json=report_config, headers=auth_headers)
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["status"] == "generated"
-    
-    def test_get_analytics_dashboard(self, client, auth_headers):
-        """Test getting analytics dashboard endpoint."""
-        response = client.get("/reports/analytics", headers=auth_headers)
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert "incidents" in data
-        assert "access_logs" in data
-    
-    def test_export_data(self, client, auth_headers):
-        """Test data export endpoint."""
-        export_config = {
             "data_type": "access_logs",
             "format": "csv",
             "date_range": "last_7_days"

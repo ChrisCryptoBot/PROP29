@@ -2,7 +2,6 @@
 export const MODAL_TYPES = {
   // Event & Security Modals
   ACTIVE_INCIDENTS: 'ACTIVE_INCIDENTS',
-  CYBERSECURITY_THREATS: 'CYBERSECURITY_THREATS',
   GUEST_SAFETY_ALERTS: 'GUEST_SAFETY_ALERTS',
   
   // Patrol Modals (INTEGRATED)
@@ -22,7 +21,6 @@ export const MODAL_TYPES = {
   GUARDS_ON_DUTY: 'GUARDS_ON_DUTY',
   AI_OPTIMIZED_PATROLS: 'AI_OPTIMIZED_PATROLS',
   PATROL_EFFICIENCY: 'PATROL_EFFICIENCY',
-  CYBERSECURITY_DASHBOARD: 'CYBERSECURITY_DASHBOARD',
   THREATS_BLOCKED: 'THREATS_BLOCKED',
   ACCESS_GRANTED: 'ACCESS_GRANTED'
 };
@@ -34,14 +32,6 @@ export const modalConfig = {
     size: 'extra-large',
     tabs: ['Current Incidents', 'Response Teams', 'Timeline'],
     dataEndpoint: '/api/incidents/active'
-  },
-  
-  [MODAL_TYPES.CYBERSECURITY_THREATS]: {
-    title: 'Cybersecurity Threat Dashboard',
-    component: 'CybersecurityThreatsModal',
-    size: 'extra-large',
-    tabs: ['Active Threats', 'Blocked Attacks', 'Network Security', 'Incident Response'],
-    dataEndpoint: '/api/cybersecurity/threats'
   },
   
   [MODAL_TYPES.PATROL_COMMAND_CENTER]: {
@@ -77,21 +67,6 @@ export const modalConfig = {
     dataEndpoint: '/api/patrols/efficiency'
   },
 
-  [MODAL_TYPES.CYBERSECURITY_DASHBOARD]: {
-    title: 'Cybersecurity Command Dashboard',
-    component: 'CybersecurityDashboardModal',
-    size: 'extra-large',
-    tabs: ['Threat Overview', 'Blocked Attacks', 'Network Status', 'Security Logs'],
-    dataEndpoint: '/api/cybersecurity/dashboard'
-  },
-
-  [MODAL_TYPES.THREATS_BLOCKED]: {
-    title: 'Cyber Threats Blocked Today',
-    component: 'ThreatsBlockedModal',
-    size: 'large',
-    tabs: ['Blocked Threats', 'Attack Types', 'Timeline'],
-    dataEndpoint: '/api/cybersecurity/blocked-threats'
-  },
 
   [MODAL_TYPES.ACCESS_GRANTED]: {
     title: 'Access Control Events',

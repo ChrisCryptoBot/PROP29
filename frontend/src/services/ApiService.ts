@@ -448,33 +448,13 @@ class ApiService {
     return this.handleRequest(() => this.api.get('/packages/analytics'));
   }
 
-  // Security Methods
-  async getSecurityThreats(params?: any): Promise<ApiResponse<SecurityThreat[]>> {
-    return this.handleRequest(() => this.api.get('/cybersecurity/threats', { params }));
+
+  async getSecurityAlerts(params?: any): Promise<ApiResponse<any[]>> {
+    return this.handleRequest(() => this.api.get('/security/alerts', { params }));
   }
 
-  async createSecurityThreat(threat: Omit<SecurityThreat, 'id'>): Promise<ApiResponse<SecurityThreat>> {
-    return this.handleRequest(() => this.api.post('/cybersecurity/threats', threat));
-  }
-
-  async updateSecurityThreat(id: string, threat: Partial<SecurityThreat>): Promise<ApiResponse<SecurityThreat>> {
-    return this.handleRequest(() => this.api.put(`/cybersecurity/threats/${id}`, threat));
-  }
-
-  async deleteSecurityThreat(id: string): Promise<ApiResponse<void>> {
-    return this.handleRequest(() => this.api.delete(`/cybersecurity/threats/${id}`));
-  }
-
-  async getSecurityAnalytics(): Promise<ApiResponse<SecurityAnalytics>> {
-    return this.handleRequest(() => this.api.get('/cybersecurity/analytics'));
-  }
-
-  async getSecurityAlerts(params?: any): Promise<ApiResponse<SecurityThreat[]>> {
-    return this.getSecurityThreats(params);
-  }
-
-  async createSecurityAlert(alert: Omit<SecurityThreat, 'id'>): Promise<ApiResponse<SecurityThreat>> {
-    return this.createSecurityThreat(alert);
+  async createSecurityAlert(alert: any): Promise<ApiResponse<any>> {
+    return this.handleRequest(() => this.api.post('/security/alerts', alert));
   }
 
   // Environmental/IoT Methods
@@ -717,25 +697,6 @@ class ApiService {
 
   async healthCheck(): Promise<ApiResponse<any>> {
     return this.handleRequest(() => this.api.get('/health'));
-  }
-
-  // ============= ADVANCED REPORTS =============
-  async getReports(params?: any): Promise<ApiResponse<Report[]>> {
-    return this.handleRequest<Report[]>(() => 
-      this.api.get('/api/reports', { params })
-    );
-  }
-
-  async generateReport(reportData: any): Promise<ApiResponse<Report>> {
-    return this.handleRequest<Report>(() => 
-      this.api.post('/api/reports/generate', reportData)
-    );
-  }
-
-  async downloadReport(id: string): Promise<ApiResponse<void>> {
-    return this.handleRequest<void>(() => 
-      this.api.get(`/api/reports/${id}/download`, { responseType: 'blob' })
-    );
   }
 
   // ============= BANNED INDIVIDUALS =============

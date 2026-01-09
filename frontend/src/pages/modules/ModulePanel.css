@@ -433,11 +433,6 @@ a.module-tab.active {
   --module-accent-bg: #dcfce7;
 }
 
-.cybersecurity-hub-panel,
-.cybersecurity-dashboard-panel {
-  --module-accent: #8b5cf6;
-  --module-accent-bg: #f3e8ff;
-}
 
 .security-alerts-panel {
   --module-accent: #ef4444;
@@ -458,10 +453,6 @@ a.module-tab.active {
   --module-accent-bg: #14532d;
 }
 
-.dark-mode .cybersecurity-hub-panel,
-.dark-mode .cybersecurity-dashboard-panel {
-  --module-accent-bg: #4c1d95;
-}
 
 .dark-mode .security-alerts-panel {
   --module-accent-bg: #7f1d1d;
@@ -481,10 +472,6 @@ a.module-tab.active {
   border-top: 3px solid #10b981;
 }
 
-.cybersecurity-hub-panel .module-header,
-.cybersecurity-dashboard-panel .module-header {
-  border-top: 3px solid #8b5cf6;
-}
 
 .security-alerts-panel .module-header {
   border-top: 3px solid #ef4444;

@@ -173,7 +173,7 @@ const TeamChat = () => {
     {
       id: 'rodriguez',
       name: 'Maria Rodriguez',
-      role: 'Cybersecurity',
+      role: 'Security',
       status: 'busy',
       location: 'Remote',
       avatar: null,

@@ -63,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
         },
         {
           id: 'visitors',
-          label: 'Visitors',
+          label: 'Visitor Security',
           icon: 'fas fa-users',
           path: '/modules/visitors'
         },
@@ -114,12 +114,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
           label: 'Guest Safety',
           icon: 'fas fa-user-shield',
           path: '/modules/guest-safety'
-        },
-        {
-          id: 'cybersecurity-hub',
-          label: 'Cybersecurity Hub',
-          icon: 'fas fa-shield-virus',
-          path: '/modules/cybersecurity-hub'
         },
         {
           id: 'lockdown-facility',

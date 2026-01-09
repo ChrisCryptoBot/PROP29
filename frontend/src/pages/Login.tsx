@@ -30,6 +30,16 @@ const Login: React.FC = () => {
     }));
   };
 
+  const fillDemoCredentials = () => {
+    setCredentials({
+      email: 'admin@proper.com',
+      password: 'admin123'
+    });
+    toast.success('Demo credentials filled!');
+  };
+
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -87,7 +97,16 @@ const Login: React.FC = () => {
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
+            {isDevelopment && (
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="w-full py-2 px-4 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                🔑 Fill Demo Credentials
+              </button>
+            )}
             <p className="text-sm text-gray-600">
               Demo credentials: admin@proper.com / admin123
             </p>

@@ -24,6 +24,61 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+interface IncidentTimelineEvent {
+  id: string;
+  timestamp: string;
+  action: string;
+  user: string;
+  status: string;
+  notes?: string;
+}
+
+interface EscalationRule {
+  id: string;
+  name: string;
+  trigger: 'time' | 'severity' | 'manual';
+  conditions: {
+    severity?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    timeMinutes?: number;
+    status?: string;
+  };
+  actions: {
+    escalateTo?: string;
+    notify?: string[];
+    assignTo?: string;
+  };
+  active: boolean;
+}
+
+interface EscalationHistory {
+  id: string;
+  timestamp: string;
+  fromLevel: number;
+  toLevel: number;
+  reason: string;
+  escalatedBy: string;
+  notified: string[];
+}
+
+interface EvidenceItem {
+  id: string;
+  type: 'photo' | 'video' | 'document' | 'cctv';
+  name: string;
+  url: string;
+  uploadedAt: string;
+  uploadedBy: string;
+  size?: number;
+  description?: string;
+}
+
+interface RelatedIncident {
+  id: number;
+  title: string;
+  similarity: number;
+  reasons: string[];
+  timestamp: string;
+}
+
 interface Incident {
   id: number;
   title: string;
@@ -49,6 +104,10 @@ interface Incident {
   guestImpact?: string;
   floorPlanLocation?: { x: number; y: number; floor: string };
   additionalData?: any;
+  timeline?: IncidentTimelineEvent[];
+  escalationHistory?: EscalationHistory[];
+  evidenceItems?: EvidenceItem[];
+  relatedIncidentsData?: RelatedIncident[];
 }
 
 const mockIncidents: Incident[] = [
@@ -72,7 +131,19 @@ const mockIncidents: Incident[] = [
     relatedIncidents: [2, 3],
     escalationLevel: 2,
     guestImpact: 'Medium - 3 guests reported concerns',
-    floorPlanLocation: { x: 150, y: 200, floor: 'P2' }
+    floorPlanLocation: { x: 150, y: 200, floor: 'P2' },
+    timeline: [
+      { id: 't1', timestamp: '2025-01-27 14:30', action: 'created', user: 'Security Staff', status: 'active', notes: 'Incident reported via security camera monitoring' },
+      { id: 't2', timestamp: '2025-01-27 14:35', action: 'assigned', user: 'John Smith', status: 'investigating', notes: 'Assigned to security team for investigation' },
+      { id: 't3', timestamp: '2025-01-27 14:40', action: 'escalated', user: 'John Smith', status: 'escalated', notes: 'Escalated due to suspicious behavior patterns' }
+    ],
+    escalationHistory: [
+      { id: 'e1', timestamp: '2025-01-27 14:40', fromLevel: 1, toLevel: 2, reason: 'Suspicious behavior patterns detected', escalatedBy: 'John Smith', notified: ['Security Manager'] }
+    ],
+    evidenceItems: [
+      { id: 'ev1', type: 'cctv', name: 'CCTV_20250127_1430.mp4', url: '#', uploadedAt: '2025-01-27 14:30', uploadedBy: 'Security Staff', size: 5242880 },
+      { id: 'ev2', type: 'photo', name: 'Photo_1432.jpg', url: '#', uploadedAt: '2025-01-27 14:32', uploadedBy: 'Security Staff', size: 1024000 }
+    ]
   },
   {
     id: 2,
@@ -87,7 +158,14 @@ const mockIncidents: Incident[] = [
     witnesses: ['Room 812 Guest', 'Housekeeping Staff'],
     evidence: ['Fire_Alarm_Log_1545.txt', 'Room_812_Photo.jpg'],
     escalationLevel: 3,
-    guestImpact: 'High - Full building evacuation required'
+    guestImpact: 'High - Full building evacuation required',
+    timeline: [
+      { id: 't1', timestamp: '2025-01-27 15:45', action: 'created', user: 'Fire Safety System', status: 'active', notes: 'Fire alarm automatically triggered' },
+      { id: 't2', timestamp: '2025-01-27 15:46', action: 'escalated', user: 'System', status: 'escalated', notes: 'Auto-escalated due to CRITICAL severity' }
+    ],
+    escalationHistory: [
+      { id: 'e1', timestamp: '2025-01-27 15:46', fromLevel: 0, toLevel: 3, reason: 'Auto-escalation: CRITICAL fire safety incident', escalatedBy: 'System', notified: ['Fire Safety Team', 'General Manager', 'Emergency Services'] }
+    ]
   },
   {
     id: 3,
@@ -103,7 +181,16 @@ const mockIncidents: Incident[] = [
     evidence: ['Incident_Report_1620.pdf', 'Medical_Assessment.pdf'],
     resolutionTime: '2025-01-27 16:45',
     cost: 150,
-    guestImpact: 'Low - Single guest affected'
+    guestImpact: 'Low - Single guest affected',
+    timeline: [
+      { id: 't1', timestamp: '2025-01-27 16:20', action: 'created', user: 'Lifeguard', status: 'active', notes: 'Incident reported by lifeguard on duty' },
+      { id: 't2', timestamp: '2025-01-27 16:22', action: 'assigned', user: 'Pool Staff', status: 'investigating', notes: 'Assigned to pool staff for first aid' },
+      { id: 't3', timestamp: '2025-01-27 16:45', action: 'resolved', user: 'Pool Staff', status: 'resolved', notes: 'First aid administered, incident resolved' }
+    ],
+    evidenceItems: [
+      { id: 'ev1', type: 'document', name: 'Incident_Report_1620.pdf', url: '#', uploadedAt: '2025-01-27 16:20', uploadedBy: 'Lifeguard', size: 256000 },
+      { id: 'ev2', type: 'document', name: 'Medical_Assessment.pdf', url: '#', uploadedAt: '2025-01-27 16:25', uploadedBy: 'Medical Staff', size: 128000 }
+    ]
   }
 ];
 
@@ -148,6 +235,19 @@ const IncidentLogModule: React.FC = () => {
   } | null>(null);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [showAISuggestion, setShowAISuggestion] = useState(false);
+
+  // New feature states
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [showEvidenceModal, setShowEvidenceModal] = useState(false);
+  const [showRelatedIncidentsModal, setShowRelatedIncidentsModal] = useState(false);
+  const [showEscalationModal, setShowEscalationModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showQRCodeModal, setShowQRCodeModal] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [savedFilters, setSavedFilters] = useState<Array<{id: string, name: string, filters: any}>>([]);
+  const [escalationRules, setEscalationRules] = useState<EscalationRule[]>([]);
+  const [uploadingEvidence, setUploadingEvidence] = useState(false);
+  const [relatedIncidentsLoading, setRelatedIncidentsLoading] = useState(false);
   
   // Settings state management
   const [settings, setSettings] = useState({
@@ -248,6 +348,9 @@ const IncidentLogModule: React.FC = () => {
   }, []);
 
   const handleEscalateIncident = useCallback(async (incidentId: number) => {
+    const incident = incidents.find(i => i.id === incidentId);
+    if (!incident) return;
+    
     let toastId: string | undefined;
     try {
       toastId = showLoading('Escalating incident...');
@@ -255,10 +358,25 @@ const IncidentLogModule: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setIncidents(prev => prev.map(incident =>
-        incident.id === incidentId
-          ? { ...incident, status: 'escalated' as const, escalationLevel: (incident.escalationLevel || 0) + 1 }
-          : incident
+      const escalation: EscalationHistory = {
+        id: `esc-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        fromLevel: incident.escalationLevel || 0,
+        toLevel: (incident.escalationLevel || 0) + 1,
+        reason: 'Manual escalation',
+        escalatedBy: 'Current User',
+        notified: ['Security Manager']
+      };
+      
+      setIncidents(prev => prev.map(inc =>
+        inc.id === incidentId
+          ? { 
+              ...inc, 
+              status: 'escalated' as const, 
+              escalationLevel: escalation.toLevel,
+              escalationHistory: [...(inc.escalationHistory || []), escalation]
+            }
+          : inc
       ));
       
       if (toastId) {
@@ -269,7 +387,7 @@ const IncidentLogModule: React.FC = () => {
         dismissLoadingAndShowError(toastId, 'Failed to escalate incident');
       }
     }
-  }, []);
+  }, [incidents]);
 
   // Enhanced handler functions
   // AI Classification Handler
@@ -315,6 +433,173 @@ const IncidentLogModule: React.FC = () => {
     } finally {
       setIsLoadingAI(false);
     }
+  }, []);
+
+  // Timeline Handler
+  const handleViewTimeline = useCallback((incident: Incident) => {
+    setSelectedIncident(incident);
+    setShowTimelineModal(true);
+  }, []);
+
+  // Evidence Management Handlers
+  const handleUploadEvidence = useCallback(async (incidentId: number, file: File, type: 'photo' | 'video' | 'document' | 'cctv') => {
+    setUploadingEvidence(true);
+    showLoading('Uploading evidence...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const newEvidence: EvidenceItem = {
+        id: `ev-${Date.now()}`,
+        type,
+        name: file.name,
+        url: URL.createObjectURL(file),
+        uploadedAt: new Date().toISOString(),
+        uploadedBy: 'Current User',
+        size: file.size,
+        description: ''
+      };
+
+      setIncidents(prev => prev.map(inc => 
+        inc.id === incidentId
+          ? { 
+              ...inc, 
+              evidenceItems: [...(inc.evidenceItems || []), newEvidence],
+              evidence: [...(inc.evidence || []), file.name]
+            }
+          : inc
+      ));
+
+      dismissLoadingAndShowSuccess(showLoading(''), 'Evidence uploaded successfully!');
+    } catch (error) {
+      showError('Failed to upload evidence');
+    } finally {
+      setUploadingEvidence(false);
+    }
+  }, []);
+
+  const handleViewEvidence = useCallback((incident: Incident) => {
+    setSelectedIncident(incident);
+    setShowEvidenceModal(true);
+  }, []);
+
+  // Related Incidents Handler
+  const handleFindRelatedIncidents = useCallback(async (incident: Incident) => {
+    setRelatedIncidentsLoading(true);
+    showLoading('Finding related incidents...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // AI-powered related incident detection
+      const related: RelatedIncident[] = incidents
+        .filter(i => i.id !== incident.id)
+        .map(i => {
+          let similarity = 0;
+          const reasons: string[] = [];
+          
+          if (i.type === incident.type) {
+            similarity += 30;
+            reasons.push('Same incident type');
+          }
+          if (i.location === incident.location) {
+            similarity += 40;
+            reasons.push('Same location');
+          }
+          if (i.severity === incident.severity) {
+            similarity += 20;
+            reasons.push('Same severity level');
+          }
+          if (Math.abs(new Date(i.timestamp).getTime() - new Date(incident.timestamp).getTime()) < 7 * 24 * 60 * 60 * 1000) {
+            similarity += 10;
+            reasons.push('Occurred within 7 days');
+          }
+          
+          return {
+            id: i.id,
+            title: i.title,
+            similarity,
+            reasons,
+            timestamp: i.timestamp
+          };
+        })
+        .filter(r => r.similarity >= 30)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 5);
+
+      setIncidents(prev => prev.map(inc => 
+        inc.id === incident.id
+          ? { ...inc, relatedIncidentsData: related }
+          : inc
+      ));
+
+      setSelectedIncident({ ...incident, relatedIncidentsData: related });
+      setShowRelatedIncidentsModal(true);
+      dismissLoadingAndShowSuccess(showLoading(''), `Found ${related.length} related incidents!`);
+    } catch (error) {
+      showError('Failed to find related incidents');
+    } finally {
+      setRelatedIncidentsLoading(false);
+    }
+  }, [incidents]);
+
+  // Enhanced Escalation Handler (with reason)
+  const handleEscalateIncidentWithReason = useCallback(async (incident: Incident, reason: string) => {
+    showLoading('Escalating incident...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const escalation: EscalationHistory = {
+        id: `esc-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        fromLevel: incident.escalationLevel || 0,
+        toLevel: (incident.escalationLevel || 0) + 1,
+        reason,
+        escalatedBy: 'Current User',
+        notified: ['Security Manager', 'Operations Manager']
+      };
+
+      setIncidents(prev => prev.map(inc => 
+        inc.id === incident.id
+          ? { 
+              ...inc, 
+              escalationLevel: escalation.toLevel,
+              status: 'escalated' as const,
+              escalationHistory: [...(inc.escalationHistory || []), escalation]
+            }
+          : inc
+      ));
+
+      showSuccess(`Incident escalated to level ${escalation.toLevel}`);
+    } catch (error) {
+      showError('Failed to escalate incident');
+    }
+  }, []);
+
+  // Report Generation Handler
+  const handleGenerateReport = useCallback(async (type: 'daily' | 'weekly' | 'monthly' | 'custom') => {
+    showLoading(`Generating ${type} report...`);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      showSuccess(`${type.charAt(0).toUpperCase() + type.slice(1)} report generated! Download will start shortly.`);
+    } catch (error) {
+      showError('Failed to generate report');
+    }
+  }, []);
+
+  // QR Code Generation Handler
+  const handleGenerateQRCode = useCallback((incident: Incident) => {
+    setSelectedIncident(incident);
+    setShowQRCodeModal(true);
+  }, []);
+
+  // Advanced Filter Handler
+  const handleSaveFilter = useCallback((name: string, filters: any) => {
+    const newFilter = {
+      id: `filter-${Date.now()}`,
+      name,
+      filters
+    };
+    setSavedFilters(prev => [...prev, newFilter]);
+    showSuccess('Filter saved successfully!');
   }, []);
 
   // Apply AI Suggestion to form
@@ -590,6 +875,27 @@ const IncidentLogModule: React.FC = () => {
     }
   }, [settings]);
 
+  const getSeverityBadgeClass = (severity: string) => {
+    switch (severity) {
+      case 'CRITICAL': return 'text-red-800 bg-red-100';
+      case 'HIGH': return 'text-orange-800 bg-orange-100';
+      case 'MEDIUM': return 'text-yellow-800 bg-yellow-100';
+      case 'LOW': return 'text-blue-800 bg-blue-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'active': return 'text-red-800 bg-red-100';
+      case 'investigating': return 'text-blue-800 bg-blue-100';
+      case 'resolved': return 'text-green-800 bg-green-100';
+      case 'escalated': return 'text-orange-800 bg-orange-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  // Legacy functions for compatibility
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'CRITICAL': return 'destructive';
@@ -682,7 +988,7 @@ const IncidentLogModule: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-list-alt text-white text-2xl" />
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
@@ -725,19 +1031,19 @@ const IncidentLogModule: React.FC = () => {
       </div>
 
       {/* Main Content - GOLD STANDARD LAYOUT */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {/* Key Metrics - GOLD STANDARD 4-CARD LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Incidents */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-list-alt text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.total}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -749,14 +1055,14 @@ const IncidentLogModule: React.FC = () => {
 
           {/* Active Incidents */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-exclamation-triangle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.active}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -768,14 +1074,14 @@ const IncidentLogModule: React.FC = () => {
 
           {/* Investigating */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-search text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.investigating}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -787,14 +1093,14 @@ const IncidentLogModule: React.FC = () => {
 
           {/* Resolved */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-check-circle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.resolved}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -812,10 +1118,34 @@ const IncidentLogModule: React.FC = () => {
             {/* Enhanced Search and Filters */}
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm mb-8">
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-search mr-3 text-slate-600" />
-                  Search & Filter Incidents
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-search text-white" />
+                    </div>
+                    Search & Filter Incidents
+                  </CardTitle>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAdvancedFilters(true)}
+                      className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      <i className="fas fa-filter mr-2" />
+                      Advanced Filters
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowReportModal(true)}
+                      className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      <i className="fas fa-file-pdf mr-2" />
+                      Generate Report
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -901,6 +1231,26 @@ const IncidentLogModule: React.FC = () => {
                   </div>
                 </div>
                 
+                {/* Saved Filters Quick Access */}
+                {savedFilters.length > 0 && (
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-slate-700 mb-2 block">Quick Filters</label>
+                    <div className="flex flex-wrap gap-2">
+                      {savedFilters.map((filter) => (
+                        <Button
+                          key={filter.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => showSuccess(`Applied filter: ${filter.name}`)}
+                          className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                        >
+                          {filter.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
                   <Button onClick={() => setShowCreateModal(true)} className="!bg-[#2563eb] hover:!bg-blue-700 text-white">
@@ -931,11 +1281,61 @@ const IncidentLogModule: React.FC = () => {
               </CardContent>
             </Card>
 
+            {/* Module Integrations */}
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-plug text-white" />
+                  </div>
+                  System Integrations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-check-circle text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">Access Control</span>
+                    </div>
+                    <span className="text-xs text-green-600 font-semibold">Connected</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-check-circle text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">Patrol Module</span>
+                    </div>
+                    <span className="text-xs text-green-600 font-semibold">Connected</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-check-circle text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">Package Management</span>
+                    </div>
+                    <span className="text-xs text-green-600 font-semibold">Connected</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-check-circle text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">Visitor Management</span>
+                    </div>
+                    <span className="text-xs text-green-600 font-semibold">Connected</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-3">
+                  <i className="fas fa-info-circle mr-1" />
+                  Failed access attempts, patrol findings, missing packages, and suspicious visitors automatically create incidents.
+                </p>
+              </CardContent>
+            </Card>
+
             {/* Incident List */}
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm mb-8">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-list-alt mr-3 text-slate-600" />
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-list-alt text-white" />
+                  </div>
                   Incidents ({filteredIncidents.length})
                 </CardTitle>
                 <div className="flex items-center space-x-4">
@@ -984,12 +1384,12 @@ const IncidentLogModule: React.FC = () => {
                           <div className="flex items-center space-x-3 mb-2">
                             <i className={cn(getTypeIcon(incident.type), "text-slate-600")} />
                             <h4 className="font-semibold text-slate-900">{incident.title}</h4>
-                            <Badge variant={getSeverityColor(incident.severity) as any}>
+                            <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getSeverityBadgeClass(incident.severity)}`}>
                               {incident.severity}
-                            </Badge>
-                            <Badge variant={getStatusColor(incident.status) as any}>
+                            </span>
+                            <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getStatusBadgeClass(incident.status)}`}>
                               {incident.status}
-                            </Badge>
+                            </span>
                           </div>
                           <p className="text-slate-600 text-sm mb-2">{incident.description}</p>
                           <div className="flex items-center space-x-4 text-xs text-slate-500">
@@ -1006,6 +1406,42 @@ const IncidentLogModule: React.FC = () => {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
+                              setSelectedIncident(incident);
+                              handleViewTimeline(incident);
+                            }}
+                            title="View Timeline"
+                          >
+                            <i className="fas fa-clock" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedIncident(incident);
+                              handleViewEvidence(incident);
+                            }}
+                            title="View Evidence"
+                          >
+                            <i className="fas fa-file-upload" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFindRelatedIncidents(incident);
+                            }}
+                            disabled={relatedIncidentsLoading}
+                            title="Find Related"
+                          >
+                            <i className="fas fa-link" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleAssignIncident(incident.id, 'Current User');
                             }}
                             disabled={loading}
@@ -1017,7 +1453,8 @@ const IncidentLogModule: React.FC = () => {
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEscalateIncident(incident.id);
+                              setSelectedIncident(incident);
+                              setShowEscalationModal(true);
                             }}
                             disabled={loading}
                           >
@@ -1054,7 +1491,9 @@ const IncidentLogModule: React.FC = () => {
             <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center text-xl">
-                    <i className="fas fa-tasks mr-3 text-slate-600" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                      <i className="fas fa-tasks text-white" />
+                    </div>
                     Incident Management
                   </CardTitle>
                   <div className="flex space-x-2">
@@ -1075,7 +1514,7 @@ const IncidentLogModule: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-slate-600">Active Incidents</p>
-                        <p className="text-2xl font-bold text-slate-900">{incidents.filter(i => i.status === 'active').length}</p>
+                        <p className="text-2xl font-bold text-blue-600">{incidents.filter(i => i.status === 'active').length}</p>
                       </div>
                       <i className="fas fa-exclamation-triangle text-slate-600 text-2xl" />
                     </div>
@@ -1085,7 +1524,7 @@ const IncidentLogModule: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-slate-600">Investigating</p>
-                        <p className="text-2xl font-bold text-slate-900">{incidents.filter(i => i.status === 'investigating').length}</p>
+                        <p className="text-2xl font-bold text-blue-600">{incidents.filter(i => i.status === 'investigating').length}</p>
                       </div>
                       <i className="fas fa-search text-slate-600 text-2xl" />
                     </div>
@@ -1095,7 +1534,7 @@ const IncidentLogModule: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-slate-600">Resolved</p>
-                        <p className="text-2xl font-bold text-slate-900">{incidents.filter(i => i.status === 'resolved').length}</p>
+                        <p className="text-2xl font-bold text-blue-600">{incidents.filter(i => i.status === 'resolved').length}</p>
                       </div>
                       <i className="fas fa-check-circle text-slate-600 text-2xl" />
                     </div>
@@ -1105,7 +1544,7 @@ const IncidentLogModule: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-slate-600">Escalated</p>
-                        <p className="text-2xl font-bold text-slate-900">{incidents.filter(i => i.status === 'escalated').length}</p>
+                        <p className="text-2xl font-bold text-blue-600">{incidents.filter(i => i.status === 'escalated').length}</p>
                       </div>
                       <i className="fas fa-arrow-up text-slate-600 text-2xl" />
                     </div>
@@ -1118,7 +1557,9 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-list-alt mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-list-alt text-white" />
+                  </div>
                   All Incidents ({incidents.length})
                 </CardTitle>
               </CardHeader>
@@ -1134,12 +1575,12 @@ const IncidentLogModule: React.FC = () => {
                           <div className="flex items-center space-x-3 mb-2">
                             <i className={cn(getTypeIcon(incident.type), "text-slate-600")} />
                             <h4 className="font-semibold text-slate-900">{incident.title}</h4>
-                            <Badge variant={getSeverityColor(incident.severity) as any}>
+                            <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getSeverityBadgeClass(incident.severity)}`}>
                               {incident.severity}
-                            </Badge>
-                            <Badge variant={getStatusColor(incident.status) as any}>
+                            </span>
+                            <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getStatusBadgeClass(incident.status)}`}>
                               {incident.status}
-                            </Badge>
+                            </span>
                           </div>
                           <p className="text-slate-600 text-sm mb-2">{incident.description}</p>
                           <div className="flex items-center space-x-4 text-xs text-slate-500">
@@ -1207,7 +1648,7 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-chart-line text-white" />
                   </div>
                   Incident Trends Over Time
@@ -1231,14 +1672,14 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-chart-pie text-white" />
                   </div>
                   Incident Type Distribution
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -1281,7 +1722,7 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-map-marker-alt text-white" />
                   </div>
                   Location Hotspots
@@ -1305,7 +1746,7 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-clock text-white" />
                   </div>
                   Time Pattern Analysis
@@ -1333,7 +1774,7 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-brain text-white" />
                   </div>
                   AI Risk Predictions
@@ -1345,9 +1786,13 @@ const IncidentLogModule: React.FC = () => {
                     <div key={index} className="p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold text-slate-900">{item.metric}</span>
-                        <Badge variant={item.predicted > item.threshold ? 'destructive' : item.predicted > item.current ? 'warning' : 'success'}>
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded ${
+                          item.predicted > item.threshold ? 'text-red-800 bg-red-100' : 
+                          item.predicted > item.current ? 'text-yellow-800 bg-yellow-100' : 
+                          'text-green-800 bg-green-100'
+                        }`}>
                           {item.predicted > item.threshold ? 'High Risk' : item.predicted > item.current ? 'Increasing' : 'Improving'}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
@@ -1379,7 +1824,7 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-lightbulb text-white" />
                   </div>
                   Pattern Recognition
@@ -1429,7 +1874,7 @@ const IncidentLogModule: React.FC = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center text-xl">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                       <i className="fas fa-bell text-white" />
                     </div>
                     Early Warning Alerts
@@ -1450,7 +1895,7 @@ const IncidentLogModule: React.FC = () => {
                         <p className="text-xs text-slate-600">Predicted to exceed threshold in 3 days</p>
                       </div>
                     </div>
-                    <Badge variant="destructive">Active</Badge>
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">Active</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
                     <div className="flex items-center space-x-3">
@@ -1460,7 +1905,7 @@ const IncidentLogModule: React.FC = () => {
                         <p className="text-xs text-slate-600">Increasing trend detected</p>
                       </div>
                     </div>
-                    <Badge variant="warning">Warning</Badge>
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-yellow-800 bg-yellow-100">Warning</span>
                   </div>
                 </div>
               </CardContent>
@@ -1474,14 +1919,14 @@ const IncidentLogModule: React.FC = () => {
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
             <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-cogs text-white" />
                   </div>
                   System Settings
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900">Incident Configuration</h3>
                     <div className="space-y-3">
@@ -1553,14 +1998,14 @@ const IncidentLogModule: React.FC = () => {
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
             <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-bell text-white" />
                   </div>
                   Notification Settings
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900">Email Notifications</h3>
                     <div className="space-y-3">
@@ -1625,14 +2070,14 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-plug text-white" />
                   </div>
                   Integration Settings
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900">API Configuration</h3>
                     <div className="space-y-3">
@@ -1699,14 +2144,14 @@ const IncidentLogModule: React.FC = () => {
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3">
                     <i className="fas fa-shield-alt text-white" />
                   </div>
                   Security Settings
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900">Access Control</h3>
                     <div className="space-y-3">
@@ -2196,19 +2641,19 @@ const IncidentLogModule: React.FC = () => {
                     <div className="flex items-center space-x-3 mb-2">
                       <i className={cn(getTypeIcon(selectedIncident.type), "text-slate-600 text-xl")} />
                       <h3 className="text-lg font-semibold text-slate-900">{selectedIncident.title}</h3>
-                      <Badge variant={getSeverityColor(selectedIncident.severity) as any}>
+                      <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getSeverityBadgeClass(selectedIncident.severity)}`}>
                         {selectedIncident.severity}
-                      </Badge>
-                      <Badge variant={getStatusColor(selectedIncident.status) as any}>
+                      </span>
+                      <span className={`px-2.5 py-1 text-xs font-semibold rounded ${getStatusBadgeClass(selectedIncident.status)}`}>
                         {selectedIncident.status}
-                      </Badge>
+                      </span>
                     </div>
                     <p className="text-slate-600">{selectedIncident.description}</p>
                   </div>
                 </div>
                 
                 {/* Incident Information Grid */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium text-slate-700">Type</label>
@@ -2240,6 +2685,55 @@ const IncidentLogModule: React.FC = () => {
                   </div>
                 </div>
                 
+                {/* Quick Action Buttons */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-slate-200">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleViewTimeline(selectedIncident);
+                    }}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                  >
+                    <i className="fas fa-clock mr-2" />
+                    Timeline
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleViewEvidence(selectedIncident);
+                    }}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                  >
+                    <i className="fas fa-file-upload mr-2" />
+                    Evidence
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleFindRelatedIncidents(selectedIncident);
+                    }}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    disabled={relatedIncidentsLoading}
+                  >
+                    <i className="fas fa-link mr-2" />
+                    Related
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleGenerateQRCode(selectedIncident);
+                    }}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                  >
+                    <i className="fas fa-qrcode mr-2" />
+                    QR Code
+                  </Button>
+                </div>
+
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
                   <Button 
@@ -2261,12 +2755,622 @@ const IncidentLogModule: React.FC = () => {
                     Assign
                   </Button>
                   <Button 
-                    onClick={() => handleEscalateIncident(selectedIncident.id)}
+                    onClick={() => {
+                      const reason = prompt('Enter escalation reason:');
+                      if (reason) handleEscalateIncidentWithReason(selectedIncident, reason);
+                    }}
                     className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                   >
                     <i className="fas fa-arrow-up mr-2" />
                     Escalate
                   </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Incident Timeline Modal */}
+        {showTimelineModal && selectedIncident && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Incident Timeline</h2>
+                <button 
+                  onClick={() => setShowTimelineModal(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {selectedIncident.timeline && selectedIncident.timeline.length > 0 ? (
+                  <div className="relative">
+                    {selectedIncident.timeline.map((event, index) => (
+                      <div key={event.id} className="flex items-start space-x-4 pb-6 relative">
+                        {index < selectedIncident.timeline!.length - 1 && (
+                          <div className="absolute left-5 top-12 bottom-0 w-0.5 bg-slate-200"></div>
+                        )}
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-full flex items-center justify-center shadow-lg">
+                          <i className={`fas ${
+                            event.action === 'created' ? 'fa-plus' :
+                            event.action === 'assigned' ? 'fa-user' :
+                            event.action === 'escalated' ? 'fa-arrow-up' :
+                            event.action === 'resolved' ? 'fa-check' : 'fa-edit'
+                          } text-white text-sm`} />
+                        </div>
+                        <div className="flex-1 bg-slate-50 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold text-slate-900 capitalize">{event.action}</h4>
+                            <span className="text-xs text-slate-500">{new Date(event.timestamp).toLocaleString()}</span>
+                          </div>
+                          <p className="text-sm text-slate-700">{event.user}</p>
+                          {event.notes && (
+                            <p className="text-sm text-slate-600 mt-2">{event.notes}</p>
+                          )}
+                          <span className={`inline-block mt-2 px-2 py-1 text-xs font-semibold rounded ${
+                            event.status === 'resolved' ? 'text-green-800 bg-green-100' :
+                            event.status === 'escalated' ? 'text-red-800 bg-red-100' :
+                            event.status === 'investigating' ? 'text-blue-800 bg-blue-100' :
+                            'text-slate-800 bg-slate-100'
+                          }`}>
+                            {event.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <i className="fas fa-clock text-slate-400 text-4xl mb-4" />
+                    <p className="text-slate-600">No timeline events yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Evidence Management Modal */}
+        {showEvidenceModal && selectedIncident && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Evidence Management</h2>
+                <button 
+                  onClick={() => setShowEvidenceModal(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Upload Section */}
+                <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                        <i className="fas fa-upload text-white" />
+                      </div>
+                      Upload Evidence
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUploadEvidence(selectedIncident.id, file, 'photo');
+                          }}
+                          disabled={uploadingEvidence}
+                        />
+                        <i className="fas fa-image text-2xl text-slate-400 mb-2" />
+                        <span className="text-sm text-slate-700">Photo</span>
+                      </label>
+                      <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUploadEvidence(selectedIncident.id, file, 'video');
+                          }}
+                          disabled={uploadingEvidence}
+                        />
+                        <i className="fas fa-video text-2xl text-slate-400 mb-2" />
+                        <span className="text-sm text-slate-700">Video</span>
+                      </label>
+                      <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUploadEvidence(selectedIncident.id, file, 'document');
+                          }}
+                          disabled={uploadingEvidence}
+                        />
+                        <i className="fas fa-file-pdf text-2xl text-slate-400 mb-2" />
+                        <span className="text-sm text-slate-700">Document</span>
+                      </label>
+                      <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUploadEvidence(selectedIncident.id, file, 'cctv');
+                          }}
+                          disabled={uploadingEvidence}
+                        />
+                        <i className="fas fa-camera text-2xl text-slate-400 mb-2" />
+                        <span className="text-sm text-slate-700">CCTV</span>
+                      </label>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Evidence Gallery */}
+                <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                        <i className="fas fa-images text-white" />
+                      </div>
+                      Evidence Gallery ({selectedIncident.evidenceItems?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedIncident.evidenceItems && selectedIncident.evidenceItems.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {selectedIncident.evidenceItems.map((item) => (
+                          <div key={item.id} className="border border-slate-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <i className={`fas ${
+                                  item.type === 'photo' ? 'fa-image' :
+                                  item.type === 'video' ? 'fa-video' :
+                                  item.type === 'cctv' ? 'fa-camera' : 'fa-file-pdf'
+                                } text-blue-600`} />
+                                <span className="text-sm font-medium text-slate-900 truncate">{item.name}</span>
+                              </div>
+                            </div>
+                            <div className="text-xs text-slate-500 mb-2">
+                              {new Date(item.uploadedAt).toLocaleDateString()} • {item.uploadedBy}
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(item.url, '_blank')}
+                                className="flex-1"
+                              >
+                                <i className="fas fa-eye mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = item.url;
+                                  link.download = item.name;
+                                  link.click();
+                                }}
+                                className="flex-1"
+                              >
+                                <i className="fas fa-download mr-1" />
+                                Download
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <i className="fas fa-folder-open text-slate-400 text-4xl mb-4" />
+                        <p className="text-slate-600">No evidence uploaded yet</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Related Incidents Modal */}
+        {showRelatedIncidentsModal && selectedIncident && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Related Incidents</h2>
+                <button 
+                  onClick={() => setShowRelatedIncidentsModal(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {selectedIncident.relatedIncidentsData && selectedIncident.relatedIncidentsData.length > 0 ? (
+                  selectedIncident.relatedIncidentsData.map((related) => (
+                    <Card key={related.id} className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-slate-900 mb-2">{related.title}</h4>
+                            <div className="flex items-center space-x-4 mb-3">
+                              <span className="text-sm text-slate-600">
+                                <i className="fas fa-percentage mr-1" />
+                                {related.similarity}% similarity
+                              </span>
+                              <span className="text-sm text-slate-600">
+                                <i className="fas fa-calendar mr-1" />
+                                {new Date(related.timestamp).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {related.reasons.map((reason, idx) => (
+                                <span key={idx} className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded">
+                                  {reason}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const incident = incidents.find(i => i.id === related.id);
+                              if (incident) {
+                                setSelectedIncident(incident);
+                                setShowRelatedIncidentsModal(false);
+                                setShowDetailsModal(true);
+                              }
+                            }}
+                          >
+                            <i className="fas fa-eye mr-1" />
+                            View
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <i className="fas fa-search text-slate-400 text-4xl mb-4" />
+                    <p className="text-slate-600">No related incidents found</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* QR Code Modal */}
+        {showQRCodeModal && selectedIncident && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Mobile Reporting QR Code</h2>
+                <button 
+                  onClick={() => setShowQRCodeModal(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="text-center space-y-4">
+                <div className="bg-white p-6 rounded-lg border-2 border-slate-200 inline-block">
+                  <div className="w-64 h-64 bg-slate-100 rounded flex items-center justify-center">
+                    <i className="fas fa-qrcode text-6xl text-slate-400" />
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600">
+                  Scan this QR code to quickly report incidents or access this incident on mobile
+                </p>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => showSuccess('QR code downloaded')}
+                    className="flex-1"
+                  >
+                    <i className="fas fa-download mr-2" />
+                    Download
+                  </Button>
+                  <Button
+                    onClick={() => showSuccess('QR code printed')}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white flex-1"
+                  >
+                    <i className="fas fa-print mr-2" />
+                    Print
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Escalation Workflow Modal */}
+        {showEscalationModal && selectedIncident && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Escalate Incident</h2>
+                <button 
+                  onClick={() => setShowEscalationModal(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Current Escalation Level */}
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">Current Escalation Level</p>
+                      <p className="text-2xl font-bold text-blue-600">{selectedIncident.escalationLevel || 0}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-slate-700">New Level</p>
+                      <p className="text-2xl font-bold text-green-600">{(selectedIncident.escalationLevel || 0) + 1}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Escalation Reason */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Escalation Reason</label>
+                  <textarea
+                    id="escalation-reason"
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={4}
+                    placeholder="Enter reason for escalation..."
+                  />
+                </div>
+
+                {/* Notification Recipients */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Notify</label>
+                  <div className="space-y-2">
+                    {['Security Manager', 'Operations Manager', 'General Manager', 'Legal Team'].map((recipient) => (
+                      <label key={recipient} className="flex items-center">
+                        <input type="checkbox" defaultChecked className="mr-2" />
+                        <span className="text-sm text-slate-700">{recipient}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Escalation History */}
+                {selectedIncident.escalationHistory && selectedIncident.escalationHistory.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-3">Escalation History</h3>
+                    <div className="space-y-2">
+                      {selectedIncident.escalationHistory.map((history) => (
+                        <div key={history.id} className="bg-slate-50 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium text-slate-900">
+                              Level {history.fromLevel} → Level {history.toLevel}
+                            </span>
+                            <span className="text-xs text-slate-500">{new Date(history.timestamp).toLocaleString()}</span>
+                          </div>
+                          <p className="text-sm text-slate-600">{history.reason}</p>
+                          <p className="text-xs text-slate-500 mt-1">By {history.escalatedBy}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEscalationModal(false)}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const reason = (document.getElementById('escalation-reason') as HTMLTextAreaElement)?.value || 'Manual escalation';
+                      handleEscalateIncidentWithReason(selectedIncident, reason);
+                      setShowEscalationModal(false);
+                    }}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  >
+                    <i className="fas fa-arrow-up mr-2" />
+                    Escalate Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Report Generation Modal */}
+        {showReportModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Generate Report</h2>
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    onClick={() => handleGenerateReport('daily')}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-20 flex-col"
+                  >
+                    <i className="fas fa-calendar-day text-2xl mb-2" />
+                    Daily Report
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateReport('weekly')}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-20 flex-col"
+                  >
+                    <i className="fas fa-calendar-week text-2xl mb-2" />
+                    Weekly Report
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateReport('monthly')}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-20 flex-col"
+                  >
+                    <i className="fas fa-calendar-alt text-2xl mb-2" />
+                    Monthly Report
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateReport('custom')}
+                    variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 h-20 flex-col"
+                  >
+                    <i className="fas fa-cog text-2xl mb-2" />
+                    Custom Report
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Advanced Filters Modal */}
+        {showAdvancedFilters && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Advanced Filters</h2>
+                <button 
+                  onClick={() => setShowAdvancedFilters(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Saved Filters */}
+                {savedFilters.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-3">Saved Filters</h3>
+                    <div className="space-y-2">
+                      {savedFilters.map((filter) => (
+                        <div key={filter.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <span className="text-sm text-slate-700">{filter.name}</span>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                // Apply saved filter
+                                showSuccess(`Applied filter: ${filter.name}`);
+                              }}
+                            >
+                              Apply
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSavedFilters(prev => prev.filter(f => f.id !== filter.id));
+                                showSuccess('Filter deleted');
+                              }}
+                            >
+                              <i className="fas fa-trash" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Filter Builder */}
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-3">Create New Filter</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Filter Name</label>
+                      <input
+                        type="text"
+                        id="filter-name"
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="e.g., Critical Security Incidents"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Severity</label>
+                        <select
+                          className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="all">All</option>
+                          <option value="CRITICAL">Critical</option>
+                          <option value="HIGH">High</option>
+                          <option value="MEDIUM">Medium</option>
+                          <option value="LOW">Low</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                        <select
+                          className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="all">All</option>
+                          <option value="active">Active</option>
+                          <option value="investigating">Investigating</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="escalated">Escalated</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Date Range</label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          type="date"
+                          className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <input
+                          type="date"
+                          className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        const name = (document.getElementById('filter-name') as HTMLInputElement)?.value;
+                        if (name) {
+                          handleSaveFilter(name, {});
+                          setShowAdvancedFilters(false);
+                        }
+                      }}
+                      className="!bg-[#2563eb] hover:!bg-blue-700 text-white w-full"
+                    >
+                      <i className="fas fa-save mr-2" />
+                      Save Filter
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

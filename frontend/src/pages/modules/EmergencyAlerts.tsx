@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
-import { Badge } from '../../components/UI/Badge';
 import { cn } from '../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../utils/toast';
 
@@ -112,188 +111,6 @@ interface EmergencyMetrics {
   alertAccuracy: number;
 }
 
-// Mock data using existing backend schema structure
-const mockEmergencyAlerts: EmergencyAlert[] = [
-  { 
-    id: '1',
-    alertType: 'Fire Alarm',
-    location: {
-      building: 'Main Building',
-      floor: '3',
-      room: '312'
-    },
-    severity: 'CRITICAL', 
-    description: 'Fire alarm triggered - smoke detected in room 312',
-    status: 'responding',
-    assignedTo: 'Emergency Response Team',
-    responseTime: 45,
-    priority: 'immediate',
-    timestamp: '2024-01-15T10:30:00Z',
-    emergencyServicesContacted: true,
-    escalationLevel: 3,
-    affectedAreas: ['East Wing', 'Floor 3'],
-    estimatedCasualties: 0,
-    evacuationRequired: true
-  },
-  {
-    id: '2',
-    alertType: 'Gas Leak',
-    location: {
-      building: 'Kitchen Building',
-      floor: '1',
-      room: 'Kitchen'
-    },
-    severity: 'HIGH', 
-    description: 'Gas leak detected in main kitchen area',
-    status: 'active',
-    assignedTo: 'Fire Department',
-    responseTime: 120,
-    priority: 'urgent',
-    timestamp: '2024-01-15T11:15:00Z',
-    emergencyServicesContacted: true,
-    escalationLevel: 2,
-    affectedAreas: ['Kitchen Building', 'Dining Area'],
-    estimatedCasualties: 0,
-    evacuationRequired: true
-  }
-];
-
-const mockSecurityAlerts: SecurityAlert[] = [
-  { 
-    id: '1',
-    alertType: 'Suspicious Activity',
-    location: {
-      building: 'Parking Garage',
-      floor: '2',
-      room: 'Level 2'
-    },
-    severity: 'MEDIUM',
-    description: 'Unusual loitering pattern detected by AI surveillance',
-    status: 'investigating',
-    assignedTo: 'John Smith',
-    responseTime: 120,
-    timestamp: '2024-01-15T10:30:00Z',
-    threatLevel: 'medium',
-    suspectDescription: 'Male, 30s, wearing dark clothing',
-    weaponsInvolved: false,
-    crowdSize: 1
-  },
-  {
-    id: '2',
-    alertType: 'Unauthorized Access',
-    location: {
-      building: 'Main Building',
-      floor: '5',
-      room: 'Executive Floor'
-    },
-    severity: 'HIGH',
-    description: 'Unauthorized access attempt to restricted area',
-    status: 'active',
-    assignedTo: 'Security Team Alpha',
-    responseTime: 60,
-    timestamp: '2024-01-15T09:45:00Z',
-    threatLevel: 'high',
-    suspectDescription: 'Unknown individual with access card',
-    weaponsInvolved: false,
-    crowdSize: 1
-  }
-];
-
-const mockMedicalEmergencies: MedicalEmergency[] = [
-  {
-    id: '1',
-    emergencyType: 'cardiac',
-    location: {
-      building: 'Main Building',
-      floor: '2',
-      room: 'Conference Room A'
-    },
-    severity: 'CRITICAL',
-    description: 'Guest experiencing chest pain and difficulty breathing',
-    status: 'responding',
-    assignedTo: 'Medical Team Bravo',
-    responseTime: 90,
-    timestamp: '2024-01-15T12:00:00Z',
-    patientAge: 65,
-    patientCondition: 'Chest pain, shortness of breath',
-    medicalHistory: 'History of hypertension',
-    allergies: ['Penicillin'],
-    medications: ['Lisinopril', 'Metformin'],
-    vitalSigns: {
-      pulse: 110,
-      bloodPressure: '150/95',
-      temperature: 98.6,
-      oxygenSaturation: 88
-    },
-    ambulanceRequired: true,
-    hospitalDestination: 'City General Hospital'
-  }
-];
-
-const mockResponseTeams: ResponseTeam[] = [
-  {
-    id: '1',
-    name: 'Emergency Response Team Alpha',
-    type: 'security',
-    status: 'deployed',
-    location: 'Main Building - Floor 3',
-    members: 4,
-    equipment: ['Radio', 'Flashlight', 'First Aid Kit', 'Fire Extinguisher'],
-    specializations: ['Fire Response', 'Evacuation', 'First Aid'],
-    contactInfo: {
-      phone: '+1-555-0101',
-      radio: 'Channel 1',
-      email: 'alpha@security.com'
-    },
-    currentAssignment: 'Fire Alarm - Room 312',
-    estimatedArrival: 2
-  },
-  {
-    id: '2',
-    name: 'Medical Team Bravo',
-    type: 'medical',
-    status: 'deployed',
-    location: 'Main Building - Floor 2',
-    members: 3,
-    equipment: ['AED', 'Oxygen Tank', 'Stretcher', 'Medical Kit'],
-    specializations: ['Cardiac Care', 'Trauma Response', 'Emergency Medicine'],
-    contactInfo: {
-      phone: '+1-555-0102',
-      radio: 'Channel 2',
-      email: 'bravo@medical.com'
-    },
-    currentAssignment: 'Cardiac Emergency - Conference Room A',
-    estimatedArrival: 1
-  },
-  {
-    id: '3',
-    name: 'Fire Department Unit 1',
-    type: 'fire',
-    status: 'available',
-    location: 'Fire Station 1',
-    members: 6,
-    equipment: ['Fire Truck', 'Hose', 'Ladder', 'Rescue Equipment'],
-    specializations: ['Fire Suppression', 'Rescue Operations', 'Hazardous Materials'],
-    contactInfo: {
-      phone: '+1-555-911',
-      radio: 'Emergency Channel',
-      email: 'fire@city.gov'
-    }
-  }
-];
-
-const mockMetrics: EmergencyMetrics = {
-  activeAlerts: 3,
-  resolvedToday: 7,
-  averageResponseTime: 2.5,
-  emergencyServicesCalled: 2,
-  evacuationsInitiated: 1,
-  lockdownsActive: 0,
-  medicalEmergencies: 1,
-  securityIncidents: 2,
-  systemUptime: 99.8,
-  alertAccuracy: 94.5
-};
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard' },
@@ -310,7 +127,18 @@ const EmergencyAlerts: React.FC = () => {
   const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
   const [medicalEmergencies, setMedicalEmergencies] = useState<MedicalEmergency[]>([]);
   const [responseTeams, setResponseTeams] = useState<ResponseTeam[]>([]);
-  const [metrics, setMetrics] = useState<EmergencyMetrics>(mockMetrics);
+  const [metrics, setMetrics] = useState<EmergencyMetrics>({
+    activeAlerts: 0,
+    resolvedToday: 0,
+    averageResponseTime: 0,
+    emergencyServicesCalled: 0,
+    evacuationsInitiated: 0,
+    lockdownsActive: 0,
+    medicalEmergencies: 0,
+    securityIncidents: 0,
+    systemUptime: 0,
+    alertAccuracy: 0
+  });
   const [loading, setLoading] = useState(false);
   const [showCreateAlert, setShowCreateAlert] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<EmergencyAlert | null>(null);
@@ -319,44 +147,40 @@ const EmergencyAlerts: React.FC = () => {
   const currentTab = activeTab as any;
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setAlerts(mockEmergencyAlerts);
-      setSecurityAlerts(mockSecurityAlerts);
-      setMedicalEmergencies(mockMedicalEmergencies);
-      setResponseTeams(mockResponseTeams);
-      setLoading(false);
-    }, 500);
+    // Data will be loaded from API
+    setLoading(false);
   }, []);
 
-  // Helper functions
-  const getSeverityBadgeVariant = (severity: string) => {
+  // Gold Standard Badge Helper Functions
+  const getSeverityBadgeClass = (severity: string): string => {
     switch (severity) {
-      case 'CRITICAL': return 'destructive';
-      case 'HIGH': return 'destructive';
-      case 'MEDIUM': return 'default';
-      case 'LOW': return 'secondary';
-      default: return 'secondary';
+      case 'CRITICAL': return 'text-red-800 bg-red-100';
+      case 'HIGH': return 'text-orange-800 bg-orange-100';
+      case 'MEDIUM': return 'text-yellow-800 bg-yellow-100';
+      case 'LOW': return 'text-blue-800 bg-blue-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeClass = (status: string): string => {
     switch (status) {
-      case 'active': return 'destructive';
-      case 'responding': return 'default';
-      case 'resolved': return 'secondary';
-      case 'escalated': return 'destructive';
-      default: return 'secondary';
+      case 'active': return 'text-red-800 bg-red-100';
+      case 'responding': return 'text-blue-800 bg-blue-100';
+      case 'resolved': return 'text-green-800 bg-green-100';
+      case 'escalated': return 'text-red-800 bg-red-100';
+      case 'investigating': return 'text-blue-800 bg-blue-100';
+      case 'transported': return 'text-green-800 bg-green-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
-  const getTeamStatusBadgeVariant = (status: string) => {
+  const getTeamStatusBadgeClass = (status: string): string => {
     switch (status) {
-      case 'available': return 'default';
-      case 'deployed': return 'destructive';
-      case 'busy': return 'secondary';
-      case 'offline': return 'outline';
-      default: return 'secondary';
+      case 'available': return 'text-green-800 bg-green-100';
+      case 'deployed': return 'text-blue-800 bg-blue-100';
+      case 'busy': return 'text-yellow-800 bg-yellow-100';
+      case 'offline': return 'text-slate-800 bg-slate-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
@@ -466,19 +290,19 @@ const EmergencyAlerts: React.FC = () => {
         return (
           <div className="space-y-8">
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-exclamation-triangle text-white text-xl" />
                     </div>
-                    <Badge variant="destructive" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">
                       Active
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.activeAlerts}
                     </h3>
                     <p className="text-slate-600 font-medium">Active Alerts</p>
@@ -487,17 +311,17 @@ const EmergencyAlerts: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-check-circle text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">
                       Resolved
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.resolvedToday}
                     </h3>
                     <p className="text-slate-600 font-medium">Resolved Today</p>
@@ -506,17 +330,17 @@ const EmergencyAlerts: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-clock text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">
                       Avg Time
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.averageResponseTime}m
                     </h3>
                     <p className="text-slate-600 font-medium">Response Time</p>
@@ -525,17 +349,17 @@ const EmergencyAlerts: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-ambulance text-white text-xl" />
                     </div>
-                    <Badge variant="destructive" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">
                       Called
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.emergencyServicesCalled}
                     </h3>
                     <p className="text-slate-600 font-medium">Emergency Services</p>
@@ -548,7 +372,9 @@ const EmergencyAlerts: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-bell mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-bell text-white text-lg" />
+                  </div>
                   Recent Emergency Alerts
                 </CardTitle>
               </CardHeader>
@@ -571,12 +397,12 @@ const EmergencyAlerts: React.FC = () => {
               </div>
               </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                           {alert.severity}
-                        </Badge>
-                        <Badge variant={getStatusBadgeVariant(alert.status)}>
+                        </span>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(alert.status))}>
                           {alert.status}
-                        </Badge>
+                        </span>
               </div>
             </div>
                   ))}
@@ -588,7 +414,9 @@ const EmergencyAlerts: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-bolt mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-bolt text-white text-lg" />
+                  </div>
                   Quick Actions
                 </CardTitle>
               </CardHeader>
@@ -638,7 +466,9 @@ const EmergencyAlerts: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-filter mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-filter text-white text-lg" />
+                  </div>
                   Alert Filter
                 </CardTitle>
               </CardHeader>
@@ -680,10 +510,12 @@ const EmergencyAlerts: React.FC = () => {
             {(alertFilter === 'all' || alertFilter === 'emergency') && (
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <i className="fas fa-exclamation-triangle mr-3 text-slate-600" />
-                    Emergency Alerts
-                  </CardTitle>
+                    <CardTitle className="flex items-center text-xl">
+                      <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                        <i className="fas fa-exclamation-triangle text-white text-lg" />
+                      </div>
+                      Emergency Alerts
+                    </CardTitle>
                 </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -707,12 +539,12 @@ const EmergencyAlerts: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                           {alert.severity}
-                        </Badge>
-                        <Badge variant={getStatusBadgeVariant(alert.status)}>
+                        </span>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(alert.status))}>
                           {alert.status}
-                        </Badge>
+                        </span>
                         <Button
                           size="sm"
                           variant="outline"
@@ -735,10 +567,12 @@ const EmergencyAlerts: React.FC = () => {
             {(alertFilter === 'all' || alertFilter === 'medical') && (
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <i className="fas fa-ambulance mr-3 text-slate-600" />
-                    Medical Emergencies
-                  </CardTitle>
+                    <CardTitle className="flex items-center text-xl">
+                      <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                        <i className="fas fa-ambulance text-white text-lg" />
+                      </div>
+                      Medical Emergencies
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -746,9 +580,9 @@ const EmergencyAlerts: React.FC = () => {
                       <div key={emergency.id} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-3">
-                            <Badge variant={getSeverityBadgeVariant(emergency.severity)}>
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(emergency.severity))}>
                               {emergency.severity}
-                            </Badge>
+                            </span>
                             <span className="font-medium text-slate-900">{emergency.emergencyType}</span>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -793,10 +627,12 @@ const EmergencyAlerts: React.FC = () => {
             {(alertFilter === 'all' || alertFilter === 'security') && (
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
                 <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <i className="fas fa-shield-alt mr-3 text-slate-600" />
-                    Security Alerts
-                  </CardTitle>
+                    <CardTitle className="flex items-center text-xl">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                        <i className="fas fa-shield-alt text-white text-lg" />
+                      </div>
+                      Security Alerts
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -804,9 +640,9 @@ const EmergencyAlerts: React.FC = () => {
                       <div key={alert.id} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-3">
-                            <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                               {alert.severity}
-                            </Badge>
+                            </span>
                             <span className="font-medium text-slate-900">{alert.alertType}</span>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -853,7 +689,9 @@ const EmergencyAlerts: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-users mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-users text-white text-lg" />
+                  </div>
                   Response Teams
                 </CardTitle>
               </CardHeader>
@@ -871,9 +709,9 @@ const EmergencyAlerts: React.FC = () => {
                             <p className="text-sm text-slate-600">{team.location}</p>
                           </div>
                         </div>
-                        <Badge variant={getTeamStatusBadgeVariant(team.status)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getTeamStatusBadgeClass(team.status))}>
                           {team.status}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div>
@@ -904,7 +742,7 @@ const EmergencyAlerts: React.FC = () => {
                         <h4 className="font-semibold text-slate-900 mb-2">Equipment:</h4>
                         <div className="flex flex-wrap gap-2">
                           {team.equipment.map((item, index) => (
-                            <Badge key={index} variant="secondary">{item}</Badge>
+                            <span key={index} className="px-2.5 py-1 text-xs font-semibold rounded text-slate-800 bg-slate-100">{item}</span>
                           ))}
               </div>
               </div>
@@ -918,7 +756,9 @@ const EmergencyAlerts: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-history mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-history text-white text-lg" />
+                  </div>
                   Alert History
                 </CardTitle>
               </CardHeader>
@@ -928,9 +768,9 @@ const EmergencyAlerts: React.FC = () => {
                     <div key={alert.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
-                          <Badge variant={getSeverityBadgeVariant(alert.severity)}>
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSeverityBadgeClass(alert.severity))}>
                             {alert.severity}
-                          </Badge>
+                          </span>
                           <span className="font-medium text-slate-900">{alert.alertType}</span>
                         </div>
                         <span className="text-sm text-slate-500">{alert.timestamp}</span>
@@ -958,7 +798,7 @@ const EmergencyAlerts: React.FC = () => {
       case 'settings':
         return (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">
               <i className="fas fa-cogs text-white text-2xl" />
             </div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Emergency System Settings</h3>
@@ -980,10 +820,10 @@ const EmergencyAlerts: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-exclamation-triangle text-white text-2xl" />
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center animate-pulse">
                 <i className="fas fa-bell text-white text-xs" />
               </div>
             </div>
@@ -1019,7 +859,7 @@ const EmergencyAlerts: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-[1800px] mx-auto px-6 py-8">
         {renderTabContent()}
       </div>
     </div>

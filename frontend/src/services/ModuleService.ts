@@ -82,7 +82,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch patrols:', error);
-      return this.getMockPatrols();
+      return [];
     }
   }
 
@@ -133,7 +133,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch access points:', error);
-      return this.getMockAccessPoints();
+      return [];
     }
   }
 
@@ -172,7 +172,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to refresh access points:', error);
-      return this.getMockAccessPoints();
+      return [];
     }
   }
 
@@ -182,7 +182,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch credentials:', error);
-      return this.getMockCredentials();
+      return [];
     }
   }
 
@@ -222,7 +222,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch access events:', error);
-      return this.getMockAccessEvents();
+      return [];
     }
   }
 
@@ -244,7 +244,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to filter access events:', error);
-      return this.getMockAccessEvents();
+      return [];
     }
   }
 
@@ -255,7 +255,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch prediction events:', error);
-      return this.getMockPredictionEvents();
+      return [];
     }
   }
 
@@ -287,7 +287,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to filter predictions:', error);
-      return this.getMockPredictionEvents();
+      return [];
     }
   }
 
@@ -309,39 +309,6 @@ export class ModuleService {
     }
   }
 
-  // Advanced Reports Operations
-  async createReport(reportData: any): Promise<any> {
-    try {
-      const response = await this.apiService.post('/reports', reportData);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to create report:', error);
-      throw new Error('Failed to create report');
-    }
-  }
-
-  async getReports(): Promise<any[]> {
-    try {
-      const response = await this.apiService.get('/reports');
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch reports:', error);
-      return this.getMockReports();
-    }
-  }
-
-  async exportReport(reportId: string, format: 'pdf' | 'csv' = 'pdf'): Promise<Blob> {
-    try {
-      const response = await this.apiService.get(`/reports/${reportId}/export?format=${format}`, {
-        responseType: 'blob'
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to export report:', error);
-      throw new Error('Failed to export report');
-    }
-  }
-
   // Admin Operations
   async createUser(userData: any): Promise<any> {
     try {
@@ -359,7 +326,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      return this.getMockUsers();
+      return [];
     }
   }
 
@@ -388,7 +355,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch system configs:', error);
-      return this.getMockSystemConfigs();
+      return [];
     }
   }
 
@@ -418,7 +385,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch integrations:', error);
-      return this.getMockIntegrations();
+      return [];
     }
   }
 
@@ -432,56 +399,6 @@ export class ModuleService {
     }
   }
 
-  // Cybersecurity Operations
-  async getThreats(): Promise<any[]> {
-    try {
-      const response = await this.apiService.get('/cybersecurity/threats');
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch threats:', error);
-      return this.getMockThreats();
-    }
-  }
-
-  async updateThreatStatus(threatId: number, status: string): Promise<any> {
-    try {
-      const response = await this.apiService.put(`/cybersecurity/threats/${threatId}`, { status });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to update threat status:', error);
-      throw new Error('Failed to update threat status');
-    }
-  }
-
-  async runSecurityScan(): Promise<any> {
-    try {
-      const response = await this.apiService.post('/cybersecurity/scan');
-      return response.data;
-    } catch (error) {
-      console.error('Failed to run security scan:', error);
-      throw new Error('Failed to run security scan');
-    }
-  }
-
-  async blockThreat(threatId: number): Promise<any> {
-    try {
-      const response = await this.apiService.post(`/cybersecurity/threats/${threatId}/block`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to block threat:', error);
-      throw new Error('Failed to block threat');
-    }
-  }
-
-  async investigateThreat(threatId: number): Promise<any> {
-    try {
-      const response = await this.apiService.post(`/cybersecurity/threats/${threatId}/investigate`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to investigate threat:', error);
-      throw new Error('Failed to investigate threat');
-    }
-  }
 
   // Guest Safety Operations
   async createSafetyIncident(incidentData: any): Promise<any> {
@@ -500,7 +417,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch safety incidents:', error);
-      return this.getMockSafetyIncidents();
+      return [];
     }
   }
 
@@ -531,7 +448,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch visitors:', error);
-      return this.getMockVisitors();
+      return [];
     }
   }
 
@@ -562,7 +479,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch lost items:', error);
-      return this.getMockLostItems();
+      return [];
     }
   }
 
@@ -593,7 +510,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch emergency alerts:', error);
-      return this.getMockEmergencyAlerts();
+      return [];
     }
   }
 
@@ -905,7 +822,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch sound alerts:', error);
-      return this.getMockSoundAlerts();
+      return [];
     }
   }
 
@@ -926,7 +843,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch event logs:', error);
-      return this.getMockEventLogs();
+      return [];
     }
   }
 
@@ -949,7 +866,7 @@ export class ModuleService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch guards on duty:', error);
-      return this.getMockGuardsOnDuty();
+      return [];
     }
   }
 
@@ -973,376 +890,4 @@ export class ModuleService {
     }
   }
 
-  // Mock Data Methods
-  private getMockPatrols(): ServicePatrol[] {
-    return [
-      {
-        id: '1',
-        route_name: 'Perimeter Check',
-        assigned_officer: 'Officer Smith',
-        route_description: 'Complete perimeter security check',
-        start_time: '2024-01-15T08:00:00Z',
-        status: 'in_progress',
-        notes: 'All checkpoints clear',
-        location: 'Main Building',
-        duration: '2 hours',
-        checkpoints: ['Gate A', 'Gate B', 'Gate C'],
-        completedCheckpoints: 2
-      },
-      {
-        id: '2',
-        route_name: 'Interior Patrol',
-        assigned_officer: 'Officer Johnson',
-        route_description: 'Internal building security check',
-        start_time: '2024-01-15T09:00:00Z',
-        status: 'scheduled',
-        notes: 'Scheduled for morning shift',
-        location: 'Office Complex',
-        duration: '1.5 hours',
-        checkpoints: ['Lobby', 'Floor 1', 'Floor 2', 'Parking'],
-        completedCheckpoints: 0
-      }
-    ];
-  }
-
-  private getMockAccessPoints(): AccessPoint[] {
-    return [
-      {
-        id: 1,
-        name: 'Main Entrance',
-        type: 'door',
-        location: 'Building A - Ground Floor',
-        status: 'active',
-        hardwareVendor: 'HID Global',
-        ipAddress: '192.168.1.100',
-        lastAccess: '2024-01-15T10:30:00Z'
-      },
-      {
-        id: 2,
-        name: 'Parking Gate',
-        type: 'gate',
-        location: 'Parking Lot A',
-        status: 'active',
-        hardwareVendor: 'Bosch',
-        ipAddress: '192.168.1.101',
-        lastAccess: '2024-01-15T09:45:00Z'
-      }
-    ];
-  }
-
-  private getMockCredentials(): Credential[] {
-    return [
-      {
-        id: 1,
-        type: 'keycard',
-        assignedTo: 'John Doe',
-        cardNumber: 'CARD001',
-        expiresAt: '2024-12-31T23:59:59Z',
-        maxUses: 1000,
-        currentUses: 45,
-        status: 'active'
-      },
-      {
-        id: 2,
-        type: 'biometric',
-        assignedTo: 'Jane Smith',
-        expiresAt: '2024-12-31T23:59:59Z',
-        maxUses: 500,
-        currentUses: 23,
-        status: 'active'
-      }
-    ];
-  }
-
-  private getMockAccessEvents(): AccessEvent[] {
-    return [
-      {
-        id: 1,
-        accessPoint: 'Main Entrance',
-        credential: 'CARD001',
-        user: 'John Doe',
-        timestamp: '2024-01-15T10:30:00Z',
-        result: 'granted'
-      },
-      {
-        id: 2,
-        accessPoint: 'Parking Gate',
-        credential: 'BIOMETRIC002',
-        user: 'Jane Smith',
-        timestamp: '2024-01-15T09:45:00Z',
-        result: 'granted'
-      }
-    ];
-  }
-
-  private getMockPredictionEvents(): PredictionEvent[] {
-    return [
-      {
-        id: 1,
-        type: 'Security Breach',
-        probability: 0.85,
-        location: 'Building A - Floor 3',
-        timestamp: '2024-01-15T11:00:00Z',
-        severity: 'high',
-        description: 'Unusual access pattern detected',
-        status: 'investigating'
-      },
-      {
-        id: 2,
-        type: 'Equipment Failure',
-        probability: 0.72,
-        location: 'Parking Lot B',
-        timestamp: '2024-01-15T10:30:00Z',
-        severity: 'medium',
-        description: 'Camera system showing signs of failure',
-        status: 'pending'
-      }
-    ];
-  }
-
-  private getMockReports(): any[] {
-    return [
-      {
-        id: '1',
-        title: 'Monthly Security Report',
-        type: 'security',
-        createdBy: 'Admin User',
-        createdAt: '2024-01-15T00:00:00Z',
-        status: 'completed'
-      },
-      {
-        id: '2',
-        title: 'Access Control Audit',
-        type: 'audit',
-        createdBy: 'Security Manager',
-        createdAt: '2024-01-14T00:00:00Z',
-        status: 'in_progress'
-      }
-    ];
-  }
-
-  private getMockUsers(): any[] {
-    return [
-      {
-        id: 1,
-        username: 'admin',
-        email: 'admin@company.com',
-        role: 'admin',
-        status: 'active',
-        lastLogin: '2024-01-15T08:00:00Z'
-      },
-      {
-        id: 2,
-        username: 'security_manager',
-        email: 'security@company.com',
-        role: 'manager',
-        status: 'active',
-        lastLogin: '2024-01-15T07:30:00Z'
-      }
-    ];
-  }
-
-  private getMockSystemConfigs(): any[] {
-    return [
-      {
-        id: 'security_level',
-        name: 'Security Level',
-        value: 'high',
-        description: 'Current security level setting'
-      },
-      {
-        id: 'alert_threshold',
-        name: 'Alert Threshold',
-        value: '75',
-        description: 'Percentage threshold for alerts'
-      }
-    ];
-  }
-
-  private getMockIntegrations(): any[] {
-    return [
-      {
-        id: '1',
-        name: 'CCTV System',
-        type: 'camera',
-        status: 'connected',
-        lastSync: '2024-01-15T10:00:00Z'
-      },
-      {
-        id: '2',
-        name: 'Access Control',
-        type: 'access',
-        status: 'connected',
-        lastSync: '2024-01-15T09:45:00Z'
-      }
-    ];
-  }
-
-  private getMockThreats(): any[] {
-    return [
-      {
-        id: 1,
-        type: 'Unauthorized Access',
-        severity: 'high',
-        location: 'Building A',
-        timestamp: '2024-01-15T10:30:00Z',
-        status: 'active'
-      },
-      {
-        id: 2,
-        type: 'Suspicious Activity',
-        severity: 'medium',
-        location: 'Parking Lot',
-        timestamp: '2024-01-15T09:15:00Z',
-        status: 'investigating'
-      }
-    ];
-  }
-
-  private getMockSafetyIncidents(): any[] {
-    return [
-      {
-        id: 1,
-        type: 'Medical Emergency',
-        location: 'Building B - Floor 2',
-        timestamp: '2024-01-15T11:00:00Z',
-        status: 'resolved',
-        description: 'Employee reported feeling unwell'
-      },
-      {
-        id: 2,
-        type: 'Fire Alarm',
-        location: 'Building A',
-        timestamp: '2024-01-15T10:45:00Z',
-        status: 'investigating',
-        description: 'Fire alarm triggered, investigation ongoing'
-      }
-    ];
-  }
-
-  private getMockVisitors(): any[] {
-    return [
-      {
-        id: 1,
-        name: 'John Smith',
-        company: 'ABC Corp',
-        purpose: 'Meeting',
-        checkIn: '2024-01-15T09:00:00Z',
-        status: 'checked_in'
-      },
-      {
-        id: 2,
-        name: 'Sarah Johnson',
-        company: 'XYZ Inc',
-        purpose: 'Delivery',
-        checkIn: '2024-01-15T08:30:00Z',
-        status: 'checked_out'
-      }
-    ];
-  }
-
-  private getMockLostItems(): any[] {
-    return [
-      {
-        id: 1,
-        item: 'iPhone 13',
-        location: 'Cafeteria',
-        reportedBy: 'Jane Doe',
-        reportedAt: '2024-01-15T10:00:00Z',
-        status: 'found'
-      },
-      {
-        id: 2,
-        item: 'Laptop Bag',
-        location: 'Conference Room A',
-        reportedBy: 'Mike Wilson',
-        reportedAt: '2024-01-15T09:30:00Z',
-        status: 'claimed'
-      }
-    ];
-  }
-
-  private getMockEmergencyAlerts(): any[] {
-    return [
-      {
-        id: 1,
-        type: 'Fire Alarm',
-        location: 'Building A',
-        timestamp: '2024-01-15T11:00:00Z',
-        severity: 'high',
-        status: 'active'
-      },
-      {
-        id: 2,
-        type: 'Medical Emergency',
-        location: 'Building B',
-        timestamp: '2024-01-15T10:30:00Z',
-        severity: 'medium',
-        status: 'resolved'
-      }
-    ];
-  }
-
-  private getMockSoundAlerts(): any[] {
-    return [
-      {
-        id: 1,
-        type: 'Glass Break',
-        location: 'Building A - Floor 1',
-        timestamp: '2024-01-15T11:15:00Z',
-        decibelLevel: 85,
-        status: 'investigating'
-      },
-      {
-        id: 2,
-        type: 'Gunshot Detection',
-        location: 'Parking Lot',
-        timestamp: '2024-01-15T10:45:00Z',
-        decibelLevel: 120,
-        status: 'false_positive'
-      }
-    ];
-  }
-
-  private getMockEventLogs(): any[] {
-    return [
-      {
-        id: 1,
-        event: 'User Login',
-        user: 'admin',
-        timestamp: '2024-01-15T08:00:00Z',
-        details: 'Successful login from 192.168.1.100'
-      },
-      {
-        id: 2,
-        event: 'Access Granted',
-        user: 'john.doe',
-        timestamp: '2024-01-15T07:45:00Z',
-        details: 'Access to Building A granted via keycard'
-      }
-    ];
-  }
-
-  private getMockGuardsOnDuty(): any[] {
-    return [
-      {
-        id: 1,
-        name: 'Officer Smith',
-        badge: 'G001',
-        location: 'Building A',
-        shift: 'Morning',
-        status: 'on_duty',
-        startTime: '2024-01-15T06:00:00Z'
-      },
-      {
-        id: 2,
-        name: 'Officer Johnson',
-        badge: 'G002',
-        location: 'Building B',
-        shift: 'Morning',
-        status: 'on_duty',
-        startTime: '2024-01-15T06:00:00Z'
-      }
-    ];
-  }
 } 

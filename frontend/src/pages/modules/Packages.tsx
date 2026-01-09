@@ -7,6 +7,8 @@ import { Progress } from '../../components/UI/Progress';
 import { cn } from '../../utils/cn';
 import { showError, showSuccess, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../utils/toast';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { SmartMatchingPanel } from '../../components/PackageModule';
+import '../../styles/modern-glass.css';
 
 interface Package {
   id: string;
@@ -298,6 +300,8 @@ const Packages: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [filter, setFilter] = useState<'all' | 'received' | 'notified' | 'delivered' | 'picked_up' | 'expired' | 'returned'>('all');
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [isEditingPackage, setIsEditingPackage] = useState(false);
+  const [editedPackage, setEditedPackage] = useState<Package | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -455,6 +459,40 @@ const Packages: React.FC = () => {
     }
   }, [packages.length, registerForm]);
 
+  const handleUpdatePackage = useCallback(async (updatedPackage: Package) => {
+    const toastId = showLoading('Updating package...');
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setPackages(prev => prev.map(pkg =>
+        pkg.id === updatedPackage.id ? updatedPackage : pkg
+      ));
+      dismissLoadingAndShowSuccess(toastId, 'Package updated successfully');
+      setSelectedPackage(updatedPackage);
+      setIsEditingPackage(false);
+      setEditedPackage(null);
+    } catch (error) {
+      if (toastId) {
+        dismissLoadingAndShowError(toastId, 'Failed to update package');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'received': return 'text-blue-800 bg-blue-100';
+      case 'notified': return 'text-yellow-800 bg-yellow-100';
+      case 'delivered': return 'text-green-800 bg-green-100';
+      case 'picked_up': return 'text-green-800 bg-green-100';
+      case 'expired': return 'text-red-800 bg-red-100';
+      case 'returned': return 'text-slate-800 bg-slate-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  // Legacy function for compatibility
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'received': return 'default';
@@ -516,7 +554,7 @@ const Packages: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-box text-white text-2xl" />
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-slate-500 rounded-full flex items-center justify-center animate-pulse">
@@ -555,19 +593,19 @@ const Packages: React.FC = () => {
       </div>
 
       {/* Main Content - GOLD STANDARD LAYOUT */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {/* Key Metrics - GOLD STANDARD 4-CARD LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Packages */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-box text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.total}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -579,14 +617,14 @@ const Packages: React.FC = () => {
 
           {/* Received Packages */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-inbox text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.received}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -598,14 +636,14 @@ const Packages: React.FC = () => {
 
           {/* Notified Packages */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-bell text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.notified}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -617,14 +655,14 @@ const Packages: React.FC = () => {
 
           {/* Delivered Packages */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-check-circle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.delivered}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -640,13 +678,15 @@ const Packages: React.FC = () => {
         {currentTab === 'overview' && (
           <>
             {/* Package Management */}
-            <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl mb-8">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm mb-8">
+              <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-box-open mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-box-open text-white" />
+                  </div>
                   Package Management
                 </CardTitle>
-                <div className="flex space-x-2">
+                <div className="flex items-center space-x-2">
                   {['all', 'received', 'notified', 'delivered', 'picked_up', 'expired', 'returned'].map(filterType => (
                     <Button
                       key={filterType}
@@ -666,43 +706,43 @@ const Packages: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredPackages.map(pkg => (
-                    <Card 
+                    <Card
                       key={pkg.id}
-                      className={cn(
-                        "backdrop-blur-sm bg-white/60 border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
-                        pkg.status === 'received' && "border-slate-200/50 bg-slate-50/60",
-                        pkg.status === 'notified' && "border-slate-200/50 bg-slate-50/60",
-                        pkg.status === 'delivered' && "border-slate-200/50 bg-slate-50/60",
-                        pkg.status === 'picked_up' && "border-slate-200/50 bg-slate-50/60"
-                      )}
+                      className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
+                      <CardContent className="pt-6 px-6 pb-6">
+                        {/* Header with Icon, Name, Room, and Status Tags */}
+                        <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center shadow-lg">
-                              <i className={cn("text-xl text-slate-600", getPackageTypeIcon(pkg.package_type))} />
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 mt-2">
+                              <i className={cn("text-white text-lg", getPackageTypeIcon(pkg.package_type))} />
                             </div>
                             <div>
-                              <h4 className="font-bold text-slate-900">{pkg.recipient_name}</h4>
-                              <p className="text-slate-600 text-sm">{pkg.recipient_room ? `Room ${pkg.recipient_room}` : 'No room assigned'}</p>
+                              <h4 className="font-semibold text-slate-900">{pkg.recipient_name}</h4>
+                              <p className="text-sm text-slate-600">{pkg.recipient_room ? `Room ${pkg.recipient_room}` : 'No room assigned'}</p>
                             </div>
                           </div>
-                          <div className="flex flex-col space-y-1">
-                            <Badge variant={getStatusColor(pkg.status)}>
-                              {pkg.status.toUpperCase()}
-                            </Badge>
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs"
-                              style={{ borderColor: getCarrierColor(pkg.carrier), color: getCarrierColor(pkg.carrier) }}
-                            >
-                              {pkg.carrier}
-                            </Badge>
+                          <div className="flex flex-col items-end space-y-1">
+                            <span className={cn(
+                              "px-2.5 py-1 text-xs font-semibold rounded",
+                              pkg.status === 'received' ? 'text-blue-800 bg-blue-100' :
+                              pkg.status === 'notified' ? 'text-yellow-800 bg-yellow-100' :
+                              pkg.status === 'delivered' ? 'text-green-800 bg-green-100' :
+                              pkg.status === 'picked_up' ? 'text-green-800 bg-green-100' :
+                              pkg.status === 'expired' ? 'text-red-800 bg-red-100' :
+                              'text-slate-800 bg-slate-100'
+                            )}>
+                              {pkg.status.toUpperCase().replace('_', ' ')}
+                            </span>
+                            <span className="px-2.5 py-1 text-xs font-semibold rounded text-slate-800 bg-slate-100">
+                              {pkg.carrier.toUpperCase()}
+                            </span>
                           </div>
                         </div>
-                        
+
+                        {/* Package Details */}
                         <div className="space-y-2 mb-4">
                           <div className="flex justify-between text-sm">
                             <span className="text-slate-600">Tracking:</span>
@@ -726,45 +766,60 @@ const Packages: React.FC = () => {
                           </div>
                         </div>
 
+                        {/* Description Box */}
+                        {pkg.description && (
+                          <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <p className="text-sm text-slate-700">{pkg.description}</p>
+                          </div>
+                        )}
+
+                        {/* Special Handling */}
                         {pkg.special_handling !== 'none' && (
-                          <div className="mb-4 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                          <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
                             <div className="flex items-center text-slate-700 text-sm">
-                              <i className={cn("mr-2", getSpecialHandlingIcon(pkg.special_handling))} />
+                              <i className={cn("mr-2 text-yellow-600", getSpecialHandlingIcon(pkg.special_handling))} />
                               <span className="font-medium">Special Handling: {pkg.special_handling}</span>
                             </div>
                           </div>
                         )}
 
-                        {pkg.description && (
-                          <div className="mb-4 p-3 bg-slate-50 rounded-lg">
-                            <p className="text-sm text-slate-700">{pkg.description}</p>
-                          </div>
-                        )}
-
+                        {/* Action Buttons */}
                         <div className="flex gap-2">
                           {pkg.status === 'received' && (
                             <Button 
                               className="flex-1 !bg-[#2563eb] hover:!bg-blue-700 text-white text-sm"
-                              onClick={() => handleNotifyGuest(pkg.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNotifyGuest(pkg.id);
+                              }}
                               disabled={loading}
                             >
+                              <i className="fas fa-bell mr-2" />
                               Notify Guest
                             </Button>
                           )}
                           {pkg.status === 'notified' && (
                             <Button 
                               className="flex-1 !bg-[#2563eb] hover:!bg-blue-700 text-white text-sm"
-                              onClick={() => handleDeliverPackage(pkg.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeliverPackage(pkg.id);
+                              }}
                               disabled={loading}
                             >
+                              <i className="fas fa-check mr-2" />
                               Mark Delivered
                             </Button>
                           )}
                           <Button 
                             variant="outline"
-                            className="text-slate-600 border-slate-300 hover:bg-slate-50 text-sm"
-                            onClick={() => setSelectedPackage(pkg)}
+                            className="flex-1 text-slate-600 border-slate-300 hover:bg-slate-50 text-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedPackage(pkg);
+                            }}
                           >
+                            <i className="fas fa-eye mr-2" />
                             View Details
                           </Button>
                         </div>
@@ -779,7 +834,9 @@ const Packages: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl mb-8">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-truck mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-truck text-white" />
+                  </div>
                   Carrier Integration Status
                 </CardTitle>
               </CardHeader>
@@ -793,9 +850,9 @@ const Packages: React.FC = () => {
                         </div>
                         <h4 className="font-bold text-slate-900 mb-1">{carrier}</h4>
                         <p className="text-slate-600 text-sm mb-2">API Integration Active</p>
-                        <Badge variant="success" className="text-xs">
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">
                           Connected
-                        </Badge>
+                        </span>
                       </CardContent>
                     </Card>
                   ))}
@@ -807,14 +864,16 @@ const Packages: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-exclamation-triangle mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-exclamation-triangle text-white" />
+                  </div>
                   Emergency Actions
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Button 
-                    className="!bg-red-600 hover:!bg-red-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                     onClick={() => {
                       const expiredPackages = packages.filter(p => p.status === 'expired');
                       showSuccess(`${expiredPackages.length} packages have expired and require disposal`);
@@ -824,7 +883,7 @@ const Packages: React.FC = () => {
                     Expired Alert
                   </Button>
                   <Button 
-                    className="!bg-orange-600 hover:!bg-orange-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                     onClick={() => {
                       const overduePackages = packages.filter(p => p.status === 'notified');
                       showSuccess(`${overduePackages.length} packages are awaiting pickup`);
@@ -843,7 +902,15 @@ const Packages: React.FC = () => {
         {currentTab !== 'overview' && (
           <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
             <CardHeader>
-              <CardTitle className="text-xl">
+              <CardTitle className="flex items-center text-xl">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                  <i className={cn(
+                    "text-white",
+                    currentTab === 'operations' && 'fas fa-cogs',
+                    currentTab === 'analytics' && 'fas fa-chart-bar',
+                    currentTab === 'settings' && 'fas fa-sliders-h'
+                  )} />
+                </div>
                 {currentTab === 'operations' && 'Operations'}
                 {currentTab === 'analytics' && 'Analytics & Reports'}
                 {currentTab === 'settings' && 'Settings'}
@@ -852,7 +919,7 @@ const Packages: React.FC = () => {
             <CardContent>
               {currentTab === 'operations' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-6 bg-slate-50 rounded-lg">
                       <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center">
                         <i className="fas fa-truck mr-2 text-slate-600" />
@@ -879,7 +946,7 @@ const Packages: React.FC = () => {
               {currentTab === 'analytics' && (
                 <div className="space-y-6">
                   {/* Key Performance Metrics */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <Card className="bg-white border-slate-200 shadow-sm">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-2">
@@ -928,12 +995,14 @@ const Packages: React.FC = () => {
                   </div>
 
                   {/* Charts Row 1 */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Delivery Time Trend */}
                     <Card className="bg-white border-slate-200 shadow-sm">
                       <CardHeader>
                         <CardTitle className="flex items-center">
-                          <i className="fas fa-chart-line text-slate-600 mr-2" />
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                            <i className="fas fa-chart-line text-white" />
+                          </div>
                           Delivery Time Trend
                         </CardTitle>
                       </CardHeader>
@@ -969,7 +1038,9 @@ const Packages: React.FC = () => {
                     <Card className="bg-white border-slate-200 shadow-sm">
                       <CardHeader>
                         <CardTitle className="flex items-center">
-                          <i className="fas fa-chart-bar text-slate-600 mr-2" />
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                            <i className="fas fa-chart-bar text-white" />
+                          </div>
                           Package Volume by Carrier
                         </CardTitle>
                       </CardHeader>
@@ -1000,7 +1071,7 @@ const Packages: React.FC = () => {
                   </div>
 
                   {/* Charts Row 2 */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Status Distribution */}
                     <Card className="bg-white border-slate-200 shadow-sm">
                       <CardHeader>
@@ -1135,7 +1206,7 @@ const Packages: React.FC = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-slate-700">
                             Default Storage Location
@@ -1245,7 +1316,7 @@ const Packages: React.FC = () => {
                                 <p className="text-sm text-slate-600">API Integration Active</p>
                               </div>
                             </div>
-                            <Badge variant="success">Connected</Badge>
+                            <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Connected</span>
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1371,7 +1442,7 @@ Thank you,
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-slate-700">
                             Data Retention Policy
@@ -1785,6 +1856,420 @@ Thank you,
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Package Details Modal */}
+      {selectedPackage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="backdrop-blur-xl bg-white/90 border-white/30 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-slate-200/50">
+              <CardTitle className="flex items-center text-xl">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                  <i className={cn("text-white", getPackageTypeIcon((editedPackage || selectedPackage).package_type))} />
+                </div>
+                Package Details {isEditingPackage && <span className="ml-2 text-sm text-blue-600">(Editing)</span>}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                {!isEditingPackage ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingPackage(true);
+                      setEditedPackage({ ...selectedPackage });
+                    }}
+                    className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                  >
+                    <i className="fas fa-edit mr-2" />
+                    Edit
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingPackage(false);
+                      setEditedPackage(null);
+                    }}
+                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedPackage(null);
+                    setIsEditingPackage(false);
+                    setEditedPackage(null);
+                  }}
+                  className="text-slate-500 hover:text-slate-700"
+                >
+                  <i className="fas fa-times text-lg" />
+                </Button>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                {/* Header Info */}
+                <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+                  <div className="flex-1">
+                    {isEditingPackage && editedPackage ? (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-slate-600">Recipient Name</label>
+                          <input
+                            type="text"
+                            value={editedPackage.recipient_name}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, recipient_name: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-600">Room Number</label>
+                          <input
+                            type="text"
+                            value={editedPackage.recipient_room || ''}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, recipient_room: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-900">{selectedPackage.recipient_name}</h3>
+                        <p className="text-slate-600 mt-1">{selectedPackage.recipient_room ? `Room ${selectedPackage.recipient_room}` : 'No room assigned'}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end space-y-2">
+                    {isEditingPackage && editedPackage ? (
+                      <div className="space-y-2 w-48">
+                        <div>
+                          <label className="text-sm font-medium text-slate-600">Status</label>
+                          <select
+                            value={editedPackage.status}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, status: e.target.value as Package['status'] })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          >
+                            <option value="received">Received</option>
+                            <option value="notified">Notified</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="picked_up">Picked Up</option>
+                            <option value="expired">Expired</option>
+                            <option value="returned">Returned</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-600">Carrier</label>
+                          <select
+                            value={editedPackage.carrier}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, carrier: e.target.value as Package['carrier'] })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          >
+                            <option value="FedEx">FedEx</option>
+                            <option value="UPS">UPS</option>
+                            <option value="DHL">DHL</option>
+                            <option value="USPS">USPS</option>
+                            <option value="Amazon">Amazon</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <span className={cn(
+                          "px-3 py-1.5 text-sm font-semibold rounded",
+                          selectedPackage.status === 'received' ? 'text-blue-800 bg-blue-100' :
+                          selectedPackage.status === 'notified' ? 'text-yellow-800 bg-yellow-100' :
+                          selectedPackage.status === 'delivered' ? 'text-green-800 bg-green-100' :
+                          selectedPackage.status === 'picked_up' ? 'text-green-800 bg-green-100' :
+                          selectedPackage.status === 'expired' ? 'text-red-800 bg-red-100' :
+                          'text-slate-800 bg-slate-100'
+                        )}>
+                          {selectedPackage.status.toUpperCase().replace('_', ' ')}
+                        </span>
+                        <span className="px-3 py-1.5 text-sm font-semibold rounded text-slate-800 bg-slate-100">
+                          {selectedPackage.carrier}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Package Information Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-600">Tracking Number</label>
+                      {isEditingPackage && editedPackage ? (
+                        <input
+                          type="text"
+                          value={editedPackage.tracking_number}
+                          onChange={(e) => setEditedPackage({ ...editedPackage, tracking_number: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        />
+                      ) : (
+                        <p className="text-base font-mono text-slate-900 mt-1">{selectedPackage.tracking_number}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-600">Package Type</label>
+                      {isEditingPackage && editedPackage ? (
+                        <select
+                          value={editedPackage.package_type}
+                          onChange={(e) => setEditedPackage({ ...editedPackage, package_type: e.target.value as Package['package_type'] })}
+                          className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="parcel">Parcel</option>
+                          <option value="document">Document</option>
+                          <option value="food">Food</option>
+                          <option value="equipment">Equipment</option>
+                          <option value="other">Other</option>
+                        </select>
+                      ) : (
+                        <p className="text-base capitalize text-slate-900 mt-1">{selectedPackage.package_type}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-600">Size</label>
+                      {isEditingPackage && editedPackage ? (
+                        <select
+                          value={editedPackage.package_size}
+                          onChange={(e) => setEditedPackage({ ...editedPackage, package_size: e.target.value as Package['package_size'] })}
+                          className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="small">Small</option>
+                          <option value="medium">Medium</option>
+                          <option value="large">Large</option>
+                          <option value="oversized">Oversized</option>
+                        </select>
+                      ) : (
+                        <p className="text-base capitalize text-slate-900 mt-1">{selectedPackage.package_size}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-600">Location</label>
+                      {isEditingPackage && editedPackage ? (
+                        <input
+                          type="text"
+                          value={editedPackage.location}
+                          onChange={(e) => setEditedPackage({ ...editedPackage, location: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      ) : (
+                        <p className="text-base text-slate-900 mt-1">{selectedPackage.location}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-600">Received Date</label>
+                      {isEditingPackage && editedPackage ? (
+                        <input
+                          type="text"
+                          value={editedPackage.received_date}
+                          onChange={(e) => setEditedPackage({ ...editedPackage, received_date: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="YYYY-MM-DD HH:MM"
+                        />
+                      ) : (
+                        <p className="text-base text-slate-900 mt-1">{selectedPackage.received_date}</p>
+                      )}
+                    </div>
+                    {(selectedPackage.delivered_date || (isEditingPackage && editedPackage)) && (
+                      <div>
+                        <label className="text-sm font-medium text-slate-600">Delivered Date</label>
+                        {isEditingPackage && editedPackage ? (
+                          <input
+                            type="text"
+                            value={editedPackage.delivered_date || ''}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, delivered_date: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="YYYY-MM-DD HH:MM"
+                          />
+                        ) : (
+                          <p className="text-base text-slate-900 mt-1">{selectedPackage.delivered_date}</p>
+                        )}
+                      </div>
+                    )}
+                    {(selectedPackage.pickup_date || (isEditingPackage && editedPackage)) && (
+                      <div>
+                        <label className="text-sm font-medium text-slate-600">Pickup Date</label>
+                        {isEditingPackage && editedPackage ? (
+                          <input
+                            type="text"
+                            value={editedPackage.pickup_date || ''}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, pickup_date: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="YYYY-MM-DD HH:MM"
+                          />
+                        ) : (
+                          <p className="text-base text-slate-900 mt-1">{selectedPackage.pickup_date}</p>
+                        )}
+                      </div>
+                    )}
+                    {(selectedPackage.carrier_tracking || (isEditingPackage && editedPackage)) && (
+                      <div>
+                        <label className="text-sm font-medium text-slate-600">Carrier Tracking</label>
+                        {isEditingPackage && editedPackage ? (
+                          <input
+                            type="text"
+                            value={editedPackage.carrier_tracking || ''}
+                            onChange={(e) => setEditedPackage({ ...editedPackage, carrier_tracking: e.target.value })}
+                            className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                          />
+                        ) : (
+                          <p className="text-base font-mono text-slate-900 mt-1">{selectedPackage.carrier_tracking}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                  <label className="text-sm font-medium text-slate-600 mb-2 block">Description</label>
+                  {isEditingPackage && editedPackage ? (
+                    <textarea
+                      value={editedPackage.description}
+                      onChange={(e) => setEditedPackage({ ...editedPackage, description: e.target.value })}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : (
+                    <p className="text-base text-slate-700">{selectedPackage.description}</p>
+                  )}
+                </div>
+
+                {/* Special Handling */}
+                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <label className="text-sm font-medium text-slate-600 mb-2 block">Special Handling</label>
+                  {isEditingPackage && editedPackage ? (
+                    <select
+                      value={editedPackage.special_handling}
+                      onChange={(e) => setEditedPackage({ ...editedPackage, special_handling: e.target.value as Package['special_handling'] })}
+                      className="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    >
+                      <option value="none">None</option>
+                      <option value="fragile">Fragile</option>
+                      <option value="refrigerated">Refrigerated</option>
+                      <option value="high_value">High Value</option>
+                    </select>
+                  ) : (
+                    <div className="flex items-center text-slate-700">
+                      <i className={cn("mr-2 text-yellow-600", getSpecialHandlingIcon(selectedPackage.special_handling))} />
+                      <span className="font-medium">{selectedPackage.special_handling !== 'none' ? `Special Handling: ${selectedPackage.special_handling}` : 'No special handling required'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Contact Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                  <div>
+                    <label className="text-sm font-medium text-slate-600">Phone</label>
+                    {isEditingPackage && editedPackage ? (
+                      <input
+                        type="tel"
+                        value={editedPackage.recipient_phone}
+                        onChange={(e) => setEditedPackage({ ...editedPackage, recipient_phone: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-base text-slate-900 mt-1">{selectedPackage.recipient_phone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-600">Email</label>
+                    {isEditingPackage && editedPackage ? (
+                      <input
+                        type="email"
+                        value={editedPackage.recipient_email || ''}
+                        onChange={(e) => setEditedPackage({ ...editedPackage, recipient_email: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-base text-slate-900 mt-1">{selectedPackage.recipient_email || 'No email'}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t border-slate-200">
+                  {isEditingPackage && editedPackage ? (
+                    <>
+                      <Button 
+                        className="flex-1 !bg-[#2563eb] hover:!bg-blue-700 text-white"
+                        onClick={() => {
+                          if (editedPackage) {
+                            handleUpdatePackage(editedPackage);
+                          }
+                        }}
+                        disabled={loading}
+                      >
+                        <i className="fas fa-save mr-2" />
+                        Save Changes
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        className="flex-1 text-slate-600 border-slate-300 hover:bg-slate-50"
+                        onClick={() => {
+                          setIsEditingPackage(false);
+                          setEditedPackage(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {selectedPackage.status === 'received' && (
+                        <Button 
+                          className="flex-1 !bg-[#2563eb] hover:!bg-blue-700 text-white"
+                          onClick={() => {
+                            handleNotifyGuest(selectedPackage.id);
+                            setSelectedPackage(null);
+                          }}
+                          disabled={loading}
+                        >
+                          <i className="fas fa-bell mr-2" />
+                          Notify Guest
+                        </Button>
+                      )}
+                      {selectedPackage.status === 'notified' && (
+                        <Button 
+                          className="flex-1 !bg-[#2563eb] hover:!bg-blue-700 text-white"
+                          onClick={() => {
+                            handleDeliverPackage(selectedPackage.id);
+                            setSelectedPackage(null);
+                          }}
+                          disabled={loading}
+                        >
+                          <i className="fas fa-check mr-2" />
+                          Mark Delivered
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline"
+                        className="flex-1 text-slate-600 border-slate-300 hover:bg-slate-50"
+                        onClick={() => {
+                          setSelectedPackage(null);
+                          setIsEditingPackage(false);
+                          setEditedPackage(null);
+                        }}
+                      >
+                        Close
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

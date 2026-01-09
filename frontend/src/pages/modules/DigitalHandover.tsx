@@ -7,6 +7,7 @@ import { Badge } from '../../components/UI/Badge';
 import { cn } from '../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showSuccess } from '../../utils/toast';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import '../../styles/modern-glass.css';
 
 interface Handover {
   id: string;
@@ -397,6 +398,26 @@ const DigitalHandover: React.FC = () => {
     }
   };
 
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-green-800 bg-green-100';
+      case 'in_progress': return 'text-blue-800 bg-blue-100';
+      case 'pending': return 'text-yellow-800 bg-yellow-100';
+      case 'overdue': return 'text-red-800 bg-red-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  const getPriorityBadgeClass = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'text-red-800 bg-red-100';
+      case 'high': return 'text-orange-800 bg-orange-100';
+      case 'medium': return 'text-blue-800 bg-blue-100';
+      case 'low': return 'text-slate-800 bg-slate-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
   const getShiftTypeBadge = (type: string) => {
     const typeConfig = {
       morning: { color: 'bg-blue-100 text-blue-800', label: 'Morning' },
@@ -406,7 +427,7 @@ const DigitalHandover: React.FC = () => {
 
     const config = typeConfig[type as keyof typeof typeConfig] || typeConfig.morning;
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium ${config.color}`}>
         {config.label}
       </span>
     );
@@ -421,7 +442,7 @@ const DigitalHandover: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-exchange-alt text-white text-2xl" />
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-slate-500 rounded-full flex items-center justify-center animate-pulse">
@@ -460,19 +481,19 @@ const DigitalHandover: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {/* Key Metrics with Glass Morphism */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Total Handovers */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-clipboard-list text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.totalHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -484,14 +505,14 @@ const DigitalHandover: React.FC = () => {
 
           {/* Completed Handovers */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-check-circle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.completedHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -503,14 +524,14 @@ const DigitalHandover: React.FC = () => {
 
           {/* Pending Handovers */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-clock text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.pendingHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -522,14 +543,14 @@ const DigitalHandover: React.FC = () => {
 
           {/* Overdue Handovers */}
           <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
+            <CardContent className="pt-6 px-6 pb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                   <i className="fas fa-exclamation-triangle text-white text-xl" />
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.overdueHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -547,7 +568,9 @@ const DigitalHandover: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-exclamation-triangle mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-exclamation-triangle text-white" />
+                  </div>
                   Emergency Actions
                 </CardTitle>
               </CardHeader>
@@ -558,7 +581,7 @@ const DigitalHandover: React.FC = () => {
                       const overdueHandovers = handovers.filter(h => h.status === 'overdue');
                       showSuccess(`${overdueHandovers.length} handovers are overdue`);
                     }}
-                    className="!bg-red-600 hover:!bg-red-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                   >
                     <i className="fas fa-exclamation-triangle mr-2" />
                     Overdue Alert
@@ -568,7 +591,7 @@ const DigitalHandover: React.FC = () => {
                       const incompleteHandovers = handovers.filter(h => h.status === 'in_progress');
                       showSuccess(`${incompleteHandovers.length} handovers are incomplete`);
                     }}
-                    className="!bg-orange-600 hover:!bg-orange-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                   >
                     <i className="fas fa-clock mr-2" />
                     Incomplete Alert
@@ -581,7 +604,9 @@ const DigitalHandover: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-list mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-list text-white" />
+                  </div>
                   Recent Handovers
                 </CardTitle>
               </CardHeader>
@@ -621,12 +646,12 @@ const DigitalHandover: React.FC = () => {
                             </div>
                             <div className="flex items-center space-x-2">
                               {getShiftTypeBadge(handover.shiftType)}
-                              <Badge variant={getStatusBadgeVariant(handover.status)}>
-                                {handover.status.toUpperCase()}
-                              </Badge>
-                              <Badge variant={getPriorityBadgeVariant(handover.priority)}>
+                              <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(handover.status))}>
+                                {handover.status.toUpperCase().replace('_', ' ')}
+                              </span>
+                              <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getPriorityBadgeClass(handover.priority))}>
                                 {handover.priority.toUpperCase()}
-                              </Badge>
+                              </span>
                             </div>
                           </div>
 
@@ -678,12 +703,14 @@ const DigitalHandover: React.FC = () => {
             <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <i className="fas fa-clock text-slate-600 mr-2" />
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                      <i className="fas fa-clock text-white" />
+                    </div>
                     Active Handovers
                   </div>
-                  <Badge variant="default" className="text-lg px-4 py-1">
+                  <span className="px-3 py-1.5 text-base font-semibold rounded text-blue-800 bg-blue-100">
                     {inProgressHandovers.length} In Progress
-                  </Badge>
+                  </span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -700,7 +727,7 @@ const DigitalHandover: React.FC = () => {
                             {handover.startTime} - {handover.endTime}
                           </p>
                 </div>
-                        <Badge variant="warning" className="animate-pulse">In Progress</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-yellow-800 bg-yellow-100 animate-pulse">In Progress</span>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
@@ -742,7 +769,9 @@ const DigitalHandover: React.FC = () => {
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <i className="fas fa-calendar-alt text-slate-600 mr-2" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-calendar-alt text-white" />
+                  </div>
                   Today's Shift Timeline
                 </CardTitle>
               </CardHeader>
@@ -764,12 +793,13 @@ const DigitalHandover: React.FC = () => {
                           <p className="text-sm text-slate-600">{shift.time}</p>
                           <p className="text-sm text-slate-700 mt-1">{shift.staff}</p>
                         </div>
-                        <Badge variant={
-                          shift.status === 'completed' ? 'success' :
-                          shift.status === 'in_progress' ? 'warning' : 'default'
-                        }>
+                        <span className={cn(
+                          "px-2.5 py-1 text-xs font-semibold rounded",
+                          shift.status === 'completed' ? 'text-green-800 bg-green-100' :
+                          shift.status === 'in_progress' ? 'text-yellow-800 bg-yellow-100' : 'text-slate-800 bg-slate-100'
+                        )}>
                           {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -781,7 +811,9 @@ const DigitalHandover: React.FC = () => {
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <i className="fas fa-users text-slate-600 mr-2" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-users text-white" />
+                  </div>
                   Staff Availability
                 </CardTitle>
               </CardHeader>
@@ -800,9 +832,12 @@ const DigitalHandover: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      <Badge variant={index % 3 === 0 ? 'success' : index % 3 === 1 ? 'warning' : 'default'} className="text-xs">
+                      <span className={cn(
+                        "px-2.5 py-1 text-xs font-semibold rounded",
+                        index % 3 === 0 ? 'text-green-800 bg-green-100' : index % 3 === 1 ? 'text-yellow-800 bg-yellow-100' : 'text-slate-800 bg-slate-100'
+                      )}>
                         {index % 3 === 0 ? 'Available' : index % 3 === 1 ? 'On Duty' : 'Off Duty'}
-                      </Badge>
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -834,9 +869,12 @@ const DigitalHandover: React.FC = () => {
                         <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
                           <i className={`fas ${equipment.icon} text-slate-600`} />
                 </div>
-                        <Badge variant={equipment.operational === equipment.count ? 'success' : 'warning'}>
+                        <span className={cn(
+                          "px-2.5 py-1 text-xs font-semibold rounded",
+                          equipment.operational === equipment.count ? 'text-green-800 bg-green-100' : 'text-yellow-800 bg-yellow-100'
+                        )}>
                           {equipment.operational}/{equipment.count}
-                        </Badge>
+                        </span>
                       </div>
                       <h4 className="font-semibold text-slate-900 text-sm">{equipment.name}</h4>
                       <p className="text-xs text-slate-600 mt-1">
@@ -856,9 +894,9 @@ const DigitalHandover: React.FC = () => {
                     <i className="fas fa-tasks text-slate-600 mr-2" />
                     Pending Tasks
                   </div>
-                  <Badge variant="warning" className="text-lg px-4 py-1">
+                  <span className="px-3 py-1.5 text-base font-semibold rounded text-yellow-800 bg-yellow-100">
                     {handovers.flatMap(h => h.pendingTasks).length} Open
-                  </Badge>
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -956,7 +994,9 @@ const DigitalHandover: React.FC = () => {
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <i className="fas fa-wrench text-slate-600 mr-2" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-wrench text-white" />
+                  </div>
                   Maintenance Requests
                 </CardTitle>
               </CardHeader>
@@ -969,15 +1009,19 @@ const DigitalHandover: React.FC = () => {
                   ].map((request, index) => (
                     <div key={index} className="p-4 border border-slate-200 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <Badge variant={
-                          request.priority === 'critical' ? 'destructive' :
-                          request.priority === 'high' ? 'warning' : 'default'
-                        }>
+                        <span className={cn(
+                          "px-2.5 py-1 text-xs font-semibold rounded",
+                          request.priority === 'critical' ? 'text-red-800 bg-red-100' :
+                          request.priority === 'high' ? 'text-orange-800 bg-orange-100' : 'text-blue-800 bg-blue-100'
+                        )}>
                           {request.priority.toUpperCase()}
-                        </Badge>
-                        <Badge variant={request.status === 'in_progress' ? 'warning' : 'default'}>
+                        </span>
+                        <span className={cn(
+                          "px-2.5 py-1 text-xs font-semibold rounded",
+                          request.status === 'in_progress' ? 'text-yellow-800 bg-yellow-100' : 'text-slate-800 bg-slate-100'
+                        )}>
                           {request.status.replace('_', ' ').toUpperCase()}
-                        </Badge>
+                        </span>
                       </div>
                       <h4 className="font-semibold text-slate-900 text-sm">{request.issue}</h4>
                       <p className="text-xs text-slate-600 mt-1">
@@ -1004,7 +1048,7 @@ const DigitalHandover: React.FC = () => {
         {currentTab === 'analytics' && (
           <div className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
@@ -1052,7 +1096,7 @@ const DigitalHandover: React.FC = () => {
             </div>
 
             {/* Charts Row 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Monthly Handover Trend */}
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
@@ -1114,7 +1158,7 @@ const DigitalHandover: React.FC = () => {
             </div>
 
             {/* Charts Row 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Status Distribution */}
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
@@ -1419,7 +1463,7 @@ const DigitalHandover: React.FC = () => {
                       <i className="fas fa-robot text-blue-600" />
                       <h4 className="font-semibold text-slate-900">Automatic Handover Creation</h4>
                     </div>
-                    <Badge variant="default">Active</Badge>
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">Active</span>
                   </div>
                   <p className="text-sm text-slate-600 mb-3">
                     Automatically create handovers 30 minutes before shift change
@@ -1745,7 +1789,9 @@ const DigitalHandover: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <i className="fas fa-info-circle mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                    <i className="fas fa-info-circle text-white" />
+                  </div>
                   Handover Details
                 </div>
                 <Button
@@ -1769,9 +1815,9 @@ const DigitalHandover: React.FC = () => {
                   <p className="text-sm font-medium text-slate-600">Status</p>
                   <p className="mt-1">
                     {selectedHandover && (
-                      <Badge variant={getStatusBadgeVariant(selectedHandover.status)}>
-                        {selectedHandover.status.toUpperCase()}
-                      </Badge>
+                      <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(selectedHandover.status))}>
+                        {selectedHandover.status.toUpperCase().replace('_', ' ')}
+                      </span>
                     )}
                   </p>
                 </div>
@@ -1779,9 +1825,9 @@ const DigitalHandover: React.FC = () => {
                   <p className="text-sm font-medium text-slate-600">Priority</p>
                   <p className="mt-1">
                     {selectedHandover && (
-                      <Badge variant={getPriorityBadgeVariant(selectedHandover.priority)}>
+                      <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getPriorityBadgeClass(selectedHandover.priority))}>
                         {selectedHandover.priority.toUpperCase()}
-                      </Badge>
+                      </span>
                     )}
                   </p>
                 </div>
@@ -1830,9 +1876,13 @@ const DigitalHandover: React.FC = () => {
                             <div className="text-sm text-slate-600 mt-1">{item.description}</div>
                           )}
                           <div className="flex items-center gap-4 mt-2">
-                            <Badge variant={item.status === 'completed' ? 'success' : item.status === 'skipped' ? 'secondary' : 'warning'}>
+                            <span className={cn(
+                              "px-2.5 py-1 text-xs font-semibold rounded",
+                              item.status === 'completed' ? 'text-green-800 bg-green-100' :
+                              item.status === 'skipped' ? 'text-slate-800 bg-slate-100' : 'text-yellow-800 bg-yellow-100'
+                            )}>
                               {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                            </Badge>
+                            </span>
                             <span className="text-xs text-slate-500">{item.category}</span>
                             <span className="text-xs text-slate-500">{item.priority}</span>
                           </div>

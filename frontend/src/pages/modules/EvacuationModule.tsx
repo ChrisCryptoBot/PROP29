@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
-import { Badge } from '../../components/UI/Badge';
 import { Progress } from '../../components/UI/Progress';
 import { cn } from '../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showSuccess, showError } from '../../utils/toast';
@@ -316,6 +315,42 @@ const EvacuationModule: React.FC = () => {
       setSettingsForm(settings);
     }
   }, [showSettingsModal, settings]);
+
+  // Gold Standard Badge Helper Functions
+  const getStatusBadgeClass = (status: string): string => {
+    switch (status) {
+      case 'evacuated': return 'text-green-800 bg-green-100';
+      case 'in-progress': return 'text-yellow-800 bg-yellow-100';
+      case 'pending': return 'text-red-800 bg-red-100';
+      case 'clear': return 'text-green-800 bg-green-100';
+      case 'congested': return 'text-yellow-800 bg-yellow-100';
+      case 'blocked': return 'text-red-800 bg-red-100';
+      case 'active': return 'text-blue-800 bg-blue-100';
+      case 'complete': return 'text-green-800 bg-green-100';
+      case 'assigned': return 'text-blue-800 bg-blue-100';
+      case 'standby': return 'text-slate-800 bg-slate-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  const getRiskLevelBadgeClass = (riskLevel: string): string => {
+    switch (riskLevel) {
+      case 'critical': return 'text-red-800 bg-red-100';
+      case 'high': return 'text-orange-800 bg-orange-100';
+      case 'medium': return 'text-yellow-800 bg-yellow-100';
+      case 'low': return 'text-green-800 bg-green-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  const getPriorityBadgeClass = (priority: string): string => {
+    switch (priority) {
+      case 'high': return 'text-red-800 bg-red-100';
+      case 'medium': return 'text-yellow-800 bg-yellow-100';
+      case 'low': return 'text-blue-800 bg-blue-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
 
   // Handlers with comprehensive error handling and toast notifications
   const handleStartEvacuation = useCallback(async () => {
@@ -673,7 +708,7 @@ const EvacuationModule: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-exclamation-triangle text-white text-2xl" />
               </div>
               <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
@@ -713,7 +748,7 @@ const EvacuationModule: React.FC = () => {
       </div>
 
       {/* Main Content Wrapper */}
-      <div className="p-6 max-w-[1400px] mx-auto">
+      <div className="p-6 max-w-[1800px] mx-auto">
 
       {/* Error Display */}
       {error && (
@@ -734,18 +769,18 @@ const EvacuationModule: React.FC = () => {
       )}
 
       {/* GOLD STANDARD METRICS GRID - Always Visible */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {/* Evacuated */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <CheckCircle className="text-white" size={24} />
               </div>
-              <Badge variant="default" className="bg-green-100 text-green-800">Safe</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Safe</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{metrics.evacuated}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{metrics.evacuated}</h3>
               <p className="text-slate-600 text-sm">Evacuated</p>
             </div>
           </CardContent>
@@ -753,15 +788,15 @@ const EvacuationModule: React.FC = () => {
 
         {/* In Progress */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Activity className="text-white" size={24} />
               </div>
-              <Badge variant="warning" className="animate-pulse">Active</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-yellow-800 bg-yellow-100">Active</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{metrics.inProgress}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{metrics.inProgress}</h3>
               <p className="text-slate-600 text-sm">In Progress</p>
             </div>
           </CardContent>
@@ -769,15 +804,15 @@ const EvacuationModule: React.FC = () => {
 
         {/* Remaining */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Users className="text-white" size={24} />
               </div>
-              <Badge variant="destructive" className="animate-pulse">Priority</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">Priority</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{metrics.remaining}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{metrics.remaining}</h3>
               <p className="text-slate-600 text-sm">Remaining</p>
             </div>
           </CardContent>
@@ -785,15 +820,15 @@ const EvacuationModule: React.FC = () => {
 
         {/* Staff Deployed */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Shield className="text-white" size={24} />
               </div>
-              <Badge variant="default">Deployed</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">Deployed</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{metrics.staffDeployed}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{metrics.staffDeployed}</h3>
               <p className="text-slate-600 text-sm">Staff Members</p>
             </div>
           </CardContent>
@@ -801,15 +836,15 @@ const EvacuationModule: React.FC = () => {
 
         {/* Elapsed Time */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Clock className="text-white" size={24} />
               </div>
-              <Badge variant="default" className="animate-pulse">Live</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">Live</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{metrics.elapsedTime}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{metrics.elapsedTime}</h3>
               <p className="text-slate-600 text-sm">Elapsed Time</p>
             </div>
           </CardContent>
@@ -869,7 +904,9 @@ const EvacuationModule: React.FC = () => {
           <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
-                <TrendingUp className="mr-3 text-slate-600" size={24} />
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                  <TrendingUp className="text-white" size={20} />
+                </div>
                 Evacuation Progress
               </CardTitle>
             </CardHeader>
@@ -904,7 +941,9 @@ const EvacuationModule: React.FC = () => {
           <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
-                <Clock className="mr-3 text-slate-600" size={24} />
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                  <Clock className="text-white" size={20} />
+                </div>
                 Event Timeline
               </CardTitle>
             </CardHeader>
@@ -941,7 +980,7 @@ const EvacuationModule: React.FC = () => {
                       <p className="text-xs text-slate-500 mt-1">{event.time}</p>
                     </div>
                     {event.current && (
-                      <Badge variant="warning" className="animate-pulse">Current</Badge>
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded text-yellow-800 bg-yellow-100">Current</span>
                     )}
                   </div>
                 ))}
@@ -957,12 +996,14 @@ const EvacuationModule: React.FC = () => {
           <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
-                <Building className="mr-3 text-slate-600" size={24} />
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                  <Building className="text-white" size={20} />
+                </div>
                 Floor-by-Floor Status
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {floors.map(floor => (
                   <Card 
                     key={floor.id} 
@@ -979,16 +1020,9 @@ const EvacuationModule: React.FC = () => {
                           <h3 className="font-semibold text-slate-900 text-lg">{floor.name}</h3>
                           <p className="text-slate-600 text-sm">{floor.description}</p>
                         </div>
-                        <Badge 
-                          variant={
-                            floor.status === 'evacuated' ? 'default' : 
-                            floor.status === 'in-progress' ? 'warning' : 
-                            'destructive'
-                          }
-                          className="capitalize"
-                        >
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(floor.status))}>
                           {floor.status}
-                        </Badge>
+                        </span>
                       </div>
 
                       <div className="space-y-3">
@@ -1016,16 +1050,9 @@ const EvacuationModule: React.FC = () => {
                           </div>
                           <div className="flex items-center justify-between text-sm mt-2">
                             <span className="text-slate-600">Risk Level:</span>
-                            <Badge 
-                              variant={
-                                floor.riskLevel === 'critical' ? 'destructive' :
-                                floor.riskLevel === 'high' ? 'warning' :
-                                'default'
-                              }
-                              className="capitalize"
-                            >
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getRiskLevelBadgeClass(floor.riskLevel))}>
                               {floor.riskLevel}
-                            </Badge>
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1057,18 +1084,9 @@ const EvacuationModule: React.FC = () => {
                           <h4 className="font-semibold text-slate-900">{member.name}</h4>
                           <p className="text-slate-600 text-xs">{member.role}</p>
                         </div>
-                        <Badge 
-                          variant={
-                            member.status === 'active' ? 'default' : 
-                            member.status === 'complete' ? 'default' : 
-                            'secondary'
-                          }
-                          className={cn(
-                            member.status === 'complete' && 'bg-green-100 text-green-800'
-                          )}
-                        >
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(member.status))}>
                           {member.status}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between">
@@ -1101,7 +1119,7 @@ const EvacuationModule: React.FC = () => {
                   <UserCheck className="mr-3 text-slate-600" size={24} />
                   Guest Assistance Requests
                 </div>
-                <Badge variant="destructive">{pendingAssistance.length} Pending</Badge>
+                <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">{pendingAssistance.length} Pending</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1121,15 +1139,12 @@ const EvacuationModule: React.FC = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
-                            <Badge 
-                              variant={request.priority === 'high' ? 'destructive' : 'warning'}
-                              className="capitalize"
-                            >
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getPriorityBadgeClass(request.priority))}>
                               {request.priority} Priority
-                            </Badge>
-                            <Badge variant="outline" className="capitalize">
+                            </span>
+                            <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(request.status))}>
                               {request.status}
-                            </Badge>
+                            </span>
                           </div>
                           <h4 className="font-semibold text-slate-900">{request.room}</h4>
                           <p className="text-sm text-slate-700 font-medium">{request.guestName}</p>
@@ -1161,9 +1176,9 @@ const EvacuationModule: React.FC = () => {
                             </Button>
                           )}
                           {request.status === 'completed' && (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
+                            <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">
                               ✓ Completed
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1201,16 +1216,9 @@ const EvacuationModule: React.FC = () => {
                           <h4 className="font-semibold text-slate-900">{route.name}</h4>
                           <p className="text-sm text-slate-600">{route.description}</p>
                         </div>
-                        <Badge 
-                          variant={
-                            route.status === 'clear' ? 'default' :
-                            route.status === 'congested' ? 'warning' :
-                            'destructive'
-                          }
-                          className="capitalize"
-                        >
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(route.status))}>
                           {route.status}
-                        </Badge>
+                        </span>
                       </div>
 
                       <div className="space-y-2">
@@ -1255,7 +1263,7 @@ const EvacuationModule: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Public Announcements */}
                 <Card className="backdrop-blur-sm bg-white/60 border-white/30 shadow-lg hover:shadow-xl transition-all">
                   <CardContent className="p-6">
@@ -1381,14 +1389,11 @@ const EvacuationModule: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-slate-500">{log.timestamp}</p>
-                          <Badge 
-                            variant={log.status === 'sent' ? 'default' : 'warning'}
-                            className={cn(
-                              log.status === 'sent' && 'bg-green-100 text-green-800'
-                            )}
-                          >
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded",
+                            log.status === 'sent' ? 'text-green-800 bg-green-100' : 'text-yellow-800 bg-yellow-100'
+                          )}>
                             {log.status}
-                          </Badge>
+                          </span>
                         </div>
                       </div>
                     </CardContent>
@@ -1410,7 +1415,7 @@ const EvacuationModule: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Performance Metrics */}
                 <Card className="backdrop-blur-sm bg-white/60 border-white/30 shadow-lg">
                   <CardContent className="p-6">
@@ -1465,7 +1470,7 @@ const EvacuationModule: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">Status:</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">Compliant</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Compliant</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">Next Drill:</span>
@@ -1568,11 +1573,11 @@ const EvacuationModule: React.FC = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant={drill.score >= 90 ? 'default' : 'warning'} className={cn(
-                            drill.score >= 90 && 'bg-green-100 text-green-800'
+                          <span className={cn("px-2.5 py-1 text-xs font-semibold rounded",
+                            drill.score >= 90 ? 'text-green-800 bg-green-100' : 'text-yellow-800 bg-yellow-100'
                           )}>
                             Score: {drill.score}/100
-                          </Badge>
+                          </span>
                           <p className="text-xs text-slate-500 mt-1">{drill.issues} issues</p>
                         </div>
                       </div>
@@ -1595,7 +1600,7 @@ const EvacuationModule: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Risk Assessment */}
                 <Card className="backdrop-blur-sm bg-white/60 border-white/30 shadow-lg hover:shadow-xl transition-all">
                   <CardContent className="p-6">
@@ -1611,7 +1616,7 @@ const EvacuationModule: React.FC = () => {
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">Current Risk Level:</span>
-                        <Badge variant="warning">Medium</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-yellow-800 bg-yellow-100">Medium</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">Confidence:</span>
@@ -1646,7 +1651,7 @@ const EvacuationModule: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">System Status:</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Active</span>
                       </div>
                     </div>
                     <Button 
@@ -1677,7 +1682,7 @@ const EvacuationModule: React.FC = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-slate-600">Optimization:</span>
-                        <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Active</span>
                       </div>
                     </div>
                     <Button 

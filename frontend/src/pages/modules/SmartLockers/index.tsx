@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/UI/Card';
 import { Button } from '../../../components/UI/Button';
-import { Badge } from '../../../components/UI/Badge';
 import { cn } from '../../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../utils/toast';
 
@@ -140,23 +139,32 @@ const SmartLockers: React.FC = () => {
     signalIssues: 1
   });
 
-  // Helper functions
-  const getStatusBadgeVariant = (status: string) => {
+  // Gold Standard Badge Helper Functions
+  const getStatusBadgeClass = (status: string): string => {
     switch (status) {
-      case 'available': return 'default';
-      case 'occupied': return 'destructive';
-      case 'maintenance': return 'secondary';
-      case 'out_of_service': return 'outline';
-      default: return 'secondary';
+      case 'available': return 'text-green-800 bg-green-100';
+      case 'occupied': return 'text-blue-800 bg-blue-100';
+      case 'maintenance': return 'text-yellow-800 bg-yellow-100';
+      case 'out_of_service': return 'text-red-800 bg-red-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
-  const getSizeBadgeVariant = (size: string) => {
+  const getSizeBadgeClass = (size: string): string => {
     switch (size) {
-      case 'small': return 'secondary';
-      case 'medium': return 'default';
-      case 'large': return 'destructive';
-      default: return 'secondary';
+      case 'small': return 'text-slate-800 bg-slate-100';
+      case 'medium': return 'text-blue-800 bg-blue-100';
+      case 'large': return 'text-purple-800 bg-purple-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
+  };
+
+  const getReservationStatusBadgeClass = (status: string): string => {
+    switch (status) {
+      case 'active': return 'text-green-800 bg-green-100';
+      case 'completed': return 'text-slate-800 bg-slate-100';
+      case 'cancelled': return 'text-red-800 bg-red-100';
+      default: return 'text-slate-800 bg-slate-100';
     }
   };
 
@@ -199,10 +207,10 @@ const SmartLockers: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-lock text-white text-2xl" />
               </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center animate-pulse">
                 <i className="fas fa-wifi text-white text-xs" />
               </div>
             </div>
@@ -238,24 +246,24 @@ const SmartLockers: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-[1800px] mx-auto px-6 py-8">
         {/* Overview Tab */}
         {currentTab === 'overview' && (
           <div className="space-y-8">
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-lock text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">
                       Total
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.totalLockers}
                     </h3>
                     <p className="text-slate-600 font-medium">Total Lockers</p>
@@ -264,17 +272,17 @@ const SmartLockers: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-check-circle text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">
                       Available
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.availableLockers}
                     </h3>
                     <p className="text-slate-600 font-medium">Available Lockers</p>
@@ -283,17 +291,17 @@ const SmartLockers: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-user text-white text-xl" />
                     </div>
-                    <Badge variant="destructive" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">
                       Occupied
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.occupiedLockers}
                     </h3>
                     <p className="text-slate-600 font-medium">Occupied Lockers</p>
@@ -302,17 +310,17 @@ const SmartLockers: React.FC = () => {
               </Card>
 
               <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="pt-6 px-6 pb-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                       <i className="fas fa-chart-line text-white text-xl" />
                     </div>
-                    <Badge variant="default" className="animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">
                       Rate
-                    </Badge>
+                    </span>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900">
+                    <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.utilizationRate}%
                     </h3>
                     <p className="text-slate-600 font-medium">Utilization Rate</p>
@@ -325,7 +333,9 @@ const SmartLockers: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-lock mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-lock text-white text-lg" />
+                  </div>
                   Recent Locker Activity
                 </CardTitle>
               </CardHeader>
@@ -347,12 +357,12 @@ const SmartLockers: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={getStatusBadgeVariant(locker.status)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(locker.status))}>
                           {locker.status}
-                        </Badge>
-                        <Badge variant={getSizeBadgeVariant(locker.size)}>
+                        </span>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSizeBadgeClass(locker.size))}>
                           {locker.size}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -364,14 +374,16 @@ const SmartLockers: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-bolt mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-bolt text-white text-lg" />
+                  </div>
                   Quick Actions
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Button 
-                    className="bg-slate-600 hover:bg-slate-700 text-white"
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
                     onClick={() => setShowCreateModal(true)}
                   >
                     <i className="fas fa-plus mr-2" />
@@ -413,7 +425,9 @@ const SmartLockers: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-lock mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-lock text-white text-lg" />
+                  </div>
                   All Smart Lockers
                 </CardTitle>
               </CardHeader>
@@ -438,12 +452,12 @@ const SmartLockers: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={getStatusBadgeVariant(locker.status)}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getStatusBadgeClass(locker.status))}>
                           {locker.status}
-                        </Badge>
-                        <Badge variant={getSizeBadgeVariant(locker.size)}>
+                        </span>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getSizeBadgeClass(locker.size))}>
                           {locker.size}
-                        </Badge>
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -459,7 +473,9 @@ const SmartLockers: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-calendar mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-calendar text-white text-lg" />
+                  </div>
                   Locker Reservations
                 </CardTitle>
               </CardHeader>
@@ -469,9 +485,9 @@ const SmartLockers: React.FC = () => {
                     <div key={reservation.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-slate-900">{reservation.guestName}</h3>
-                        <Badge variant={reservation.status === 'active' ? 'default' : 'secondary'}>
+                        <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getReservationStatusBadgeClass(reservation.status))}>
                           {reservation.status}
-                        </Badge>
+                        </span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                         <div>
@@ -501,28 +517,30 @@ const SmartLockers: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-chart-bar mr-3 text-slate-600" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                    <i className="fas fa-chart-bar text-white text-lg" />
+                  </div>
                   Locker Analytics
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <i className="fas fa-clock text-white text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">Average Occupancy</h3>
                     <p className="text-slate-600">{metrics.averageOccupancyTime} hours</p>
                   </div>
                   <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-600 to-yellow-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <i className="fas fa-battery-quarter text-white text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">Battery Alerts</h3>
                     <p className="text-slate-600">{metrics.batteryAlerts} lockers</p>
                   </div>
                   <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <i className="fas fa-wifi text-white text-2xl" />
                     </div>
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">Signal Issues</h3>
@@ -537,7 +555,7 @@ const SmartLockers: React.FC = () => {
         {/* Settings Tab */}
         {currentTab === 'settings' && (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-4">
               <i className="fas fa-cogs text-white text-2xl" />
             </div>
             <h3 className="text-xl font-semibold text-slate-900 mb-2">Smart Lockers Settings</h3>

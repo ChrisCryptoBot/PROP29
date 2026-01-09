@@ -94,7 +94,7 @@ class IncidentLogService {
       aiClassification: 'Medical Emergency',
       aiSeverity: severity,
       escalationLevel: severity === 'CRITICAL' ? 3 : severity === 'HIGH' ? 2 : 1,
-      module: 'MedicalAssistance',
+      module: 'GuestSafety',
       additionalData: {
         patientLocation: medicalData.patientLocation,
         consciousness: medicalData.consciousness,

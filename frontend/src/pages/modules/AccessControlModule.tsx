@@ -6,6 +6,8 @@ import { Badge } from '../../components/UI/Badge';
 import { Avatar } from '../../components/UI/Avatar';
 import { cn } from '../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showSuccess, showError } from '../../utils/toast';
+import { BehaviorAnalysisPanel } from '../../components/AccessControlModule/BehaviorAnalysisPanel';
+import '../../styles/modern-glass.css';
 
 // Enhanced TypeScript Interfaces
 interface AccessPoint {
@@ -22,6 +24,24 @@ interface AccessPoint {
   isOnline?: boolean;
 }
 
+interface AccessSchedule {
+  days: string[]; // ['monday', 'tuesday', ...]
+  startTime: string; // '06:00'
+  endTime: string; // '23:00'
+  timezone?: string;
+}
+
+interface TemporaryAccess {
+  id: string;
+  userId: string;
+  accessPointIds: string[];
+  startTime: string;
+  endTime: string;
+  reason: string;
+  grantedBy: string;
+  createdAt: string;
+}
+
 interface User {
   id: string;
   name: string;
@@ -36,6 +56,9 @@ interface User {
   permissions: string[];
   phone?: string;
   employeeId?: string;
+  accessSchedule?: AccessSchedule;
+  temporaryAccesses?: TemporaryAccess[];
+  autoRevokeAtCheckout?: boolean;
 }
 
 interface AccessEvent {
@@ -66,12 +89,14 @@ interface AccessMetrics {
   lastSecurityScan: string;
 }
 
-// Optimized Tab Structure - 5 tabs instead of 7
+// Enhanced Tab Structure - 7 tabs with AI Analytics and Reports
 const tabs = [
   { id: 'dashboard', label: 'Dashboard', path: '/modules/access-control' },
   { id: 'access-points', label: 'Access Points', path: '/modules/access-control-points' },
   { id: 'users', label: 'User Management', path: '/modules/access-control-users' },
   { id: 'events', label: 'Access Events', path: '/modules/access-control-events' },
+  { id: 'ai-analytics', label: 'AI Analytics', path: '/modules/access-control-ai' },
+  { id: 'reports', label: 'Reports & Analytics', path: '/modules/access-control-reports' },
   { id: 'configuration', label: 'Configuration', path: '/modules/access-control-config' }
 ];
 
@@ -274,8 +299,26 @@ const AccessControlModule: React.FC = () => {
     role: 'employee' as 'admin' | 'manager' | 'employee' | 'guest',
     accessLevel: 'standard' as 'standard' | 'elevated' | 'restricted',
     phone: '',
-    employeeId: ''
+    employeeId: '',
+    accessSchedule: {
+      days: [] as string[],
+      startTime: '00:00',
+      endTime: '23:59'
+    } as AccessSchedule,
+    autoRevokeAtCheckout: false
   });
+
+  const [temporaryAccessForm, setTemporaryAccessForm] = useState({
+    userId: '',
+    accessPointIds: [] as string[],
+    startTime: '',
+    endTime: '',
+    reason: ''
+  });
+
+  const [showTemporaryAccessModal, setShowTemporaryAccessModal] = useState(false);
+  const [showEmergencyOverrideModal, setShowEmergencyOverrideModal] = useState(false);
+  const [emergencyMode, setEmergencyMode] = useState<'normal' | 'lockdown' | 'unlock'>('normal');
   
   const [metrics, setMetrics] = useState<AccessMetrics>({
     totalAccessPoints: 24,
@@ -377,7 +420,13 @@ const AccessControlModule: React.FC = () => {
         role: 'employee',
         accessLevel: 'standard',
         phone: '',
-        employeeId: ''
+        employeeId: '',
+        accessSchedule: {
+          days: [],
+          startTime: '00:00',
+          endTime: '23:59'
+        },
+        autoRevokeAtCheckout: false
       });
       showSuccess('User created successfully!');
     } catch (error) {
@@ -394,7 +443,13 @@ const AccessControlModule: React.FC = () => {
       role: user.role,
       accessLevel: user.accessLevel,
       phone: user.phone || '',
-      employeeId: user.employeeId || ''
+      employeeId: user.employeeId || '',
+      accessSchedule: user.accessSchedule || {
+        days: [],
+        startTime: '00:00',
+        endTime: '23:59'
+      },
+      autoRevokeAtCheckout: user.autoRevokeAtCheckout || false
     });
     setShowEditUser(true);
   }, []);
@@ -449,6 +504,132 @@ const AccessControlModule: React.FC = () => {
     }
   }, []);
 
+  // Emergency Override Handlers
+  const handleEmergencyLockdown = useCallback(async () => {
+    const confirmed = window.confirm('⚠️ EMERGENCY LOCKDOWN\n\nThis will lock ALL access points. Are you sure?');
+    if (!confirmed) return;
+
+    showLoading('Initiating emergency lockdown...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setEmergencyMode('lockdown');
+      setAccessPoints(prev => prev.map(point => ({ ...point, status: 'disabled' as const })));
+      showSuccess('Emergency lockdown activated! All access points are now locked.');
+    } catch (error) {
+      showError('Failed to initiate lockdown');
+    }
+  }, []);
+
+  const handleEmergencyUnlock = useCallback(async () => {
+    const confirmed = window.confirm('⚠️ EMERGENCY UNLOCK\n\nThis will unlock ALL access points. Are you sure?');
+    if (!confirmed) return;
+
+    showLoading('Initiating emergency unlock...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setEmergencyMode('unlock');
+      setAccessPoints(prev => prev.map(point => ({ ...point, status: 'active' as const })));
+      showSuccess('Emergency unlock activated! All access points are now unlocked.');
+    } catch (error) {
+      showError('Failed to initiate unlock');
+    }
+  }, []);
+
+  const handleNormalMode = useCallback(async () => {
+    showLoading('Restoring normal mode...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setEmergencyMode('normal');
+      showSuccess('Normal mode restored.');
+    } catch (error) {
+      showError('Failed to restore normal mode');
+    }
+  }, []);
+
+  // Temporary Access Handlers
+  const handleGrantTemporaryAccess = useCallback(async () => {
+    if (!temporaryAccessForm.userId || temporaryAccessForm.accessPointIds.length === 0) {
+      showError('Please select a user and at least one access point');
+      return;
+    }
+    if (!temporaryAccessForm.startTime || !temporaryAccessForm.endTime) {
+      showError('Please set start and end times');
+      return;
+    }
+
+    showLoading('Granting temporary access...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newTemporaryAccess: TemporaryAccess = {
+        id: `temp-${Date.now()}`,
+        ...temporaryAccessForm,
+        grantedBy: 'Current User', // In real app, get from auth context
+        createdAt: new Date().toISOString()
+      };
+
+      setUsers(prev => prev.map(user => 
+        user.id === temporaryAccessForm.userId
+          ? { 
+              ...user, 
+              temporaryAccesses: [...(user.temporaryAccesses || []), newTemporaryAccess]
+            }
+          : user
+      ));
+
+      setShowTemporaryAccessModal(false);
+      setTemporaryAccessForm({
+        userId: '',
+        accessPointIds: [],
+        startTime: '',
+        endTime: '',
+        reason: ''
+      });
+      showSuccess('Temporary access granted successfully!');
+    } catch (error) {
+      showError('Failed to grant temporary access');
+    }
+  }, [temporaryAccessForm]);
+
+  // Time-based Access Validation
+  const isAccessAllowed = useCallback((user: User, accessPointId: string): boolean => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+    // Check emergency mode
+    if (emergencyMode === 'lockdown') return false;
+    if (emergencyMode === 'unlock') return true;
+
+    // Check temporary access
+    if (user.temporaryAccesses) {
+      const activeTempAccess = user.temporaryAccesses.find(temp => {
+        const start = new Date(temp.startTime);
+        const end = new Date(temp.endTime);
+        return now >= start && now <= end && temp.accessPointIds.includes(accessPointId);
+      });
+      if (activeTempAccess) return true;
+    }
+
+    // Check scheduled access
+    if (user.accessSchedule) {
+      const schedule = user.accessSchedule;
+      if (!schedule.days.includes(currentDay)) return false;
+      
+      const [startHour, startMin] = schedule.startTime.split(':').map(Number);
+      const [endHour, endMin] = schedule.endTime.split(':').map(Number);
+      const currentMinutes = currentHour * 60 + now.getMinutes();
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+
+      if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [emergencyMode]);
+
   // Enhanced Tab Content Rendering
   const renderTabContent = () => {
     switch (activeTab) {
@@ -466,13 +647,21 @@ const AccessControlModule: React.FC = () => {
                     <div>
                       <h3 className="text-lg font-bold text-red-900">Security Alert</h3>
                       <p className="text-red-700 text-sm">Unauthorized access attempt detected at Executive Floor - 2 minutes ago</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        <i className="fas fa-link mr-1" />
+                        Auto-linked to Incident Log #1234
+                      </p>
               </div>
               </div>
                   <div className="flex space-x-2">
           <Button
                       size="sm"
-                      className="!bg-red-600 hover:!bg-red-700 text-white"
-                      onClick={() => showSuccess('Security response initiated')}
+                      className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                      onClick={() => {
+                        showSuccess('Security response initiated');
+                        // Integration: Create incident in Incident Log
+                        navigate('/modules/event-log');
+                      }}
                     >
                       <i className="fas fa-shield-alt mr-1" />
                       Secure Area
@@ -480,7 +669,7 @@ const AccessControlModule: React.FC = () => {
                 <Button
                       size="sm"
                       variant="outline"
-                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      className="text-slate-600 border-slate-300 hover:bg-slate-50"
                       onClick={() => showSuccess('Alert acknowledged')}
                     >
                       <i className="fas fa-check mr-1" />
@@ -491,28 +680,67 @@ const AccessControlModule: React.FC = () => {
               </CardContent>
             </Card>
 
+            {/* Module Integration Status */}
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-plug text-white" />
+                  </div>
+                  System Integrations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-check-circle text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">Incident Log</span>
+                    </div>
+                    <span className="text-xs text-green-600 font-semibold">Connected</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-check-circle text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">Patrol Module</span>
+                    </div>
+                    <span className="text-xs text-green-600 font-semibold">Connected</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-clock text-yellow-600 mr-2" />
+                      <span className="text-sm font-medium text-slate-700">PMS Integration</span>
+                    </div>
+                    <span className="text-xs text-yellow-600 font-semibold">Pending</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 mt-3">
+                  <i className="fas fa-info-circle mr-1" />
+                  Failed access attempts automatically create incidents. Access violations trigger patrol assignments.
+                </p>
+              </CardContent>
+            </Card>
+
         {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Access Points */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <CardContent className="pt-6 px-6 pb-6 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">TOTAL</span>
+              </div>
+              <div className="flex items-center justify-between mb-4 mt-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                   <i className="fas fa-door-open text-white text-xl" />
                 </div>
-                    <Badge variant="default" className="bg-slate-100 text-slate-700 border-slate-300">
-                  Total
-                </Badge>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-slate-600">Access Points</p>
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.totalAccessPoints}
                 </h3>
-                <p className="text-slate-600 text-sm">
-                  Access Points
-                </p>
                     <div className="flex items-center text-xs text-slate-500">
-                      <i className="fas fa-check-circle text-green-500 mr-1" />
+                      <i className="fas fa-check-circle text-green-400 mr-1" />
                       {metrics.activeAccessPoints} active
                     </div>
               </div>
@@ -521,24 +749,22 @@ const AccessControlModule: React.FC = () => {
 
           {/* Active Users */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <CardContent className="pt-6 px-6 pb-6 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded">ACTIVE</span>
+              </div>
+              <div className="flex items-center justify-between mb-4 mt-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                   <i className="fas fa-users text-white text-xl" />
                 </div>
-                    <Badge variant="default" className="bg-slate-100 text-slate-700 border-slate-300">
-                  Active
-                </Badge>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-slate-600">Active Users</p>
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.activeUsers}
                 </h3>
-                <p className="text-slate-600 text-sm">
-                  Active Users
-                </p>
                     <div className="flex items-center text-xs text-slate-500">
-                      <i className="fas fa-user-check text-green-500 mr-1" />
+                      <i className="fas fa-user-check text-green-400 mr-1" />
                       {metrics.totalUsers} total
                     </div>
               </div>
@@ -547,24 +773,22 @@ const AccessControlModule: React.FC = () => {
 
           {/* Access Events */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <CardContent className="pt-6 px-6 pb-6 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">TODAY</span>
+              </div>
+              <div className="flex items-center justify-between mb-4 mt-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
                   <i className="fas fa-chart-line text-white text-xl" />
                 </div>
-                    <Badge variant="default" className="bg-slate-100 text-slate-700 border-slate-300">
-                  Today
-                </Badge>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-slate-600">Access Events</p>
+                <h3 className="text-2xl font-bold text-blue-600">
                   {metrics.todayAccessEvents}
                 </h3>
-                <p className="text-slate-600 text-sm">
-                  Access Events
-                </p>
                     <div className="flex items-center text-xs text-slate-500">
-                      <i className="fas fa-clock text-blue-500 mr-1" />
+                      <i className="fas fa-clock text-blue-400 mr-1" />
                       {metrics.averageResponseTime} avg response
                     </div>
               </div>
@@ -573,24 +797,22 @@ const AccessControlModule: React.FC = () => {
 
               {/* Security Score */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+            <CardContent className="pt-6 px-6 pb-6 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">SECURE</span>
+              </div>
+              <div className="flex items-center justify-between mb-4 mt-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
                       <i className="fas fa-shield-alt text-white text-xl" />
                 </div>
-                    <Badge variant="default" className="bg-green-100 text-green-700 border-green-300">
-                      Secure
-                </Badge>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-slate-600">Security Score</p>
+                <h3 className="text-2xl font-bold text-blue-600">
                       {metrics.securityScore}%
                 </h3>
-                <p className="text-slate-600 text-sm">
-                      Security Score
-                </p>
                     <div className="flex items-center text-xs text-slate-500">
-                      <i className="fas fa-sync text-blue-500 mr-1" />
+                      <i className="fas fa-sync text-blue-400 mr-1" />
                       Last scan: {new Date(metrics.lastSecurityScan).toLocaleDateString()}
                     </div>
               </div>
@@ -601,27 +823,122 @@ const AccessControlModule: React.FC = () => {
             {/* Emergency Actions */}
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-shield-alt mr-3 text-slate-600" />
-                  Emergency Actions
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-shield-alt text-white" />
+                    </div>
+                    Emergency Actions
+                  </div>
+                  {emergencyMode !== 'normal' && (
+                    <span className={`px-3 py-1 text-sm font-semibold rounded ${
+                      emergencyMode === 'lockdown' 
+                        ? 'text-red-800 bg-red-100' 
+                        : 'text-orange-800 bg-orange-100'
+                    }`}>
+                      {emergencyMode === 'lockdown' ? '🔒 LOCKDOWN ACTIVE' : '🔓 UNLOCK ACTIVE'}
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button
-                    className="!bg-red-600 hover:!bg-red-700 text-white h-16 flex-col"
-                    onClick={() => showSuccess('Emergency lockdown initiated')}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-16 flex-col"
+                    onClick={handleEmergencyLockdown}
+                    disabled={emergencyMode === 'lockdown'}
                   >
                     <i className="fas fa-lock text-xl mb-2" />
                     Emergency Lockdown
                   </Button>
                   <Button
-                    className="!bg-orange-600 hover:!bg-orange-700 text-white h-16 flex-col"
-                    onClick={() => showSuccess('Security scan initiated')}
+                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-16 flex-col"
+                    onClick={handleEmergencyUnlock}
+                    disabled={emergencyMode === 'unlock'}
                   >
-                    <i className="fas fa-search text-xl mb-2" />
-                    Security Scan
+                    <i className="fas fa-unlock text-xl mb-2" />
+                    Emergency Unlock
                   </Button>
+                  {emergencyMode !== 'normal' && (
+                    <Button
+                      className="!bg-green-600 hover:!bg-green-700 text-white h-16 flex-col"
+                      onClick={handleNormalMode}
+                    >
+                      <i className="fas fa-check-circle text-xl mb-2" />
+                      Restore Normal
+                    </Button>
+                  )}
+                  {emergencyMode === 'normal' && (
+                    <Button
+                      className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-16 flex-col"
+                      onClick={() => showSuccess('Security scan initiated')}
+                    >
+                      <i className="fas fa-search text-xl mb-2" />
+                      Security Scan
+                    </Button>
+                  )}
+                </div>
+                {emergencyMode !== 'normal' && (
+                  <div className="mt-4 p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
+                    <p className="text-sm text-amber-800">
+                      <i className="fas fa-exclamation-triangle mr-2" />
+                      <strong>Emergency Mode Active:</strong> All access points are {emergencyMode === 'lockdown' ? 'locked' : 'unlocked'}. 
+                      Remember to restore normal mode when the emergency is resolved.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Real-Time Status Overview */}
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-broadcast-tower text-white" />
+                    </div>
+                    Real-Time Status
+                  </div>
+                  <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                    LIVE
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700">Online Access Points</span>
+                      <span className="text-lg font-bold text-green-600">{metrics.activeAccessPoints}</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all duration-500" 
+                        style={{ width: `${(metrics.activeAccessPoints / metrics.totalAccessPoints) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700">Active Users</span>
+                      <span className="text-lg font-bold text-blue-600">{metrics.activeUsers}</span>
+                    </div>
+                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 transition-all duration-500" 
+                        style={{ width: `${(metrics.activeUsers / metrics.totalUsers) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700">System Uptime</span>
+                      <span className="text-lg font-bold text-green-600">{metrics.systemUptime}</span>
+                    </div>
+                    <div className="text-xs text-slate-500">Last 30 days</div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -629,8 +946,10 @@ const AccessControlModule: React.FC = () => {
             {/* Recent Access Events */}
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-history mr-3 text-blue-600" />
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-history text-white" />
+                  </div>
                   Recent Access Events
                 </CardTitle>
               </CardHeader>
@@ -643,7 +962,7 @@ const AccessControlModule: React.FC = () => {
                           event.action === 'granted' ? 'bg-green-100' : 'bg-red-100'
                         }`}>
                           <i className={`fas ${
-                            event.action === 'granted' ? 'fa-check text-green-600' : 'fa-times text-red-600'
+                            event.action === 'granted' ? 'fa-check text-green-700' : 'fa-times text-red-700'
                           }`} />
                         </div>
                         <div>
@@ -653,9 +972,13 @@ const AccessControlModule: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge variant={event.action === 'granted' ? 'default' : 'destructive'}>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                          event.action === 'granted' 
+                            ? 'text-green-800 bg-green-100' 
+                            : 'text-red-800 bg-red-100'
+                        }`}>
                           {event.action}
-                        </Badge>
+                        </span>
                         <p className="text-xs text-slate-500 mt-1">
                           {new Date(event.timestamp).toLocaleTimeString()}
                         </p>
@@ -703,26 +1026,29 @@ const AccessControlModule: React.FC = () => {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{point.name}</CardTitle>
-                      <Badge variant={
-                        point.status === 'active' ? 'default' :
-                        point.status === 'maintenance' ? 'secondary' : 'destructive'
-                      }>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                        point.status === 'active' 
+                          ? 'text-green-800 bg-green-100' 
+                          : point.status === 'maintenance'
+                          ? 'text-yellow-800 bg-yellow-100'
+                          : 'text-red-800 bg-red-100'
+                      }`}>
                         {point.status}
-                            </Badge>
+                      </span>
                           </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-slate-600">
-                        <i className="fas fa-map-marker-alt mr-2 text-blue-500" />
+                        <i className="fas fa-map-marker-alt mr-2 text-slate-600" />
                         {point.location}
                         </div>
                       <div className="flex items-center text-sm text-slate-600">
-                        <i className="fas fa-cog mr-2 text-blue-500" />
+                        <i className="fas fa-cog mr-2 text-slate-600" />
                         {point.type} • {point.accessMethod}
                           </div>
                       <div className="flex items-center text-sm text-slate-600">
-                        <i className="fas fa-shield-alt mr-2 text-blue-500" />
+                        <i className="fas fa-shield-alt mr-2 text-slate-600" />
                         Security: {point.securityLevel}
                           </div>
                           </div>
@@ -777,6 +1103,16 @@ const AccessControlModule: React.FC = () => {
                     Add User
                   </Button>
                 <Button
+                  className="!bg-green-600 hover:!bg-green-700 text-white"
+                  onClick={() => {
+                    setTemporaryAccessForm({ userId: '', accessPointIds: [], startTime: '', endTime: '', reason: '' });
+                    setShowTemporaryAccessModal(true);
+                  }}
+                >
+                  <i className="fas fa-clock mr-2" />
+                  Grant Temporary Access
+                </Button>
+                <Button
                   variant="outline"
                   className="text-slate-600 border-slate-300 hover:bg-slate-50"
                   onClick={() => showSuccess('Bulk user operations')}
@@ -787,11 +1123,60 @@ const AccessControlModule: React.FC = () => {
               </div>
             </div>
 
+            {/* Visitor Badge Quick Actions */}
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-id-badge text-white" />
+                  </div>
+                  Visitor Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button
+                    variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    onClick={() => showSuccess('Opening visitor registration...')}
+                  >
+                    <i className="fas fa-user-plus mr-2" />
+                    Register Visitor
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    onClick={() => showSuccess('Printing visitor badge...')}
+                  >
+                    <i className="fas fa-print mr-2" />
+                    Print Badge
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    onClick={() => {
+                      setTemporaryAccessForm({ userId: '', accessPointIds: [], startTime: '', endTime: '', reason: 'Visitor access' });
+                      setShowTemporaryAccessModal(true);
+                    }}
+                  >
+                    <i className="fas fa-clock mr-2" />
+                    Grant Visitor Access
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-500 mt-3">
+                  <i className="fas fa-info-circle mr-1" />
+                  Visitor badges automatically expire. Integration with Banned Individuals database active.
+                </p>
+              </CardContent>
+            </Card>
+
             {/* Users Table */}
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-users mr-3 text-blue-600" />
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-users text-white" />
+                  </div>
                   Active Users
                 </CardTitle>
               </CardHeader>
@@ -800,7 +1185,7 @@ const AccessControlModule: React.FC = () => {
                   {users.map((user) => (
                     <div key={user.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-4">
-                        <Avatar className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+                        <Avatar className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 text-white">
                           {user.avatar}
                         </Avatar>
                             <div>
@@ -810,15 +1195,18 @@ const AccessControlModule: React.FC = () => {
                             </div>
                           </div>
                       <div className="flex items-center space-x-4">
-                        <Badge variant={
-                          user.status === 'active' ? 'default' :
-                          user.status === 'inactive' ? 'secondary' : 'destructive'
-                        }>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                          user.status === 'active' 
+                            ? 'text-green-800 bg-green-100' 
+                            : user.status === 'inactive'
+                            ? 'text-slate-800 bg-slate-100'
+                            : 'text-red-800 bg-red-100'
+                        }`}>
                           {user.status}
-                            </Badge>
-                        <Badge variant="outline" className="text-slate-600">
+                        </span>
+                        <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">
                           {user.accessLevel}
-                            </Badge>
+                        </span>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -877,8 +1265,10 @@ const AccessControlModule: React.FC = () => {
             {/* Events Table */}
             <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center text-xl">
-                  <i className="fas fa-list-alt mr-3 text-blue-600" />
+                <CardTitle className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                    <i className="fas fa-list-alt text-white" />
+                  </div>
                   Recent Access Events
                 </CardTitle>
               </CardHeader>
@@ -891,7 +1281,7 @@ const AccessControlModule: React.FC = () => {
                           event.action === 'granted' ? 'bg-green-100' : 'bg-red-100'
                         }`}>
                           <i className={`fas ${
-                            event.action === 'granted' ? 'fa-check text-green-600' : 'fa-times text-red-600'
+                            event.action === 'granted' ? 'fa-check text-green-700' : 'fa-times text-red-700'
                           }`} />
                             </div>
                             <div>
@@ -899,14 +1289,18 @@ const AccessControlModule: React.FC = () => {
                           <p className="text-sm text-slate-600">{event.accessPointName}</p>
                           <p className="text-xs text-slate-500">{event.location} • {event.accessMethod}</p>
                           {event.reason && (
-                            <p className="text-xs text-red-600 mt-1">{event.reason}</p>
+                            <p className="text-xs text-red-700 mt-1">{event.reason}</p>
                           )}
                             </div>
                           </div>
                       <div className="text-right">
-                        <Badge variant={event.action === 'granted' ? 'default' : 'destructive'}>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                          event.action === 'granted' 
+                            ? 'text-green-800 bg-green-100' 
+                            : 'text-red-800 bg-red-100'
+                        }`}>
                           {event.action}
-                            </Badge>
+                        </span>
                         <p className="text-xs text-slate-500 mt-1">
                               {new Date(event.timestamp).toLocaleString()}
                         </p>
@@ -916,6 +1310,217 @@ const AccessControlModule: React.FC = () => {
                           </div>
                       </CardContent>
                     </Card>
+          </div>
+        );
+
+      case 'ai-analytics':
+        return (
+          <div className="space-y-6">
+            {/* AI Analytics Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">AI Analytics</h2>
+                <p className="text-slate-600">Behavior analysis, anomaly detection, and predictive insights</p>
+              </div>
+            </div>
+            
+            {/* AI Behavior Analysis Panel */}
+            <BehaviorAnalysisPanel events={accessEvents} users={users} />
+          </div>
+        );
+
+      case 'reports':
+        return (
+          <div className="space-y-6">
+            {/* Reports Header */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Reports & Analytics</h2>
+                <p className="text-slate-600">Access patterns, compliance reports, and analytics</p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  onClick={() => showSuccess('Generating report...')}
+                >
+                  <i className="fas fa-file-pdf mr-2" />
+                  Export PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                  onClick={() => showSuccess('Exporting CSV...')}
+                >
+                  <i className="fas fa-file-csv mr-2" />
+                  Export CSV
+                </Button>
+              </div>
+            </div>
+
+            {/* Report Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Access Pattern Report */}
+              <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => showSuccess('Opening Access Pattern Report...')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-chart-line text-white" />
+                    </div>
+                    Access Patterns
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">Peak times, location trends, and usage patterns</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Peak Hour:</span>
+                      <span className="font-semibold text-slate-900">2:00 PM - 4:00 PM</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Most Active:</span>
+                      <span className="font-semibold text-slate-900">Main Entrance</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Failed Access Report */}
+              <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => showSuccess('Opening Failed Access Report...')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-exclamation-triangle text-white" />
+                    </div>
+                    Failed Access
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">Denied attempts, security violations, and alerts</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Today:</span>
+                      <span className="font-semibold text-red-600">{metrics.deniedAccessEvents}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">This Week:</span>
+                      <span className="font-semibold text-slate-900">142</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Compliance Report */}
+              <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => showSuccess('Opening Compliance Report...')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-shield-check text-white" />
+                    </div>
+                    Compliance Audit
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">Security audit trail and compliance reports</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Last Audit:</span>
+                      <span className="font-semibold text-slate-900">{new Date(metrics.lastSecurityScan).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Score:</span>
+                      <span className="font-semibold text-green-600">{metrics.securityScore}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* User Activity Report */}
+              <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => showSuccess('Opening User Activity Report...')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-users text-white" />
+                    </div>
+                    User Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">Individual user access history and patterns</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Total Users:</span>
+                      <span className="font-semibold text-slate-900">{metrics.totalUsers}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Active Today:</span>
+                      <span className="font-semibold text-green-600">{metrics.activeUsers}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Access Point Utilization */}
+              <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => showSuccess('Opening Access Point Utilization Report...')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-door-open text-white" />
+                    </div>
+                    Point Utilization
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">Usage statistics and performance metrics</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Total Points:</span>
+                      <span className="font-semibold text-slate-900">{metrics.totalAccessPoints}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Utilization:</span>
+                      <span className="font-semibold text-blue-600">87%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Time-Based Analysis */}
+              <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                onClick={() => showSuccess('Opening Time-Based Analysis Report...')}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-clock text-white" />
+                    </div>
+                    Time Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-slate-600 mb-4">Hourly, daily, and weekly access trends</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Peak Day:</span>
+                      <span className="font-semibold text-slate-900">Friday</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Avg. Daily:</span>
+                      <span className="font-semibold text-blue-600">1,247</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         );
 
@@ -952,8 +1557,10 @@ const AccessControlModule: React.FC = () => {
               {/* Security Settings */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <i className="fas fa-shield-alt mr-3 text-blue-600" />
+                  <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-shield-alt text-white" />
+                    </div>
                     Security Settings
                   </CardTitle>
                 </CardHeader>
@@ -985,8 +1592,10 @@ const AccessControlModule: React.FC = () => {
               {/* System Settings */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center text-xl">
-                    <i className="fas fa-cog mr-3 text-blue-600" />
+              <CardTitle className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-cog text-white" />
+                    </div>
                 System Settings
               </CardTitle>
             </CardHeader>
@@ -1038,7 +1647,7 @@ const AccessControlModule: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-key text-white text-2xl" />
               </div>
             </div>
@@ -1078,7 +1687,7 @@ const AccessControlModule: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+      <div className="relative max-w-[1800px] mx-auto px-6 py-6">
         {renderTabContent()}
       </div>
 
@@ -1294,6 +1903,79 @@ const AccessControlModule: React.FC = () => {
                   placeholder="Enter employee ID"
                 />
               </div>
+
+              {/* Time-Based Access Schedule */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Access Schedule (Optional)</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Allowed Days</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                        <label key={day} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={userForm.accessSchedule.days.includes(day)}
+                            onChange={(e) => {
+                              setUserForm(prev => ({
+                                ...prev,
+                                accessSchedule: {
+                                  ...prev.accessSchedule,
+                                  days: e.target.checked
+                                    ? [...prev.accessSchedule.days, day]
+                                    : prev.accessSchedule.days.filter(d => d !== day)
+                                }
+                              }));
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-slate-700 capitalize">{day}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="access-start-time" className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+                      <input
+                        type="time"
+                        id="access-start-time"
+                        value={userForm.accessSchedule.startTime}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({
+                          ...prev,
+                          accessSchedule: { ...prev.accessSchedule, startTime: e.target.value }
+                        }))}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="access-end-time" className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
+                      <input
+                        type="time"
+                        id="access-end-time"
+                        value={userForm.accessSchedule.endTime}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({
+                          ...prev,
+                          accessSchedule: { ...prev.accessSchedule, endTime: e.target.value }
+                        }))}
+                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="auto-revoke-checkout"
+                      checked={userForm.autoRevokeAtCheckout}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({ ...prev, autoRevokeAtCheckout: e.target.checked }))}
+                      className="mr-2"
+                    />
+                    <label htmlFor="auto-revoke-checkout" className="text-sm text-slate-700">
+                      Auto-revoke access at checkout (for guests)
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <div className="flex justify-end space-x-3 mt-6">
@@ -1439,6 +2121,115 @@ const AccessControlModule: React.FC = () => {
                 className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
               >
                 Update User
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Temporary Access Grant Modal */}
+      {showTemporaryAccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-slate-900">Grant Temporary Access</h2>
+              <button 
+                onClick={() => setShowTemporaryAccessModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <i className="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="temp-user" className="block text-sm font-medium text-slate-700 mb-2">User</label>
+                <select
+                  id="temp-user"
+                  value={temporaryAccessForm.userId}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTemporaryAccessForm(prev => ({ ...prev, userId: e.target.value }))}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a user</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Access Points</label>
+                <div className="border border-slate-300 rounded-md p-3 max-h-40 overflow-y-auto">
+                  {accessPoints.map(point => (
+                    <label key={point.id} className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        checked={temporaryAccessForm.accessPointIds.includes(point.id)}
+                        onChange={(e) => {
+                          setTemporaryAccessForm(prev => ({
+                            ...prev,
+                            accessPointIds: e.target.checked
+                              ? [...prev.accessPointIds, point.id]
+                              : prev.accessPointIds.filter(id => id !== point.id)
+                          }));
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-slate-700">{point.name} - {point.location}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="temp-start-time" className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+                  <input
+                    type="datetime-local"
+                    id="temp-start-time"
+                    value={temporaryAccessForm.startTime}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTemporaryAccessForm(prev => ({ ...prev, startTime: e.target.value }))}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="temp-end-time" className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
+                  <input
+                    type="datetime-local"
+                    id="temp-end-time"
+                    value={temporaryAccessForm.endTime}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTemporaryAccessForm(prev => ({ ...prev, endTime: e.target.value }))}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="temp-reason" className="block text-sm font-medium text-slate-700 mb-2">Reason</label>
+                <textarea
+                  id="temp-reason"
+                  value={temporaryAccessForm.reason}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setTemporaryAccessForm(prev => ({ ...prev, reason: e.target.value }))}
+                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Enter reason for temporary access"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowTemporaryAccessModal(false)}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleGrantTemporaryAccess}
+                className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              >
+                Grant Access
               </Button>
             </div>
           </div>

@@ -167,13 +167,14 @@ const GuestSafety: React.FC = () => {
     { time: '15 min ago', content: 'Noise complaint resolved - Floor 8' }
   ]);
 
-  // Authentication check
-  useEffect(() => {
-    const isAdmin = localStorage.getItem('admin_guestsafety_authenticated');
-    if (!isAdmin) {
-      navigate('/modules/GuestSafetyAuth');
-    }
-  }, [navigate]);
+  // Authentication check - Removed redirect to non-existent route
+  // If authentication is needed, implement proper auth flow
+  // useEffect(() => {
+  //   const isAdmin = localStorage.getItem('admin_guestsafety_authenticated');
+  //   if (!isAdmin) {
+  //     navigate('/modules/GuestSafetyAuth');
+  //   }
+  // }, [navigate]);
 
 
   const handleAssignTeam = useCallback(async (incidentId: string, teamId: string) => {

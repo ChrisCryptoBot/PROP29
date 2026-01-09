@@ -58,12 +58,6 @@ modules = [
         "icon": "fas fa-exchange-alt"
     },
     {
-        "name": "AdvancedReports",
-        "title": "Advanced Reports",
-        "description": "Customizable reporting with real-time analytics and KPI tracking",
-        "icon": "fas fa-chart-bar"
-    },
-    {
         "name": "CybersecurityHub",
         "title": "Cybersecurity Hub",
         "description": "24/7 threat monitoring with AI-powered attack prevention",

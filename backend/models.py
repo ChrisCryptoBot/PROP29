@@ -17,7 +17,6 @@ class IncidentType(str, enum.Enum):
     MEDICAL = "medical"
     FIRE = "fire"
     FLOOD = "flood"
-    CYBER = "cyber"
     GUEST_COMPLAINT = "guest_complaint"
     OTHER = "other"
 
@@ -102,14 +101,6 @@ class SensorType(str, enum.Enum):
     AIR_QUALITY = "air_quality"
     PRESSURE = "pressure"
     VIBRATION = "vibration"
-
-class CybersecurityThreatType(str, enum.Enum):
-    PHISHING = "phishing"
-    MALWARE = "malware"
-    DDOS = "ddos"
-    UNAUTHORIZED_ACCESS = "unauthorized_access"
-    DATA_BREACH = "data_breach"
-    RANSOMWARE = "ransomware"
 
 class ThreatSeverity(str, enum.Enum):
     LOW = "low"
@@ -419,29 +410,6 @@ class DigitalHandover(Base):
     to_user = relationship("User", foreign_keys=[to_user_id])
     acknowledged_by_user = relationship("User", foreign_keys=[acknowledged_by])
     creator = relationship("User", foreign_keys=[created_by])
-
-class CybersecurityEvent(Base):
-    __tablename__ = "cybersecurity_events"
-    
-    event_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
-    threat_type = Column(Enum(CybersecurityThreatType), nullable=False)
-    severity = Column(Enum(ThreatSeverity), default=ThreatSeverity.MEDIUM)
-    timestamp = Column(DateTime(timezone=True), server_default=func.now())
-    source_ip = Column(String(45), nullable=True)
-    target_system = Column(String(100), nullable=True)
-    description = Column(Text, nullable=False)
-    threat_indicators = Column(JSON, nullable=True)
-    ai_confidence = Column(Float, nullable=True)
-    blocked = Column(Boolean, default=False)
-    response_time_seconds = Column(Float, nullable=True)
-    resolved_at = Column(DateTime(timezone=True), nullable=True)
-    resolved_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
-    notes = Column(Text, nullable=True)
-    
-    # Relationships
-    property = relationship("Property")
-    resolver = relationship("User", foreign_keys=[resolved_by])
 
 class SmartLocker(Base):
     __tablename__ = "smart_lockers"

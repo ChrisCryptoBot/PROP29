@@ -102,14 +102,6 @@ class SensorType(str, enum.Enum):
     PRESSURE = "pressure"
     VIBRATION = "vibration"
 
-class CybersecurityThreatType(str, enum.Enum):
-    PHISHING = "phishing"
-    MALWARE = "malware"
-    DDOS = "ddos"
-    UNAUTHORIZED_ACCESS = "unauthorized_access"
-    DATA_BREACH = "data_breach"
-    RANSOMWARE = "ransomware"
-
 class ThreatSeverity(str, enum.Enum):
     LOW = "low"
     MEDIUM = "medium"
@@ -566,31 +558,6 @@ class ShiftBriefingResponse(BaseModel):
     system_alerts: List[Dict[str, Any]]
     recommendations: List[str]
 
-# Cybersecurity schemas
-class CybersecurityEventCreate(BaseModel):
-    property_id: UUID
-    threat_type: CybersecurityThreatType
-    severity: ThreatSeverity = ThreatSeverity.MEDIUM
-    source_ip: Optional[str] = None
-    target_system: Optional[str] = None
-    description: str
-    threat_indicators: Optional[Dict[str, Any]] = None
-    ai_confidence: Optional[float] = None
-
-class CybersecurityEventResponse(BaseModel):
-    event_id: UUID
-    property_id: UUID
-    threat_type: CybersecurityThreatType
-    severity: ThreatSeverity
-    timestamp: datetime
-    source_ip: Optional[str] = None
-    target_system: Optional[str] = None
-    description: str
-    threat_indicators: Optional[Dict[str, Any]] = None
-    ai_confidence: Optional[float] = None
-    blocked: bool
-    response_time_seconds: Optional[float] = None
-    resolved_at: Optional[datetime] = None
     resolved_by: Optional[UUID] = None
     notes: Optional[str] = None
 

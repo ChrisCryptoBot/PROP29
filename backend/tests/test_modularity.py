@@ -120,7 +120,6 @@ class TestConfiguration:
         assert 'ai_predictions' in feature_flags
         assert 'panic_button' in feature_flags
         assert 'iot_monitoring' in feature_flags
-        assert 'cybersecurity_monitoring' in feature_flags
 
 class TestRouteModularity:
     """Test that routes work correctly in modular structure."""

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
-import { Badge } from '../../components/UI/Badge';
 import { useWebSocket } from '../../components/UI/WebSocketProvider';
 import apiService from '../../services/ApiService';
 import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../utils/toast';
@@ -364,26 +363,33 @@ const IoTEnvironmental: React.FC = () => {
     return colors[status as keyof typeof colors] || 'text-gray-600';
   }, []);
 
-  const getStatusBadge = useCallback((status: string) => {
-    const variants = {
-      normal: 'default',
-      warning: 'warning',
-      critical: 'destructive',
-    };
-    const variant = variants[status as keyof typeof variants] || 'default';
-    return <Badge variant={variant as any} className="capitalize">{status}</Badge>;
+  // Gold Standard Badge Helper Functions
+  const getStatusBadgeClass = useCallback((status: string): string => {
+    switch (status) {
+      case 'normal': return 'text-green-800 bg-green-100';
+      case 'warning': return 'text-yellow-800 bg-yellow-100';
+      case 'critical': return 'text-red-800 bg-red-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
   }, []);
 
-  const getAlertSeverityBadge = useCallback((severity: string) => {
-    const variants = {
-      low: 'default',
-      medium: 'warning',
-      high: 'warning',
-      critical: 'destructive',
-    };
-    const variant = variants[severity as keyof typeof variants] || 'default';
-    return <Badge variant={variant as any} className="capitalize">{severity}</Badge>;
+  const getAlertSeverityBadgeClass = useCallback((severity: string): string => {
+    switch (severity) {
+      case 'low': return 'text-blue-800 bg-blue-100';
+      case 'medium': return 'text-yellow-800 bg-yellow-100';
+      case 'high': return 'text-orange-800 bg-orange-100';
+      case 'critical': return 'text-red-800 bg-red-100';
+      default: return 'text-slate-800 bg-slate-100';
+    }
   }, []);
+
+  const getStatusBadge = useCallback((status: string) => {
+    return <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(status))}>{status}</span>;
+  }, [getStatusBadgeClass]);
+
+  const getAlertSeverityBadge = useCallback((severity: string) => {
+    return <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getAlertSeverityBadgeClass(severity))}>{severity}</span>;
+  }, [getAlertSeverityBadgeClass]);
 
   const filteredData = useMemo(() => {
     let filtered = selectedSensor 
@@ -497,10 +503,10 @@ const IoTEnvironmental: React.FC = () => {
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
                 <i className="fas fa-thermometer-half text-white text-2xl" />
                 </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-600 rounded-full flex items-center justify-center animate-pulse">
                 <Activity size={12} className="text-white" />
                 </div>
                 </div>
@@ -536,21 +542,21 @@ const IoTEnvironmental: React.FC = () => {
       </div>
 
       {/* Main Content Wrapper */}
-      <div className="p-6 max-w-[1400px] mx-auto">
+      <div className="p-6 max-w-[1800px] mx-auto">
 
       {/* GOLD STANDARD METRICS GRID - Always Visible */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {/* Total Sensors */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Server className="text-white" size={24} />
                 </div>
-              <Badge variant="default" className="animate-pulse">Total</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">Total</span>
                 </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{analytics.total_sensors}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{analytics.total_sensors}</h3>
               <p className="text-slate-600 text-sm">Total Sensors</p>
               </div>
           </CardContent>
@@ -558,15 +564,15 @@ const IoTEnvironmental: React.FC = () => {
 
         {/* Active Sensors */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
                 <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Wifi className="text-white" size={24} />
               </div>
-              <Badge variant="default" className="animate-pulse">Online</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Online</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{analytics.active_sensors}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{analytics.active_sensors}</h3>
               <p className="text-slate-600 text-sm">Active Sensors</p>
             </div>
           </CardContent>
@@ -574,15 +580,15 @@ const IoTEnvironmental: React.FC = () => {
 
         {/* Total Alerts */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <Bell className="text-white" size={24} />
               </div>
-              <Badge variant="default" className="animate-pulse">Alerts</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100">Alerts</span>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{analytics.alerts_count}</h3>
+              <h3 className="text-2xl font-bold text-blue-600">{analytics.alerts_count}</h3>
               <p className="text-slate-600 text-sm">Total Alerts</p>
             </div>
           </CardContent>
@@ -590,12 +596,12 @@ const IoTEnvironmental: React.FC = () => {
 
         {/* Critical Alerts */}
         <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <CardContent className="p-6">
+          <CardContent className="pt-6 px-6 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg mt-2">
                 <AlertTriangle className="text-white" size={24} />
               </div>
-              <Badge variant="destructive" className="animate-pulse">Critical</Badge>
+              <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">Critical</span>
             </div>
             <div className="space-y-1">
               <h3 className="text-2xl font-bold text-slate-900">{analytics.critical_alerts}</h3>
@@ -625,7 +631,7 @@ const IoTEnvironmental: React.FC = () => {
                       <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
                         <Thermometer className="text-red-600" size={24} />
                       </div>
-                      <Badge variant="outline" className="text-red-700">Temperature</Badge>
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100 border border-red-200">Temperature</span>
                 </div>
                 <div className="text-center">
                       <h3 className="text-4xl font-bold text-slate-900 mb-2">
@@ -643,7 +649,7 @@ const IoTEnvironmental: React.FC = () => {
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
                         <Droplets className="text-blue-600" size={24} />
               </div>
-                      <Badge variant="outline" className="text-blue-700">Humidity</Badge>
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded text-blue-800 bg-blue-100 border border-blue-200">Humidity</span>
                     </div>
                     <div className="text-center">
                       <h3 className="text-4xl font-bold text-slate-900 mb-2">
@@ -661,7 +667,7 @@ const IoTEnvironmental: React.FC = () => {
                       <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
                         <Wind className="text-green-600" size={24} />
                       </div>
-                      <Badge variant="outline" className="text-green-700">Air Quality</Badge>
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100 border border-green-200">Air Quality</span>
                 </div>
                 <div className="text-center">
                       <h3 className="text-4xl font-bold text-slate-900 mb-2">
@@ -726,7 +732,7 @@ const IoTEnvironmental: React.FC = () => {
                   <Bell className="mr-3 text-slate-600" size={24} />
                   Recent Active Alerts
                 </CardTitle>
-                <Badge variant="destructive">{activeAlerts.length} Active</Badge>
+                <span className="px-2.5 py-1 text-xs font-semibold rounded text-red-800 bg-red-100">{activeAlerts.length} Active</span>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -744,7 +750,7 @@ const IoTEnvironmental: React.FC = () => {
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-2">
                                 {getAlertSeverityBadge(alert.severity)}
-                                <Badge variant="outline" className="capitalize">{alert.status}</Badge>
+                                <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(alert.status))}>{alert.status}</span>
                               </div>
                               <p className="font-medium text-slate-900 mb-1">{alert.message}</p>
                               <div className="flex items-center space-x-4 text-sm text-slate-600">
@@ -976,7 +982,7 @@ const IoTEnvironmental: React.FC = () => {
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-2">
                                 {getAlertSeverityBadge(alert.severity)}
-                                <Badge variant="outline" className="capitalize">{alert.status}</Badge>
+                                <span className={cn("px-2.5 py-1 text-xs font-semibold rounded capitalize", getStatusBadgeClass(alert.status))}>{alert.status}</span>
                               </div>
                               <p className="font-medium text-slate-900 mb-1">{alert.message}</p>
                               <div className="flex items-center space-x-4 text-sm text-slate-600">
@@ -1045,7 +1051,7 @@ const IoTEnvironmental: React.FC = () => {
                               Resolved: {alert.resolved_at ? new Date(alert.resolved_at).toLocaleString() : 'N/A'}
                             </p>
                         </div>
-                          <Badge variant="default" className="bg-green-100 text-green-800">RESOLVED</Badge>
+                          <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">RESOLVED</span>
                       </div>
                       </CardContent>
                     </Card>
@@ -1100,7 +1106,7 @@ const IoTEnvironmental: React.FC = () => {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-600">Overall Status:</span>
-                          <Badge variant="default" className="bg-green-100 text-green-800">Healthy</Badge>
+                          <span className="px-2.5 py-1 text-xs font-semibold rounded text-green-800 bg-green-100">Healthy</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-600">Uptime:</span>

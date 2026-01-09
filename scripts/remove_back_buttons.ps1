@@ -8,7 +8,6 @@ $files = @(
     "frontend\src\pages\modules\Patrols\index.tsx",
     "frontend\src\pages\modules\SmartParking.tsx",
     "frontend\src\pages\modules\SystemAdministration.tsx",
-    "frontend\src\pages\modules\EvidenceManagement.tsx",
     "frontend\src\pages\modules\Visitors.tsx",
     "frontend\src\pages\modules\Packages.tsx",
     "frontend\src\pages\modules\EventLogModule.tsx",

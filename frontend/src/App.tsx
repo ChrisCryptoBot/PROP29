@@ -6,7 +6,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Incidents from './pages/Incidents';
-import Analytics from './pages/Analytics';
 import HelpSupport from './pages/HelpSupport';
 import Notifications from './pages/Notifications';
 import AccountSettings from './pages/AccountSettings';
@@ -31,19 +30,17 @@ import BannedIndividuals from './pages/modules/BannedIndividuals';
 import SmartLockers from './pages/modules/SmartLockers/index';
 import SmartParking from './pages/modules/SmartParking';
 import DigitalHandover from './pages/modules/DigitalHandover';
-import AdvancedReports from './pages/modules/AdvancedReports';
-import CybersecurityHub from './pages/modules/CybersecurityHub';
 import GuestSafety from './pages/modules/GuestSafety';
 import IoTEnvironmental from './pages/modules/IoTEnvironmental';
 import EmergencyAlerts from './pages/modules/EmergencyAlerts';
 
 // Import additional pages for dashboard navigation
-import CameraMonitoring from './pages/CameraMonitoring';
+import SecurityOperationsCenter from './pages/modules/SecurityOperationsCenter';
 import EvacuationModule from './pages/modules/EvacuationModule';
 import SystemAdministration from './pages/modules/SystemAdministration';
 import SoundMonitoring from './pages/modules/SoundMonitoring';
 import TeamChat from './pages/modules/TeamChat';
-import EvidenceManagement from './pages/modules/EvidenceManagement';
+import LockdownFacility from './pages/modules/LockdownFacility';
 
 // Fixed Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -105,11 +102,6 @@ const MainAppContent: React.FC = () => {
       <Route path="/patrols" element={
         <ProtectedRoute>
           <Patrols />
-        </ProtectedRoute>
-      } />
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <Analytics />
         </ProtectedRoute>
       } />
       <Route path="/help" element={
@@ -225,20 +217,6 @@ const MainAppContent: React.FC = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/modules/advanced-reports" element={
-        <ProtectedRoute>
-          <Layout>
-            <AdvancedReports />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/cybersecurity-hub" element={
-        <ProtectedRoute>
-          <Layout>
-            <CybersecurityHub />
-          </Layout>
-        </ProtectedRoute>
-      } />
       <Route path="/modules/guest-safety" element={
         <ProtectedRoute>
           <Layout>
@@ -267,20 +245,17 @@ const MainAppContent: React.FC = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/modules/camera-monitoring" element={
+      <Route path="/modules/security-operations-center" element={
         <ProtectedRoute>
           <Layout>
-            <CameraMonitoring />
+            <SecurityOperationsCenter />
           </Layout>
         </ProtectedRoute>
       } />
       <Route path="/modules/lockdown-facility" element={
         <ProtectedRoute>
           <Layout>
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-slate-900">Lockdown Facility</h1>
-              <p className="text-slate-600">Module under development</p>
-            </div>
+            <LockdownFacility />
           </Layout>
         </ProtectedRoute>
       } />
@@ -288,7 +263,7 @@ const MainAppContent: React.FC = () => {
       <Route path="/view-cameras" element={
         <ProtectedRoute>
           <Layout>
-            <CameraMonitoring />
+            <SecurityOperationsCenter />
           </Layout>
         </ProtectedRoute>
       } />
@@ -303,13 +278,6 @@ const MainAppContent: React.FC = () => {
         <ProtectedRoute>
           <Layout>
             <SoundMonitoring />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/evidence-management" element={
-        <ProtectedRoute>
-          <Layout>
-            <EvidenceManagement />
           </Layout>
         </ProtectedRoute>
       } />
