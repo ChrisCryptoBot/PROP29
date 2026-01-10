@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
@@ -119,111 +119,111 @@ const tabs = [
 
 // Enhanced Mock Data
 const mockAccessPoints: AccessPoint[] = [
-    {
-      id: '1',
-      name: 'Main Entrance',
-      location: 'Building A - Lobby',
-      type: 'door',
-      status: 'active',
-      accessMethod: 'card',
-      lastAccess: '2024-01-15T14:30:00Z',
-      accessCount: 1247,
-      permissions: ['staff', 'guest', 'contractor'],
-      securityLevel: 'high',
-      isOnline: true,
-      sensorStatus: 'closed',
-      powerSource: 'mains',
-      batteryLevel: undefined
-    },
-    {
-      id: '2',
-      name: 'Parking Gate',
-      location: 'Underground Parking',
-      type: 'gate',
-      status: 'active',
-      accessMethod: 'mobile',
-      lastAccess: '2024-01-15T14:25:00Z',
-      accessCount: 234,
-      permissions: ['staff', 'guest'],
-      securityLevel: 'medium',
-      isOnline: true,
-      sensorStatus: 'closed',
-      powerSource: 'mains',
-      batteryLevel: undefined
-    },
-    {
-      id: '3',
-      name: 'Executive Floor',
-      location: 'Building A - Floor 15',
-      type: 'elevator',
-      status: 'active',
-      accessMethod: 'biometric',
-      lastAccess: '2024-01-15T14:20:00Z',
-      accessCount: 89,
-      permissions: ['admin', 'executive'],
-      securityLevel: 'critical',
-      isOnline: true,
-      sensorStatus: 'closed',
-      powerSource: 'mains',
-      batteryLevel: undefined
-    },
-    {
-      id: '4',
-      name: 'Server Room',
-      location: 'Building B - Basement',
-      type: 'door',
-      status: 'active',
-      accessMethod: 'card',
-      lastAccess: '2024-01-15T14:15:00Z',
-      accessCount: 12,
-      permissions: ['admin', 'it'],
-      securityLevel: 'critical',
-      isOnline: false,
-      sensorStatus: 'open',
-      powerSource: 'battery',
-      batteryLevel: 45
-    },
-    {
-      id: '5',
-      name: 'Guest Elevator',
-      location: 'Building A - Lobby',
-      type: 'elevator',
-      status: 'maintenance',
-      accessMethod: 'card',
-      lastAccess: '2024-01-15T13:45:00Z',
-      accessCount: 456,
-      permissions: ['staff', 'guest'],
-      securityLevel: 'medium',
-      isOnline: true,
-      sensorStatus: 'closed',
-      powerSource: 'mains',
-      batteryLevel: undefined
-    }
+  {
+    id: '1',
+    name: 'Main Entrance',
+    location: 'Building A - Lobby',
+    type: 'door',
+    status: 'active',
+    accessMethod: 'card',
+    lastAccess: '2024-01-15T14:30:00Z',
+    accessCount: 1247,
+    permissions: ['staff', 'guest', 'contractor'],
+    securityLevel: 'high',
+    isOnline: true,
+    sensorStatus: 'closed',
+    powerSource: 'mains',
+    batteryLevel: undefined
+  },
+  {
+    id: '2',
+    name: 'Parking Gate',
+    location: 'Underground Parking',
+    type: 'gate',
+    status: 'active',
+    accessMethod: 'mobile',
+    lastAccess: '2024-01-15T14:25:00Z',
+    accessCount: 234,
+    permissions: ['staff', 'guest'],
+    securityLevel: 'medium',
+    isOnline: true,
+    sensorStatus: 'closed',
+    powerSource: 'mains',
+    batteryLevel: undefined
+  },
+  {
+    id: '3',
+    name: 'Executive Floor',
+    location: 'Building A - Floor 15',
+    type: 'elevator',
+    status: 'active',
+    accessMethod: 'biometric',
+    lastAccess: '2024-01-15T14:20:00Z',
+    accessCount: 89,
+    permissions: ['admin', 'executive'],
+    securityLevel: 'critical',
+    isOnline: true,
+    sensorStatus: 'closed',
+    powerSource: 'mains',
+    batteryLevel: undefined
+  },
+  {
+    id: '4',
+    name: 'Server Room',
+    location: 'Building B - Basement',
+    type: 'door',
+    status: 'active',
+    accessMethod: 'card',
+    lastAccess: '2024-01-15T14:15:00Z',
+    accessCount: 12,
+    permissions: ['admin', 'it'],
+    securityLevel: 'critical',
+    isOnline: false,
+    sensorStatus: 'open',
+    powerSource: 'battery',
+    batteryLevel: 45
+  },
+  {
+    id: '5',
+    name: 'Guest Elevator',
+    location: 'Building A - Lobby',
+    type: 'elevator',
+    status: 'maintenance',
+    accessMethod: 'card',
+    lastAccess: '2024-01-15T13:45:00Z',
+    accessCount: 456,
+    permissions: ['staff', 'guest'],
+    securityLevel: 'medium',
+    isOnline: true,
+    sensorStatus: 'closed',
+    powerSource: 'mains',
+    batteryLevel: undefined
+  }
 ];
 
 const mockUsers: User[] = [
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john.smith@hotel.com',
-      role: 'admin',
-      department: 'Security',
-      status: 'active',
+  {
+    id: '1',
+    name: 'John Smith',
+    email: 'john.smith@hotel.com',
+    role: 'admin',
+    department: 'Security',
+    status: 'active',
     accessLevel: 'elevated',
-      lastAccess: '2024-01-15T14:30:00Z',
+    lastAccess: '2024-01-15T14:30:00Z',
     accessCount: 45,
     avatar: 'JS',
     permissions: ['all']
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@hotel.com',
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@hotel.com',
     role: 'manager',
     department: 'Front Desk',
-      status: 'active',
+    status: 'active',
     accessLevel: 'standard',
-      lastAccess: '2024-01-15T13:45:00Z',
+    lastAccess: '2024-01-15T13:45:00Z',
     accessCount: 23,
     avatar: 'SJ',
     permissions: ['lobby', 'guest_areas']
@@ -257,22 +257,22 @@ const mockUsers: User[] = [
 ];
 
 const mockAccessEvents: AccessEvent[] = [
-    {
-      id: '1',
-      userId: '1',
-      userName: 'John Smith',
-      accessPointId: '1',
-      accessPointName: 'Main Entrance',
-      action: 'granted',
+  {
+    id: '1',
+    userId: '1',
+    userName: 'John Smith',
+    accessPointId: '1',
+    accessPointName: 'Main Entrance',
+    action: 'granted',
     timestamp: '2024-01-15T14:30:00Z',
     location: 'Building A - Lobby',
     accessMethod: 'card'
-    },
-    {
-      id: '2',
-      userId: '2',
-      userName: 'Sarah Johnson',
-      accessPointId: '2',
+  },
+  {
+    id: '2',
+    userId: '2',
+    userName: 'Sarah Johnson',
+    accessPointId: '2',
     accessPointName: 'Parking Gate',
     action: 'granted',
     timestamp: '2024-01-15T14:25:00Z',
@@ -285,7 +285,7 @@ const mockAccessEvents: AccessEvent[] = [
     userName: 'Unknown User',
     accessPointId: '3',
     accessPointName: 'Executive Floor',
-      action: 'denied',
+    action: 'denied',
     timestamp: '2024-01-15T14:20:00Z',
     reason: 'Insufficient permissions',
     location: 'Building A - Floor 15',
@@ -346,14 +346,14 @@ const AccessControlModule: React.FC = () => {
   const [accessPoints, setAccessPoints] = useState<AccessPoint[]>(mockAccessPoints);
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [accessEvents, setAccessEvents] = useState<AccessEvent[]>(mockAccessEvents);
-  
+
   // Modal states for admin functionality
   const [showCreateAccessPoint, setShowCreateAccessPoint] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showEditUser, setShowEditUser] = useState(false);
   const [showSecuritySettings, setShowSecuritySettings] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
+
   // Visitor Registration State
   const [showVisitorRegistration, setShowVisitorRegistration] = useState(false);
   const [visitorForm, setVisitorForm] = useState({
@@ -366,11 +366,11 @@ const AccessControlModule: React.FC = () => {
     expectedCheckOutTime: '',
     accessPointIds: [] as string[]
   });
-  
+
   // Bulk Operations State
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [showBulkOperationsModal, setShowBulkOperationsModal] = useState(false);
-  
+
   // Report Generation State
   const [showReportGenerationModal, setShowReportGenerationModal] = useState(false);
   const [reportForm, setReportForm] = useState({
@@ -381,7 +381,7 @@ const AccessControlModule: React.FC = () => {
     accessPointIds: [] as string[],
     format: 'pdf' as 'pdf' | 'csv'
   });
-  
+
   // Access Point Grouping State
   const [accessPointGroups, setAccessPointGroups] = useState<AccessPointGroup[]>([]);
   const [showAccessPointGroupModal, setShowAccessPointGroupModal] = useState(false);
@@ -390,7 +390,7 @@ const AccessControlModule: React.FC = () => {
     description: '',
     accessPointIds: [] as string[]
   });
-  
+
   // Role-to-Zone Mapping State
   const [roleZoneMappings, setRoleZoneMappings] = useState<RoleZoneMapping[]>([]);
   const [showRoleZoneModal, setShowRoleZoneModal] = useState(false);
@@ -399,14 +399,14 @@ const AccessControlModule: React.FC = () => {
     zoneName: '',
     accessPointIds: [] as string[]
   });
-  
+
   // Hardware Late-Sync State
   const [syncingAccessPointId, setSyncingAccessPointId] = useState<string | null>(null);
-  
+
   // Form dirty state tracking
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [pendingModalClose, setPendingModalClose] = useState<(() => void) | null>(null);
-  
+
   // Search and filter state
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [accessPointSearchQuery, setAccessPointSearchQuery] = useState('');
@@ -414,7 +414,7 @@ const AccessControlModule: React.FC = () => {
   const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
   const [accessPointTypeFilter, setAccessPointTypeFilter] = useState<'all' | 'door' | 'gate' | 'elevator' | 'turnstile'>('all');
   const [accessPointStatusFilter, setAccessPointStatusFilter] = useState<'all' | 'active' | 'maintenance' | 'disabled'>('all');
-  
+
   // Form states
   const [accessPointForm, setAccessPointForm] = useState({
     name: '',
@@ -424,7 +424,7 @@ const AccessControlModule: React.FC = () => {
     status: 'active' as 'active' | 'maintenance' | 'disabled',
     description: ''
   });
-  
+
   const [userForm, setUserForm] = useState({
     name: '',
     email: '',
@@ -460,11 +460,11 @@ const AccessControlModule: React.FC = () => {
     timeoutDuration?: number; // in seconds (for emergency timeout)
     timeoutTimer?: NodeJS.Timeout; // Timer ID for auto-relock
   } | null>(null);
-  
+
   // Held-Open Alarm System State
   const [heldOpenAlerts, setHeldOpenAlerts] = useState<HeldOpenAlert[]>([]);
   const emergencyTimeoutDuration = 30 * 60; // 30 minutes in seconds (configurable)
-  
+
   const [metrics, setMetrics] = useState<AccessMetrics>({
     totalAccessPoints: 24,
     activeAccessPoints: 22,
@@ -499,7 +499,7 @@ const AccessControlModule: React.FC = () => {
     showLoading('Creating access point...');
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const newAccessPoint: AccessPoint = {
         id: `ap-${Date.now()}`,
         ...accessPointForm,
@@ -509,7 +509,7 @@ const AccessControlModule: React.FC = () => {
         securityLevel: 'medium',
         isOnline: true
       };
-      
+
       setAccessPoints(prev => [...prev, newAccessPoint]);
       setShowCreateAccessPoint(false);
       setAccessPointForm({
@@ -549,7 +549,7 @@ const AccessControlModule: React.FC = () => {
         email: userForm.email,
         identification_number: userForm.employeeId || undefined
       });
-      
+
       if (bannedCheck.success && bannedCheck.data && bannedCheck.data.length > 0) {
         const bannedPerson = bannedCheck.data[0];
         showError(
@@ -567,7 +567,7 @@ const AccessControlModule: React.FC = () => {
     showLoading('Creating user...');
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const newUser: User = {
         id: `user-${Date.now()}`,
         ...userForm,
@@ -578,7 +578,7 @@ const AccessControlModule: React.FC = () => {
         accessCount: 0,
         permissions: []
       };
-      
+
       setUsers(prev => [...prev, newUser]);
       setShowCreateUser(false);
       setIsFormDirty(false);
@@ -633,12 +633,12 @@ const AccessControlModule: React.FC = () => {
     const isChangingRole = userForm.role !== selectedUser.role;
     const isChangingAccessLevel = userForm.accessLevel !== selectedUser.accessLevel;
     const isPromotingToAdmin = userForm.role === 'admin' && selectedUser.role !== 'admin';
-    
+
     if (isPromotingToAdmin && !isAdmin) {
       showError('Unauthorized: Only administrators can promote users to Admin role');
       return;
     }
-    
+
     // Prevent managers from promoting themselves to admin
     if (isPromotingToAdmin && selectedUser.id === currentUser?.user_id) {
       showError('Unauthorized: You cannot promote yourself to Admin role');
@@ -648,13 +648,13 @@ const AccessControlModule: React.FC = () => {
     showLoading('Updating user...');
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setUsers(prev => prev.map(user => 
-        user.id === selectedUser.id 
+
+      setUsers(prev => prev.map(user =>
+        user.id === selectedUser.id
           ? { ...user, ...userForm }
           : user
       ));
-      
+
       setShowEditUser(false);
       setSelectedUser(null);
       setIsFormDirty(false);
@@ -669,7 +669,7 @@ const AccessControlModule: React.FC = () => {
     showLoading('Deleting user...');
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       setUsers(prev => prev.filter(user => user.id !== userId));
       showSuccess('User deleted successfully!');
     } catch (error) {
@@ -696,13 +696,13 @@ const AccessControlModule: React.FC = () => {
     showLoading('Updating access point...');
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setAccessPoints(prev => prev.map(point => 
-        point.id === pointId 
+
+      setAccessPoints(prev => prev.map(point =>
+        point.id === pointId
           ? { ...point, status: point.status === 'active' ? 'disabled' : 'active' }
           : point
       ));
-      
+
       showSuccess('Access point status updated!');
     } catch (error) {
       ErrorHandlerService.logError(error, 'handleToggleAccessPoint');
@@ -712,7 +712,7 @@ const AccessControlModule: React.FC = () => {
 
   // Emergency Override Handlers with Conflict Resolution
   const handleEmergencyLockdown = useCallback(async () => {
-    const confirmed = window.confirm('⚠️ EMERGENCY LOCKDOWN\n\nThis will lock ALL access points. Are you sure?');
+    const confirmed = window.confirm('âš ï¸ EMERGENCY LOCKDOWN\n\nThis will lock ALL access points. Are you sure?');
     if (!confirmed) return;
 
     // SECURITY FIX 4: Master Emergency Controller with conflict resolution
@@ -724,13 +724,13 @@ const AccessControlModule: React.FC = () => {
     if (emergencyMode === 'unlock' && emergencyController) {
       const existingTimestamp = new Date(emergencyController.timestamp);
       const timeDiff = new Date(currentTimestamp).getTime() - existingTimestamp.getTime();
-      
+
       // If existing unlock is less than 5 seconds old, allow override (newer takes precedence)
       if (timeDiff < 5000 && currentPriority >= emergencyController.priority) {
         // Allow override - proceed with lockdown
       } else if (timeDiff < 5000 && currentPriority < emergencyController.priority) {
         showError(
-          `Emergency Conflict: Unlock was initiated ${Math.round(timeDiff/1000)}s ago by ${emergencyController.initiatedBy}. ` +
+          `Emergency Conflict: Unlock was initiated ${Math.round(timeDiff / 1000)}s ago by ${emergencyController.initiatedBy}. ` +
           `Lockdown requires higher priority. Contact security administrator.`
         );
         return;
@@ -756,7 +756,7 @@ const AccessControlModule: React.FC = () => {
   }, [emergencyMode, emergencyController, currentUser]);
 
   const handleEmergencyUnlock = useCallback(async () => {
-    const confirmed = window.confirm('⚠️ EMERGENCY UNLOCK\n\nThis will unlock ALL access points. Are you sure?');
+    const confirmed = window.confirm('âš ï¸ EMERGENCY UNLOCK\n\nThis will unlock ALL access points. Are you sure?');
     if (!confirmed) return;
 
     // SECURITY FIX 4: Master Emergency Controller with conflict resolution
@@ -768,11 +768,11 @@ const AccessControlModule: React.FC = () => {
     if (emergencyMode === 'lockdown' && emergencyController) {
       const existingTimestamp = new Date(emergencyController.timestamp);
       const timeDiff = new Date(currentTimestamp).getTime() - existingTimestamp.getTime();
-      
+
       // Lockdown has higher priority - block unlock unless lockdown is old
       if (timeDiff < 10000) { // 10 seconds grace period
         showError(
-          `Emergency Conflict: Lockdown was initiated ${Math.round(timeDiff/1000)}s ago by ${emergencyController.initiatedBy}. ` +
+          `Emergency Conflict: Lockdown was initiated ${Math.round(timeDiff / 1000)}s ago by ${emergencyController.initiatedBy}. ` +
           `Unlock requires authorization override. Contact security administrator.`
         );
         return;
@@ -808,7 +808,7 @@ const AccessControlModule: React.FC = () => {
       if (emergencyController?.timeoutTimer) {
         clearTimeout(emergencyController.timeoutTimer);
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       setEmergencyMode('normal');
       setEmergencyController(null);
@@ -823,7 +823,7 @@ const AccessControlModule: React.FC = () => {
   useEffect(() => {
     const checkHeldOpenAlarms = () => {
       const newAlerts: HeldOpenAlert[] = [];
-      
+
       accessPoints.forEach(point => {
         if (point.sensorStatus === 'held-open' && point.lastStatusChange) {
           const alert = AccessControlUtilities.checkHeldOpenAlarm(
@@ -833,17 +833,17 @@ const AccessControlModule: React.FC = () => {
             point.sensorStatus,
             point.lastStatusChange
           );
-          
+
           if (alert) {
             // Check if alert already exists for this access point
             const existingAlert = heldOpenAlerts.find(a => a.accessPointId === point.id && !a.acknowledged);
             if (!existingAlert) {
               newAlerts.push(alert);
-              
+
               // Show critical alert if held open > 5 minutes
               if (alert.severity === 'critical') {
                 showError(
-                  `🚨 CRITICAL: Door "${point.name}" has been held open for ${AccessControlUtilities.formatDuration(alert.duration)}. ` +
+                  `ðŸš¨ CRITICAL: Door "${point.name}" has been held open for ${AccessControlUtilities.formatDuration(alert.duration)}. ` +
                   `Security risk detected!`
                 );
               }
@@ -851,11 +851,11 @@ const AccessControlModule: React.FC = () => {
           }
         }
       });
-      
+
       if (newAlerts.length > 0) {
         setHeldOpenAlerts(prev => [...prev, ...newAlerts]);
       }
-      
+
       // Auto-acknowledge alerts when door closes
       setHeldOpenAlerts(prev => prev.map(alert => {
         const point = accessPoints.find(ap => ap.id === alert.accessPointId);
@@ -865,11 +865,11 @@ const AccessControlModule: React.FC = () => {
         return alert;
       }));
     };
-    
+
     // Check every 30 seconds
     const interval = setInterval(checkHeldOpenAlarms, 30000);
     checkHeldOpenAlarms(); // Initial check
-    
+
     return () => clearInterval(interval);
   }, [accessPoints, heldOpenAlerts]);
 
@@ -879,13 +879,13 @@ const AccessControlModule: React.FC = () => {
       // Set timeout for auto-relock
       const timeoutMs = (emergencyController.timeoutDuration || emergencyTimeoutDuration) * 1000;
       const timeoutTimer = setTimeout(() => {
-        showError('⚠️ Emergency unlock timeout reached. Auto-relocking all access points for security.');
+        showError('âš ï¸ Emergency unlock timeout reached. Auto-relocking all access points for security.');
         handleNormalMode();
       }, timeoutMs);
-      
+
       // Update controller with timer ID
       setEmergencyController(prev => prev ? { ...prev, timeoutTimer } : null);
-      
+
       return () => {
         if (timeoutTimer) clearTimeout(timeoutTimer);
       };
@@ -932,7 +932,7 @@ const AccessControlModule: React.FC = () => {
     showLoading('Granting temporary access...');
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const newTemporaryAccess: TemporaryAccess = {
         id: `temp-${Date.now()}`,
         ...temporaryAccessForm,
@@ -940,12 +940,12 @@ const AccessControlModule: React.FC = () => {
         createdAt: new Date().toISOString()
       };
 
-      setUsers(prev => prev.map(user => 
+      setUsers(prev => prev.map(user =>
         user.id === temporaryAccessForm.userId
-          ? { 
-              ...user, 
-              temporaryAccesses: [...(user.temporaryAccesses || []), newTemporaryAccess]
-            }
+          ? {
+            ...user,
+            temporaryAccesses: [...(user.temporaryAccesses || []), newTemporaryAccess]
+          }
           : user
       ));
 
@@ -992,7 +992,7 @@ const AccessControlModule: React.FC = () => {
         email: visitorForm.email || undefined,
         phone: visitorForm.phone
       });
-      
+
       if (bannedCheck.success && bannedCheck.data && bannedCheck.data.length > 0) {
         const bannedPerson = bannedCheck.data[0];
         dismissLoadingAndShowError(
@@ -1004,10 +1004,10 @@ const AccessControlModule: React.FC = () => {
       }
 
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Generate badge ID
       const badgeId = AccessControlUtilities.generateBadgeId();
-      
+
       // Create visitor user
       const visitorUser: User = {
         id: `visitor-${Date.now()}`,
@@ -1036,10 +1036,10 @@ const AccessControlModule: React.FC = () => {
       };
 
       setUsers(prev => [...prev, visitorUser]);
-      
+
       // Simulate badge printing
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       setShowVisitorRegistration(false);
       setIsFormDirty(false);
       setVisitorForm({
@@ -1052,7 +1052,7 @@ const AccessControlModule: React.FC = () => {
         expectedCheckOutTime: '',
         accessPointIds: []
       });
-      
+
       dismissLoadingAndShowSuccess(toastId, `Visitor "${visitorForm.name}" registered successfully! Badge ID: ${badgeId}. Badge printed.`);
     } catch (error) {
       ErrorHandlerService.logError(error, 'handleRegisterVisitor');
@@ -1069,7 +1069,7 @@ const AccessControlModule: React.FC = () => {
 
     if (action === 'delete') {
       const confirmed = window.confirm(
-        `⚠️ Are you sure you want to delete ${selectedUsers.size} user(s)? This action cannot be undone.`
+        `âš ï¸ Are you sure you want to delete ${selectedUsers.size} user(s)? This action cannot be undone.`
       );
       if (!confirmed) return;
     }
@@ -1077,7 +1077,7 @@ const AccessControlModule: React.FC = () => {
     const toastId = showLoading(`Performing bulk ${action} on ${selectedUsers.size} user(s)...`);
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       if (action === 'delete') {
         setUsers(prev => prev.filter(user => !selectedUsers.has(user.id)));
       } else {
@@ -1090,7 +1090,7 @@ const AccessControlModule: React.FC = () => {
           return user;
         }));
       }
-      
+
       setSelectedUsers(new Set());
       setShowBulkOperationsModal(false);
       dismissLoadingAndShowSuccess(toastId, `Bulk ${action} completed successfully!`);
@@ -1111,7 +1111,7 @@ const AccessControlModule: React.FC = () => {
     try {
       // Simulate API call to backend
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       // In production, this would be:
       // const response = await apiService.generateAccessReport(reportForm);
       // const blob = await response.blob();
@@ -1120,7 +1120,7 @@ const AccessControlModule: React.FC = () => {
       // link.href = url;
       // link.download = `access-report-${reportForm.startDate}-${reportForm.endDate}.${reportForm.format}`;
       // link.click();
-      
+
       setShowReportGenerationModal(false);
       dismissLoadingAndShowSuccess(
         toastId,
@@ -1149,10 +1149,10 @@ const AccessControlModule: React.FC = () => {
 
     setSyncingAccessPointId(accessPointId);
     const toastId = showLoading(`Syncing ${unsyncedEvents.length} cached event(s) from "${accessPoint.name}"...`);
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Convert cached events to access events and add to main array
       const newAccessEvents: AccessEvent[] = unsyncedEvents.map(cached => ({
         id: cached.id,
@@ -1165,19 +1165,19 @@ const AccessControlModule: React.FC = () => {
         location: accessPoint.location,
         accessMethod: accessPoint.accessMethod
       }));
-      
+
       setAccessEvents(prev => [...newAccessEvents, ...prev]);
-      
+
       // Mark cached events as synced
-      setAccessPoints(prev => prev.map(ap => 
+      setAccessPoints(prev => prev.map(ap =>
         ap.id === accessPointId
-          ? { 
-              ...ap, 
-              cachedEvents: ap.cachedEvents?.map(e => ({ ...e, synced: true })) || []
-            }
+          ? {
+            ...ap,
+            cachedEvents: ap.cachedEvents?.map(e => ({ ...e, synced: true })) || []
+          }
           : ap
       ));
-      
+
       setSyncingAccessPointId(null);
       dismissLoadingAndShowSuccess(toastId, `Successfully synced ${unsyncedEvents.length} event(s) from "${accessPoint.name}"`);
     } catch (error) {
@@ -1187,20 +1187,85 @@ const AccessControlModule: React.FC = () => {
     }
   }, [accessPoints]);
 
+  const handleCreateAccessPointGroup = useCallback(async () => {
+    if (!accessPointGroupForm.name.trim()) {
+      showError('Group name is required');
+      return;
+    }
+    if (accessPointGroupForm.accessPointIds.length === 0) {
+      showError('Please select at least one access point');
+      return;
+    }
+
+    showLoading('Creating access point group...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const newGroup: AccessPointGroup = {
+        id: `group-${Date.now()}`,
+        ...accessPointGroupForm,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setAccessPointGroups(prev => [...prev, newGroup]);
+      setShowAccessPointGroupModal(false);
+      setIsFormDirty(false);
+      setAccessPointGroupForm({ name: '', description: '', accessPointIds: [] });
+      showSuccess(`Group "${newGroup.name}" created successfully!`);
+    } catch (error) {
+      ErrorHandlerService.logError(error, 'handleCreateAccessPointGroup');
+      showError('Failed to create group');
+    }
+  }, [accessPointGroupForm]);
+
+  const handleCreateRoleZoneMapping = useCallback(async () => {
+    if (!roleZoneForm.zoneName.trim()) {
+      showError('Zone name is required');
+      return;
+    }
+    if (roleZoneForm.accessPointIds.length === 0) {
+      showError('Please select at least one access point for this zone');
+      return;
+    }
+
+    showLoading('Creating role-to-zone mapping...');
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const newMapping: RoleZoneMapping = {
+        id: `mapping-${Date.now()}`,
+        ...roleZoneForm,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setRoleZoneMappings(prev => [...prev, newMapping]);
+      setShowRoleZoneModal(false);
+      setIsFormDirty(false);
+      setRoleZoneForm({ role: 'employee', zoneName: '', accessPointIds: [] });
+      showSuccess(`Mapping for "${newMapping.role}" role created successfully!`);
+    } catch (error) {
+      ErrorHandlerService.logError(error, 'handleCreateRoleZoneMapping');
+      showError('Failed to create mapping');
+    }
+  }, [roleZoneForm]);
+
+
   // Time-based Access Validation with UTC Timezone Handling + Priority Stack
   const isAccessAllowed = useCallback((user: User, accessPointId: string): boolean => {
     // SECURITY FIX 6: Use UTC time instead of browser-local time to prevent timezone mismatches
     const now = new Date();
-    
+
     // CRITICAL FIX: Access Priority Stack (Permanent > Temporary > Emergency)
     // Priority 1: Emergency Override (lowest priority - only if no other access)
     // Priority 2: Permanent/Scheduled Access (highest priority - never expires)
     // Priority 3: Temporary Access (medium priority - expires)
-    
+
     // Check emergency mode (lowest priority - only applies if no scheduled/temporary access)
     const hasEmergencyOverride = emergencyMode === 'unlock';
     const isEmergencyLockdown = emergencyMode === 'lockdown';
-    
+
     if (isEmergencyLockdown) return false;
 
     // Priority 1: Check Permanent/Scheduled Access (highest priority - never expires)
@@ -1208,23 +1273,23 @@ const AccessControlModule: React.FC = () => {
     if (user.accessSchedule) {
       const schedule = user.accessSchedule;
       const scheduleTimezone = schedule.timezone || 'UTC';
-      
+
       // Get current day in schedule timezone
-      const currentDayInTZ = now.toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        timeZone: scheduleTimezone 
+      const currentDayInTZ = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        timeZone: scheduleTimezone
       }).toLowerCase();
-      
+
       if (schedule.days.includes(currentDayInTZ)) {
         // Parse schedule times (assumed to be in schedule timezone)
         const [startHour, startMin] = schedule.startTime.split(':').map(Number);
         const [endHour, endMin] = schedule.endTime.split(':').map(Number);
-        
+
         // Get current time in schedule timezone
         const currentTimeInTZ = new Date(now.toLocaleString('en-US', { timeZone: scheduleTimezone }));
         const currentHourInTZ = currentTimeInTZ.getHours();
         const currentMinInTZ = currentTimeInTZ.getMinutes();
-        
+
         const currentTotalMinutes = currentHourInTZ * 60 + currentMinInTZ;
         const startTotalMinutes = startHour * 60 + startMin;
         const endTotalMinutes = endHour * 60 + endMin;
@@ -1234,7 +1299,7 @@ const AccessControlModule: React.FC = () => {
         }
       }
     }
-    
+
     // Also check if user has permanent access via permissions (role-based)
     const accessPoint = accessPoints.find(ap => ap.id === accessPointId);
     if (accessPoint && user.permissions) {
@@ -1262,10 +1327,10 @@ const AccessControlModule: React.FC = () => {
     // Priority Stack Resolution: Permanent > Temporary > Emergency
     // If permanent access exists, it always takes precedence (never expires)
     if (hasPermanentAccess) return true;
-    
+
     // If temporary access exists, use it (even if expired, permanent would have been checked first)
     if (hasTemporaryAccess) return true;
-    
+
     // Only use emergency override if no permanent or temporary access exists
     if (hasEmergencyOverride) return true;
 
@@ -1275,55 +1340,55 @@ const AccessControlModule: React.FC = () => {
   // Memoized filtered arrays for performance (Gold Standard)
   const filteredUsers = useMemo(() => {
     let filtered = (users || []).filter(u => u);
-    
+
     // Apply search filter
     if (userSearchQuery.trim()) {
       const query = userSearchQuery.toLowerCase();
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         user.name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
         user.department.toLowerCase().includes(query) ||
         (user.employeeId && user.employeeId.toLowerCase().includes(query))
       );
     }
-    
+
     // Apply role filter
     if (userRoleFilter !== 'all') {
       filtered = filtered.filter(user => user.role === userRoleFilter);
     }
-    
+
     // Apply status filter
     if (userStatusFilter !== 'all') {
       filtered = filtered.filter(user => user.status === userStatusFilter);
     }
-    
+
     return filtered;
   }, [users, userSearchQuery, userRoleFilter, userStatusFilter]);
 
   const filteredAccessPoints = useMemo(() => {
     let filtered = (accessPoints || []).filter(ap => ap);
-    
+
     // Apply search filter
     if (accessPointSearchQuery.trim()) {
       const query = accessPointSearchQuery.toLowerCase();
-      filtered = filtered.filter(point => 
+      filtered = filtered.filter(point =>
         point.name.toLowerCase().includes(query) ||
         point.location.toLowerCase().includes(query) ||
         point.type.toLowerCase().includes(query) ||
         point.accessMethod.toLowerCase().includes(query)
       );
     }
-    
+
     // Apply type filter
     if (accessPointTypeFilter !== 'all') {
       filtered = filtered.filter(point => point.type === accessPointTypeFilter);
     }
-    
+
     // Apply status filter
     if (accessPointStatusFilter !== 'all') {
       filtered = filtered.filter(point => point.status === accessPointStatusFilter);
     }
-    
+
     return filtered;
   }, [accessPoints, accessPointSearchQuery, accessPointTypeFilter, accessPointStatusFilter]);
 
@@ -1331,7 +1396,7 @@ const AccessControlModule: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-  return (
+        return (
           <div className="space-y-6">
             {/* Security Alert Banner - TOP PRIORITY */}
             <Card className="backdrop-blur-xl bg-gradient-to-r from-red-50 to-orange-50 border-red-200 shadow-lg">
@@ -1340,7 +1405,7 @@ const AccessControlModule: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
                       <i className="fas fa-shield-alt text-white text-lg" />
-        </div>
+                    </div>
                     <div>
                       <h3 className="text-lg font-bold text-red-900">Security Alert</h3>
                       <p className="text-red-700 text-sm">Unauthorized access attempt detected at Executive Floor - 2 minutes ago</p>
@@ -1348,10 +1413,10 @@ const AccessControlModule: React.FC = () => {
                         <i className="fas fa-link mr-1" />
                         Auto-linked to Incident Log #1234
                       </p>
-              </div>
-              </div>
+                    </div>
+                  </div>
                   <div className="flex space-x-2">
-          <Button
+                    <Button
                       size="sm"
                       onClick={() => {
                         showSuccess('Security response initiated');
@@ -1361,8 +1426,8 @@ const AccessControlModule: React.FC = () => {
                     >
                       <i className="fas fa-shield-alt mr-1" />
                       Secure Area
-          </Button>
-                <Button
+                    </Button>
+                    <Button
                       size="sm"
                       variant="outline"
                       className="text-slate-600 border-slate-300 hover:bg-slate-50"
@@ -1370,9 +1435,9 @@ const AccessControlModule: React.FC = () => {
                     >
                       <i className="fas fa-check mr-1" />
                       Acknowledge
-                </Button>
-            </div>
-        </div>
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -1417,104 +1482,104 @@ const AccessControlModule: React.FC = () => {
               </CardContent>
             </Card>
 
-        {/* Key Metrics */}
+            {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Access Points */}
+              {/* Total Access Points */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="pt-6 px-6 pb-6 relative">
-              <div className="absolute top-4 right-4">
-                <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">TOTAL</span>
-              </div>
-              <div className="flex items-center justify-between mb-4 mt-2">
+                <CardContent className="pt-6 px-6 pb-6 relative">
+                  <div className="absolute top-4 right-4">
+                    <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">TOTAL</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-4 mt-2">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
-                  <i className="fas fa-door-open text-white text-xl" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-600">Access Points</p>
-                <h3 className="text-2xl font-bold text-slate-900">
-                  {metrics.totalAccessPoints}
-                </h3>
+                      <i className="fas fa-door-open text-white text-xl" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-600">Access Points</p>
+                    <h3 className="text-2xl font-bold text-slate-900">
+                      {metrics.totalAccessPoints}
+                    </h3>
                     <div className="flex items-center text-xs text-slate-500">
                       <i className="fas fa-check-circle text-green-400 mr-1" />
                       {metrics.activeAccessPoints} active
                     </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Active Users */}
+              {/* Active Users */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="pt-6 px-6 pb-6 relative">
-              <div className="absolute top-4 right-4">
-                <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded">ACTIVE</span>
-              </div>
-              <div className="flex items-center justify-between mb-4 mt-2">
+                <CardContent className="pt-6 px-6 pb-6 relative">
+                  <div className="absolute top-4 right-4">
+                    <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded">ACTIVE</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-4 mt-2">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
-                  <i className="fas fa-users text-white text-xl" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-600">Active Users</p>
-                <h3 className="text-2xl font-bold text-slate-900">
-                  {metrics.activeUsers}
-                </h3>
+                      <i className="fas fa-users text-white text-xl" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-600">Active Users</p>
+                    <h3 className="text-2xl font-bold text-slate-900">
+                      {metrics.activeUsers}
+                    </h3>
                     <div className="flex items-center text-xs text-slate-500">
                       <i className="fas fa-user-check text-green-400 mr-1" />
                       {metrics.totalUsers} total
                     </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Access Events */}
+              {/* Access Events */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="pt-6 px-6 pb-6 relative">
-              <div className="absolute top-4 right-4">
-                <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">TODAY</span>
-              </div>
-              <div className="flex items-center justify-between mb-4 mt-2">
+                <CardContent className="pt-6 px-6 pb-6 relative">
+                  <div className="absolute top-4 right-4">
+                    <span className="px-2 py-1 text-xs font-semibold text-slate-800 bg-slate-100 rounded">TODAY</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-4 mt-2">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center shadow-lg">
-                  <i className="fas fa-chart-line text-white text-xl" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-600">Access Events</p>
-                <h3 className="text-2xl font-bold text-slate-900">
-                  {metrics.todayAccessEvents}
-                </h3>
+                      <i className="fas fa-chart-line text-white text-xl" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-600">Access Events</p>
+                    <h3 className="text-2xl font-bold text-slate-900">
+                      {metrics.todayAccessEvents}
+                    </h3>
                     <div className="flex items-center text-xs text-slate-500">
                       <i className="fas fa-clock text-blue-400 mr-1" />
                       {metrics.averageResponseTime} avg response
                     </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Security Score */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-            <CardContent className="pt-6 px-6 pb-6 relative">
-              <div className="absolute top-4 right-4">
-                <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">SECURE</span>
-              </div>
-              <div className="flex items-center justify-between mb-4 mt-2">
+                <CardContent className="pt-6 px-6 pb-6 relative">
+                  <div className="absolute top-4 right-4">
+                    <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded">SECURE</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-4 mt-2">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
                       <i className="fas fa-shield-alt text-white text-xl" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-600">Security Score</p>
-                <h3 className="text-2xl font-bold text-slate-900">
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-slate-600">Security Score</p>
+                    <h3 className="text-2xl font-bold text-slate-900">
                       {metrics.securityScore}%
-                </h3>
+                    </h3>
                     <div className="flex items-center text-xs text-slate-500">
                       <i className="fas fa-sync text-blue-400 mr-1" />
                       Last scan: {new Date(metrics.lastSecurityScan).toLocaleDateString()}
                     </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Emergency Actions */}
             <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
@@ -1527,12 +1592,11 @@ const AccessControlModule: React.FC = () => {
                     Emergency Actions
                   </div>
                   {emergencyMode !== 'normal' && (
-                    <span className={`px-3 py-1 text-sm font-semibold rounded ${
-                      emergencyMode === 'lockdown' 
-                        ? 'text-red-800 bg-red-100' 
-                        : 'text-orange-800 bg-orange-100'
-                    }`}>
-                      {emergencyMode === 'lockdown' ? '🔒 LOCKDOWN ACTIVE' : '🔓 UNLOCK ACTIVE'}
+                    <span className={`px-3 py-1 text-sm font-semibold rounded ${emergencyMode === 'lockdown'
+                      ? 'text-red-800 bg-red-100'
+                      : 'text-orange-800 bg-orange-100'
+                      }`}>
+                      {emergencyMode === 'lockdown' ? 'ðŸ”’ LOCKDOWN ACTIVE' : 'ðŸ”“ UNLOCK ACTIVE'}
                     </span>
                   )}
                 </CardTitle>
@@ -1580,33 +1644,33 @@ const AccessControlModule: React.FC = () => {
                 </div>
                 {emergencyMode !== 'normal' && (
                   <div className="mt-4 space-y-3">
-                  <div className="p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
-                    <p className="text-sm text-amber-800">
-                      <i className="fas fa-exclamation-triangle mr-2" />
-                      <strong>Emergency Mode Active:</strong> All access points are {emergencyMode === 'lockdown' ? 'locked' : 'unlocked'}. 
-                      Remember to restore normal mode when the emergency is resolved.
-                    </p>
-                  </div>
-                  {/* CRITICAL FIX: Emergency Timeout Countdown Display */}
-                          {/* CRITICAL FIX: Emergency Timeout Countdown Display */}
-                          {emergencyMode === 'unlock' && emergencyController && (
-                    <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-semibold text-red-900">
-                          <i className="fas fa-clock mr-2"></i>
-                          Auto-Relock Countdown
-                        </p>
-                        <EmergencyTimeoutCountdownDisplay 
-                          startTimestamp={emergencyController.timestamp}
-                          durationSeconds={emergencyController.timeoutDuration || emergencyTimeoutDuration}
-                        />
-                      </div>
-                      <p className="text-xs text-red-700">
-                        Access points will automatically relock after timeout. Click "Restore Normal" to extend or disable timeout.
+                    <div className="p-3 bg-amber-50 border-l-4 border-amber-500 rounded">
+                      <p className="text-sm text-amber-800">
+                        <i className="fas fa-exclamation-triangle mr-2" />
+                        <strong>Emergency Mode Active:</strong> All access points are {emergencyMode === 'lockdown' ? 'locked' : 'unlocked'}.
+                        Remember to restore normal mode when the emergency is resolved.
                       </p>
                     </div>
-                  )}
-                </div>
+                    {/* CRITICAL FIX: Emergency Timeout Countdown Display */}
+                    {/* CRITICAL FIX: Emergency Timeout Countdown Display */}
+                    {emergencyMode === 'unlock' && emergencyController && (
+                      <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-red-900">
+                            <i className="fas fa-clock mr-2"></i>
+                            Auto-Relock Countdown
+                          </p>
+                          <EmergencyTimeoutCountdownDisplay
+                            startTimestamp={emergencyController.timestamp}
+                            durationSeconds={emergencyController.timeoutDuration || emergencyTimeoutDuration}
+                          />
+                        </div>
+                        <p className="text-xs text-red-700">
+                          Access points will automatically relock after timeout. Click "Restore Normal" to extend or disable timeout.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -1619,15 +1683,14 @@ const AccessControlModule: React.FC = () => {
                     <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center mr-2 shadow-lg animate-pulse">
                       <i className="fas fa-exclamation-triangle text-white text-xl"></i>
                     </div>
-                    🚨 Held-Open Alarm ({heldOpenAlerts.filter(a => !a.acknowledged).length})
+                    ðŸš¨ Held-Open Alarm ({heldOpenAlerts.filter(a => !a.acknowledged).length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {heldOpenAlerts.filter(a => !a.acknowledged).map((alert) => (
-                      <div key={alert.id} className={`p-4 rounded-lg border-2 ${
-                        alert.severity === 'critical' ? 'bg-red-100 border-red-500' : 'bg-orange-100 border-orange-500'
-                      }`}>
+                      <div key={alert.id} className={`p-4 rounded-lg border-2 ${alert.severity === 'critical' ? 'bg-red-100 border-red-500' : 'bg-orange-100 border-orange-500'
+                        }`}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -1652,8 +1715,8 @@ const AccessControlModule: React.FC = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setHeldOpenAlerts(prev => prev.map(a => 
-                                a.id === alert.id 
+                              setHeldOpenAlerts(prev => prev.map(a =>
+                                a.id === alert.id
                                   ? { ...a, acknowledged: true, acknowledgedAt: new Date().toISOString(), acknowledgedBy: currentUser?.email || 'System' }
                                   : a
                               ));
@@ -1695,8 +1758,8 @@ const AccessControlModule: React.FC = () => {
                       <span className="text-lg font-bold text-green-600">{metrics.activeAccessPoints}</span>
                     </div>
                     <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-500 transition-all duration-500" 
+                      <div
+                        className="h-full bg-green-500 transition-all duration-500"
                         style={{ width: `${(metrics.activeAccessPoints / metrics.totalAccessPoints) * 100}%` }}
                       />
                     </div>
@@ -1707,8 +1770,8 @@ const AccessControlModule: React.FC = () => {
                       <span className="text-lg font-bold text-slate-900">{metrics.activeUsers}</span>
                     </div>
                     <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-500 transition-all duration-500" 
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-500"
                         style={{ width: `${(metrics.activeUsers / metrics.totalUsers) * 100}%` }}
                       />
                     </div>
@@ -1739,12 +1802,10 @@ const AccessControlModule: React.FC = () => {
                   {accessEvents.slice(0, 5).map((event) => (
                     <div key={event.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          event.action === 'granted' ? 'bg-green-100' : 'bg-red-100'
-                        }`}>
-                          <i className={`fas ${
-                            event.action === 'granted' ? 'fa-check text-green-700' : 'fa-times text-red-700'
-                          }`} />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${event.action === 'granted' ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                          <i className={`fas ${event.action === 'granted' ? 'fa-check text-green-700' : 'fa-times text-red-700'
+                            }`} />
                         </div>
                         <div>
                           <h4 className="font-semibold text-slate-900">{event.userName}</h4>
@@ -1753,11 +1814,10 @@ const AccessControlModule: React.FC = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                          event.action === 'granted' 
-                            ? 'text-green-800 bg-green-100' 
-                            : 'text-red-800 bg-red-100'
-                        }`}>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded ${event.action === 'granted'
+                          ? 'text-green-800 bg-green-100'
+                          : 'text-red-800 bg-red-100'
+                          }`}>
                           {event.action}
                         </span>
                         <p className="text-xs text-slate-500 mt-1">
@@ -1780,7 +1840,7 @@ const AccessControlModule: React.FC = () => {
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Access Points Management</h2>
                 <p className="text-slate-600">Manage doors, gates, elevators, and access methods</p>
-                  </div>
+              </div>
               <div className="flex gap-3">
                 <Button
                   variant="primary"
@@ -1789,9 +1849,9 @@ const AccessControlModule: React.FC = () => {
                     setIsFormDirty(false);
                   }}
                 >
-                    <i className="fas fa-plus mr-2" />
-                    Add Access Point
-                  </Button>
+                  <i className="fas fa-plus mr-2" />
+                  Add Access Point
+                </Button>
                 <Button
                   variant="outline"
                   className="text-slate-600 border-slate-300 hover:bg-slate-50"
@@ -1800,8 +1860,8 @@ const AccessControlModule: React.FC = () => {
                   <i className="fas fa-tasks mr-2" />
                   Bulk Operations
                 </Button>
-                            </div>
-                            </div>
+              </div>
+            </div>
 
             {/* Search and Filter Bar */}
             <div className="space-y-4">
@@ -1841,7 +1901,7 @@ const AccessControlModule: React.FC = () => {
                   </select>
                 </div>
               </div>
-              
+
               {/* Active Filter Badges */}
               {(accessPointSearchQuery || accessPointTypeFilter !== 'all' || accessPointStatusFilter !== 'all') && (
                 <div className="flex flex-wrap gap-2 items-center">
@@ -1898,194 +1958,188 @@ const AccessControlModule: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAccessPoints.length > 0 ? (
                 filteredAccessPoints.map((point) => (
-                <Card key={point.id} className={`bg-white border-[1.5px] shadow-sm hover:shadow-md transition-all duration-200 relative ${
-                  point.isOnline === false ? 'border-red-300 opacity-75' : 'border-slate-200'
-                }`}>
-                  {/* Offline Hardware Overlay */}
-                  {point.isOnline === false && (
-                    <div className="absolute inset-0 bg-red-50/80 border-2 border-red-300 rounded-lg flex items-center justify-center z-10 backdrop-blur-sm">
-                      <div className="text-center p-4">
-                        <i className="fas fa-unlink text-red-600 text-3xl mb-2"></i>
-                        <p className="text-sm font-semibold text-red-900">Hardware Disconnected</p>
-                        <p className="text-xs text-red-700 mt-1">Access point is offline</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{point.name}</CardTitle>
-                      <div className="flex items-center gap-2">
-                        {point.isOnline === false && (
-                          <Badge variant="destructive" size="sm">
-                            <i className="fas fa-unlink mr-1"></i>
-                            Offline
-                          </Badge>
-                        )}
-                        <Badge
-                          variant={
-                            point.status === 'active' ? 'success' :
-                            point.status === 'maintenance' ? 'warning' :
-                            'destructive'
-                          }
-                          size="sm"
-                        >
-                          {point.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-slate-600">
-                        <i className="fas fa-map-marker-alt mr-2 text-slate-600" />
-                        {point.location}
-                      </div>
-                      <div className="flex items-center text-sm text-slate-600">
-                        <i className="fas fa-cog mr-2 text-slate-600" />
-                        {point.type} • {point.accessMethod}
-                      </div>
-                      <div className="flex items-center text-sm text-slate-600">
-                        <i className="fas fa-shield-alt mr-2 text-slate-600" />
-                        Security: {point.securityLevel}
-                      </div>
-                      {/* Sensor Status */}
-                      {point.sensorStatus && (
-                        <div className="flex items-center text-sm">
-                          <i className={`fas mr-2 ${
-                            point.sensorStatus === 'closed' ? 'fa-lock text-green-600' :
-                            point.sensorStatus === 'open' ? 'fa-unlock text-blue-600' :
-                            point.sensorStatus === 'forced' ? 'fa-exclamation-triangle text-red-600' :
-                            'fa-clock text-yellow-600'
-                          }`} />
-                          <span className={`font-medium ${
-                            point.sensorStatus === 'closed' ? 'text-green-700' :
-                            point.sensorStatus === 'open' ? 'text-blue-700' :
-                            point.sensorStatus === 'forced' ? 'text-red-700' :
-                            'text-yellow-700'
-                          }`}>
-                            Sensor: {point.sensorStatus.replace('-', ' ')}
-                          </span>
-                        </div>
-                      )}
-                      {/* Power Source & Battery */}
-                      {point.powerSource && (
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center text-slate-600">
-                            <i className={`fas mr-2 ${
-                              point.powerSource === 'mains' ? 'fa-plug text-green-600' : 'fa-battery-half text-yellow-600'
-                            }`} />
-                            <span>Power: {point.powerSource === 'mains' ? 'Mains' : 'Battery'}</span>
-                          </div>
-                          {point.powerSource === 'battery' && point.batteryLevel !== undefined && (
-                            <div className="flex items-center gap-2">
-                              <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full transition-all ${
-                                    point.batteryLevel > 50 ? 'bg-green-500' :
-                                    point.batteryLevel > 20 ? 'bg-yellow-500' :
-                                    'bg-red-500'
-                                  }`}
-                                  style={{ width: `${point.batteryLevel}%` }}
-                                />
-                              </div>
-                              <span className={`text-xs font-semibold ${
-                                point.batteryLevel > 50 ? 'text-green-700' :
-                                point.batteryLevel > 20 ? 'text-yellow-700' :
-                                'text-red-700'
-                              }`}>
-                                {point.batteryLevel}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Access Count:</span>
-                      <span className="font-semibold text-slate-900">{point.accessCount}</span>
-                    </div>
-
-                    {/* CRITICAL FIX: Hardware Late-Sync Button */}
-                    {point.isOnline && point.cachedEvents && point.cachedEvents.filter(e => !e.synced).length > 0 && (
-                      <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-lg mb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <i className="fas fa-exclamation-circle text-yellow-600"></i>
-                            <span className="text-sm font-medium text-yellow-900">
-                              {point.cachedEvents.filter(e => !e.synced).length} cached event(s) available
-                            </span>
-                          </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSyncCachedEvents(point.id)}
-                            disabled={syncingAccessPointId === point.id}
-                            className="border-yellow-500 text-yellow-700 hover:bg-yellow-100"
-                          >
-                            {syncingAccessPointId === point.id ? (
-                              <>
-                                <i className="fas fa-spinner fa-spin mr-1"></i>
-                                Syncing...
-                              </>
-                            ) : (
-                              <>
-                                <i className="fas fa-sync mr-1"></i>
-                                Sync Events
-                              </>
-                            )}
-                          </Button>
+                  <Card key={point.id} className={`bg-white border-[1.5px] shadow-sm hover:shadow-md transition-all duration-200 relative ${point.isOnline === false ? 'border-red-300 opacity-75' : 'border-slate-200'
+                    }`}>
+                    {/* Offline Hardware Overlay */}
+                    {point.isOnline === false && (
+                      <div className="absolute inset-0 bg-red-50/80 border-2 border-red-300 rounded-lg flex items-center justify-center z-10 backdrop-blur-sm">
+                        <div className="text-center p-4">
+                          <i className="fas fa-unlink text-red-600 text-3xl mb-2"></i>
+                          <p className="text-sm font-semibold text-red-900">Hardware Disconnected</p>
+                          <p className="text-xs text-red-700 mt-1">Access point is offline</p>
                         </div>
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => showSuccess(`Managing ${point.name}`)}
-                      >
-                        <i className="fas fa-edit mr-1" />
-                        Manage
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => handleToggleAccessPoint(point.id)}
-                        disabled={point.isOnline === false}
-                        title={point.isOnline === false ? 'Access point is offline' : `Toggle ${point.name}`}
-                      >
-                        <i className={`fas ${point.status === 'active' ? 'fa-lock' : 'fa-unlock'} mr-1`} />
-                        {point.status === 'active' ? 'Disable' : 'Enable'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                  ))
-                ) : (
-                  <div className="col-span-full">
-                    <EmptyState
-                      icon="fas fa-search"
-                      title={accessPointSearchQuery || accessPointTypeFilter !== 'all' || accessPointStatusFilter !== 'all' 
-                        ? "No access points found" 
-                        : "No access points configured"}
-                      description={accessPointSearchQuery || accessPointTypeFilter !== 'all' || accessPointStatusFilter !== 'all'
-                        ? `No access points match your filters. Try adjusting your search or filters.`
-                        : "Add your first access point to start managing access control"}
-                      action={
-                        !accessPointSearchQuery && accessPointTypeFilter === 'all' && accessPointStatusFilter === 'all' ? {
-                          label: 'Add Access Point',
-                          onClick: () => setShowCreateAccessPoint(true),
-                          variant: 'primary' as const
-                        } : undefined
-                      }
-                    />
-                  </div>
-                )}
-              </div>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{point.name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          {point.isOnline === false && (
+                            <Badge variant="destructive" size="sm">
+                              <i className="fas fa-unlink mr-1"></i>
+                              Offline
+                            </Badge>
+                          )}
+                          <Badge
+                            variant={
+                              point.status === 'active' ? 'success' :
+                                point.status === 'maintenance' ? 'warning' :
+                                  'destructive'
+                            }
+                            size="sm"
+                          >
+                            {point.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm text-slate-600">
+                          <i className="fas fa-map-marker-alt mr-2 text-slate-600" />
+                          {point.location}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <i className="fas fa-cog mr-2 text-slate-600" />
+                          {point.type} â€¢ {point.accessMethod}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <i className="fas fa-shield-alt mr-2 text-slate-600" />
+                          Security: {point.securityLevel}
+                        </div>
+                        {/* Sensor Status */}
+                        {point.sensorStatus && (
+                          <div className="flex items-center text-sm">
+                            <i className={`fas mr-2 ${point.sensorStatus === 'closed' ? 'fa-lock text-green-600' :
+                              point.sensorStatus === 'open' ? 'fa-unlock text-blue-600' :
+                                point.sensorStatus === 'forced' ? 'fa-exclamation-triangle text-red-600' :
+                                  'fa-clock text-yellow-600'
+                              }`} />
+                            <span className={`font-medium ${point.sensorStatus === 'closed' ? 'text-green-700' :
+                              point.sensorStatus === 'open' ? 'text-blue-700' :
+                                point.sensorStatus === 'forced' ? 'text-red-700' :
+                                  'text-yellow-700'
+                              }`}>
+                              Sensor: {point.sensorStatus.replace('-', ' ')}
+                            </span>
+                          </div>
+                        )}
+                        {/* Power Source & Battery */}
+                        {point.powerSource && (
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center text-slate-600">
+                              <i className={`fas mr-2 ${point.powerSource === 'mains' ? 'fa-plug text-green-600' : 'fa-battery-half text-yellow-600'
+                                }`} />
+                              <span>Power: {point.powerSource === 'mains' ? 'Mains' : 'Battery'}</span>
+                            </div>
+                            {point.powerSource === 'battery' && point.batteryLevel !== undefined && (
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full transition-all ${point.batteryLevel > 50 ? 'bg-green-500' :
+                                      point.batteryLevel > 20 ? 'bg-yellow-500' :
+                                        'bg-red-500'
+                                      }`}
+                                    style={{ width: `${point.batteryLevel}%` }}
+                                  />
+                                </div>
+                                <span className={`text-xs font-semibold ${point.batteryLevel > 50 ? 'text-green-700' :
+                                  point.batteryLevel > 20 ? 'text-yellow-700' :
+                                    'text-red-700'
+                                  }`}>
+                                  {point.batteryLevel}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Access Count:</span>
+                        <span className="font-semibold text-slate-900">{point.accessCount}</span>
+                      </div>
+
+                      {/* CRITICAL FIX: Hardware Late-Sync Button */}
+                      {point.isOnline && point.cachedEvents && point.cachedEvents.filter(e => !e.synced).length > 0 && (
+                        <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-lg mb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <i className="fas fa-exclamation-circle text-yellow-600"></i>
+                              <span className="text-sm font-medium text-yellow-900">
+                                {point.cachedEvents.filter(e => !e.synced).length} cached event(s) available
+                              </span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSyncCachedEvents(point.id)}
+                              disabled={syncingAccessPointId === point.id}
+                              className="border-yellow-500 text-yellow-700 hover:bg-yellow-100"
+                            >
+                              {syncingAccessPointId === point.id ? (
+                                <>
+                                  <i className="fas fa-spinner fa-spin mr-1"></i>
+                                  Syncing...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="fas fa-sync mr-1"></i>
+                                  Sync Events
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => showSuccess(`Managing ${point.name}`)}
+                        >
+                          <i className="fas fa-edit mr-1" />
+                          Manage
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleToggleAccessPoint(point.id)}
+                          disabled={point.isOnline === false}
+                          title={point.isOnline === false ? 'Access point is offline' : `Toggle ${point.name}`}
+                        >
+                          <i className={`fas ${point.status === 'active' ? 'fa-lock' : 'fa-unlock'} mr-1`} />
+                          {point.status === 'active' ? 'Disable' : 'Enable'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full">
+                  <EmptyState
+                    icon="fas fa-search"
+                    title={accessPointSearchQuery || accessPointTypeFilter !== 'all' || accessPointStatusFilter !== 'all'
+                      ? "No access points found"
+                      : "No access points configured"}
+                    description={accessPointSearchQuery || accessPointTypeFilter !== 'all' || accessPointStatusFilter !== 'all'
+                      ? `No access points match your filters. Try adjusting your search or filters.`
+                      : "Add your first access point to start managing access control"}
+                    action={
+                      !accessPointSearchQuery && accessPointTypeFilter === 'all' && accessPointStatusFilter === 'all' ? {
+                        label: 'Add Access Point',
+                        onClick: () => setShowCreateAccessPoint(true),
+                        variant: 'primary' as const
+                      } : undefined
+                    }
+                  />
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -2097,7 +2151,7 @@ const AccessControlModule: React.FC = () => {
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">User Management</h2>
                 <p className="text-slate-600">Manage user access levels, permissions, and roles</p>
-                  </div>
+              </div>
               <div className="flex gap-3">
                 <Button
                   variant="primary"
@@ -2107,8 +2161,8 @@ const AccessControlModule: React.FC = () => {
                   }}
                 >
                   <i className="fas fa-user-plus mr-2" />
-                    Add User
-                  </Button>
+                  Add User
+                </Button>
                 <Button
                   variant="primary"
                   onClick={() => {
@@ -2180,7 +2234,7 @@ const AccessControlModule: React.FC = () => {
                         const bTime = b.lastAccess ? new Date(b.lastAccess).getTime() : 0;
                         return bTime - aTime;
                       })[0];
-                      
+
                       if (lastVisitor) {
                         showSuccess(`Printing badge for visitor: ${lastVisitor.name} (Badge ID: ${lastVisitor.employeeId})`);
                       } else {
@@ -2248,7 +2302,7 @@ const AccessControlModule: React.FC = () => {
                   </select>
                 </div>
               </div>
-              
+
               {/* Active Filter Badges */}
               {(userSearchQuery || userRoleFilter !== 'all' || userStatusFilter !== 'all') && (
                 <div className="flex flex-wrap gap-2 items-center">
@@ -2348,9 +2402,8 @@ const AccessControlModule: React.FC = () => {
                 <div className="space-y-4">
                   {filteredUsers.length > 0 ? (
                     filteredUsers.map((user) => (
-                      <div key={user.id} className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors ${
-                        selectedUsers.has(user.id) ? 'ring-2 ring-[#2563eb] bg-blue-50' : ''
-                      }`}>
+                      <div key={user.id} className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors ${selectedUsers.has(user.id) ? 'ring-2 ring-[#2563eb] bg-blue-50' : ''
+                        }`}>
                         <div className="flex items-center space-x-4">
                           <input
                             type="checkbox"
@@ -2372,15 +2425,15 @@ const AccessControlModule: React.FC = () => {
                           <div>
                             <h4 className="font-semibold text-slate-900">{user.name}</h4>
                             <p className="text-sm text-slate-600">{user.email}</p>
-                            <p className="text-xs text-slate-500">{user.department} • {user.role}</p>
+                            <p className="text-xs text-slate-500">{user.department} â€¢ {user.role}</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
                           <Badge
                             variant={
                               user.status === 'active' ? 'success' :
-                              user.status === 'inactive' ? 'secondary' :
-                              'destructive'
+                                user.status === 'inactive' ? 'secondary' :
+                                  'destructive'
                             }
                             size="sm"
                           >
@@ -2486,39 +2539,36 @@ const AccessControlModule: React.FC = () => {
                   {accessEvents.map((event) => (
                     <div key={event.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          event.action === 'granted' ? 'bg-green-100' : 'bg-red-100'
-                        }`}>
-                          <i className={`fas ${
-                            event.action === 'granted' ? 'fa-check text-green-700' : 'fa-times text-red-700'
-                          }`} />
-                            </div>
-                            <div>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${event.action === 'granted' ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                          <i className={`fas ${event.action === 'granted' ? 'fa-check text-green-700' : 'fa-times text-red-700'
+                            }`} />
+                        </div>
+                        <div>
                           <h4 className="font-semibold text-slate-900">{event.userName}</h4>
                           <p className="text-sm text-slate-600">{event.accessPointName}</p>
-                          <p className="text-xs text-slate-500">{event.location} • {event.accessMethod}</p>
+                          <p className="text-xs text-slate-500">{event.location} â€¢ {event.accessMethod}</p>
                           {event.reason && (
                             <p className="text-xs text-red-700 mt-1">{event.reason}</p>
                           )}
-                            </div>
-                          </div>
+                        </div>
+                      </div>
                       <div className="text-right">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                          event.action === 'granted' 
-                            ? 'text-green-800 bg-green-100' 
-                            : 'text-red-800 bg-red-100'
-                        }`}>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded ${event.action === 'granted'
+                          ? 'text-green-800 bg-green-100'
+                          : 'text-red-800 bg-red-100'
+                          }`}>
                           {event.action}
                         </span>
                         <p className="text-xs text-slate-500 mt-1">
-                              {new Date(event.timestamp).toLocaleString()}
+                          {new Date(event.timestamp).toLocaleString()}
                         </p>
-                          </div>
-                        </div>
+                      </div>
+                    </div>
                   ))}
-                          </div>
-                      </CardContent>
-                    </Card>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         );
 
@@ -2533,7 +2583,7 @@ const AccessControlModule: React.FC = () => {
                   <p className="text-slate-600">Behavior analysis, anomaly detection, and predictive insights</p>
                 </div>
               </div>
-              
+
               {/* AI Behavior Analysis Panel - Wrapped in ErrorBoundary for graceful failure */}
               <BehaviorAnalysisPanel events={accessEvents} users={users} />
             </div>
@@ -2551,7 +2601,10 @@ const AccessControlModule: React.FC = () => {
               </div>
               <div className="flex gap-3">
                 <Button
-                  onClick={() => showSuccess('Generating report...')}
+                  onClick={() => {
+                    setReportForm(prev => ({ ...prev, format: 'pdf' }));
+                    setShowReportGenerationModal(true);
+                  }}
                 >
                   <i className="fas fa-file-pdf mr-2" />
                   Export PDF
@@ -2559,7 +2612,10 @@ const AccessControlModule: React.FC = () => {
                 <Button
                   variant="outline"
                   className="text-slate-600 border-slate-300 hover:bg-slate-50"
-                  onClick={() => showSuccess('Exporting CSV...')}
+                  onClick={() => {
+                    setReportForm(prev => ({ ...prev, format: 'csv' }));
+                    setShowReportGenerationModal(true);
+                  }}
                 >
                   <i className="fas fa-file-csv mr-2" />
                   Export CSV
@@ -2794,26 +2850,26 @@ const AccessControlModule: React.FC = () => {
                       <p className="text-sm text-slate-600">Emergency access protocols</p>
                     </div>
                     <Button variant="outline" size="sm">Configure</Button>
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* System Settings */}
               <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
                       <i className="fas fa-cog text-white" />
                     </div>
-                System Settings
-              </CardTitle>
-            </CardHeader>
+                    System Settings
+                  </CardTitle>
+                </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-semibold text-slate-900">Access Logging</h4>
                       <p className="text-sm text-slate-600">Configure access event logging</p>
-                </div>
+                    </div>
                     <Button variant="outline" size="sm">Configure</Button>
                   </div>
                   <div className="flex items-center justify-between">
@@ -2829,195 +2885,195 @@ const AccessControlModule: React.FC = () => {
                       <p className="text-sm text-slate-600">System backup configuration</p>
                     </div>
                     <Button variant="outline" size="sm">Configure</Button>
-              </div>
-            </CardContent>
-          </Card>
-      </div>
-
-      {/* Access Point Grouping Section */}
-      <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
-                <i className="fas fa-layer-group text-white" />
-              </div>
-              Access Point Grouping
-            </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setAccessPointGroupForm({ name: '', description: '', accessPointIds: [] });
-                setIsFormDirty(false);
-                setShowAccessPointGroupModal(true);
-              }}
-            >
-              <i className="fas fa-plus mr-2"></i>
-              Create Group
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-600 mb-4">
-            Group access points together (e.g., "Floor 4", "Housekeeping Closets") for bulk permission management.
-          </p>
-          {accessPointGroups.length > 0 ? (
-            <div className="space-y-3">
-              {accessPointGroups.map((group) => (
-                <div key={group.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-slate-900 mb-1">{group.name}</h4>
-                      <p className="text-sm text-slate-600 mb-2">{group.description}</p>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" size="sm">
-                          <i className="fas fa-door-open mr-1"></i>
-                          {group.accessPointIds.length} access point{group.accessPointIds.length !== 1 ? 's' : ''}
-                        </Badge>
-                        <span className="text-xs text-slate-500">
-                          Created: {new Date(group.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <i className="fas fa-edit mr-1"></i>
-                        Edit
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                        onClick={() => {
-                          if (window.confirm(`Delete group "${group.name}"? This will not delete the access points themselves.`)) {
-                            setAccessPointGroups(prev => prev.filter(g => g.id !== group.id));
-                            showSuccess(`Group "${group.name}" deleted`);
-                          }
-                        }}
-                      >
-                        <i className="fas fa-trash mr-1"></i>
-                        Delete
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              ))}
+                </CardContent>
+              </Card>
             </div>
-          ) : (
-            <EmptyState
-              icon="fas fa-layer-group"
-              title="No Access Point Groups"
-              description="Create groups to manage multiple access points together (e.g., 'Floor 4', 'Housekeeping Closets')"
-              action={{
-                label: 'Create First Group',
-                onClick: () => {
-                  setAccessPointGroupForm({ name: '', description: '', accessPointIds: [] });
-                  setIsFormDirty(false);
-                  setShowAccessPointGroupModal(true);
-                },
-                variant: 'primary'
-              }}
-            />
-          )}
-        </CardContent>
-      </Card>
 
-      {/* Role-to-Zone Mapping Section */}
-      <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
-                <i className="fas fa-route text-white" />
-              </div>
-              Role-to-Zone Mapping
-            </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setRoleZoneForm({ role: 'employee', zoneName: '', accessPointIds: [] });
-                setIsFormDirty(false);
-                setShowRoleZoneModal(true);
-              }}
-            >
-              <i className="fas fa-plus mr-2"></i>
-              Create Mapping
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-slate-600 mb-4">
-            Map roles (e.g., "Housekeeping", "Security") to access zones for automatic permission assignment.
-          </p>
-          {roleZoneMappings.length > 0 ? (
-            <div className="space-y-3">
-              {roleZoneMappings.map((mapping) => (
-                <div key={mapping.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="default" size="sm" className="bg-[#2563eb] text-white">
-                          {mapping.role}
-                        </Badge>
-                        <span className="font-semibold text-slate-900">→</span>
-                        <Badge variant="outline" size="sm">
-                          {mapping.zoneName}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary" size="sm">
-                          <i className="fas fa-door-open mr-1"></i>
-                          {mapping.accessPointIds.length} access point{mapping.accessPointIds.length !== 1 ? 's' : ''}
-                        </Badge>
-                        <span className="text-xs text-slate-500">
-                          Updated: {new Date(mapping.updatedAt).toLocaleDateString()}
-                        </span>
-                      </div>
+            {/* Access Point Grouping Section */}
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-layer-group text-white" />
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <i className="fas fa-edit mr-1"></i>
-                        Edit
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                        onClick={() => {
-                          if (window.confirm(`Delete role-zone mapping for "${mapping.role}" → "${mapping.zoneName}"?`)) {
-                            setRoleZoneMappings(prev => prev.filter(m => m.id !== mapping.id));
-                            showSuccess(`Role-zone mapping deleted`);
-                          }
-                        }}
-                      >
-                        <i className="fas fa-trash mr-1"></i>
-                        Delete
-                      </Button>
-                    </div>
+                    Access Point Grouping
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon="fas fa-route"
-              title="No Role-Zone Mappings"
-              description="Create mappings to automatically assign access points to users based on their role (e.g., 'Housekeeping' → 'Service Zone')"
-              action={{
-                label: 'Create First Mapping',
-                onClick: () => {
-                  setRoleZoneForm({ role: 'employee', zoneName: '', accessPointIds: [] });
-                  setIsFormDirty(false);
-                  setShowRoleZoneModal(true);
-                },
-                variant: 'primary'
-              }}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setAccessPointGroupForm({ name: '', description: '', accessPointIds: [] });
+                      setIsFormDirty(false);
+                      setShowAccessPointGroupModal(true);
+                    }}
+                  >
+                    <i className="fas fa-plus mr-2"></i>
+                    Create Group
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-slate-600 mb-4">
+                  Group access points together (e.g., "Floor 4", "Housekeeping Closets") for bulk permission management.
+                </p>
+                {accessPointGroups.length > 0 ? (
+                  <div className="space-y-3">
+                    {accessPointGroups.map((group) => (
+                      <div key={group.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-slate-900 mb-1">{group.name}</h4>
+                            <p className="text-sm text-slate-600 mb-2">{group.description}</p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" size="sm">
+                                <i className="fas fa-door-open mr-1"></i>
+                                {group.accessPointIds.length} access point{group.accessPointIds.length !== 1 ? 's' : ''}
+                              </Badge>
+                              <span className="text-xs text-slate-500">
+                                Created: {new Date(group.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <i className="fas fa-edit mr-1"></i>
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                if (window.confirm(`Delete group "${group.name}"? This will not delete the access points themselves.`)) {
+                                  setAccessPointGroups(prev => prev.filter(g => g.id !== group.id));
+                                  showSuccess(`Group "${group.name}" deleted`);
+                                }
+                              }}
+                            >
+                              <i className="fas fa-trash mr-1"></i>
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon="fas fa-layer-group"
+                    title="No Access Point Groups"
+                    description="Create groups to manage multiple access points together (e.g., 'Floor 4', 'Housekeeping Closets')"
+                    action={{
+                      label: 'Create First Group',
+                      onClick: () => {
+                        setAccessPointGroupForm({ name: '', description: '', accessPointIds: [] });
+                        setIsFormDirty(false);
+                        setShowAccessPointGroupModal(true);
+                      },
+                      variant: 'primary'
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Role-to-Zone Mapping Section */}
+            <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-2 shadow-lg">
+                      <i className="fas fa-route text-white" />
+                    </div>
+                    Role-to-Zone Mapping
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setRoleZoneForm({ role: 'employee', zoneName: '', accessPointIds: [] });
+                      setIsFormDirty(false);
+                      setShowRoleZoneModal(true);
+                    }}
+                  >
+                    <i className="fas fa-plus mr-2"></i>
+                    Create Mapping
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-slate-600 mb-4">
+                  Map roles (e.g., "Housekeeping", "Security") to access zones for automatic permission assignment.
+                </p>
+                {roleZoneMappings.length > 0 ? (
+                  <div className="space-y-3">
+                    {roleZoneMappings.map((mapping) => (
+                      <div key={mapping.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="default" size="sm" className="bg-[#2563eb] text-white">
+                                {mapping.role}
+                              </Badge>
+                              <span className="font-semibold text-slate-900">â†’</span>
+                              <Badge variant="outline" size="sm">
+                                {mapping.zoneName}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Badge variant="secondary" size="sm">
+                                <i className="fas fa-door-open mr-1"></i>
+                                {mapping.accessPointIds.length} access point{mapping.accessPointIds.length !== 1 ? 's' : ''}
+                              </Badge>
+                              <span className="text-xs text-slate-500">
+                                Updated: {new Date(mapping.updatedAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">
+                              <i className="fas fa-edit mr-1"></i>
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                if (window.confirm(`Delete role-zone mapping for "${mapping.role}" â†’ "${mapping.zoneName}"?`)) {
+                                  setRoleZoneMappings(prev => prev.filter(m => m.id !== mapping.id));
+                                  showSuccess(`Role-zone mapping deleted`);
+                                }
+                              }}
+                            >
+                              <i className="fas fa-trash mr-1"></i>
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon="fas fa-route"
+                    title="No Role-Zone Mappings"
+                    description="Create mappings to automatically assign access points to users based on their role (e.g., 'Housekeeping' â†’ 'Service Zone')"
+                    action={{
+                      label: 'Create First Mapping',
+                      onClick: () => {
+                        setRoleZoneForm({ role: 'employee', zoneName: '', accessPointIds: [] });
+                        setIsFormDirty(false);
+                        setShowRoleZoneModal(true);
+                      },
+                      variant: 'primary'
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
 
       default:
         return (
@@ -3034,7 +3090,7 @@ const AccessControlModule: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
       {/* HEADER - GOLD STANDARD LAYOUT */}
       <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        
+
         {/* Title Section - CENTER */}
         <div className="flex items-center justify-center py-8">
           <div className="flex items-center space-x-4">
@@ -3064,11 +3120,10 @@ const AccessControlModule: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${activeTab === tab.id
+                    ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -3097,8 +3152,8 @@ const AccessControlModule: React.FC = () => {
         size="lg"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
                   return;
@@ -3109,7 +3164,7 @@ const AccessControlModule: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleCreateAccessPoint}
             >
@@ -3119,89 +3174,89 @@ const AccessControlModule: React.FC = () => {
         }
       >
         <div className="space-y-4">
-              <div>
-                <label htmlFor="ap-name" className="block text-sm font-medium text-slate-700 mb-2">Access Point Name</label>
-                <input
-                  type="text"
-                  id="ap-name"
-                  value={accessPointForm.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setAccessPointForm(prev => ({ ...prev, name: e.target.value }));
-                    setIsFormDirty(true);
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter access point name"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="ap-location" className="block text-sm font-medium text-slate-700 mb-2">Location</label>
-                <input
-                  type="text"
-                  id="ap-location"
-                  value={accessPointForm.location}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setAccessPointForm(prev => ({ ...prev, location: e.target.value }));
-                    setIsFormDirty(true);
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter location"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="ap-type" className="block text-sm font-medium text-slate-700 mb-2">Type</label>
-                  <select
-                    id="ap-type"
-                    value={accessPointForm.type}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setAccessPointForm(prev => ({ ...prev, type: e.target.value as 'door' | 'gate' | 'elevator' | 'turnstile' }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="door">Door</option>
-                    <option value="gate">Gate</option>
-                    <option value="elevator">Elevator</option>
-                    <option value="turnstile">Turnstile</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="ap-method" className="block text-sm font-medium text-slate-700 mb-2">Access Method</label>
-                  <select
-                    id="ap-method"
-                    value={accessPointForm.accessMethod}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setAccessPointForm(prev => ({ ...prev, accessMethod: e.target.value as 'card' | 'biometric' | 'pin' | 'mobile' }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="card">Card</option>
-                    <option value="biometric">Biometric</option>
-                    <option value="pin">PIN</option>
-                    <option value="mobile">Mobile</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label htmlFor="ap-description" className="block text-sm font-medium text-slate-700 mb-2">Description</label>
-                <textarea
-                  id="ap-description"
-                  value={accessPointForm.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                    setAccessPointForm(prev => ({ ...prev, description: e.target.value }));
-                    setIsFormDirty(true);
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                  placeholder="Enter description"
-                />
-              </div>
+          <div>
+            <label htmlFor="ap-name" className="block text-sm font-medium text-slate-700 mb-2">Access Point Name</label>
+            <input
+              type="text"
+              id="ap-name"
+              value={accessPointForm.name}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setAccessPointForm(prev => ({ ...prev, name: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter access point name"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="ap-location" className="block text-sm font-medium text-slate-700 mb-2">Location</label>
+            <input
+              type="text"
+              id="ap-location"
+              value={accessPointForm.location}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setAccessPointForm(prev => ({ ...prev, location: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter location"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="ap-type" className="block text-sm font-medium text-slate-700 mb-2">Type</label>
+              <select
+                id="ap-type"
+                value={accessPointForm.type}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setAccessPointForm(prev => ({ ...prev, type: e.target.value as 'door' | 'gate' | 'elevator' | 'turnstile' }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="door">Door</option>
+                <option value="gate">Gate</option>
+                <option value="elevator">Elevator</option>
+                <option value="turnstile">Turnstile</option>
+              </select>
             </div>
+
+            <div>
+              <label htmlFor="ap-method" className="block text-sm font-medium text-slate-700 mb-2">Access Method</label>
+              <select
+                id="ap-method"
+                value={accessPointForm.accessMethod}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setAccessPointForm(prev => ({ ...prev, accessMethod: e.target.value as 'card' | 'biometric' | 'pin' | 'mobile' }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="card">Card</option>
+                <option value="biometric">Biometric</option>
+                <option value="pin">PIN</option>
+                <option value="mobile">Mobile</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="ap-description" className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+            <textarea
+              id="ap-description"
+              value={accessPointForm.description}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                setAccessPointForm(prev => ({ ...prev, description: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+              placeholder="Enter description"
+            />
+          </div>
+        </div>
       </Modal>
 
       {/* Create User Modal */}
@@ -3218,8 +3273,8 @@ const AccessControlModule: React.FC = () => {
         size="lg"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
                   return;
@@ -3230,7 +3285,7 @@ const AccessControlModule: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleCreateUser}
             >
@@ -3240,201 +3295,201 @@ const AccessControlModule: React.FC = () => {
         }
       >
         <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="user-name" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    id="user-name"
-                    value={userForm.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setUserForm(prev => ({ ...prev, name: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter full name"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="user-email" className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    id="user-email"
-                    value={userForm.email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setUserForm(prev => ({ ...prev, email: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter email"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="user-department" className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-                  <input
-                    type="text"
-                    id="user-department"
-                    value={userForm.department}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter department"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="user-role" className="block text-sm font-medium text-slate-700 mb-2">Role</label>
-                  <select
-                    id="user-role"
-                    value={userForm.role}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setUserForm(prev => ({ ...prev, role: e.target.value as 'admin' | 'manager' | 'employee' | 'guest' }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="employee">Employee</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="guest">Guest</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="user-access-level" className="block text-sm font-medium text-slate-700 mb-2">Access Level</label>
-                  <select
-                    id="user-access-level"
-                    value={userForm.accessLevel}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setUserForm(prev => ({ ...prev, accessLevel: e.target.value as 'standard' | 'elevated' | 'restricted' }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="standard">Standard</option>
-                    <option value="elevated">Elevated</option>
-                    <option value="restricted">Restricted</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="user-phone" className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    id="user-phone"
-                    value={userForm.phone}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setUserForm(prev => ({ ...prev, phone: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter phone number"
-                  />
-                </div>
-              </div>
-              
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="user-name" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+              <input
+                type="text"
+                id="user-name"
+                value={userForm.name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUserForm(prev => ({ ...prev, name: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter full name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="user-email" className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+              <input
+                type="email"
+                id="user-email"
+                value={userForm.email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUserForm(prev => ({ ...prev, email: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter email"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="user-department" className="block text-sm font-medium text-slate-700 mb-2">Department</label>
+              <input
+                type="text"
+                id="user-department"
+                value={userForm.department}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({ ...prev, department: e.target.value }))}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter department"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="user-role" className="block text-sm font-medium text-slate-700 mb-2">Role</label>
+              <select
+                id="user-role"
+                value={userForm.role}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setUserForm(prev => ({ ...prev, role: e.target.value as 'admin' | 'manager' | 'employee' | 'guest' }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+                <option value="guest">Guest</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="user-access-level" className="block text-sm font-medium text-slate-700 mb-2">Access Level</label>
+              <select
+                id="user-access-level"
+                value={userForm.accessLevel}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setUserForm(prev => ({ ...prev, accessLevel: e.target.value as 'standard' | 'elevated' | 'restricted' }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="standard">Standard</option>
+                <option value="elevated">Elevated</option>
+                <option value="restricted">Restricted</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="user-phone" className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+              <input
+                type="tel"
+                id="user-phone"
+                value={userForm.phone}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUserForm(prev => ({ ...prev, phone: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter phone number"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="user-employee-id" className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
+            <input
+              type="text"
+              id="user-employee-id"
+              value={userForm.employeeId}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setUserForm(prev => ({ ...prev, employeeId: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter employee ID"
+            />
+          </div>
+
+          {/* Time-Based Access Schedule */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Access Schedule (Optional)</h3>
+            <div className="space-y-4">
               <div>
-                <label htmlFor="user-employee-id" className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Allowed Days</label>
+                <div className="flex flex-wrap gap-2">
+                  {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
+                    <label key={day} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={userForm.accessSchedule.days.includes(day)}
+                        onChange={(e) => {
+                          setUserForm(prev => ({
+                            ...prev,
+                            accessSchedule: {
+                              ...prev.accessSchedule,
+                              days: e.target.checked
+                                ? [...prev.accessSchedule.days, day]
+                                : prev.accessSchedule.days.filter(d => d !== day)
+                            }
+                          }));
+                          setIsFormDirty(true);
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm text-slate-700 capitalize">{day}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="access-start-time" className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+                  <input
+                    type="time"
+                    id="access-start-time"
+                    value={userForm.accessSchedule.startTime}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setUserForm(prev => ({
+                        ...prev,
+                        accessSchedule: { ...prev.accessSchedule, startTime: e.target.value }
+                      }));
+                      setIsFormDirty(true);
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="access-end-time" className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
+                  <input
+                    type="time"
+                    id="access-end-time"
+                    value={userForm.accessSchedule.endTime}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setUserForm(prev => ({
+                        ...prev,
+                        accessSchedule: { ...prev.accessSchedule, endTime: e.target.value }
+                      }));
+                      setIsFormDirty(true);
+                    }}
+                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center">
                 <input
-                  type="text"
-                  id="user-employee-id"
-                  value={userForm.employeeId}
+                  type="checkbox"
+                  id="auto-revoke-checkout"
+                  checked={userForm.autoRevokeAtCheckout}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setUserForm(prev => ({ ...prev, employeeId: e.target.value }));
+                    setUserForm(prev => ({ ...prev, autoRevokeAtCheckout: e.target.checked }));
                     setIsFormDirty(true);
                   }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter employee ID"
+                  className="mr-2"
                 />
+                <label htmlFor="auto-revoke-checkout" className="text-sm text-slate-700">
+                  Auto-revoke access at checkout (for guests)
+                </label>
               </div>
-
-              {/* Time-Based Access Schedule */}
-              <div className="border-t pt-4 mt-4">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">Access Schedule (Optional)</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Allowed Days</label>
-                    <div className="flex flex-wrap gap-2">
-                      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                        <label key={day} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={userForm.accessSchedule.days.includes(day)}
-                            onChange={(e) => {
-                              setUserForm(prev => ({
-                                ...prev,
-                                accessSchedule: {
-                                  ...prev.accessSchedule,
-                                  days: e.target.checked
-                                    ? [...prev.accessSchedule.days, day]
-                                    : prev.accessSchedule.days.filter(d => d !== day)
-                                }
-                              }));
-                              setIsFormDirty(true);
-                            }}
-                            className="mr-2"
-                          />
-                          <span className="text-sm text-slate-700 capitalize">{day}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="access-start-time" className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
-                      <input
-                        type="time"
-                        id="access-start-time"
-                        value={userForm.accessSchedule.startTime}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          setUserForm(prev => ({
-                            ...prev,
-                            accessSchedule: { ...prev.accessSchedule, startTime: e.target.value }
-                          }));
-                          setIsFormDirty(true);
-                        }}
-                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="access-end-time" className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
-                      <input
-                        type="time"
-                        id="access-end-time"
-                        value={userForm.accessSchedule.endTime}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          setUserForm(prev => ({
-                            ...prev,
-                            accessSchedule: { ...prev.accessSchedule, endTime: e.target.value }
-                          }));
-                          setIsFormDirty(true);
-                        }}
-                        className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="auto-revoke-checkout"
-                      checked={userForm.autoRevokeAtCheckout}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        setUserForm(prev => ({ ...prev, autoRevokeAtCheckout: e.target.checked }));
-                        setIsFormDirty(true);
-                      }}
-                      className="mr-2"
-                    />
-                    <label htmlFor="auto-revoke-checkout" className="text-sm text-slate-700">
-                      Auto-revoke access at checkout (for guests)
-                    </label>
-                  </div>
-                </div>
-              </div>
+            </div>
+          </div>
         </div>
       </Modal>
 
@@ -3453,8 +3508,8 @@ const AccessControlModule: React.FC = () => {
         size="lg"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
                   return;
@@ -3466,7 +3521,7 @@ const AccessControlModule: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleUpdateUser}
             >
@@ -3476,118 +3531,118 @@ const AccessControlModule: React.FC = () => {
         }
       >
         <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="edit-user-name" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    id="edit-user-name"
-                    value={userForm.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setUserForm(prev => ({ ...prev, name: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter full name"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="edit-user-email" className="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    id="edit-user-email"
-                    value={userForm.email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setUserForm(prev => ({ ...prev, email: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter email"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="edit-user-department" className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-                  <input
-                    type="text"
-                    id="edit-user-department"
-                    value={userForm.department}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({ ...prev, department: e.target.value }))}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter department"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="edit-user-role" className="block text-sm font-medium text-slate-700 mb-2">Role</label>
-                  <select
-                    id="edit-user-role"
-                    value={userForm.role}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setUserForm(prev => ({ ...prev, role: e.target.value as 'admin' | 'manager' | 'employee' | 'guest' }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="employee">Employee</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="guest">Guest</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="edit-user-access-level" className="block text-sm font-medium text-slate-700 mb-2">Access Level</label>
-                  <select
-                    id="edit-user-access-level"
-                    value={userForm.accessLevel}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      setUserForm(prev => ({ ...prev, accessLevel: e.target.value as 'standard' | 'elevated' | 'restricted' }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="standard">Standard</option>
-                    <option value="elevated">Elevated</option>
-                    <option value="restricted">Restricted</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="edit-user-phone" className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    id="edit-user-phone"
-                    value={userForm.phone}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setUserForm(prev => ({ ...prev, phone: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter phone number"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label htmlFor="edit-user-employee-id" className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
-                <input
-                  type="text"
-                  id="edit-user-employee-id"
-                  value={userForm.employeeId}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setUserForm(prev => ({ ...prev, employeeId: e.target.value }));
-                    setIsFormDirty(true);
-                  }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter employee ID"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="edit-user-name" className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
+              <input
+                type="text"
+                id="edit-user-name"
+                value={userForm.name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUserForm(prev => ({ ...prev, name: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter full name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="edit-user-email" className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+              <input
+                type="email"
+                id="edit-user-email"
+                value={userForm.email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUserForm(prev => ({ ...prev, email: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter email"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="edit-user-department" className="block text-sm font-medium text-slate-700 mb-2">Department</label>
+              <input
+                type="text"
+                id="edit-user-department"
+                value={userForm.department}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUserForm(prev => ({ ...prev, department: e.target.value }))}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter department"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="edit-user-role" className="block text-sm font-medium text-slate-700 mb-2">Role</label>
+              <select
+                id="edit-user-role"
+                value={userForm.role}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setUserForm(prev => ({ ...prev, role: e.target.value as 'admin' | 'manager' | 'employee' | 'guest' }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+                <option value="guest">Guest</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="edit-user-access-level" className="block text-sm font-medium text-slate-700 mb-2">Access Level</label>
+              <select
+                id="edit-user-access-level"
+                value={userForm.accessLevel}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  setUserForm(prev => ({ ...prev, accessLevel: e.target.value as 'standard' | 'elevated' | 'restricted' }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="standard">Standard</option>
+                <option value="elevated">Elevated</option>
+                <option value="restricted">Restricted</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="edit-user-phone" className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+              <input
+                type="tel"
+                id="edit-user-phone"
+                value={userForm.phone}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUserForm(prev => ({ ...prev, phone: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter phone number"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="edit-user-employee-id" className="block text-sm font-medium text-slate-700 mb-2">Employee ID</label>
+            <input
+              type="text"
+              id="edit-user-employee-id"
+              value={userForm.employeeId}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setUserForm(prev => ({ ...prev, employeeId: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter employee ID"
+            />
+          </div>
         </div>
       </Modal>
 
@@ -3605,8 +3660,8 @@ const AccessControlModule: React.FC = () => {
         size="lg"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
                   return;
@@ -3617,7 +3672,7 @@ const AccessControlModule: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleGrantTemporaryAccess}
             >
@@ -3627,89 +3682,89 @@ const AccessControlModule: React.FC = () => {
         }
       >
         <div className="space-y-4">
-              <div>
-                <label htmlFor="temp-user" className="block text-sm font-medium text-slate-700 mb-2">User</label>
-                <select
-                  id="temp-user"
-                  value={temporaryAccessForm.userId}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTemporaryAccessForm(prev => ({ ...prev, userId: e.target.value }))}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select a user</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-                  ))}
-                </select>
-              </div>
+          <div>
+            <label htmlFor="temp-user" className="block text-sm font-medium text-slate-700 mb-2">User</label>
+            <select
+              id="temp-user"
+              value={temporaryAccessForm.userId}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setTemporaryAccessForm(prev => ({ ...prev, userId: e.target.value }))}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select a user</option>
+              {users.map(user => (
+                <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+              ))}
+            </select>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Access Points</label>
-                <div className="border border-slate-300 rounded-md p-3 max-h-40 overflow-y-auto">
-                  {accessPoints.map(point => (
-                    <label key={point.id} className="flex items-center mb-2">
-                      <input
-                        type="checkbox"
-                        checked={temporaryAccessForm.accessPointIds.includes(point.id)}
-                        onChange={(e) => {
-                          setTemporaryAccessForm(prev => ({
-                            ...prev,
-                            accessPointIds: e.target.checked
-                              ? [...prev.accessPointIds, point.id]
-                              : prev.accessPointIds.filter(id => id !== point.id)
-                          }));
-                          setIsFormDirty(true);
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-slate-700">{point.name} - {point.location}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="temp-start-time" className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Access Points</label>
+            <div className="border border-slate-300 rounded-md p-3 max-h-40 overflow-y-auto">
+              {accessPoints.map(point => (
+                <label key={point.id} className="flex items-center mb-2">
                   <input
-                    type="datetime-local"
-                    id="temp-start-time"
-                    value={temporaryAccessForm.startTime}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setTemporaryAccessForm(prev => ({ ...prev, startTime: e.target.value }));
+                    type="checkbox"
+                    checked={temporaryAccessForm.accessPointIds.includes(point.id)}
+                    onChange={(e) => {
+                      setTemporaryAccessForm(prev => ({
+                        ...prev,
+                        accessPointIds: e.target.checked
+                          ? [...prev.accessPointIds, point.id]
+                          : prev.accessPointIds.filter(id => id !== point.id)
+                      }));
                       setIsFormDirty(true);
                     }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mr-2"
                   />
-                </div>
-                <div>
-                  <label htmlFor="temp-end-time" className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
-                  <input
-                    type="datetime-local"
-                    id="temp-end-time"
-                    value={temporaryAccessForm.endTime}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      setTemporaryAccessForm(prev => ({ ...prev, endTime: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                    className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
+                  <span className="text-sm text-slate-700">{point.name} - {point.location}</span>
+                </label>
+              ))}
+            </div>
+          </div>
 
-              <div>
-                <label htmlFor="temp-reason" className="block text-sm font-medium text-slate-700 mb-2">Reason</label>
-                <textarea
-                  id="temp-reason"
-                  value={temporaryAccessForm.reason}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                      setTemporaryAccessForm(prev => ({ ...prev, reason: e.target.value }));
-                      setIsFormDirty(true);
-                    }}
-                  className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                  placeholder="Enter reason for temporary access"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="temp-start-time" className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+              <input
+                type="datetime-local"
+                id="temp-start-time"
+                value={temporaryAccessForm.startTime}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setTemporaryAccessForm(prev => ({ ...prev, startTime: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="temp-end-time" className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
+              <input
+                type="datetime-local"
+                id="temp-end-time"
+                value={temporaryAccessForm.endTime}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setTemporaryAccessForm(prev => ({ ...prev, endTime: e.target.value }));
+                  setIsFormDirty(true);
+                }}
+                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="temp-reason" className="block text-sm font-medium text-slate-700 mb-2">Reason</label>
+            <textarea
+              id="temp-reason"
+              value={temporaryAccessForm.reason}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                setTemporaryAccessForm(prev => ({ ...prev, reason: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={3}
+              placeholder="Enter reason for temporary access"
+            />
+          </div>
         </div>
       </Modal>
 
@@ -3727,8 +3782,8 @@ const AccessControlModule: React.FC = () => {
         size="lg"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
                   return;
@@ -3739,7 +3794,7 @@ const AccessControlModule: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleRegisterVisitor}
             >
@@ -3859,72 +3914,243 @@ const AccessControlModule: React.FC = () => {
         </div>
       </Modal>
 
+
+      {/* Access Point Grouping Modal */}
+      <Modal
+        isOpen={showAccessPointGroupModal}
+        onClose={() => {
+          if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+            return;
+          }
+          setShowAccessPointGroupModal(false);
+          setIsFormDirty(false);
+        }}
+        title="Create Access Point Group"
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+                  return;
+                }
+                setShowAccessPointGroupModal(false);
+                setIsFormDirty(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateAccessPointGroup}
+            >
+              Create Group
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="group-name" className="block text-sm font-medium text-slate-700 mb-2">Group Name *</label>
+            <input
+              type="text"
+              id="group-name"
+              value={accessPointGroupForm.name}
+              onChange={(e) => {
+                setAccessPointGroupForm(prev => ({ ...prev, name: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Floor 4, North Wing"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="group-description" className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+            <textarea
+              id="group-description"
+              value={accessPointGroupForm.description}
+              onChange={(e) => {
+                setAccessPointGroupForm(prev => ({ ...prev, description: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              rows={2}
+              placeholder="Describe the purpose of this group"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Select Access Points *</label>
+            <div className="border border-slate-300 rounded-md p-3 max-h-60 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-2">
+              {accessPoints.map(point => (
+                <label key={point.id} className="flex items-center p-2 hover:bg-slate-50 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={accessPointGroupForm.accessPointIds.includes(point.id)}
+                    onChange={(e) => {
+                      setAccessPointGroupForm(prev => ({
+                        ...prev,
+                        accessPointIds: e.target.checked
+                          ? [...prev.accessPointIds, point.id]
+                          : prev.accessPointIds.filter(id => id !== point.id)
+                      }));
+                      setIsFormDirty(true);
+                    }}
+                    className="mr-2 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-slate-900">{point.name}</span>
+                    <span className="text-xs text-slate-500">{point.location}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Role-to-Zone Mapping Modal */}
+      <Modal
+        isOpen={showRoleZoneModal}
+        onClose={() => {
+          if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+            return;
+          }
+          setShowRoleZoneModal(false);
+          setIsFormDirty(false);
+        }}
+        title="Create Role-to-Zone Mapping"
+        size="lg"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+                  return;
+                }
+                setShowRoleZoneModal(false);
+                setIsFormDirty(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateRoleZoneMapping}
+            >
+              Create Mapping
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="role-select" className="block text-sm font-medium text-slate-700 mb-2">Select Role *</label>
+            <select
+              id="role-select"
+              value={roleZoneForm.role}
+              onChange={(e) => {
+                setRoleZoneForm(prev => ({ ...prev, role: e.target.value as AccessRole }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="employee">Employee</option>
+              <option value="manager">Manager</option>
+              <option value="security">Security</option>
+              <option value="admin">Admin</option>
+              <option value="visitor">Visitor</option>
+              <option value="contractor">Contractor</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="zone-name" className="block text-sm font-medium text-slate-700 mb-2">Zone Name *</label>
+            <input
+              type="text"
+              id="zone-name"
+              value={roleZoneForm.zoneName}
+              onChange={(e) => {
+                setRoleZoneForm(prev => ({ ...prev, zoneName: e.target.value }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., Secure Storage A, Executive Floor"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Define Access Points for this Zone *</label>
+            <div className="border border-slate-300 rounded-md p-3 max-h-60 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-2">
+              {accessPoints.map(point => (
+                <label key={point.id} className="flex items-center p-2 hover:bg-slate-50 rounded cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={roleZoneForm.accessPointIds.includes(point.id)}
+                    onChange={(e) => {
+                      setRoleZoneForm(prev => ({
+                        ...prev,
+                        accessPointIds: e.target.checked
+                          ? [...prev.accessPointIds, point.id]
+                          : prev.accessPointIds.filter(id => id !== point.id)
+                      }));
+                      setIsFormDirty(true);
+                    }}
+                    className="mr-2 h-4 w-4 text-blue-600 rounded"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-slate-900">{point.name}</span>
+                    <span className="text-xs text-slate-500">{point.location}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
+
       {/* Bulk Operations Modal */}
       <Modal
         isOpen={showBulkOperationsModal}
         onClose={() => {
           setShowBulkOperationsModal(false);
-          setSelectedUsers(new Set());
+          setSelectedUsers([]);
         }}
-        title={`Bulk Operations (${selectedUsers.size} selected)`}
-        size="lg"
-        footer={
-          <>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowBulkOperationsModal(false);
-                setSelectedUsers(new Set());
-              }}
-            >
-              Cancel
-            </Button>
-            <div className="flex gap-2">
-              <Button 
-                variant="primary"
-                onClick={() => handleBulkAction('activate')}
-                disabled={selectedUsers.size === 0}
-              >
-                <i className="fas fa-check mr-2"></i>
-                Activate
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => handleBulkAction('deactivate')}
-                disabled={selectedUsers.size === 0}
-              >
-                <i className="fas fa-pause mr-2"></i>
-                Deactivate
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => handleBulkAction('suspend')}
-                disabled={selectedUsers.size === 0}
-              >
-                <i className="fas fa-ban mr-2"></i>
-                Suspend
-              </Button>
-              <Button 
-                variant="destructive"
-                onClick={() => handleBulkAction('delete')}
-                disabled={selectedUsers.size === 0}
-              >
-                <i className="fas fa-trash mr-2"></i>
-                Delete
-              </Button>
-            </div>
-          </>
-        }
+        title={`Bulk Operations (${selectedUsers.length} users selected)`}
+        size="md"
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">
-            Selected users: {selectedUsers.size}. Choose an action to apply to all selected users.
-          </p>
-          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-            <p className="text-sm text-yellow-800">
-              <i className="fas fa-exclamation-triangle mr-2"></i>
-              <strong>Warning:</strong> Bulk operations cannot be undone. Please review your selection carefully.
-            </p>
+          <p className="text-sm text-slate-600">Select an action to apply to all selected users:</p>
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleBulkAction('suspend')}
+            >
+              <i className="fas fa-pause mr-2"></i> Suspend Access
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleBulkAction('activate')}
+            >
+              <i className="fas fa-play mr-2"></i> Activate Access
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleBulkAction('export')}
+            >
+              <i className="fas fa-file-export mr-2"></i> Export Data
+            </Button>
+            <Button
+              variant="destructive"
+              className="justify-start"
+              onClick={() => handleBulkAction('delete')}
+            >
+              <i className="fas fa-trash-alt mr-2"></i> Delete Users
+            </Button>
           </div>
         </div>
       </Modal>
@@ -3933,20 +4159,19 @@ const AccessControlModule: React.FC = () => {
       <Modal
         isOpen={showReportGenerationModal}
         onClose={() => {
-          if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+          if (isFormDirty && !window.confirm('Discard report settings?')) {
             return;
           }
           setShowReportGenerationModal(false);
           setIsFormDirty(false);
         }}
         title="Generate Access Report"
-        size="lg"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
-                if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+                if (isFormDirty && !window.confirm('Discard report settings?')) {
                   return;
                 }
                 setShowReportGenerationModal(false);
@@ -3955,12 +4180,11 @@ const AccessControlModule: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="primary"
               onClick={handleGenerateReport}
             >
-              <i className={`fas fa-file-${reportForm.format === 'pdf' ? 'pdf' : 'csv'} mr-2`}></i>
-              Generate {reportForm.format.toUpperCase()} Report
+              Generate Report
             </Button>
           </>
         }
@@ -3968,67 +4192,86 @@ const AccessControlModule: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="report-start-date" className="block text-sm font-medium text-slate-700 mb-2">Start Date *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
               <input
                 type="date"
-                id="report-start-date"
                 value={reportForm.startDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                onChange={(e) => {
                   setReportForm(prev => ({ ...prev, startDate: e.target.value }));
                   setIsFormDirty(true);
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
+                className="w-full p-2 border border-slate-300 rounded-md"
               />
             </div>
             <div>
-              <label htmlFor="report-end-date" className="block text-sm font-medium text-slate-700 mb-2">End Date *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
               <input
                 type="date"
-                id="report-end-date"
                 value={reportForm.endDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                onChange={(e) => {
                   setReportForm(prev => ({ ...prev, endDate: e.target.value }));
                   setIsFormDirty(true);
                 }}
-                className="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
+                className="w-full p-2 border border-slate-300 rounded-md"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Event Types</label>
-            <div className="flex flex-wrap gap-2">
-              {['granted', 'denied', 'timeout'].map(type => (
-                <label key={type} className="flex items-center">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Report Type</label>
+            <select
+              value={reportForm.type}
+              onChange={(e) => {
+                setReportForm(prev => ({ ...prev, type: e.target.value as any }));
+                setIsFormDirty(true);
+              }}
+              className="w-full p-2 border border-slate-300 rounded-md"
+            >
+              <option value="activity">User Activity</option>
+              <option value="emergency">Emergency Events</option>
+              <option value="denied">Access Denied Log</option>
+              <option value="audit">System Audit</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Format</label>
+            <div className="flex space-x-4">
+              {['PDF', 'CSV', 'XLSX'].map(format => (
+                <label key={format} className="flex items-center">
                   <input
-                    type="checkbox"
-                    checked={reportForm.eventTypes.includes(type)}
+                    type="radio"
+                    name="format"
+                    value={format.toLowerCase()}
+                    checked={reportForm.format === format.toLowerCase()}
                     onChange={(e) => {
-                      setReportForm(prev => ({
-                        ...prev,
-                        eventTypes: e.target.checked
-                          ? [...prev.eventTypes, type]
-                          : prev.eventTypes.filter(t => t !== type)
-                      }));
+                      setReportForm(prev => ({ ...prev, format: e.target.value as any }));
                       setIsFormDirty(true);
                     }}
                     className="mr-2"
                   />
-                  <span className="text-sm text-slate-700 capitalize">{type}</span>
+                  {format}
                 </label>
               ))}
             </div>
           </div>
-          <div className="bg-blue-50 border-l-4 border-[#2563eb] p-4 rounded">
-            <p className="text-sm text-slate-700">
-              <i className="fas fa-info-circle mr-2 text-[#2563eb]"></i>
-              Report will include all access events within the selected date range and filters.
-            </p>
-          </div>
         </div>
       </Modal>
-    </div>
+
+      {/* Held Open Alarms Floating Monitor */}
+      {
+        heldOpenAlarms.length > 0 && (
+          <div className="fixed bottom-4 right-4 z-50 animate-bounce">
+            <div className="bg-red-600 text-white p-4 rounded-lg shadow-2xl flex items-center space-x-3 cursor-pointer"
+              onClick={() => setActiveTab('access-points')}>
+              <i className="fas fa-exclamation-triangle text-xl"></i>
+              <div>
+                <p className="font-bold">{heldOpenAlarms.length} Door(s) Held Open!</p>
+                <p className="text-xs opacity-90">Attention Required Immediately</p>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 };
 
