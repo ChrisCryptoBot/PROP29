@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
+import { EmptyState } from '../components/UI/EmptyState';
+import ModuleShell from '../components/Layout/ModuleShell';
+import { useNotifications } from '../contexts/NotificationsContext';
+import { cn } from '../utils/cn';
 
 interface Notification {
   id: string;
@@ -49,126 +54,12 @@ interface NotificationSettings {
 }
 
 const Notifications: React.FC = () => {
+  const { notifications, markAllAsRead, markAsRead, removeNotification } = useNotifications();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'Security Incident Reported',
-      message: 'Unauthorized access attempt detected at Main Entrance at 10:30 AM',
-      type: 'error',
-      priority: 'high',
-      category: 'incident',
-      timestamp: '2024-01-15T10:30:00Z',
-      read: false,
-      actionable: true,
-      actionUrl: '/modules/event-log',
-      actionText: 'View Incident',
-      sender: {
-        name: 'Sarah Johnson',
-        role: 'Patrol Agent'
-      },
-      relatedTo: {
-        type: 'incident',
-        id: 'INC-001',
-        name: 'Main Entrance Access Violation'
-      }
-    },
-    {
-      id: '2',
-      title: 'System Maintenance Scheduled',
-      message: 'Camera system maintenance scheduled for tonight 11 PM - 1 AM',
-      type: 'info',
-      priority: 'medium',
-      category: 'maintenance',
-      timestamp: '2024-01-15T09:15:00Z',
-      read: false,
-      actionable: true,
-      actionUrl: '/modules/admin',
-      actionText: 'View Schedule',
-      sender: {
-        name: 'System Administrator',
-        role: 'System'
-      }
-    },
-    {
-      id: '3',
-      title: 'Team Member Check-in',
-      message: 'Mike Davis completed his patrol route and checked in successfully',
-      type: 'success',
-      priority: 'low',
-      category: 'team',
-      timestamp: '2024-01-15T08:45:00Z',
-      read: true,
-      actionable: false,
-      sender: {
-        name: 'Mike Davis',
-        role: 'Patrol Agent'
-      },
-      relatedTo: {
-        type: 'user',
-        id: '3',
-        name: 'Mike Davis'
-      }
-    },
-    {
-      id: '4',
-      title: 'Guest Service Request',
-      message: 'Guest in Room 205 requesting assistance with lost luggage',
-      type: 'info',
-      priority: 'medium',
-      category: 'guest',
-      timestamp: '2024-01-15T08:20:00Z',
-      read: false,
-      actionable: true,
-      actionUrl: '/modules/lost-and-found',
-      actionText: 'Handle Request',
-      sender: {
-        name: 'Lisa Wilson',
-        role: 'Front Desk Staff'
-      },
-      relatedTo: {
-        type: 'guest',
-        id: 'GUEST-205',
-        name: 'Room 205 Guest'
-      }
-    },
-    {
-      id: '5',
-      title: 'Emergency Alert',
-      message: 'FIRE ALARM ACTIVATED - Building evacuation required immediately',
-      type: 'emergency',
-      priority: 'critical',
-      category: 'security',
-      timestamp: '2024-01-15T07:30:00Z',
-      read: true,
-      actionable: true,
-      actionUrl: '/modules/emergency',
-      actionText: 'Emergency Response',
-      sender: {
-        name: 'Fire Safety System',
-        role: 'System'
-      }
-    },
-    {
-      id: '6',
-      title: 'Access Control Update',
-      message: 'New access card issued for temporary contractor - John Smith',
-      type: 'info',
-      priority: 'low',
-      category: 'system',
-      timestamp: '2024-01-15T07:00:00Z',
-      read: true,
-      actionable: false,
-      sender: {
-        name: 'Access Control System',
-        role: 'System'
-      }
-    }
-  ]);
 
   const [settings, setSettings] = useState<NotificationSettings>({
     emailNotifications: true,
@@ -203,20 +94,18 @@ const Notifications: React.FC = () => {
     setTimeout(() => setSuccess(null), 5000);
   }, []);
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
+  const handleMarkAsRead = (id: string) => {
+    markAsRead(id);
     showSuccess('Notification marked as read');
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
     showSuccess('All notifications marked as read');
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+  const handleDeleteNotification = (id: string) => {
+    removeNotification(id);
     showSuccess('Notification deleted');
   };
 
@@ -233,35 +122,35 @@ const Notifications: React.FC = () => {
 
   const getNotificationColor = (type: string) => {
     const colors = {
-      info: 'text-blue-600',
-      warning: 'text-yellow-600',
-      error: 'text-red-600',
-      success: 'text-green-600',
-      emergency: 'text-red-700'
+      info: 'text-blue-400',
+      warning: 'text-amber-400',
+      error: 'text-red-400',
+      success: 'text-emerald-400',
+      emergency: 'text-red-400'
     };
-    return colors[type as keyof typeof colors] || 'text-slate-600';
+    return colors[type as keyof typeof colors] || 'text-[color:var(--text-sub)]';
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadgeClass = (priority: string) => {
     const colors = {
-      low: 'default',
-      medium: 'warning',
-      high: 'destructive',
-      critical: 'destructive'
+      low: 'bg-white/5 text-[color:var(--text-sub)] border border-white/5',
+      medium: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+      high: 'bg-red-500/10 text-red-400 border border-red-500/20',
+      critical: 'bg-red-500/10 text-red-400 border border-red-500/20'
     };
-    return colors[priority as keyof typeof colors] || 'default';
+    return colors[priority as keyof typeof colors] || 'bg-white/5 text-[color:var(--text-sub)] border border-white/5';
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryBadgeClass = (category: string) => {
     const colors = {
-      incident: 'destructive',
-      system: 'default',
-      security: 'warning',
-      maintenance: 'secondary',
-      team: 'success',
-      guest: 'outline'
+      incident: 'bg-red-500/10 text-red-400 border border-red-500/20',
+      system: 'bg-white/5 text-[color:var(--text-sub)] border border-white/5',
+      security: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+      maintenance: 'bg-slate-500/10 text-[color:var(--text-sub)] border border-white/5',
+      team: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+      guest: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
     };
-    return colors[category as keyof typeof colors] || 'default';
+    return colors[category as keyof typeof colors] || 'bg-white/5 text-[color:var(--text-sub)] border border-white/5';
   };
 
   const filteredNotifications = notifications.filter(notification => {
@@ -284,57 +173,62 @@ const Notifications: React.FC = () => {
     { id: 'security', label: 'Security', icon: 'fas fa-shield-alt', count: notifications.filter(n => n.category === 'security').length },
     { id: 'maintenance', label: 'Maintenance', icon: 'fas fa-tools', count: notifications.filter(n => n.category === 'maintenance').length },
     { id: 'team', label: 'Team', icon: 'fas fa-users', count: notifications.filter(n => n.category === 'team').length },
-    { id: 'guest', label: 'Guest', icon: 'fas fa-user', count: notifications.filter(n => n.category === 'guest').length }
+    { id: 'guest', label: 'Guest', icon: 'fas fa-user', count: notifications.filter(n => n.category === 'guest').length },
+    { id: 'settings', label: 'Settings', icon: 'fas fa-sliders-h', count: 0 }
   ];
 
   const renderNotifications = () => (
     <div className="space-y-4">
       {filteredNotifications.length === 0 ? (
-        <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
-          <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-bell-slash text-slate-400 text-2xl" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No notifications</h3>
-            <p className="text-slate-600">You're all caught up! No new notifications to show.</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon="fas fa-bell-slash"
+          title="No notifications"
+          description="You're all caught up. No new alerts to show."
+          className="bg-black/20 border-dashed border-2 border-white/5 rounded-3xl p-12"
+        />
       ) : (
         filteredNotifications.map((notification) => (
-          <Card key={notification.id} className={`bg-white border-[1.5px] shadow-sm hover:shadow-md transition-all duration-200 ${
-            notification.read ? 'border-slate-200' : 'border-blue-200 bg-blue-50/30'
-          }`}>
+          <Card
+            key={notification.id}
+            className={cn(
+              "bg-[color:var(--surface-card)] border border-white/5 shadow-2xl transition-all duration-200",
+              notification.read ? 'opacity-80' : 'border-blue-500/20'
+            )}
+          >
             <CardContent className="p-6">
               <div className="flex items-start space-x-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  notification.read ? 'bg-slate-100' : 'bg-blue-100'
-                }`}>
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center shadow-2xl border border-white/5",
+                    notification.read ? 'bg-white/5' : 'bg-blue-500/10'
+                  )}
+                >
                   <i className={`${getNotificationIcon(notification.type)} ${getNotificationColor(notification.type)}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <h4 className={`font-semibold ${notification.read ? 'text-slate-700' : 'text-slate-900'}`}>
+                      <h4 className={`font-black uppercase tracking-tight ${notification.read ? 'text-[color:var(--text-sub)]' : 'text-[color:var(--text-main)]'}`}>
                         {notification.title}
                       </h4>
                       {!notification.read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                        <div className="w-2 h-2 bg-blue-400 rounded-full" />
                       )}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant={getPriorityColor(notification.priority) as any} className="text-xs">
+                      <Badge variant="outline" className={cn("text-[8px] font-black uppercase tracking-widest", getPriorityBadgeClass(notification.priority))}>
                         {notification.priority}
                       </Badge>
-                      <Badge variant={getCategoryColor(notification.category) as any} className="text-xs">
+                      <Badge variant="outline" className={cn("text-[8px] font-black uppercase tracking-widest", getCategoryBadgeClass(notification.category))}>
                         {notification.category}
                       </Badge>
                     </div>
                   </div>
-                  <p className={`text-sm mb-3 ${notification.read ? 'text-slate-600' : 'text-slate-700'}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-widest mb-3 ${notification.read ? 'text-[color:var(--text-sub)]' : 'text-[color:var(--text-sub)]'}`}>
                     {notification.message}
                   </p>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-xs text-slate-500">
+                    <div className="flex items-center space-x-4 text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] opacity-70">
                       <span>
                         <i className="fas fa-user mr-1" />
                         {notification.sender.name} ({notification.sender.role})
@@ -354,19 +248,27 @@ const Notifications: React.FC = () => {
                       {notification.actionable && (
                         <Button
                           size="sm"
-                          className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
-                          onClick={() => showSuccess(`Opening ${notification.actionText}`)}
+                          variant="glass"
+                          className="text-[9px] font-black uppercase tracking-widest"
+                          onClick={() => {
+                            handleMarkAsRead(notification.id);
+                            if (notification.actionUrl) {
+                              navigate(notification.actionUrl);
+                            } else if (notification.actionText) {
+                              showSuccess(`Opening ${notification.actionText}`);
+                            }
+                          }}
                         >
                           <i className="fas fa-external-link-alt mr-1" />
-                          {notification.actionText}
+                          {notification.actionText || 'Open'}
                         </Button>
                       )}
                       {!notification.read && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-slate-600 border-slate-300 hover:bg-slate-50"
-                          onClick={() => markAsRead(notification.id)}
+                          className="text-[9px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:text-[color:var(--text-main)]"
+                        onClick={() => handleMarkAsRead(notification.id)}
                         >
                           <i className="fas fa-check mr-1" />
                           Mark Read
@@ -375,8 +277,8 @@ const Notifications: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-red-600 border-red-300 hover:bg-red-50"
-                        onClick={() => deleteNotification(notification.id)}
+                        className="text-[9px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:text-red-400 hover:border-red-500/30"
+                        onClick={() => handleDeleteNotification(notification.id)}
                       >
                         <i className="fas fa-trash" />
                       </Button>
@@ -393,16 +295,17 @@ const Notifications: React.FC = () => {
 
   const renderSettings = () => (
     <div className="space-y-6">
-      <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+      <Card className="bg-[color:var(--surface-card)] border border-white/5 shadow-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-xl">
-              <i className="fas fa-cog mr-3 text-slate-600" />
+            <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
+              <i className="fas fa-cog mr-3 text-blue-400" />
               Notification Settings
             </CardTitle>
             <Button
               onClick={() => setEditMode(!editMode)}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              variant="glass"
+              className="text-[9px] font-black uppercase tracking-widest"
             >
               <i className="fas fa-edit mr-2" />
               {editMode ? 'Cancel' : 'Edit Settings'}
@@ -412,58 +315,58 @@ const Notifications: React.FC = () => {
         <CardContent className="space-y-6">
           {/* Notification Channels */}
           <div>
-            <h4 className="font-semibold text-slate-900 mb-4">Notification Channels</h4>
+            <h4 className="font-black uppercase tracking-widest text-[color:var(--text-main)] mb-4 text-[10px]">Notification Channels</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
                 <div>
-                  <span className="text-slate-700 font-medium">Email Notifications</span>
-                  <p className="text-xs text-slate-500">Receive notifications via email</p>
+                  <span className="text-[color:var(--text-main)] font-black uppercase tracking-widest text-[9px]">Email Notifications</span>
+                  <p className="text-[9px] text-[color:var(--text-sub)]">Receive notifications via email</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={settings.emailNotifications}
                   onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
                   disabled={!editMode}
-                  className="w-5 h-5 text-blue-600 rounded"
+                  className="w-5 h-5 text-blue-400 rounded bg-[color:var(--console-dark)] border-white/10"
                 />
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
                 <div>
-                  <span className="text-slate-700 font-medium">SMS Notifications</span>
-                  <p className="text-xs text-slate-500">Receive notifications via text message</p>
+                  <span className="text-[color:var(--text-main)] font-black uppercase tracking-widest text-[9px]">SMS Notifications</span>
+                  <p className="text-[9px] text-[color:var(--text-sub)]">Receive notifications via text message</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={settings.smsNotifications}
                   onChange={(e) => setSettings({ ...settings, smsNotifications: e.target.checked })}
                   disabled={!editMode}
-                  className="w-5 h-5 text-blue-600 rounded"
+                  className="w-5 h-5 text-blue-400 rounded bg-[color:var(--console-dark)] border-white/10"
                 />
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
                 <div>
-                  <span className="text-slate-700 font-medium">Push Notifications</span>
-                  <p className="text-xs text-slate-500">Receive notifications on mobile devices</p>
+                  <span className="text-[color:var(--text-main)] font-black uppercase tracking-widest text-[9px]">Push Notifications</span>
+                  <p className="text-[9px] text-[color:var(--text-sub)]">Receive notifications on mobile devices</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={settings.pushNotifications}
                   onChange={(e) => setSettings({ ...settings, pushNotifications: e.target.checked })}
                   disabled={!editMode}
-                  className="w-5 h-5 text-blue-600 rounded"
+                  className="w-5 h-5 text-blue-400 rounded bg-[color:var(--console-dark)] border-white/10"
                 />
               </div>
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
                 <div>
-                  <span className="text-slate-700 font-medium">Desktop Notifications</span>
-                  <p className="text-xs text-slate-500">Receive notifications on desktop</p>
+                  <span className="text-[color:var(--text-main)] font-black uppercase tracking-widest text-[9px]">Desktop Notifications</span>
+                  <p className="text-[9px] text-[color:var(--text-sub)]">Receive notifications on desktop</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={settings.desktopNotifications}
                   onChange={(e) => setSettings({ ...settings, desktopNotifications: e.target.checked })}
                   disabled={!editMode}
-                  className="w-5 h-5 text-blue-600 rounded"
+                  className="w-5 h-5 text-blue-400 rounded bg-[color:var(--console-dark)] border-white/10"
                 />
               </div>
             </div>
@@ -471,13 +374,13 @@ const Notifications: React.FC = () => {
 
           {/* Notification Categories */}
           <div>
-            <h4 className="font-semibold text-slate-900 mb-4">Notification Categories</h4>
+            <h4 className="font-black uppercase tracking-widest text-[color:var(--text-main)] mb-4 text-[10px]">Notification Categories</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(settings.categories).map(([category, enabled]) => (
-                <div key={category} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div key={category} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
                   <div>
-                    <span className="text-slate-700 font-medium capitalize">{category}</span>
-                    <p className="text-xs text-slate-500">
+                    <span className="text-[color:var(--text-main)] font-black uppercase tracking-widest text-[9px] capitalize">{category}</span>
+                    <p className="text-[9px] text-[color:var(--text-sub)]">
                       {category === 'incident' && 'Security incidents and violations'}
                       {category === 'system' && 'System updates and maintenance'}
                       {category === 'security' && 'Security alerts and warnings'}
@@ -494,7 +397,7 @@ const Notifications: React.FC = () => {
                       categories: { ...settings.categories, [category]: e.target.checked }
                     })}
                     disabled={!editMode}
-                    className="w-5 h-5 text-blue-600 rounded"
+                    className="w-5 h-5 text-blue-400 rounded bg-[color:var(--console-dark)] border-white/10"
                   />
                 </div>
               ))}
@@ -503,12 +406,12 @@ const Notifications: React.FC = () => {
 
           {/* Quiet Hours */}
           <div>
-            <h4 className="font-semibold text-slate-900 mb-4">Quiet Hours</h4>
-            <div className="p-4 border border-slate-200 rounded-lg">
+            <h4 className="font-black uppercase tracking-widest text-[color:var(--text-main)] mb-4 text-[10px]">Quiet Hours</h4>
+            <div className="p-4 border border-white/5 rounded-lg bg-white/5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <span className="text-slate-700 font-medium">Enable Quiet Hours</span>
-                  <p className="text-xs text-slate-500">Pause non-emergency notifications during specified hours</p>
+                  <span className="text-[color:var(--text-main)] font-black uppercase tracking-widest text-[9px]">Enable Quiet Hours</span>
+                  <p className="text-[9px] text-[color:var(--text-sub)]">Pause non-emergency notifications during specified hours</p>
                 </div>
                 <input
                   type="checkbox"
@@ -518,13 +421,13 @@ const Notifications: React.FC = () => {
                     quietHours: { ...settings.quietHours, enabled: e.target.checked }
                   })}
                   disabled={!editMode}
-                  className="w-5 h-5 text-blue-600 rounded"
+                  className="w-5 h-5 text-blue-400 rounded bg-[color:var(--console-dark)] border-white/10"
                 />
               </div>
               {settings.quietHours.enabled && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Start Time</label>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-2">Start Time</label>
                     <input
                       type="time"
                       value={settings.quietHours.start}
@@ -533,11 +436,11 @@ const Notifications: React.FC = () => {
                         quietHours: { ...settings.quietHours, start: e.target.value }
                       })}
                       disabled={!editMode}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-white/10 rounded-lg bg-[color:var(--console-dark)] text-[color:var(--text-main)] text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">End Time</label>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-2">End Time</label>
                     <input
                       type="time"
                       value={settings.quietHours.end}
@@ -546,7 +449,7 @@ const Notifications: React.FC = () => {
                         quietHours: { ...settings.quietHours, end: e.target.value }
                       })}
                       disabled={!editMode}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-white/10 rounded-lg bg-[color:var(--console-dark)] text-[color:var(--text-main)] text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                     />
                   </div>
                 </div>
@@ -555,23 +458,27 @@ const Notifications: React.FC = () => {
           </div>
 
           {/* Emergency Override */}
-          <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
             <div>
-              <span className="text-red-700 font-medium">Emergency Override</span>
-              <p className="text-xs text-red-600">Always receive emergency notifications regardless of other settings</p>
+              <span className="text-red-400 font-black uppercase tracking-widest text-[9px]">Emergency Override</span>
+              <p className="text-[9px] text-red-300">Always receive emergency notifications regardless of other settings</p>
             </div>
             <input
               type="checkbox"
               checked={settings.emergencyOverride}
               onChange={(e) => setSettings({ ...settings, emergencyOverride: e.target.checked })}
               disabled={!editMode}
-              className="w-5 h-5 text-red-600 rounded"
+              className="w-5 h-5 text-red-400 rounded bg-[color:var(--console-dark)] border-red-500/30"
             />
           </div>
 
           {editMode && (
             <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={() => setEditMode(false)}>
+              <Button
+                variant="outline"
+                className="text-[9px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:text-[color:var(--text-main)]"
+                onClick={() => setEditMode(false)}
+              >
                 Cancel
               </Button>
               <Button
@@ -579,7 +486,8 @@ const Notifications: React.FC = () => {
                   setEditMode(false);
                   showSuccess('Notification settings updated successfully');
                 }}
-                className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                variant="glass"
+                className="text-[9px] font-black uppercase tracking-widest"
               >
                 Save Changes
               </Button>
@@ -600,63 +508,39 @@ const Notifications: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-bell text-white text-2xl" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
-                <span className="text-white text-xs font-bold">
-                  {notifications.filter(n => !n.read).length}
-                </span>
-              </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-900">Notifications</h1>
-              <p className="text-slate-600 font-medium">Stay informed with real-time alerts and updates</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex justify-center pb-4">
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-lg shadow-lg border border-white/30 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
+    <ModuleShell
+      title="Notifications"
+      subtitle="Stay informed with real-time alerts and updates"
+      tabs={tabs.map((tab) => ({
+        id: tab.id,
+        label: (
+          <span className="flex items-center gap-2">
+            <i className={tab.icon} />
+            <span>{tab.label}</span>
+            {tab.count > 0 && (
+              <Badge
+                variant="outline"
+                className="text-[8px] font-black uppercase tracking-widest border-white/5 bg-white/10 text-[color:var(--text-sub)]"
               >
-                <i className={`${tab.icon} mr-2`} />
-                {tab.label}
-                {tab.count > 0 && (
-                  <Badge variant="destructive" className="ml-2 text-xs">
-                    {tab.count}
-                  </Badge>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+                {tab.count}
+              </Badge>
+            )}
+          </span>
+        )
+      }))}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      <div className="space-y-6">
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-exclamation-triangle mr-2" />
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-check-circle mr-2" />
             {success}
           </div>
@@ -666,12 +550,12 @@ const Notifications: React.FC = () => {
         {activeTab !== 'settings' && (
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-black uppercase tracking-tight text-[color:var(--text-main)]">
                 {activeTab === 'all' ? 'All Notifications' : 
                  activeTab === 'unread' ? 'Unread Notifications' :
                  `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Notifications`}
               </h2>
-              <Badge variant="outline" className="text-slate-600">
+              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-white/5 bg-white/10 text-[color:var(--text-sub)]">
                 {filteredNotifications.length} total
               </Badge>
             </div>
@@ -679,8 +563,8 @@ const Notifications: React.FC = () => {
               {notifications.filter(n => !n.read).length > 0 && (
                 <Button
                   variant="outline"
-                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
-                  onClick={markAllAsRead}
+                  className="text-[9px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:text-[color:var(--text-main)]"
+                  onClick={handleMarkAllAsRead}
                 >
                   <i className="fas fa-check-double mr-2" />
                   Mark All Read
@@ -688,7 +572,7 @@ const Notifications: React.FC = () => {
               )}
               <Button
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className="text-[9px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:text-[color:var(--text-main)]"
                 onClick={() => showSuccess('Refreshing notifications')}
               >
                 <i className="fas fa-sync-alt mr-2" />
@@ -700,8 +584,10 @@ const Notifications: React.FC = () => {
 
         {renderTabContent()}
       </div>
-    </div>
+    </ModuleShell>
   );
 };
 
 export default Notifications;
+
+

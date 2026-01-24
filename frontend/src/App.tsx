@@ -15,11 +15,13 @@ import SplashScreen from './components/UI/SplashScreen';
 import { WebSocketProvider } from './components/UI/WebSocketProvider';
 import { ModalProvider, useModal } from './contexts/ModalContext';
 import { ModalManager } from './components/modals/ModalManager';
-import SilentAlertTrigger from './components/UI/SilentAlertTrigger';
 import Layout from './components/Layout/Layout';
+import { GlobalRefreshProvider } from './contexts/GlobalRefreshContext';
+import { NetworkStatusProvider } from './contexts/NetworkStatusContext';
+import { NotificationsProvider } from './contexts/NotificationsContext';
 
 // Import new module pages
-import IncidentLogModule from './pages/modules/IncidentLogModule';
+import IncidentLogModule from './features/incident-log/IncidentLogModule';
 import LostAndFound from './pages/modules/LostAndFound';
 import Packages from './pages/modules/Packages';
 import AccessControlModule from './pages/modules/AccessControlModule';
@@ -29,10 +31,12 @@ import Patrols from './pages/modules/Patrols/index';
 import BannedIndividuals from './pages/modules/BannedIndividuals';
 import SmartLockers from './pages/modules/SmartLockers/index';
 import SmartParking from './pages/modules/SmartParking';
-import DigitalHandover from './pages/modules/DigitalHandover';
-import GuestSafety from './pages/modules/GuestSafety';
+// Digital Handover - Using new modular architecture
+import DigitalHandoverModule from './features/digital-handover';
+// Old monolithic file (can be removed after validation):
+// import DigitalHandover from './pages/modules/DigitalHandover';
+import GuestSafety from './features/guest-safety';
 import IoTEnvironmental from './pages/modules/IoTEnvironmental';
-import EmergencyAlerts from './pages/modules/EmergencyAlerts';
 
 // Import additional pages for dashboard navigation
 import SecurityOperationsCenter from './pages/modules/SecurityOperationsCenter';
@@ -40,7 +44,6 @@ import EvacuationModule from './pages/modules/EvacuationModule';
 import SystemAdministration from './pages/modules/SystemAdministration';
 import SoundMonitoring from './pages/modules/SoundMonitoring';
 import TeamChat from './pages/modules/TeamChat';
-import LockdownFacility from './pages/modules/LockdownFacility';
 
 // Fixed Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -213,7 +216,7 @@ const MainAppContent: React.FC = () => {
       <Route path="/modules/digital-handover" element={
         <ProtectedRoute>
           <Layout>
-            <DigitalHandover />
+            <DigitalHandoverModule />
           </Layout>
         </ProtectedRoute>
       } />
@@ -231,13 +234,6 @@ const MainAppContent: React.FC = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/modules/emergency-alerts" element={
-        <ProtectedRoute>
-          <Layout>
-            <EmergencyAlerts />
-          </Layout>
-        </ProtectedRoute>
-      } />
       <Route path="/modules/notifications" element={
         <ProtectedRoute>
           <Layout>
@@ -249,13 +245,6 @@ const MainAppContent: React.FC = () => {
         <ProtectedRoute>
           <Layout>
             <SecurityOperationsCenter />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/lockdown-facility" element={
-        <ProtectedRoute>
-          <Layout>
-            <LockdownFacility />
           </Layout>
         </ProtectedRoute>
       } />
@@ -301,10 +290,6 @@ const MainAppContent: React.FC = () => {
   );
 };
 
-const handleSilentAlert = () => {
-  // TODO: Implement silent alert API call and notification logic
-  alert('Silent Security Alert triggered! (This should be silent in production)');
-};
 
 const App: React.FC = () => {
   const [showSplash, setShowSplash] = React.useState(true);
@@ -316,7 +301,9 @@ const App: React.FC = () => {
     <AuthProvider>
       <ModalProvider>
         <WebSocketProvider>
-          <SilentAlertTrigger onTrigger={handleSilentAlert} />
+          <NetworkStatusProvider>
+            <NotificationsProvider>
+              <GlobalRefreshProvider>
           {showSplash && <SplashScreen />}
           {!showSplash && <MainAppContent />}
           <Toaster 
@@ -337,6 +324,9 @@ const App: React.FC = () => {
             }}
           />
           <ModalManager />
+              </GlobalRefreshProvider>
+            </NotificationsProvider>
+          </NetworkStatusProvider>
         </WebSocketProvider>
       </ModalProvider>
     </AuthProvider>

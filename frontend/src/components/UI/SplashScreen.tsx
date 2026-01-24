@@ -27,7 +27,7 @@ const SplashScreen: React.FC = () => {
           PROPER 2.9
         </h1>
         <p className="text-xl text-blue-200 mb-8">
-          AI-Enhanced Hotel Security Platform
+          AI-Enhanced Security Platform
         </p>
         <div className="flex justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>

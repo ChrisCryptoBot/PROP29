@@ -6,7 +6,7 @@ const modules: ModuleRegistry = {
     id: 'access-control',
     name: 'Access Control',
     version: '1.0.0',
-    description: 'Comprehensive access control management system for hotel security',
+    description: 'Comprehensive access control management system',
     category: 'Security',
     priority: 1,
     dependencies: [],
@@ -46,7 +46,7 @@ class ModuleRegistryService {
   private static instance: ModuleRegistryService;
   private registry: ModuleRegistry = modules;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): ModuleRegistryService {
     if (!ModuleRegistryService.instance) {
@@ -72,7 +72,7 @@ class ModuleRegistryService {
   }
 
   getModulesByPermission(permission: string): ModuleDefinition[] {
-    return Object.values(this.registry).filter((module: ModuleDefinition) => 
+    return Object.values(this.registry).filter((module: ModuleDefinition) =>
       module.permissions.includes(permission)
     );
   }

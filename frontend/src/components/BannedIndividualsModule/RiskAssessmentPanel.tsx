@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { showLoading, dismissLoadingAndShowSuccess, showError } from '../../utils/toast';
 import { bannedIndividualsAI } from '../../services/BannedIndividualsAIService';
+import { logger } from '../../services/logger';
 import '../../styles/modern-glass.css';
 
 interface BannedIndividual {
@@ -68,7 +69,7 @@ export const RiskAssessmentPanel: React.FC<Props> = ({ individual, allIndividual
       setAssessment(riskAssessment);
       dismissLoadingAndShowSuccess(toastId, 'Risk assessment complete!');
     } catch (error) {
-      console.error('Risk assessment error:', error);
+      logger.error('Risk assessment error', error instanceof Error ? error : new Error(String(error)), { module: 'RiskAssessmentPanel', action: 'handleAssessRisk' });
       showError('Failed to assess risk');
     } finally {
       setIsAssessing(false);
@@ -259,4 +260,5 @@ export const RiskAssessmentPanel: React.FC<Props> = ({ individual, allIndividual
     </div>
   );
 };
+
 

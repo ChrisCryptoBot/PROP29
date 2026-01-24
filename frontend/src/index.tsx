@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
 import store from './app/store/store';
 import './index.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 import App from './App';
 
 // Create a client

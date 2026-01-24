@@ -4,6 +4,7 @@ import { Button } from '../UI/Button';
 import { Badge } from '../UI/Badge';
 import { showLoading, dismissLoadingAndShowSuccess, showError } from '../../utils/toast';
 import { patrolAI } from '../../services/PatrolAIService';
+import { logger } from '../../services/logger';
 import '../../styles/modern-glass.css';
 
 interface Props {
@@ -31,7 +32,7 @@ export const ScheduleSuggestionsPanel: React.FC<Props> = ({ schedule, incidents,
       setSuggestions(scheduleSuggestions);
       dismissLoadingAndShowSuccess(toastId, `Generated ${scheduleSuggestions.length} suggestion${scheduleSuggestions.length > 1 ? 's' : ''}!`);
     } catch (error) {
-      console.error('Schedule suggestions error:', error);
+      logger.error('Schedule suggestions error', error instanceof Error ? error : new Error(String(error)), { module: 'ScheduleSuggestionsPanel', action: 'handleGenerateSuggestions' });
       showError('Failed to generate suggestions');
     } finally {
       setIsGenerating(false);
@@ -54,63 +55,72 @@ export const ScheduleSuggestionsPanel: React.FC<Props> = ({ schedule, incidents,
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+      <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
         <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
-              <i className="fas fa-calendar-alt text-white"></i>
+          <div className="flex items-center text-white">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+              <i className="fas fa-magic text-white"></i>
             </div>
-            AI Schedule Suggestions
+            <span className="text-sm font-black uppercase tracking-widest">Procedural Logic Engine</span>
           </div>
           <Button
             onClick={handleGenerateSuggestions}
             disabled={isGenerating}
-            className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-12 px-5 py-2.5 text-lg font-semibold"
+            variant="glass"
+            className="h-10 px-6 border-indigo-500/20 hover:border-indigo-500/40 text-indigo-400"
           >
-            <i className={`fas ${isGenerating ? 'fa-spinner fa-spin' : 'fa-magic'} mr-2.5 text-lg`}></i>
-            {isGenerating ? 'Analyzing...' : 'Generate'}
+            <i className={`fas ${isGenerating ? 'fa-spinner fa-spin' : 'fa-terminal'} mr-2`}></i>
+            {isGenerating ? 'ANALYZING...' : 'RUN AUDIT'}
           </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 py-6">
         {suggestions.length > 0 ? (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {suggestions.map((suggestion, index) => (
-              <div key={index} className="p-4 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-all">
-                <div className="flex items-start justify-between mb-2">
+              <div key={index} className="p-4 bg-slate-900/30 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-all group">
+                <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.recommendation}</p>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={`badge ${getPriorityBadge(suggestion.priority)}`}>
+                    <p className="text-sm font-bold text-white mb-2">{suggestion.recommendation}</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${suggestion.priority === 'high' ? 'text-red-400 bg-red-400/10 border-red-400/20' :
+                          suggestion.priority === 'medium' ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' :
+                            'text-indigo-400 bg-indigo-400/10 border-indigo-400/20'
+                        }`}>
                         {suggestion.priority.toUpperCase()}
-                      </Badge>
-                      <span className="text-xs text-slate-600">
-                        Confidence: {patrolAI.formatConfidence(suggestion.confidence)}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                        Confidence Score: <span className="text-white">{patrolAI.formatConfidence(suggestion.confidence)}</span>
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 mb-2">{suggestion.reasoning}</p>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <p className="text-[11px] text-slate-400 leading-relaxed mb-4 font-medium">{suggestion.reasoning}</p>
+                    <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                       {suggestion.timeframe && (
-                        <span><i className="fas fa-clock mr-1"></i>{suggestion.timeframe}</span>
+                        <span className="flex items-center"><i className="fas fa-clock mr-1.5 text-slate-600"></i>{suggestion.timeframe}</span>
                       )}
                       {suggestion.location && (
-                        <span><i className="fas fa-map-marker-alt mr-1"></i>{suggestion.location}</span>
+                        <span className="flex items-center"><i className="fas fa-map-marker-alt mr-1.5 text-slate-600"></i>{suggestion.location}</span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
                   <Button
                     size="sm"
                     onClick={() => handleApplySuggestion(suggestion)}
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    variant="glass"
+                    className="h-8 border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-widest"
                   >
-                    <i className="fas fa-check mr-1"></i>
-                    Apply
+                    <i className="fas fa-check-double mr-2"></i>
+                    Deploy Change
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <i className="fas fa-times mr-1"></i>
+                  <Button
+                    size="sm"
+                    variant="glass"
+                    className="h-8 border-white/5 text-slate-500 text-[10px] font-black uppercase tracking-widest"
+                  >
+                    <i className="fas fa-trash-alt mr-2"></i>
                     Dismiss
                   </Button>
                 </div>
@@ -118,14 +128,15 @@ export const ScheduleSuggestionsPanel: React.FC<Props> = ({ schedule, incidents,
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-slate-600">
-            <i className="fas fa-lightbulb text-3xl mb-3 text-slate-400"></i>
-            <p className="text-sm mb-2">No schedule suggestions yet</p>
-            <p className="text-xs text-slate-500">Click "Generate" to analyze patterns and get AI recommendations</p>
+          <div className="text-center py-12 px-6 bg-slate-900/20 rounded-2xl border border-dashed border-white/5">
+            <div className="w-16 h-16 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+              <i className="fas fa-microchip text-3xl text-slate-700"></i>
+            </div>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Neural Link Idle</p>
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Initialize Logic Engine to analyze patrol patterns and security vectors</p>
           </div>
         )}
       </CardContent>
     </Card>
   );
 };
-

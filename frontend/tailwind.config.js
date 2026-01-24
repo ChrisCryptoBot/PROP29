@@ -6,6 +6,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        console: {
+          dark: '#020617',
+          deep: '#0f172a',
+        },
+        brand: {
+          blue: '#2563eb',
+        },
+        accent: {
+          cyan: '#22d3ee',
+        },
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
@@ -107,6 +117,13 @@ module.exports = {
       boxShadow: {
         'security': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         'security-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        // Splash blue shadows for cohesive branding (matching splash page gradient)
+        'splash-blue': '0 4px 14px 0 rgba(37, 99, 235, 0.2)',
+        'splash-blue-lg': '0 10px 30px 0 rgba(29, 78, 216, 0.3)',
+        'splash-blue-dark': '0 4px 14px 0 rgba(30, 58, 138, 0.25)',
+        // Danger/red shadows for destructive actions
+        'danger': '0 4px 14px 0 rgba(220, 38, 38, 0.2)',
+        'danger-lg': '0 10px 30px 0 rgba(185, 28, 28, 0.3)',
       },
       backdropBlur: {
         xs: '2px',

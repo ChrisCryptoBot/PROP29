@@ -3,6 +3,7 @@ import { cn } from '../../utils/cn';
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  variant?: 'console' | 'flat' | 'glass' | 'soft';
 }
 
 export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -18,11 +19,17 @@ export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, children, ...props }, ref) => (
+  ({ className, children, variant = 'console', ...props }, ref) => (
     <div
       ref={ref}
       className={cn(
-        'rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-200',
+        variant === 'console'
+          ? 'rounded-2xl glass-card'
+          : variant === 'glass'
+            ? 'rounded-2xl glass-card'
+            : variant === 'soft'
+              ? 'rounded-2xl glass-soft'
+              : 'rounded-xl border-[1.5px] bg-[color:var(--surface-card)] border-[color:var(--border-subtle)] shadow-sm hover:shadow-md transition-all duration-200',
         className
       )}
       {...props}
@@ -64,7 +71,7 @@ CardTitle.displayName = 'CardTitle';
 
 const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, children, ...props }, ref) => (
-    <div ref={ref} className={cn('p-6 pt-0', className)} {...props}>
+    <div ref={ref} className={cn('p-6', className)} {...props}>
       {children}
     </div>
   )
@@ -72,4 +79,5 @@ const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
 CardContent.displayName = 'CardContent';
 
 export { Card, CardHeader, CardTitle, CardContent };
+
 

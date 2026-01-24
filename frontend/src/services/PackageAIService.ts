@@ -3,6 +3,9 @@
  * Handles smart package-to-guest matching and OCR
  */
 
+import { logger } from './logger';
+import { env } from '../config/env';
+
 interface Package {
   id: string;
   tracking_number: string;
@@ -62,7 +65,11 @@ interface DeliveryPrediction {
 }
 
 export class PackageAIService {
-  private apiBaseUrl = 'http://localhost:8000';
+  private apiBaseUrl = env.API_BASE_URL;
+
+  private getAuthHeader(): string {
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+  }
 
   /**
    * Smart package-to-guest matching with fuzzy logic
@@ -76,7 +83,7 @@ export class PackageAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ package: pkg, guests })
       });
@@ -88,7 +95,7 @@ export class PackageAIService {
       const data = await response.json();
       return data.matches || this.generateFallbackMatches(pkg, guests);
     } catch (error) {
-      console.error('AI Package Matching Error:', error);
+      logger.error('AI Package Matching Error', error instanceof Error ? error : new Error(String(error)), { module: 'PackageAIService', action: 'matchPackageToGuest' });
       return this.generateFallbackMatches(pkg, guests);
     }
   }
@@ -108,7 +115,7 @@ export class PackageAIService {
       const response = await fetch(`${this.apiBaseUrl}/packages/ai-ocr`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: formData
       });
@@ -119,7 +126,7 @@ export class PackageAIService {
 
       return await response.json();
     } catch (error) {
-      console.error('AI OCR Error:', error);
+      logger.error('AI OCR Error', error instanceof Error ? error : new Error(String(error)), { module: 'PackageAIService', action: 'processPackageLabel' });
       return {
         extractedText: '',
         recipientName: null,
@@ -144,7 +151,7 @@ export class PackageAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ package: pkg, guest })
       });
@@ -155,7 +162,7 @@ export class PackageAIService {
 
       return await response.json();
     } catch (error) {
-      console.error('AI Delivery Prediction Error:', error);
+      logger.error('AI Delivery Prediction Error', error instanceof Error ? error : new Error(String(error)), { module: 'PackageAIService', action: 'predictDeliveryTime' });
       return this.generateFallbackPrediction(pkg, guest);
     }
   }

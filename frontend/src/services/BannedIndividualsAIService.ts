@@ -3,6 +3,9 @@
  * Handles risk assessment, pattern detection, and automated recommendations
  */
 
+import { logger } from './logger';
+import { env } from '../config/env';
+
 interface BannedIndividual {
   id: string;
   firstName: string;
@@ -63,7 +66,11 @@ interface BanRecommendation {
 }
 
 export class BannedIndividualsAIService {
-  private apiBaseUrl = 'http://localhost:8000';
+  private apiBaseUrl = env.API_BASE_URL;
+
+  private getAuthHeader(): string {
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+  }
 
   /**
    * Assess risk level for a new or existing banned individual
@@ -74,7 +81,7 @@ export class BannedIndividualsAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ individual, allIndividuals })
       });
@@ -86,7 +93,7 @@ export class BannedIndividualsAIService {
       const data = await response.json();
       return data.assessment || this.generateFallbackRiskAssessment(individual, allIndividuals);
     } catch (error) {
-      console.error('AI Risk Assessment Error:', error);
+      logger.error('AI Risk Assessment Error', error instanceof Error ? error : new Error(String(error)), { module: 'BannedIndividualsAIService', action: 'assessRisk' });
       return this.generateFallbackRiskAssessment(individual, allIndividuals);
     }
   }
@@ -100,7 +107,7 @@ export class BannedIndividualsAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ individuals })
       });
@@ -112,7 +119,7 @@ export class BannedIndividualsAIService {
       const data = await response.json();
       return data.patterns || this.generateFallbackPatterns(individuals);
     } catch (error) {
-      console.error('AI Pattern Detection Error:', error);
+      logger.error('AI Pattern Detection Error', error instanceof Error ? error : new Error(String(error)), { module: 'BannedIndividualsAIService', action: 'detectPatterns' });
       return this.generateFallbackPatterns(individuals);
     }
   }
@@ -120,13 +127,13 @@ export class BannedIndividualsAIService {
   /**
    * Generate ban recommendations based on incident data
    */
-  async generateBanRecommendation(incidentData: any): Promise<BanRecommendation> {
+  async generateBanRecommendation(incidentData: Record<string, unknown>): Promise<BanRecommendation> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/banned-individuals/ai/recommend-ban`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ incidentData })
       });
@@ -138,7 +145,7 @@ export class BannedIndividualsAIService {
       const data = await response.json();
       return data.recommendation || this.generateFallbackRecommendation(incidentData);
     } catch (error) {
-      console.error('AI Ban Recommendation Error:', error);
+      logger.error('AI Ban Recommendation Error', error instanceof Error ? error : new Error(String(error)), { module: 'BannedIndividualsAIService', action: 'generateBanRecommendation' });
       return this.generateFallbackRecommendation(incidentData);
     }
   }
@@ -340,9 +347,11 @@ export class BannedIndividualsAIService {
   /**
    * Fallback ban recommendation (rule-based when AI unavailable)
    */
-  private generateFallbackRecommendation(incidentData: any): BanRecommendation {
-    const severity = incidentData.severity?.toLowerCase() || 'medium';
-    const incidentType = incidentData.type?.toLowerCase() || '';
+  private generateFallbackRecommendation(incidentData: Record<string, unknown>): BanRecommendation {
+    const severityRaw = incidentData['severity'];
+    const typeRaw = incidentData['type'];
+    const severity = typeof severityRaw === 'string' ? severityRaw.toLowerCase() : 'medium';
+    const incidentType = typeof typeRaw === 'string' ? typeRaw.toLowerCase() : '';
     
     let suggestedBanType: 'TEMPORARY' | 'PERMANENT' | 'CONDITIONAL' = 'TEMPORARY';
     let suggestedRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'MEDIUM';

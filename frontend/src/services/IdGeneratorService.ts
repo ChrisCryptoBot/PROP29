@@ -9,7 +9,7 @@ export class IdGeneratorService {
   /**
    * Generate unique ID with type prefix
    */
-  static generate(type: 'template' | 'route' | 'checkpoint' | 'patrol'): string {
+  static generate(type: 'template' | 'route' | 'checkpoint' | 'patrol' | 'officer'): string {
     this.counter++;
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { showLoading, dismissLoadingAndShowSuccess, showError } from '../../utils/toast';
 import { bannedIndividualsAI } from '../../services/BannedIndividualsAIService';
+import { logger } from '../../services/logger';
 import '../../styles/modern-glass.css';
 
 interface BannedIndividual {
@@ -67,7 +68,7 @@ export const PatternDetectionPanel: React.FC<Props> = ({ individuals }) => {
       setLastDetected(new Date());
       dismissLoadingAndShowSuccess(toastId, 'Pattern detection complete!');
     } catch (error) {
-      console.error('Pattern detection error:', error);
+      logger.error('Pattern detection error', error instanceof Error ? error : new Error(String(error)), { module: 'PatternDetectionPanel', action: 'handleDetectPatterns' });
       showError('Failed to detect patterns');
     } finally {
       setIsDetecting(false);
@@ -230,4 +231,5 @@ export const PatternDetectionPanel: React.FC<Props> = ({ individuals }) => {
     </div>
   );
 };
+
 

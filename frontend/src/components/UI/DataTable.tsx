@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { SearchBar } from './SearchBar';
 
 interface Column {
   key: string;
@@ -177,16 +178,12 @@ const DataTable: React.FC<DataTableProps> = ({
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           {searchable && (
-            <div className="relative flex-1">
-              <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+            <SearchBar
+              className="flex-1"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
           )}
 
           {filterable && (

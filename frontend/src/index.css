@@ -1,20 +1,98 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import './styles/tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+
+  /* Hide all UI chrome */
+  .no-print,
+  nav,
+  header,
+  aside,
+  button,
+  .glass-card-strong,
+  .glass-card {
+    display: none !important;
+  }
+
+  /* Reset body and layout for print */
+  body,
+  #root {
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Incident Report Container */
+  .print-only-container {
+    display: block !important;
+    padding: 2cm !important;
+    font-family: 'Inter', sans-serif !important;
+  }
+
+  /* Ensure text is standard and readable */
+  .print-header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 1rem;
+  }
+
+  .print-title {
+    font-size: 24pt !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+  }
+
+  .print-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    font-size: 10pt !important;
+  }
+
+  /* Force background colors for badges if user enables "Background Graphics" */
+  .badge-print {
+    border: 1px solid #000 !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+  }
+
+  /* Watermark */
+  .watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 8rem;
+    color: rgba(0, 0, 0, 0.05) !important;
+    z-index: -1;
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+}
+
+/* Base styles continue... */
 
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
-  
+
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-console-dark text-slate-100;
   }
-  
+
   * {
-    @apply border-gray-200;
+    @apply border-white/10;
   }
 }
 
@@ -22,103 +100,96 @@
   .btn {
     @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white;
   }
-  
+
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    @apply btn bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white transition-all;
   }
-  
-  .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
-  }
-  
+
   .btn-secondary {
     @apply btn bg-secondary-100 text-secondary-900 hover:bg-secondary-200 active:bg-secondary-300;
   }
-  
+
   .btn-danger {
     @apply btn bg-danger-600 text-white hover:bg-danger-700 active:bg-danger-800;
   }
-  
+
   .btn-success {
     @apply btn bg-success-600 text-white hover:bg-success-700 active:bg-success-800;
     background: linear-gradient(135deg, #10b981, #059669);
   }
-  
+
   .btn-success:hover:not(:disabled) {
     background: linear-gradient(135deg, #059669, #047857);
   }
-  
+
   .btn-warning {
     @apply btn bg-warning-600 text-white hover:bg-warning-700 active:bg-warning-800;
   }
-  
+
   .btn-sm {
     @apply h-8 px-3 text-xs;
   }
-  
+
   .btn-md {
     @apply h-10 px-4 py-2;
   }
-  
+
   .btn-lg {
     @apply h-12 px-6 text-base;
   }
-  
+
   .card {
     @apply bg-white rounded-lg border border-gray-200 shadow-sm;
   }
-  
+
   .card-header {
     @apply px-6 py-4 border-b border-gray-200;
   }
-  
+
   .card-body {
     @apply px-6 py-4;
   }
-  
+
   .card-footer {
     @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
   }
-  
+
   .input {
     @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
-  
+
   .select {
     @apply flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
   }
-  
+
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
-  
+
   .badge-success {
     @apply badge bg-success-100 text-success-800;
   }
-  
+
   .badge-warning {
     @apply badge bg-warning-100 text-warning-800;
   }
-  
+
   .badge-danger {
     @apply badge bg-danger-100 text-danger-800;
   }
-  
+
   .badge-info {
     @apply badge bg-security-100 text-security-800;
   }
-  
+
   .badge-secondary {
     @apply badge bg-secondary-100 text-secondary-800;
   }
-  
+
   .badge-glass {
     @apply badge bg-slate-100/50 text-slate-700 border border-slate-200/50;
   }
-  
+
   /* Glass card styles - Gold Standard */
   .glass-card {
     background: rgba(255, 255, 255, 0.8);
@@ -127,7 +198,7 @@
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
-  
+
   .glass-card-strong {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(16px);
@@ -135,7 +206,7 @@
     border-radius: 12px;
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
   }
-  
+
   /* Duotone overlay icons - Gold Standard */
   .duotone-overlay {
     width: 40px;
@@ -146,71 +217,71 @@
     justify-content: center;
     position: relative;
   }
-  
+
   .duotone-overlay i {
     font-size: 18px;
     color: white;
     position: relative;
     z-index: 2;
   }
-  
+
   .duotone-primary {
     background: linear-gradient(135deg, #3b82f6, #60a5fa);
   }
-  
+
   .duotone-warning {
     background: linear-gradient(135deg, #f59e0b, #fbbf24);
   }
-  
+
   .btn-ghost {
     @apply btn bg-transparent text-slate-600 border border-slate-200 hover:bg-slate-50;
   }
-  
+
   .status-indicator {
     @apply inline-flex items-center gap-2;
   }
-  
+
   .status-indicator::before {
     content: '';
     @apply w-2 h-2 rounded-full;
   }
-  
+
   .status-online::before {
     @apply bg-success-500;
   }
-  
+
   .status-offline::before {
     @apply bg-gray-400;
   }
-  
+
   .status-warning::before {
     @apply bg-warning-500;
   }
-  
+
   .status-error::before {
     @apply bg-danger-500;
   }
-  
+
   .pulse-animation {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
+
   .security-gradient {
     background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
   }
-  
+
   .glass-effect {
     @apply backdrop-blur-sm bg-white/80 border border-white/20;
   }
-  
+
   .emergency-red {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   }
-  
+
   .emergency-yellow {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   }
-  
+
   .emergency-green {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   }
@@ -220,20 +291,20 @@
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
+
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
+
   .animate-bounce-slow {
     animation: bounce 2s infinite;
   }
@@ -264,9 +335,12 @@
 
 /* Emergency animations */
 @keyframes emergency-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -291,6 +365,7 @@
   0% {
     transform: translateY(-100%);
   }
+
   100% {
     transform: translateY(100%);
   }
@@ -389,56 +464,13 @@
   .dashboard-grid {
     @apply grid-cols-1 gap-4;
   }
-  
+
   .card {
     @apply rounded-none border-l-0 border-r-0;
   }
 }
 
 /* === PROPER 2.9 Dashboard Custom Styles (from homepage_ui.txt) === */
-:root {
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --bg-nav: linear-gradient(135deg, #1e40af, #3b82f6);
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --text-nav: #ffffff;
-    --card-border: #e2e8f0;
-    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --metric-accent: var(--accent-color);
-    --ai-section-bg: #ffffff;
-    --risk-factor-bg: #f8fafc;
-    --activity-bg: #ffffff;
-    --quick-action-bg: #ffffff;
-    --status-online: #10b981;
-    --status-offline: #ef4444;
-    --cyber-accent: #8b5cf6;
-    --biometric-accent: #06b6d4;
-}
-
-.dark-mode {
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --bg-nav: linear-gradient(135deg, #0c4a6e, #1e40af);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-nav: #e2e8f0;
-    --card-border: #334155;
-    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --metric-accent: var(--accent-color-dark);
-    --ai-section-bg: #1e293b;
-    --risk-factor-bg: #0f172a;
-    --activity-bg: #1e293b;
-    --quick-action-bg: #1e293b;
-    --status-online: #10b981;
-    --status-offline: #ef4444;
-    --cyber-accent: #a78bfa;
-    --biometric-accent: #22d3ee;
-}
-
-/* ... (rest of the dashboard CSS from homepage_ui.txt goes here) ... */ 
-
-/* Global CSS Variables for Light Mode */
 :root {
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
@@ -459,26 +491,51 @@
   --biometric-accent: #06b6d4;
 }
 
-/* Global CSS Variables for Dark Mode */
 .dark-mode {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
+  --bg-primary: var(--console-dark);
+  --bg-secondary: var(--surface-card);
   --bg-nav: linear-gradient(135deg, #0c4a6e, #1e40af);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-sub);
   --text-nav: #e2e8f0;
-  --card-border: #334155;
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --metric-accent: var(--accent-color-dark);
-  --ai-section-bg: #1e293b;
-  --risk-factor-bg: #0f172a;
-  --activity-bg: #1e293b;
-  --quick-action-bg: #1e293b;
+  --card-border: var(--border-subtle);
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --metric-accent: var(--accent-cyan);
+  --ai-section-bg: var(--surface-panel);
+  --risk-factor-bg: var(--console-deep);
+  --activity-bg: var(--surface-card);
+  --quick-action-bg: var(--surface-card);
   --status-online: #10b981;
   --status-offline: #ef4444;
   --cyber-accent: #a78bfa;
   --biometric-accent: #22d3ee;
 }
+
+/* ... (rest of the dashboard CSS from homepage_ui.txt goes here) ... */
+
+/* Global CSS Variables - Enforced Dark Mode */
+:root {
+  --bg-primary: var(--console-dark);
+  --bg-secondary: var(--surface-card);
+  --bg-nav: linear-gradient(135deg, #0c4a6e, #1e40af);
+  --text-primary: var(--text-main);
+  --text-secondary: var(--text-sub);
+  --text-nav: #e2e8f0;
+  --card-border: var(--border-subtle);
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --metric-accent: var(--accent-cyan);
+  --ai-section-bg: var(--surface-panel);
+  --risk-factor-bg: var(--console-deep);
+  --activity-bg: var(--surface-card);
+  --quick-action-bg: var(--surface-card);
+  --status-online: #10b981;
+  --status-offline: #ef4444;
+  --cyber-accent: #a78bfa;
+  --biometric-accent: #22d3ee;
+  color-scheme: dark;
+}
+
+/* Dark Mode overrides removed as it is now default */
 
 * {
   margin: 0;
@@ -488,11 +545,38 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--console-dark);
   min-height: 100vh;
-  color: var(--text-primary);
+  color: #e2e8f0;
 }
+
+/* Legacy theme blocks removed */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.6);
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.4);
+}
+
+html.theme-light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+html.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border: 2px solid #e2e8f0;
+}
+
 
 /* Global Module Styles */
 .section-title {
@@ -520,21 +604,15 @@ body {
 }
 
 .btn-primary {
-  background: #2563eb !important;
-  color: white !important;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-all;
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-primary:hover {
-  background: #1d4ed8 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
 }
 
@@ -762,15 +840,15 @@ body {
   .admin-content {
     grid-template-columns: 1fr;
   }
-  
+
   .admin-sidebar {
     order: 2;
   }
-  
+
   .admin-main {
     order: 1;
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
@@ -870,26 +948,26 @@ body {
   .admin-content {
     grid-template-columns: 1fr;
   }
-  
+
   .admin-sidebar {
     order: 2;
   }
-  
+
   .admin-main {
     order: 1;
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .settings-actions {
     flex-direction: column;
   }
-  
+
   .settings-form {
     grid-template-columns: 1fr;
   }
-} 
+}

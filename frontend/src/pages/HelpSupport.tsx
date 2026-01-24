@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
+import ModuleShell from '../components/Layout/ModuleShell';
+import { SearchBar } from '../components/UI/SearchBar';
 import { Badge } from '../components/UI/Badge';
 
 interface HelpArticle {
@@ -320,7 +322,7 @@ const HelpSupport: React.FC = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white h-16 flex-col"
+              className=" h-16 flex-col"
               onClick={() => setActiveTab('help')}
             >
               <i className="fas fa-search text-xl mb-2" />
@@ -328,7 +330,7 @@ const HelpSupport: React.FC = () => {
             </Button>
             <Button
               variant="outline"
-              className="text-slate-600 border-slate-300 hover:bg-slate-50 h-16 flex-col"
+              className=" h-16 flex-col"
               onClick={() => setShowNewTicketModal(true)}
             >
               <i className="fas fa-plus text-xl mb-2" />
@@ -336,7 +338,7 @@ const HelpSupport: React.FC = () => {
             </Button>
             <Button
               variant="outline"
-              className="text-slate-600 border-slate-300 hover:bg-slate-50 h-16 flex-col"
+              className=" h-16 flex-col"
               onClick={() => setActiveTab('contact')}
             >
               <i className="fas fa-phone text-xl mb-2" />
@@ -344,7 +346,7 @@ const HelpSupport: React.FC = () => {
             </Button>
             <Button
               variant="outline"
-              className="text-slate-600 border-slate-300 hover:bg-slate-50 h-16 flex-col"
+              className=" h-16 flex-col"
               onClick={() => showSuccess('Opening live chat')}
             >
               <i className="fas fa-comments text-xl mb-2" />
@@ -364,7 +366,7 @@ const HelpSupport: React.FC = () => {
             </CardTitle>
             <Button
               variant="outline"
-              className="text-slate-600 border-slate-300 hover:bg-slate-50"
+              className=""
               onClick={() => setActiveTab('tickets')}
             >
               View All
@@ -393,7 +395,7 @@ const HelpSupport: React.FC = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                  className=""
                   onClick={() => showSuccess(`Viewing ticket ${ticket.id}`)}
                 >
                   <i className="fas fa-eye mr-1" />
@@ -414,16 +416,11 @@ const HelpSupport: React.FC = () => {
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search help articles..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <i className="fas fa-search absolute left-3 top-3 text-slate-400" />
-              </div>
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search help articles..."
+              />
             </div>
             <div className="flex items-center space-x-4">
               <select
@@ -441,7 +438,7 @@ const HelpSupport: React.FC = () => {
               </select>
               <Button
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory('all');
@@ -496,7 +493,7 @@ const HelpSupport: React.FC = () => {
                     </Badge>
                     <Button
                       size="sm"
-                      className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                      className=""
                       onClick={() => showSuccess(`Opening article: ${article.title}`)}
                     >
                       <i className="fas fa-external-link-alt mr-1" />
@@ -530,7 +527,7 @@ const HelpSupport: React.FC = () => {
             </CardTitle>
             <Button
               onClick={() => setShowNewTicketModal(true)}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              className=""
             >
               <i className="fas fa-plus mr-2" />
               New Ticket
@@ -580,7 +577,7 @@ const HelpSupport: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                          className=""
                           onClick={() => showSuccess(`Viewing ticket ${ticket.id}`)}
                         >
                           <i className="fas fa-eye" />
@@ -588,7 +585,7 @@ const HelpSupport: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                          className=""
                           onClick={() => showSuccess(`Updating ticket ${ticket.id}`)}
                         >
                           <i className="fas fa-edit" />
@@ -655,7 +652,7 @@ const HelpSupport: React.FC = () => {
                 <div className="mt-4 flex space-x-2">
                   <Button
                     size="sm"
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                     onClick={() => showSuccess(`Contacting ${contact.name}`)}
                   >
                     <i className="fas fa-envelope mr-1" />
@@ -664,7 +661,7 @@ const HelpSupport: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess(`Calling ${contact.name}`)}
                   >
                     <i className="fas fa-phone mr-1" />
@@ -724,7 +721,7 @@ const HelpSupport: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => showSuccess('Downloading user manual')}
               >
                 <i className="fas fa-download mr-1" />
@@ -739,7 +736,7 @@ const HelpSupport: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => showSuccess('Opening app store')}
               >
                 <i className="fas fa-external-link-alt mr-1" />
@@ -754,7 +751,7 @@ const HelpSupport: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => showSuccess('Opening API docs')}
               >
                 <i className="fas fa-code mr-1" />
@@ -780,7 +777,7 @@ const HelpSupport: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => showSuccess('Playing getting started video')}
               >
                 <i className="fas fa-play mr-1" />
@@ -795,7 +792,7 @@ const HelpSupport: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => showSuccess('Playing incident management video')}
               >
                 <i className="fas fa-play mr-1" />
@@ -810,7 +807,7 @@ const HelpSupport: React.FC = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                className=""
                 onClick={() => showSuccess('Playing mobile app training video')}
               >
                 <i className="fas fa-play mr-1" />
@@ -841,56 +838,31 @@ const HelpSupport: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-question-circle text-white text-2xl" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
-                <i className="fas fa-check text-white text-xs" />
-              </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-900">Help & Support</h1>
-              <p className="text-slate-600 font-medium">Get help, submit tickets, and access resources</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex justify-center pb-4">
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-lg shadow-lg border border-white/30">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
-              >
-                <i className={`${tab.icon} mr-2`} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+    <ModuleShell
+      title="Help & Support"
+      subtitle="Get help, submit tickets, and access resources"
+      tabs={tabs.map((tab) => ({
+        id: tab.id,
+        label: (
+          <span className="flex items-center gap-2">
+            <i className={tab.icon} />
+            <span>{tab.label}</span>
+          </span>
+        )
+      }))}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      <div className="space-y-6 profile-console-skin">
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-exclamation-triangle mr-2" />
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-check-circle mr-2" />
             {success}
           </div>
@@ -964,7 +936,7 @@ const HelpSupport: React.FC = () => {
                       setNewTicket({ title: '', description: '', priority: 'medium', category: 'technical' });
                       showSuccess('Support ticket created successfully');
                     }}
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                   >
                     Create Ticket
                   </Button>
@@ -974,8 +946,11 @@ const HelpSupport: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </ModuleShell>
   );
 };
 
 export default HelpSupport;
+
+
+

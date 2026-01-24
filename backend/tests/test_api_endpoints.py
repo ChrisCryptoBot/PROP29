@@ -97,14 +97,14 @@ class TestIoTEnvironmentalEndpoints:
             "location": "lobby"
         }
         
-        response = client.post("/iot/sensors/data", json=sensor_data, headers=auth_headers)
+        response = client.post("/api/iot/sensors/data", json=sensor_data, headers=auth_headers)
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["sensor_id"] == sensor_data["sensor_id"]
     
     def test_get_sensor_readings(self, client, auth_headers):
         """Test getting sensor readings endpoint."""
-        response = client.get("/iot/sensors/readings", headers=auth_headers)
+        response = client.get("/api/iot/sensors/readings", headers=auth_headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
@@ -117,7 +117,7 @@ class TestIoTEnvironmentalEndpoints:
             "location": "lobby"
         }
         
-        response = client.get("/iot/reports/environmental", params=params, headers=auth_headers)
+        response = client.get("/api/iot/reports/environmental", params=params, headers=auth_headers)
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "temperature" in data

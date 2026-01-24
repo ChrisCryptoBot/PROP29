@@ -4,6 +4,7 @@ import { Button } from '../UI/Button';
 import { Badge } from '../UI/Badge';
 import { showLoading, dismissLoadingAndShowSuccess, showError, showSuccess } from '../../utils/toast';
 import { packageAI } from '../../services/PackageAIService';
+import { logger } from '../../services/logger';
 import '../../styles/modern-glass.css';
 
 interface Package {
@@ -87,7 +88,7 @@ export const SmartMatchingPanel: React.FC<Props> = ({ selectedPackage, guests, o
         }
       }
     } catch (error) {
-      console.error('Smart matching error:', error);
+      logger.error('Smart matching error', error instanceof Error ? error : new Error(String(error)), { module: 'SmartMatchingPanel', action: 'handleSmartMatch' });
       showError('Failed to find matches');
     } finally {
       setIsMatching(false);
@@ -105,7 +106,7 @@ export const SmartMatchingPanel: React.FC<Props> = ({ selectedPackage, guests, o
       setOcrResult(result);
       dismissLoadingAndShowSuccess(toastId, 'OCR processing complete!');
     } catch (error) {
-      console.error('OCR error:', error);
+      logger.error('OCR error', error instanceof Error ? error : new Error(String(error)), { module: 'SmartMatchingPanel', action: 'handleOCRUpload' });
       showError('Failed to process image');
     }
   };
@@ -397,3 +398,4 @@ export const SmartMatchingPanel: React.FC<Props> = ({ selectedPackage, guests, o
     </div>
   );
 };
+

@@ -4,6 +4,7 @@ import { Button } from '../UI/Button';
 import { Badge } from '../UI/Badge';
 import { showLoading, dismissLoadingAndShowSuccess, showError } from '../../utils/toast';
 import { patrolAI } from '../../services/PatrolAIService';
+import { logger } from '../../services/logger';
 import '../../styles/modern-glass.css';
 
 interface Officer {
@@ -53,7 +54,7 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
       setMatches(officerMatches);
       dismissLoadingAndShowSuccess(toastId, `Found ${officerMatches.length} officer match${officerMatches.length > 1 ? 'es' : ''}!`);
     } catch (error) {
-      console.error('Officer matching error:', error);
+      logger.error('Officer matching error', error instanceof Error ? error : new Error(String(error)), { module: 'OfficerMatchingPanel', action: 'handleMatchOfficers' });
       showError('Failed to find officer matches');
     } finally {
       setIsMatching(false);
@@ -69,112 +70,127 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
   const getMatchQuality = (score: number) => patrolAI.getMatchQuality(score);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
-            <i className="fas fa-brain text-white"></i>
+    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+      <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center text-white">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+              <i className="fas fa-microchip text-white"></i>
+            </div>
+            <span className="text-sm font-black uppercase tracking-widest">Logic Deployment Engine</span>
           </div>
-          AI Officer Matching
+          <Button
+            onClick={handleMatchOfficers}
+            disabled={isMatching || !selectedPatrol}
+            variant="glass"
+            className="h-10 px-6 border-indigo-500/20 hover:border-indigo-500/40 text-indigo-400"
+          >
+            <i className={`fas ${isMatching ? 'fa-spinner fa-spin' : 'fa-bolt'} mr-2`}></i>
+            {isMatching ? 'ANALYZING...' : 'RUN MATCHING'}
+          </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 py-6">
         {selectedPatrol && (
-          <div className="mb-4 p-3 bg-slate-50 rounded-lg">
-            <p className="text-sm font-medium text-slate-900">{selectedPatrol.name}</p>
-            <p className="text-xs text-slate-600">{selectedPatrol.location}</p>
+          <div className="mb-6 p-4 bg-slate-900/30 rounded-xl border border-white/5 shadow-inner">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Target Vector</p>
+            <p className="text-sm font-black text-white">{selectedPatrol.name}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 italic">{selectedPatrol.location}</p>
           </div>
         )}
 
-        <Button
-          onClick={handleMatchOfficers}
-          disabled={isMatching || !selectedPatrol}
-          className="!bg-[#2563eb] hover:!bg-blue-700 text-white mb-4"
-        >
-          <i className={`fas ${isMatching ? 'fa-spinner fa-spin' : 'fa-magic'} mr-2`}></i>
-          {isMatching ? 'Matching...' : 'Find Best Match'}
-        </Button>
-
         {matches.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold text-slate-900 mb-3">Recommended Officers</h4>
-            {matches.map((match, index) => {
-              const quality = getMatchQuality(match.matchScore);
-              return (
-                <div key={match.officerId} className="p-4 bg-white rounded-lg border border-slate-200 hover:shadow-md transition-all">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className={`badge ${index === 0 ? 'badge-success' : index === 1 ? 'badge-info' : 'badge-secondary'}`}>
-                          #{index + 1}
-                        </Badge>
-                        <h5 className="font-semibold text-slate-900">{match.officerName}</h5>
-                      </div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="text-2xl font-bold" style={{ color: quality.color }}>
-                          {match.matchScore}%
+          <div className="space-y-4">
+            <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Recommended Operatives</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {matches.map((match, index) => {
+                const quality = getMatchQuality(match.matchScore);
+                return (
+                  <div key={match.officerId} className="p-4 bg-slate-900/30 rounded-2xl border border-white/5 hover:border-indigo-500/20 transition-all duration-300 group shadow-2xl">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${index === 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-white/5 text-slate-400 border-white/5'}`}>
+                            #{index + 1} RECOMMENDED
+                          </div>
                         </div>
-                        <Badge className="badge badge-info">{quality.label} Match</Badge>
+                        <h5 className="font-black text-white text-sm uppercase tracking-widest mb-4">{match.officerName}</h5>
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="text-3xl font-black text-white">
+                            {match.matchScore}<span className="text-xs text-slate-600">%</span>
+                          </div>
+                          <div className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            {quality.label.toUpperCase()} COMPATIBILITY
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {match.strengths.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs font-semibold text-slate-700 mb-1">Strengths:</p>
-                      <ul className="space-y-1">
-                        {match.strengths.map((strength: string, idx: number) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <i className="fas fa-check-circle text-green-600 text-xs mt-0.5"></i>
-                            <span className="text-xs text-slate-700">{strength}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="grid grid-cols-2 gap-4 mb-5">
+                      {match.strengths.length > 0 && (
+                        <div>
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Strengths</p>
+                          <ul className="space-y-1.5">
+                            {match.strengths.slice(0, 2).map((strength: string, idx: number) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <i className="fas fa-check-circle text-emerald-500 text-[10px] mt-0.5 opacity-50"></i>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{strength}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {match.considerations.length > 0 && (
+                        <div>
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Vectors</p>
+                          <ul className="space-y-1.5">
+                            {match.considerations.slice(0, 2).map((consideration: string, idx: number) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <i className="fas fa-info-circle text-amber-500 text-[10px] mt-0.5 opacity-50"></i>
+                                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{consideration}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {match.considerations.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-xs font-semibold text-amber-700 mb-1">Considerations:</p>
-                      <ul className="space-y-1">
-                        {match.considerations.map((consideration: string, idx: number) => (
-                          <li key={idx} className="flex items-start gap-2">
-                            <i className="fas fa-info-circle text-amber-600 text-xs mt-0.5"></i>
-                            <span className="text-xs text-amber-700">{consideration}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
+                      <Button
+                        size="sm"
+                        onClick={() => handleSelectOfficer(match.officerId)}
+                        variant="glass"
+                        className="flex-1 h-8 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400"
+                      >
+                        <i className="fas fa-bolt mr-2"></i>
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="glass"
+                        className="h-8 w-8 p-0 border-white/5 text-slate-500"
+                      >
+                        <i className="fas fa-eye"></i>
+                      </Button>
                     </div>
-                  )}
-
-                  <div className="flex items-center gap-2 mt-3">
-                    <Button
-                      size="sm"
-                      onClick={() => handleSelectOfficer(match.officerId)}
-                      className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
-                    >
-                      <i className="fas fa-check mr-1"></i>
-                      Select Officer
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <i className="fas fa-info-circle mr-1"></i>
-                      View Details
-                    </Button>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         )}
 
         {!selectedPatrol && (
-          <div className="text-center py-8 text-slate-600">
-            <i className="fas fa-hand-pointer text-3xl mb-3 text-slate-400"></i>
-            <p className="text-sm">Select a patrol to find the best officer match</p>
+          <div className="text-center py-12 px-6 bg-slate-900/20 rounded-2xl border border-dashed border-white/5">
+            <div className="w-16 h-16 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+              <i className="fas fa-hand-pointer text-3xl text-slate-700"></i>
+            </div>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Neural Input Required</p>
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Select a target vector to initialize operative compatibility matching</p>
           </div>
         )}
       </CardContent>
     </Card>
   );
 };
-

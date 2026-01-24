@@ -22,20 +22,25 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   className
 }) => {
   return (
-    <div className={cn('text-center py-12 px-6', className)}>
-      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i className={cn(icon, 'text-3xl text-slate-400')}></i>
+    <div className={cn(
+      'text-center py-20 px-8 rounded-2xl border border-dashed border-[color:var(--border-subtle)]/30 bg-[color:var(--console-dark)]/30 backdrop-blur-sm group transition-all hover:bg-white/[0.02]',
+      className
+    )}>
+      <div className="flex justify-center mb-6">
+        <i className={cn(icon, 'text-5xl text-[color:var(--text-sub)] opacity-20 group-hover:opacity-40 transition-all duration-500 transform group-hover:scale-110')}></i>
       </div>
-      <h3 className="text-lg font-semibold text-slate-900 mb-2">{title}</h3>
+      <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tighter">{title}</h3>
       {description && (
-        <p className="text-sm text-slate-600 mb-4 max-w-md mx-auto">{description}</p>
+        <p className="text-sm text-[color:var(--text-sub)] max-w-xs mx-auto leading-relaxed mb-8 font-medium">
+          {description}
+        </p>
       )}
       {action && (
         <Button
           onClick={action.onClick}
-          variant={action.variant || 'default'}
+          variant="outline"
+          className="font-black uppercase tracking-widest px-10 text-[10px] border-[color:var(--border-subtle)] text-[color:var(--text-sub)] hover:text-white hover:bg-white/5 shadow-lg shadow-black/20"
         >
-          <i className="fas fa-plus mr-2"></i>
           {action.label}
         </Button>
       )}
@@ -44,3 +49,4 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 };
 
 export { EmptyState };
+

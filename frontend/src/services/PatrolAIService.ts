@@ -3,6 +3,9 @@
  * Handles officer matching, route optimization, schedule optimization, and alert prioritization
  */
 
+import { logger } from './logger';
+import { env } from '../config/env';
+
 interface Officer {
   id: string;
   name: string;
@@ -90,7 +93,11 @@ interface TemplateSuggestion {
 }
 
 export class PatrolAIService {
-  private apiBaseUrl = 'http://localhost:8000';
+  private apiBaseUrl = env.API_BASE_URL;
+
+  private getAuthHeader(): string {
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+  }
 
   /**
    * Match best officer for a patrol
@@ -101,7 +108,7 @@ export class PatrolAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ patrol, officers })
       });
@@ -113,7 +120,7 @@ export class PatrolAIService {
       const data = await response.json();
       return data.matches || this.generateFallbackMatches(patrol, officers);
     } catch (error) {
-      console.error('AI Officer Matching Error:', error);
+      logger.error('AI Officer Matching Error', error instanceof Error ? error : new Error(String(error)), { module: 'PatrolAIService', action: 'matchOfficerToPatrol' });
       return this.generateFallbackMatches(patrol, officers);
     }
   }
@@ -127,7 +134,7 @@ export class PatrolAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ route })
       });
@@ -139,7 +146,7 @@ export class PatrolAIService {
       const data = await response.json();
       return data.optimization || this.generateFallbackOptimization(route);
     } catch (error) {
-      console.error('AI Route Optimization Error:', error);
+      logger.error('AI Route Optimization Error', error instanceof Error ? error : new Error(String(error)), { module: 'PatrolAIService', action: 'optimizeRoute' });
       return this.generateFallbackOptimization(route);
     }
   }
@@ -148,8 +155,8 @@ export class PatrolAIService {
    * Generate schedule optimization suggestions
    */
   async generateScheduleSuggestions(
-    schedule: any[],
-    incidents: any[],
+    schedule: Record<string, unknown>[],
+    incidents: Record<string, unknown>[],
     routes: Route[]
   ): Promise<ScheduleSuggestion[]> {
     try {
@@ -157,7 +164,7 @@ export class PatrolAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ schedule, incidents, routes })
       });
@@ -169,7 +176,7 @@ export class PatrolAIService {
       const data = await response.json();
       return data.suggestions || this.generateFallbackScheduleSuggestions(schedule, incidents);
     } catch (error) {
-      console.error('AI Schedule Optimization Error:', error);
+      logger.error('AI Schedule Optimization Error', error instanceof Error ? error : new Error(String(error)), { module: 'PatrolAIService', action: 'generateScheduleSuggestions' });
       return this.generateFallbackScheduleSuggestions(schedule, incidents);
     }
   }
@@ -177,13 +184,13 @@ export class PatrolAIService {
   /**
    * Prioritize alerts using AI
    */
-  async prioritizeAlerts(alerts: any[]): Promise<AlertPriority[]> {
+  async prioritizeAlerts(alerts: Record<string, unknown>[]): Promise<AlertPriority[]> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/patrols/ai-prioritize-alerts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ alerts })
       });
@@ -195,7 +202,7 @@ export class PatrolAIService {
       const data = await response.json();
       return data.priorities || this.generateFallbackPriorities(alerts);
     } catch (error) {
-      console.error('AI Alert Prioritization Error:', error);
+      logger.error('AI Alert Prioritization Error', error instanceof Error ? error : new Error(String(error)), { module: 'PatrolAIService', action: 'prioritizeAlerts' });
       return this.generateFallbackPriorities(alerts);
     }
   }
@@ -204,15 +211,15 @@ export class PatrolAIService {
    * Suggest patrol templates based on patterns
    */
   async suggestTemplates(
-    patrolHistory: any[],
-    incidents: any[]
+    patrolHistory: Record<string, unknown>[],
+    incidents: Record<string, unknown>[]
   ): Promise<TemplateSuggestion[]> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/patrols/ai-suggest-templates`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ patrolHistory, incidents })
       });
@@ -224,7 +231,7 @@ export class PatrolAIService {
       const data = await response.json();
       return data.suggestions || this.generateFallbackTemplateSuggestions(patrolHistory, incidents);
     } catch (error) {
-      console.error('AI Template Suggestions Error:', error);
+      logger.error('AI Template Suggestions Error', error instanceof Error ? error : new Error(String(error)), { module: 'PatrolAIService', action: 'suggestTemplates' });
       return this.generateFallbackTemplateSuggestions(patrolHistory, incidents);
     }
   }
@@ -323,15 +330,16 @@ export class PatrolAIService {
   }
 
   private generateFallbackScheduleSuggestions(
-    schedule: any[],
-    incidents: any[]
+    schedule: Record<string, unknown>[],
+    incidents: Record<string, unknown>[]
   ): ScheduleSuggestion[] {
     const suggestions: ScheduleSuggestion[] = [];
 
     // Analyze time-based patterns
     const timePatterns: Record<string, number> = {};
     incidents.forEach(incident => {
-      const hour = new Date(incident.timestamp).getHours();
+      const timestamp = typeof incident.timestamp === 'string' ? incident.timestamp : String(incident.timestamp || '');
+      const hour = new Date(timestamp).getHours();
       const key = `${hour}-${hour + 1}`;
       timePatterns[key] = (timePatterns[key] || 0) + 1;
     });
@@ -353,22 +361,26 @@ export class PatrolAIService {
     return suggestions;
   }
 
-  private generateFallbackPriorities(alerts: any[]): AlertPriority[] {
+  private generateFallbackPriorities(alerts: Record<string, unknown>[]): AlertPriority[] {
     return alerts.map(alert => {
       let priority: 'critical' | 'high' | 'medium' | 'low' = 'medium';
       let score = 50;
       let reasoning = 'Standard alert priority';
 
+      const alertSeverity = typeof alert.severity === 'string' ? alert.severity : 'medium';
+      const alertType = typeof alert.type === 'string' ? alert.type : '';
+      const alertId = typeof alert.id === 'string' ? alert.id : String(alert.id || '');
+
       // Severity-based prioritization
-      if (alert.severity === 'critical') {
+      if (alertSeverity === 'critical') {
         priority = 'critical';
         score = 95;
         reasoning = 'Critical severity alert';
-      } else if (alert.severity === 'high') {
+      } else if (alertSeverity === 'high') {
         priority = 'high';
         score = 75;
         reasoning = 'High severity alert';
-      } else if (alert.severity === 'medium') {
+      } else if (alertSeverity === 'medium') {
         priority = 'medium';
         score = 50;
         reasoning = 'Medium severity alert';
@@ -379,13 +391,13 @@ export class PatrolAIService {
       }
 
       // Type-based adjustments
-      if (alert.type === 'checkpoint_missed') {
+      if (alertType === 'checkpoint_missed') {
         score += 10;
         reasoning += ' - Checkpoint missed (requires immediate attention)';
       }
 
       return {
-        alertId: alert.id,
+        alertId,
         priority,
         score: Math.min(100, score),
         reasoning,
@@ -395,15 +407,17 @@ export class PatrolAIService {
   }
 
   private generateFallbackTemplateSuggestions(
-    patrolHistory: any[],
-    incidents: any[]
+    patrolHistory: Record<string, unknown>[],
+    incidents: Record<string, unknown>[]
   ): TemplateSuggestion[] {
     const suggestions: TemplateSuggestion[] = [];
 
     // Group patrols by location and time
-    const patterns: Record<string, any[]> = {};
+    const patterns: Record<string, Record<string, unknown>[]> = {};
     patrolHistory.forEach(patrol => {
-      const key = `${patrol.location}-${patrol.time}`;
+      const location = typeof patrol.location === 'string' ? patrol.location : '';
+      const time = typeof patrol.time === 'string' ? patrol.time : '';
+      const key = `${location}-${time}`;
       if (!patterns[key]) {
         patterns[key] = [];
       }

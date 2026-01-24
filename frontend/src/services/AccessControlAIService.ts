@@ -3,6 +3,9 @@
  * Handles user behavior analysis and anomaly detection
  */
 
+import { logger } from './logger';
+import { env } from '../config/env';
+
 interface AccessEvent {
   id: string;
   userId: string;
@@ -53,7 +56,11 @@ interface UserBehaviorProfile {
 }
 
 export class AccessControlAIService {
-  private apiBaseUrl = 'http://localhost:8000';
+  private apiBaseUrl = env.API_BASE_URL;
+
+  private getAuthHeader(): string {
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+  }
 
   /**
    * Analyze user behavior for anomalies
@@ -67,7 +74,7 @@ export class AccessControlAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ events, users })
       });
@@ -79,7 +86,7 @@ export class AccessControlAIService {
       const data = await response.json();
       return data.anomalies || this.generateFallbackAnomalies(events, users);
     } catch (error) {
-      console.error('AI Behavior Analysis Error:', error);
+      logger.error('AI Behavior Analysis Error', error instanceof Error ? error : new Error(String(error)), { module: 'AccessControlAIService', action: 'analyzeUserBehavior' });
       return this.generateFallbackAnomalies(events, users);
     }
   }
@@ -96,7 +103,7 @@ export class AccessControlAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ events, users })
       });
@@ -108,7 +115,7 @@ export class AccessControlAIService {
       const data = await response.json();
       return data.profiles || this.generateFallbackProfiles(events, users);
     } catch (error) {
-      console.error('AI Profile Generation Error:', error);
+      logger.error('AI Profile Generation Error', error instanceof Error ? error : new Error(String(error)), { module: 'AccessControlAIService', action: 'generateBehaviorProfiles' });
       return this.generateFallbackProfiles(events, users);
     }
   }
@@ -127,7 +134,7 @@ export class AccessControlAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ event, user })
       });
@@ -138,7 +145,7 @@ export class AccessControlAIService {
 
       return await response.json();
     } catch (error) {
-      console.error('AI Event Classification Error:', error);
+      logger.error('AI Event Classification Error', error instanceof Error ? error : new Error(String(error)), { module: 'AccessControlAIService', action: 'classifyAccessEvent' });
       return {
         isAnomalous: false,
         confidence: 0.5,

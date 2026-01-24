@@ -26,15 +26,17 @@ const Toggle: React.FC<ToggleProps> = ({
     lg: 'w-14 h-7 after:h-6 after:w-6'
   };
 
+  const hasLabelOrDescription = (label && label.trim()) || (description && description.trim());
+
   return (
-    <div className={cn('flex items-center justify-between', className)}>
-      {(label || description) && (
+    <div className={cn(hasLabelOrDescription ? 'flex items-center justify-between' : 'inline-flex items-center', className)}>
+      {hasLabelOrDescription && (
         <div className="flex-1 mr-4">
-          {label && (
-            <h3 className="font-medium text-slate-900">{label}</h3>
+          {label && label.trim() && (
+            <h3 className="font-medium text-[color:var(--text-main)]">{label}</h3>
           )}
-          {description && (
-            <p className="text-sm text-slate-600">{description}</p>
+          {description && description.trim() && (
+            <p className="text-sm text-[color:var(--text-sub)]">{description}</p>
           )}
         </div>
       )}
@@ -48,9 +50,9 @@ const Toggle: React.FC<ToggleProps> = ({
         />
         <div
           className={cn(
-            'bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[""] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:transition-all peer-checked:bg-blue-600',
+            'relative bg-white/10 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[""] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:transition-all peer-checked:bg-blue-600',
             sizeClasses[size],
-            disabled && 'opacity-50 cursor-not-allowed'
+            disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
           )}
         ></div>
       </label>
@@ -59,3 +61,4 @@ const Toggle: React.FC<ToggleProps> = ({
 };
 
 export { Toggle };
+

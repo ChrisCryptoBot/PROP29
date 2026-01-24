@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '../../services/logger';
 
 interface ModuleCardProps {
   title: string;
@@ -29,18 +30,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
-    console.log('ModuleCard clicked:', { title, route });
-    
     if (onClick) {
       onClick();
       return;
     }
     
     if (route) {
-      console.log('Navigating to:', route);
+      logger.debug('ModuleCard: Navigating to route', { module: 'ModuleCard', action: 'handleClick', title, route });
       navigate(route);
     } else {
-      console.log('No route provided for:', title);
+      logger.debug('ModuleCard: No route provided', { module: 'ModuleCard', action: 'handleClick', title });
     }
   };
 

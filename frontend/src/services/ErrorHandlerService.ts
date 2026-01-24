@@ -3,6 +3,8 @@
  * Provides consistent error handling and logging
  */
 
+import { logger } from './logger';
+
 export interface ApiError {
   message: string;
   status?: number;
@@ -18,7 +20,7 @@ export class ErrorHandlerService {
     const fullMessage = `${context}: ${errorMessage}`;
     
     // Log error for debugging
-    console.error(`[${context}]`, error);
+    logger.error(fullMessage, error instanceof Error ? error : new Error(String(error)), { module: 'ErrorHandlerService', action: 'handle', context });
     
     return fullMessage;
   }
@@ -51,7 +53,7 @@ export class ErrorHandlerService {
       timestamp: new Date().toISOString()
     };
     
-    console.error('[Error Log]', errorInfo);
+    logger.error('Error Log', error instanceof Error ? error : new Error(String(error)), { module: 'ErrorHandlerService', action: 'logError', context, errorInfo });
     
     // In production, send to error tracking service (e.g., Sentry)
     // if (process.env.NODE_ENV === 'production') {

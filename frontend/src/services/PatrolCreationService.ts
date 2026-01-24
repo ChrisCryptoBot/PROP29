@@ -17,6 +17,7 @@ export interface UpcomingPatrol {
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   location: string;
   description: string;
+  routeId?: string; // Added for checkpoint tracking
 }
 
 export interface PatrolTemplate {
@@ -32,12 +33,20 @@ export interface PatrolTemplate {
   priority: 'low' | 'medium' | 'high' | 'critical';
 }
 
+export interface Checkpoint {
+  id: string;
+  name: string;
+  location: string;
+  isCritical?: boolean;
+  estimatedTime?: number;
+}
+
 export interface PatrolRoute {
   id: string;
   name: string;
   description: string;
   estimatedDuration: string;
-  checkpoints: any[];
+  checkpoints: Checkpoint[];
 }
 
 export class PatrolCreationService {
@@ -57,7 +66,8 @@ export class PatrolCreationService {
       priority: template.priority || ConfigService.DEFAULT_PRIORITY,
       status: 'scheduled',
       location: route?.description || 'Various',
-      description: template.description || ''
+      description: template.description || '',
+      routeId: route?.id || template.routeId
     };
   }
 
@@ -77,7 +87,8 @@ export class PatrolCreationService {
       priority: ConfigService.DEFAULT_PRIORITY,
       status: 'scheduled',
       location: 'Route',
-      description: route.description || ''
+      description: route.description || '',
+      routeId: route.id
     };
   }
 

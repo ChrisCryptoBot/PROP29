@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
-import ErrorBoundary from './ErrorBoundary';
-import LoadingSpinner from './LoadingSpinner';
+import { ErrorBoundary } from '../../components/UI/ErrorBoundary';
+import LoadingSpinner from '../../components/UI/LoadingSpinner';
 import type { ModuleDefinition } from '../../types/module';
 
 interface ModuleContainerProps {
@@ -19,8 +19,8 @@ const ModuleContainer: React.FC<ModuleContainerProps> = ({
   const defaultFallback = (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <LoadingSpinner 
-        size="lg" 
-        text={`Loading ${module.name}...`}
+        size="large" 
+        message={`Loading ${module.name}...`}
       />
     </div>
   );
@@ -28,7 +28,7 @@ const ModuleContainer: React.FC<ModuleContainerProps> = ({
   return (
     <div className={`module-container ${className}`}>
       <ErrorBoundary 
-        moduleId={module.id}
+        moduleName={module.name}
         fallback={fallback}
       >
         <Suspense fallback={defaultFallback}>

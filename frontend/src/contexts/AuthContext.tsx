@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
+import { logger } from '../services/logger';
+import { env } from '../config/env';
 
 // Enhanced TypeScript interfaces
 export interface User {
@@ -37,18 +39,15 @@ export interface AuthContextType {
   updateUser: (userData: Partial<User>) => Promise<boolean>;
 }
 
-// API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
 // API service functions
 class AuthAPI {
   private static async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${env.API_BASE_URL}${endpoint}`;
     const token = localStorage.getItem('access_token');
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -59,35 +58,30 @@ class AuthAPI {
     };
 
     try {
-      console.log('🌐 Fetching:', url);
-      console.log('🌐 Config:', { method: config.method, headers: config.headers, body: config.body });
+      logger.debug(`Fetching: ${url}`, { module: 'AuthAPI', action: 'request', endpoint, method: config.method });
       const response = await fetch(url, config);
-      console.log('📥 Response status:', response.status, response.statusText);
-      
+      logger.debug(`Response status: ${response.status} ${response.statusText}`, { module: 'AuthAPI', action: 'request', endpoint, status: response.status });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Error response:', errorData);
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        logger.error('API request failed', new Error(`HTTP ${response.status}: ${(errorData as { detail?: string }).detail || response.statusText}`), { module: 'AuthAPI', action: 'request', endpoint, errorData });
+        throw new Error((errorData as { detail?: string }).detail || `HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      console.log('✅ Response data:', data);
+      logger.debug('Response data received', { module: 'AuthAPI', action: 'request', endpoint });
       return data;
     } catch (error) {
-      console.error('❌ API request failed:', error);
+      logger.error('API request failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthAPI', action: 'request', endpoint, url });
       throw error;
     }
   }
 
   static async login(credentials: LoginCredentials): Promise<{ user: User } & AuthTokens> {
-    console.log('📤 AuthAPI.login called with:', credentials);
-    const payload = JSON.stringify(credentials);
-    console.log('📤 Sending payload:', payload);
-    console.log('📤 API Base URL:', API_BASE_URL);
-    console.log('📤 Full URL:', `${API_BASE_URL}/auth/login`);
-    return this.request('/auth/login', {
+    logger.debug('AuthAPI.login called', { module: 'AuthAPI', action: 'login', email: credentials.email });
+    return this.request<{ user: User } & AuthTokens>('/auth/login', {
       method: 'POST',
-      body: payload,
+      body: JSON.stringify(credentials),
     });
   }
 
@@ -156,7 +150,7 @@ class TokenManager {
     try {
       return JSON.parse(userStr);
     } catch (err) {
-      console.error("Failed to parse user from storage:", err);
+      logger.error("Failed to parse user from storage", err instanceof Error ? err : new Error(String(err)), { module: 'TokenManager', action: 'getUser' });
       // Clear invalid data
       localStorage.removeItem(this.USER_KEY);
       return null;
@@ -190,31 +184,22 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  console.log('🔄 AuthProvider rendering...');
-  
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
+
   // Use ref to avoid circular dependencies
   const isInitialized = useRef(false);
 
-  console.log('📊 AuthProvider state:', { 
-    userExists: !!user, 
-    loading, 
-    isAuthenticated,
-    isInitialized: isInitialized.current 
-  });
-
   // Define logout first to avoid circular dependency
   const logout = useCallback(async (): Promise<void> => {
-    console.log('🚪 Logout called');
+    logger.info('Logout called', { module: 'AuthProvider', action: 'logout' });
     try {
       if (isAuthenticated) {
         await AuthAPI.logout();
       }
     } catch (error) {
-      console.error('Logout API call failed:', error);
+      logger.error('Logout API call failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'logout' });
     } finally {
       // Clear local state regardless of API call success
       TokenManager.clearTokens();
@@ -226,11 +211,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Define refreshToken with proper dependencies
   const refreshToken = useCallback(async (): Promise<boolean> => {
-    console.log('🔄 RefreshToken called');
+    logger.debug('RefreshToken called', { module: 'AuthProvider', action: 'refreshToken' });
     try {
       const response = await AuthAPI.refreshToken();
       TokenManager.setTokens(response);
-      
+
       // Update user data if needed
       const currentUser = TokenManager.getUser();
       if (currentUser) {
@@ -239,13 +224,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           TokenManager.setUser(updatedUser);
           setUser(updatedUser);
         } catch (error) {
-          console.error('Failed to get updated user:', error);
+          logger.error('Failed to get updated user', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'refreshToken' });
         }
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      logger.error('Token refresh failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'refreshToken' });
       logout();
       return false;
     }
@@ -253,37 +238,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Initialize auth state on mount - ONLY ONCE
   useEffect(() => {
-    console.log('🚀 AuthProvider useEffect running, isInitialized:', isInitialized.current);
-    
     if (isInitialized.current) {
-      console.log('⏭️ Already initialized, skipping...');
       return;
     }
-    
+
     isInitialized.current = true;
-    console.log('✅ Starting auth initialization...');
+    logger.debug('Starting auth initialization', { module: 'AuthProvider', action: 'useEffect-init' });
 
     const initializeAuth = async (): Promise<void> => {
       try {
-        console.log('🔍 Checking saved tokens...');
         const savedUser = TokenManager.getUser();
         const accessToken = TokenManager.getAccessToken();
 
-        console.log('💾 Saved data:', { 
-          hasSavedUser: !!savedUser, 
-          hasAccessToken: !!accessToken 
-        });
+        logger.debug('Checking saved tokens', { module: 'AuthProvider', action: 'initializeAuth', hasSavedUser: !!savedUser, hasAccessToken: !!accessToken });
 
         if (savedUser && accessToken && !TokenManager.isTokenExpired(accessToken)) {
-          console.log('✅ Valid tokens found, setting authenticated');
+          logger.debug('Valid tokens found, setting authenticated', { module: 'AuthProvider', action: 'initializeAuth' });
           setUser(savedUser);
           setIsAuthenticated(true);
         } else if (accessToken && TokenManager.isTokenExpired(accessToken)) {
-          console.log('🔄 Token expired, attempting refresh...');
+          logger.debug('Token expired, attempting refresh', { module: 'AuthProvider', action: 'initializeAuth' });
           try {
             const response = await AuthAPI.refreshToken();
             TokenManager.setTokens(response);
-            
+
             // Update user data if needed
             const currentUser = TokenManager.getUser();
             if (currentUser) {
@@ -293,21 +271,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 setUser(updatedUser);
                 setIsAuthenticated(true);
               } catch (error) {
-                console.error('Failed to get updated user:', error);
+                logger.error('Failed to get updated user', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'initializeAuth' });
               }
             }
           } catch (error) {
-            console.log('❌ Refresh failed, clearing tokens');
+            logger.warn('Refresh failed, clearing tokens', { module: 'AuthProvider', action: 'initializeAuth' });
             TokenManager.clearTokens();
           }
-        } else {
-          console.log('❌ No valid tokens found');
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error);
+        logger.error('Auth initialization failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'initializeAuth' });
         TokenManager.clearTokens();
       } finally {
-        console.log('✅ Auth initialization complete, setting loading to false');
         setLoading(false);
       }
     };
@@ -317,20 +292,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Auto-refresh token before expiration - only when authenticated
   useEffect(() => {
-    console.log('⏰ Auto-refresh effect, isAuthenticated:', isAuthenticated);
-    
     if (!isAuthenticated) {
-      console.log('⏭️ Not authenticated, skipping auto-refresh setup');
       return;
     }
 
-    console.log('⏰ Setting up auto-refresh interval');
+    logger.debug('Setting up auto-refresh interval', { module: 'AuthProvider', action: 'useEffect-autoRefresh' });
     const interval = setInterval(async () => {
-      console.log('⏰ Auto-refresh triggered');
+      logger.debug('Auto-refresh triggered', { module: 'AuthProvider', action: 'autoRefresh' });
       try {
         const response = await AuthAPI.refreshToken();
         TokenManager.setTokens(response);
-        
+
         // Update user data if needed
         const currentUser = TokenManager.getUser();
         if (currentUser) {
@@ -339,40 +311,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             TokenManager.setUser(updatedUser);
             setUser(updatedUser);
           } catch (error) {
-            console.error('Failed to get updated user:', error);
+            logger.error('Failed to get updated user', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'autoRefresh' });
           }
         }
       } catch (error) {
-        console.error('Auto-refresh failed:', error);
+        logger.error('Auto-refresh failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'autoRefresh' });
         logout();
       }
     }, 15 * 60 * 1000); // 15 minutes
 
     return () => {
-      console.log('🧹 Cleaning up auto-refresh interval');
       clearInterval(interval);
     };
   }, [isAuthenticated, logout]);
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<boolean> => {
-    console.log('🔑 Login attempt');
+    logger.info('Login attempt', { module: 'AuthProvider', action: 'login', email: credentials.email });
     try {
       setLoading(true);
-      
+
       const response = await AuthAPI.login(credentials);
-      
+
       // Store tokens and user data
       TokenManager.setTokens(response);
       TokenManager.setUser(response.user);
-      
+
       setUser(response.user);
       setIsAuthenticated(true);
-      
+
       toast.success('Login successful!');
-      console.log('✅ Login successful');
+      logger.info('Login successful', { module: 'AuthProvider', action: 'login', userId: response.user.user_id });
       return true;
     } catch (error) {
-      console.error('Login failed:', error);
+      logger.error('Login failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'login' });
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       toast.error(errorMessage);
       return false;
@@ -389,7 +360,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       toast.success('Profile updated successfully');
       return true;
     } catch (error) {
-      console.error('User update failed:', error);
+      logger.error('User update failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'updateUser' });
       const errorMessage = error instanceof Error ? error.message : 'Update failed';
       toast.error(errorMessage);
       return false;
@@ -405,12 +376,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshToken,
     updateUser,
   };
-
-  console.log('📤 AuthProvider providing value:', { 
-    userExists: !!value.user, 
-    loading: value.loading, 
-    isAuthenticated: value.isAuthenticated 
-  });
 
   return (
     <AuthContext.Provider value={value}>

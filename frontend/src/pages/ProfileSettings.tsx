@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
+import ModuleShell from '../components/Layout/ModuleShell';
 
 interface UserProfile {
   id: string;
@@ -212,7 +213,7 @@ const ProfileSettings: React.FC = () => {
             </div>
             <Button
               onClick={() => setEditMode('personal')}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              className=""
             >
               <i className="fas fa-edit mr-2" />
               Edit Profile
@@ -309,7 +310,7 @@ const ProfileSettings: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => handleSave('Personal information')}
-                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  className=""
                   disabled={loading}
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
@@ -363,7 +364,7 @@ const ProfileSettings: React.FC = () => {
             </CardTitle>
             <Button
               onClick={() => setEditMode('work')}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              className=""
             >
               <i className="fas fa-edit mr-2" />
               Edit
@@ -451,7 +452,7 @@ const ProfileSettings: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => handleSave('Work details')}
-                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  className=""
                   disabled={loading}
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
@@ -513,7 +514,7 @@ const ProfileSettings: React.FC = () => {
               Certifications & Training
             </CardTitle>
             {currentPermissions.canManageCertifications && (
-              <Button className="!bg-[#2563eb] hover:!bg-blue-700 text-white">
+              <Button className="">
                 <i className="fas fa-plus mr-2" />
                 Add Certification
               </Button>
@@ -568,7 +569,7 @@ const ProfileSettings: React.FC = () => {
             </CardTitle>
             <Button
               onClick={() => setEditMode('preferences')}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              className=""
             >
               <i className="fas fa-edit mr-2" />
               Edit
@@ -645,7 +646,7 @@ const ProfileSettings: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => handleSave('Preferences')}
-                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  className=""
                   disabled={loading}
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
@@ -718,7 +719,7 @@ const ProfileSettings: React.FC = () => {
               </div>
             </div>
             <div className="mt-4">
-              <Button className="!bg-[#2563eb] hover:!bg-blue-700 text-white">
+              <Button className="">
                 <i className="fas fa-key mr-2" />
                 Update Password
               </Button>
@@ -735,11 +736,11 @@ const ProfileSettings: React.FC = () => {
               <Badge variant="success">Enabled</Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="text-slate-600 border-slate-300 hover:bg-slate-50">
+              <Button variant="outline" className="">
                 <i className="fas fa-mobile-alt mr-2" />
                 Manage 2FA
               </Button>
-              <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+              <Button variant="outline" className="">
                 <i className="fas fa-times mr-2" />
                 Disable
               </Button>
@@ -768,7 +769,7 @@ const ProfileSettings: React.FC = () => {
                     <p className="text-sm text-slate-600">Last active 2 hours ago • New York, NY</p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                <Button size="sm" variant="outline" className="">
                   Revoke
                 </Button>
               </div>
@@ -797,56 +798,31 @@ const ProfileSettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-user-cog text-white text-2xl" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
-                <i className="fas fa-check text-white text-xs" />
-              </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-900">Profile Settings</h1>
-              <p className="text-slate-600 font-medium">Manage your personal and work information</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex justify-center pb-4">
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-lg shadow-lg border border-white/30">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
-              >
-                <i className={`${tab.icon} mr-2`} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+    <ModuleShell
+      title="Profile Settings"
+      subtitle="Manage your personal and work information"
+      tabs={tabs.map((tab) => ({
+        id: tab.id,
+        label: (
+          <span className="flex items-center gap-2">
+            <i className={tab.icon} />
+            <span>{tab.label}</span>
+          </span>
+        )
+      }))}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      <div className="space-y-6 profile-console-skin">
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-exclamation-triangle mr-2" />
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-check-circle mr-2" />
             {success}
           </div>
@@ -854,8 +830,11 @@ const ProfileSettings: React.FC = () => {
 
         {renderTabContent()}
       </div>
-    </div>
+    </ModuleShell>
   );
 };
 
 export default ProfileSettings;
+
+
+

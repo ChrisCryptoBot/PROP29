@@ -4,6 +4,7 @@ import { Button } from '../UI/Button';
 import { Badge } from '../UI/Badge';
 import { showLoading, dismissLoadingAndShowSuccess, showError, showSuccess } from '../../utils/toast';
 import { patrolAI } from '../../services/PatrolAIService';
+import { logger } from '../../services/logger';
 import '../../styles/modern-glass.css';
 
 interface Route {
@@ -46,7 +47,7 @@ export const RouteOptimizationPanel: React.FC<Props> = ({ selectedRoute, onApply
       setOptimization(result);
       dismissLoadingAndShowSuccess(toastId, `Route optimized! Saves ${result.timeSaved} minutes`);
     } catch (error) {
-      console.error('Route optimization error:', error);
+      logger.error('Route optimization error', error instanceof Error ? error : new Error(String(error)), { module: 'RouteOptimizationPanel', action: 'handleOptimizeRoute' });
       showError('Failed to optimize route');
     } finally {
       setIsOptimizing(false);
@@ -61,87 +62,101 @@ export const RouteOptimizationPanel: React.FC<Props> = ({ selectedRoute, onApply
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3">
-            <i className="fas fa-route text-white"></i>
+    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+      <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center text-white">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+              <i className="fas fa-microchip text-white"></i>
+            </div>
+            <span className="text-sm font-black uppercase tracking-widest">Logic Path Optimization</span>
           </div>
-          AI Route Optimization
+          <Button
+            onClick={handleOptimize}
+            disabled={isOptimizing || !selectedRoute}
+            variant="glass"
+            className="h-10 px-6 border-indigo-500/20 hover:border-indigo-500/40 text-indigo-400"
+          >
+            <i className={`fas ${isOptimizing ? 'fa-spinner fa-spin' : 'fa-bolt'} mr-2`}></i>
+            {isOptimizing ? 'ANALYZING...' : 'RUN OPTIMIZATION'}
+          </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 py-6">
         {selectedRoute && (
-          <div className="mb-4 p-3 bg-slate-50 rounded-lg">
-            <p className="text-sm font-medium text-slate-900">{selectedRoute.name}</p>
-            <p className="text-xs text-slate-600">Current duration: {selectedRoute.estimatedDuration}</p>
+          <div className="mb-6 p-4 bg-slate-900/30 rounded-xl border border-white/5 shadow-inner">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Target Path</p>
+            <p className="text-sm font-black text-white">{selectedRoute.name}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 opacity-70 italic">Current cycle duration: {selectedRoute.estimatedDuration}</p>
           </div>
         )}
 
-        <Button
-          onClick={handleOptimize}
-          disabled={isOptimizing || !selectedRoute}
-          className="!bg-[#2563eb] hover:!bg-blue-700 text-white mb-4"
-        >
-          <i className={`fas ${isOptimizing ? 'fa-spinner fa-spin' : 'fa-magic'} mr-2`}></i>
-          {isOptimizing ? 'Optimizing...' : 'Optimize Route'}
-        </Button>
-
         {optimization && (
-          <div className="space-y-4">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-green-900">Time Saved</span>
-                <span className="text-2xl font-bold text-green-700">{optimization.timeSaved} min</span>
+          <div className="space-y-6">
+            <div className="p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl shadow-inner group overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all"></div>
+
+              <div className="flex items-center justify-between mb-4 relative z-10">
+                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Efficiency Gain</span>
+                <span className="text-3xl font-black text-white">{optimization.timeSaved}<span className="text-xs text-slate-600 ml-1">MIN</span></span>
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-3">
+
+              <div className="grid grid-cols-2 gap-4 relative z-10 bg-black/20 p-3 rounded-xl border border-white/5">
                 <div>
-                  <p className="text-xs text-slate-600">Original Duration</p>
-                  <p className="text-sm font-medium text-slate-900">{optimization.originalDuration} min</p>
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Standard Duration</p>
+                  <p className="text-sm font-black text-white">{optimization.originalDuration} MIN</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-600">Optimized Duration</p>
-                  <p className="text-sm font-medium text-green-700">{optimization.optimizedDuration} min</p>
+                  <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Optimized Execution</p>
+                  <p className="text-sm font-black text-emerald-400">{optimization.optimizedDuration} MIN</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h5 className="text-sm font-semibold text-slate-900 mb-2">Optimization Reasoning:</h5>
+              <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Neural Logic Reasoning</h5>
               <ul className="space-y-2">
                 {optimization.reasoning.map((reason: string, idx: number) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <i className="fas fa-check-circle text-blue-600 text-xs mt-0.5"></i>
-                    <span className="text-sm text-slate-700">{reason}</span>
+                  <li key={idx} className="flex items-start gap-3 p-3 bg-slate-900/30 rounded-xl border border-white/5 hover:border-indigo-500/20 transition-all">
+                    <i className="fas fa-check-double text-emerald-500 text-[10px] mt-1 opacity-60"></i>
+                    <span className="text-[11px] text-slate-400 font-medium leading-relaxed">{reason}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="flex items-center gap-2 pt-3 border-t">
+            <div className="flex items-center gap-3 pt-4 border-t border-white/5">
               <Button
                 onClick={handleApply}
-                className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                variant="glass"
+                className="flex-1 h-10 border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-widest"
               >
-                <i className="fas fa-check mr-2"></i>
-                Apply Optimization
+                <i className="fas fa-check-double mr-2"></i>
+                Commit Optimized Path
               </Button>
-              <Button variant="outline" onClick={() => setOptimization(null)}>
-                <i className="fas fa-times mr-2"></i>
-                Dismiss
+              <Button
+                variant="glass"
+                onClick={() => setOptimization(null)}
+                className="h-10 border-white/5 text-slate-500 text-[10px] font-black uppercase tracking-widest px-6"
+              >
+                Reset
               </Button>
             </div>
           </div>
         )}
 
-        {!selectedRoute && (
-          <div className="text-center py-8 text-slate-600">
-            <i className="fas fa-route text-3xl mb-3 text-slate-400"></i>
-            <p className="text-sm">Select a route to optimize</p>
+        {!selectedRoute && !optimization && (
+          <div className="text-center py-12 px-6 bg-slate-900/20 rounded-2xl border border-dashed border-white/5">
+            <div className="w-16 h-16 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+              <i className="fas fa-project-diagram text-3xl text-slate-700"></i>
+            </div>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Vector Data Required</p>
+            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em]">Select a path vector to initialize neural logic optimization</p>
           </div>
         )}
       </CardContent>
     </Card>
   );
 };
+
 

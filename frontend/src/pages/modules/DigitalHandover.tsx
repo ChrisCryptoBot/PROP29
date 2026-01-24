@@ -8,6 +8,7 @@ import { cn } from '../../utils/cn';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showSuccess } from '../../utils/toast';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../../styles/modern-glass.css';
+import ModuleShell from '../../components/Layout/ModuleShell';
 
 interface Handover {
   id: string;
@@ -80,7 +81,7 @@ const DigitalHandover: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedHandover, setSelectedHandover] = useState<Handover | null>(null);
   const [editingHandover, setEditingHandover] = useState<Handover | null>(null);
-  
+
   // Type assertion to fix TypeScript strict literal type inference
   const currentTab = activeTab as any;
 
@@ -270,7 +271,7 @@ const DigitalHandover: React.FC = () => {
       toastId = showLoading('Creating handover...');
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const newHandover: Handover = {
         id: Date.now().toString(),
         shiftType: formData.shiftType,
@@ -296,7 +297,7 @@ const DigitalHandover: React.FC = () => {
       setHandovers(prev => [newHandover, ...prev]);
       setShowCreateModal(false);
       resetForm();
-      
+
       if (toastId) {
         dismissLoadingAndShowSuccess(toastId, 'Handover created successfully');
       }
@@ -313,13 +314,13 @@ const DigitalHandover: React.FC = () => {
       toastId = showLoading('Completing handover...');
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       setHandovers(prev => prev.map(handover =>
         handover.id === id
           ? { ...handover, status: 'completed' as const, completedAt: new Date().toISOString() }
           : handover
       ));
-      
+
       if (toastId) {
         dismissLoadingAndShowSuccess(toastId, 'Handover completed successfully');
       }
@@ -434,51 +435,14 @@ const DigitalHandover: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* HEADER - GOLD STANDARD LAYOUT */}
-      <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        
-        {/* Title Section - CENTER */}
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-700 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-exchange-alt text-white text-2xl" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-slate-500 rounded-full flex items-center justify-center animate-pulse">
-                <i className="fas fa-clock text-white text-xs" />
-              </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-900">
-                Digital Handover
-              </h1>
-              <p className="text-slate-600 font-medium">
-                Seamless shift transitions and operational continuity
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex justify-center pb-4">
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-lg shadow-lg border border-white/30">
-            {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  currentTab === tab.id
-                    ? "bg-white text-slate-900 shadow-sm border border-slate-200"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50"
-                }`}
-              >
-                {tab.label}
-                    </button>
-                  ))}
-          </div>
-        </div>
-      </div>
+    <ModuleShell
+      icon={<i className="fas fa-exchange-alt" />}
+      title="Digital Handover"
+      subtitle="Seamless shift transitions and operational continuity"
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
 
       {/* Main Content */}
       <div className="relative max-w-[1800px] mx-auto px-6 py-6">
@@ -493,7 +457,7 @@ const DigitalHandover: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-blue-600">
+                <h3 className="text-2xl font-bold text-slate-900">
                   {metrics.totalHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -512,7 +476,7 @@ const DigitalHandover: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-blue-600">
+                <h3 className="text-2xl font-bold text-slate-900">
                   {metrics.completedHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -531,7 +495,7 @@ const DigitalHandover: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-blue-600">
+                <h3 className="text-2xl font-bold text-slate-900">
                   {metrics.pendingHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -550,7 +514,7 @@ const DigitalHandover: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <h3 className="text-2xl font-bold text-blue-600">
+                <h3 className="text-2xl font-bold text-slate-900">
                   {metrics.overdueHandovers}
                 </h3>
                 <p className="text-slate-600 text-sm">
@@ -565,7 +529,7 @@ const DigitalHandover: React.FC = () => {
         {currentTab === 'management' && (
           <div className="space-y-6">
             {/* Emergency Actions */}
-            <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
                   <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center mr-3 shadow-lg">
@@ -581,7 +545,7 @@ const DigitalHandover: React.FC = () => {
                       const overdueHandovers = handovers.filter(h => h.status === 'overdue');
                       showSuccess(`${overdueHandovers.length} handovers are overdue`);
                     }}
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                   >
                     <i className="fas fa-exclamation-triangle mr-2" />
                     Overdue Alert
@@ -591,7 +555,7 @@ const DigitalHandover: React.FC = () => {
                       const incompleteHandovers = handovers.filter(h => h.status === 'in_progress');
                       showSuccess(`${incompleteHandovers.length} handovers are incomplete`);
                     }}
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                   >
                     <i className="fas fa-clock mr-2" />
                     Incomplete Alert
@@ -601,7 +565,7 @@ const DigitalHandover: React.FC = () => {
             </Card>
 
             {/* Handover List */}
-            <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
@@ -613,7 +577,7 @@ const DigitalHandover: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {handovers.length === 0 ? (
-                    <Card className="backdrop-blur-xl bg-white/80 border-white/20 shadow-xl">
+                    <Card className="">
                       <CardContent className="p-12 text-center">
                         <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                           <i className="fas fa-clipboard-list text-slate-400 text-2xl"></i>
@@ -626,7 +590,7 @@ const DigitalHandover: React.FC = () => {
                     handovers.map(handover => (
                       <Card
                         key={handover.id}
-                        className="backdrop-blur-sm bg-white/60 border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                        className=" hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
                         onClick={() => setSelectedHandover(handover)}
                       >
                         <CardContent className="p-6">
@@ -679,7 +643,7 @@ const DigitalHandover: React.FC = () => {
                                   e.stopPropagation();
                                   handleCompleteHandover(handover.id);
                                 }}
-                                className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                                className=""
                               >
                                 <i className="fas fa-check mr-1" />
                                 Complete
@@ -700,7 +664,7 @@ const DigitalHandover: React.FC = () => {
           <div className="space-y-6">
             {/* Active Handovers */}
             <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader>
+              <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
@@ -711,9 +675,9 @@ const DigitalHandover: React.FC = () => {
                   <span className="px-3 py-1.5 text-base font-semibold rounded text-blue-800 bg-blue-100">
                     {inProgressHandovers.length} In Progress
                   </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
                   {inProgressHandovers.map(handover => (
                     <div key={handover.id} className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
@@ -723,10 +687,10 @@ const DigitalHandover: React.FC = () => {
                             {handover.handoverFrom} → {handover.handoverTo}
                           </h4>
                           <p className="text-sm text-slate-600">
-                            {handover.shiftType.charAt(0).toUpperCase() + handover.shiftType.slice(1)} Shift | 
+                            {handover.shiftType.charAt(0).toUpperCase() + handover.shiftType.slice(1)} Shift |
                             {handover.startTime} - {handover.endTime}
                           </p>
-                </div>
+                        </div>
                         <span className="px-2.5 py-1 text-xs font-semibold rounded text-yellow-800 bg-yellow-100 animate-pulse">In Progress</span>
                       </div>
                       <div className="space-y-2">
@@ -737,17 +701,17 @@ const DigitalHandover: React.FC = () => {
                           </span>
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div 
+                          <div
                             className="bg-blue-600 h-2 rounded-full transition-all"
-                            style={{ 
-                              width: `${(handover.checklistItems.filter(i => i.status === 'completed').length / handover.checklistItems.length) * 100}%` 
+                            style={{
+                              width: `${(handover.checklistItems.filter(i => i.status === 'completed').length / handover.checklistItems.length) * 100}%`
                             }}
                           />
                         </div>
                       </div>
                       <Button
                         size="sm"
-                        className="!bg-[#2563eb] hover:!bg-blue-700 text-white mt-3"
+                        className=" mt-3"
                         onClick={() => setSelectedHandover(handover)}
                       >
                         <i className="fas fa-eye mr-1" />
@@ -782,11 +746,10 @@ const DigitalHandover: React.FC = () => {
                     { shift: 'Afternoon', time: '14:00 - 22:00', staff: 'Sarah Johnson → Mike Wilson', status: 'in_progress' },
                     { shift: 'Night', time: '22:00 - 06:00', staff: 'Mike Wilson → John Smith', status: 'pending' }
                   ].map((shift, index) => (
-                    <div key={index} className={`p-4 rounded-lg border ${
-                      shift.status === 'completed' ? 'border-green-200 bg-green-50' :
+                    <div key={index} className={`p-4 rounded-lg border ${shift.status === 'completed' ? 'border-green-200 bg-green-50' :
                       shift.status === 'in_progress' ? 'border-blue-200 bg-blue-50' :
-                      'border-slate-200 bg-slate-50'
-                    }`}>
+                        'border-slate-200 '
+                      }`}>
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-semibold text-slate-900">{shift.shift} Shift</h4>
@@ -796,7 +759,7 @@ const DigitalHandover: React.FC = () => {
                         <span className={cn(
                           "px-2.5 py-1 text-xs font-semibold rounded",
                           shift.status === 'completed' ? 'text-green-800 bg-green-100' :
-                          shift.status === 'in_progress' ? 'text-yellow-800 bg-yellow-100' : 'text-slate-800 bg-slate-100'
+                            shift.status === 'in_progress' ? 'text-yellow-800 bg-yellow-100' : 'text-slate-800 bg-slate-100'
                         )}>
                           {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
                         </span>
@@ -850,13 +813,13 @@ const DigitalHandover: React.FC = () => {
           <div className="space-y-6">
             {/* Equipment Status Overview */}
             <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader>
+              <CardHeader>
                 <CardTitle className="flex items-center">
                   <i className="fas fa-clipboard-check text-slate-600 mr-2" />
                   Equipment Status Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {[
                     { name: 'Security Cameras', count: 24, operational: 23, icon: 'fa-video' },
@@ -868,7 +831,7 @@ const DigitalHandover: React.FC = () => {
                       <div className="flex items-center justify-between mb-3">
                         <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
                           <i className={`fas ${equipment.icon} text-slate-600`} />
-                </div>
+                        </div>
                         <span className={cn(
                           "px-2.5 py-1 text-xs font-semibold rounded",
                           equipment.operational === equipment.count ? 'text-green-800 bg-green-100' : 'text-yellow-800 bg-yellow-100'
@@ -882,9 +845,9 @@ const DigitalHandover: React.FC = () => {
                       </p>
                     </div>
                   ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Pending Tasks */}
             <Card className="bg-white border-slate-200 shadow-sm">
@@ -901,7 +864,7 @@ const DigitalHandover: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {handovers.flatMap((handover, hIndex) => 
+                  {handovers.flatMap((handover, hIndex) =>
                     handover.pendingTasks.map((task, tIndex) => (
                       <div key={`${hIndex}-${tIndex}`} className="p-4 border border-amber-200 bg-amber-50 rounded-lg">
                         <div className="flex items-center justify-between">
@@ -917,7 +880,7 @@ const DigitalHandover: React.FC = () => {
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                              className=""
                               onClick={() => showSuccess('Task marked as completed')}
                             >
                               <i className="fas fa-check mr-1" />
@@ -940,13 +903,13 @@ const DigitalHandover: React.FC = () => {
 
             {/* Equipment Checklist */}
             <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader>
+              <CardHeader>
                 <CardTitle className="flex items-center">
                   <i className="fas fa-list-check text-slate-600 mr-2" />
                   Standard Equipment Checklist
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-3">
                   {[
                     { item: 'Security patrol completed', category: 'Security', completed: true },
@@ -958,14 +921,12 @@ const DigitalHandover: React.FC = () => {
                     { item: 'Incident reports filed', category: 'Documentation', completed: true },
                     { item: 'Equipment logs updated', category: 'Documentation', completed: false }
                   ].map((item, index) => (
-                    <div key={index} className={`p-3 rounded-lg border ${
-                      item.completed ? 'border-green-200 bg-green-50' : 'border-slate-200 bg-slate-50'
-                    }`}>
+                    <div key={index} className={`p-3 rounded-lg border ${item.completed ? 'border-green-200 bg-green-50' : 'border-slate-200 '
+                      }`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                            item.completed ? 'bg-green-600' : 'bg-slate-300'
-                          }`}>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${item.completed ? 'bg-green-600' : 'bg-slate-300'
+                            }`}>
                             {item.completed && <i className="fas fa-check text-white text-xs" />}
                           </div>
                           <div>
@@ -977,7 +938,7 @@ const DigitalHandover: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                            className=""
                             onClick={() => showSuccess(`${item.item} marked complete`)}
                           >
                             Mark Complete
@@ -987,8 +948,8 @@ const DigitalHandover: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                  </CardContent>
-                </Card>
+              </CardContent>
+            </Card>
 
             {/* Maintenance Requests */}
             <Card className="bg-white border-slate-200 shadow-sm">
@@ -1012,7 +973,7 @@ const DigitalHandover: React.FC = () => {
                         <span className={cn(
                           "px-2.5 py-1 text-xs font-semibold rounded",
                           request.priority === 'critical' ? 'text-red-800 bg-red-100' :
-                          request.priority === 'high' ? 'text-orange-800 bg-orange-100' : 'text-blue-800 bg-blue-100'
+                            request.priority === 'high' ? 'text-orange-800 bg-orange-100' : 'text-blue-800 bg-blue-100'
                         )}>
                           {request.priority.toUpperCase()}
                         </span>
@@ -1031,7 +992,7 @@ const DigitalHandover: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-slate-600 border-slate-300 hover:bg-slate-50 w-full mt-3"
+                        className=" w-full mt-3"
                         onClick={() => showSuccess('Maintenance team notified')}
                       >
                         <i className="fas fa-bell mr-1" />
@@ -1040,8 +1001,8 @@ const DigitalHandover: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                  </CardContent>
-                </Card>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -1058,8 +1019,8 @@ const DigitalHandover: React.FC = () => {
                   <h3 className="text-3xl font-bold text-slate-900 mb-1">{metrics.completionRate}%</h3>
                   <p className="text-sm text-slate-600">Completion Rate</p>
                   <p className="text-xs text-green-600 mt-1">+5% from last month</p>
-                  </CardContent>
-                </Card>
+                </CardContent>
+              </Card>
 
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="p-6">
@@ -1069,19 +1030,19 @@ const DigitalHandover: React.FC = () => {
                   <h3 className="text-3xl font-bold text-slate-900 mb-1">{metrics.averageRating}/5</h3>
                   <p className="text-sm text-slate-600">Average Rating</p>
                   <p className="text-xs text-slate-500 mt-1">Handover quality</p>
-                  </CardContent>
-                </Card>
+                </CardContent>
+              </Card>
 
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-2">
                     <i className="fas fa-clock text-slate-600 text-xl" />
-              </div>
+                  </div>
                   <h3 className="text-3xl font-bold text-slate-900 mb-1">{metrics.averageCompletionTime}</h3>
                   <p className="text-sm text-slate-600">Avg Completion Time</p>
                   <p className="text-xs text-slate-500 mt-1">Per handover</p>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
               <Card className="bg-white border-slate-200 shadow-sm">
                 <CardContent className="p-6">
@@ -1111,9 +1072,9 @@ const DigitalHandover: React.FC = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="month" stroke="#64748b" />
                       <YAxis stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
                           border: '1px solid #e2e8f0',
                           borderRadius: '8px'
                         }}
@@ -1143,9 +1104,9 @@ const DigitalHandover: React.FC = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="shift" stroke="#64748b" />
                       <YAxis stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'white', 
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
                           border: '1px solid #e2e8f0',
                           borderRadius: '8px'
                         }}
@@ -1239,11 +1200,11 @@ const DigitalHandover: React.FC = () => {
                     <div className="pt-4 border-t border-slate-200">
                       <p className="text-sm text-slate-600 mb-2">Quick Stats:</p>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="text-center p-3 bg-slate-50 rounded-lg">
+                        <div className="text-center p-3  rounded-lg">
                           <div className="text-2xl font-bold text-slate-900">{metrics.totalHandovers}</div>
                           <div className="text-xs text-slate-600">Total Handovers</div>
                         </div>
-                        <div className="text-center p-3 bg-slate-50 rounded-lg">
+                        <div className="text-center p-3  rounded-lg">
                           <div className="text-2xl font-bold text-slate-900">{metrics.averageCompletionTime}</div>
                           <div className="text-xs text-slate-600">Avg Time</div>
                         </div>
@@ -1262,7 +1223,7 @@ const DigitalHandover: React.FC = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <Button
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                     onClick={() => showSuccess('Daily report generated')}
                   >
                     <i className="fas fa-file-pdf mr-2" />
@@ -1270,7 +1231,7 @@ const DigitalHandover: React.FC = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess('Weekly report generated')}
                   >
                     <i className="fas fa-file-excel mr-2" />
@@ -1278,7 +1239,7 @@ const DigitalHandover: React.FC = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess('Monthly report generated')}
                   >
                     <i className="fas fa-file-alt mr-2" />
@@ -1286,7 +1247,7 @@ const DigitalHandover: React.FC = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess('Custom report generated')}
                   >
                     <i className="fas fa-cog mr-2" />
@@ -1302,7 +1263,7 @@ const DigitalHandover: React.FC = () => {
           <div className="space-y-6">
             {/* Shift Configuration */}
             <Card className="bg-white border-slate-200 shadow-sm">
-            <CardHeader>
+              <CardHeader>
                 <CardTitle className="flex items-center">
                   <i className="fas fa-clock text-slate-600 mr-2" />
                   Shift Configuration
@@ -1368,15 +1329,15 @@ const DigitalHandover: React.FC = () => {
                   </div>
                   <Button
                     size="sm"
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                     onClick={() => showSuccess('New template created')}
                   >
                     <i className="fas fa-plus mr-1" />
                     Add Template
                   </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-3">
                   {[
                     { name: 'Security Checklist', items: 8, category: 'Security' },
@@ -1388,12 +1349,12 @@ const DigitalHandover: React.FC = () => {
                       <div>
                         <h4 className="font-semibold text-slate-900">{template.name}</h4>
                         <p className="text-sm text-slate-600">{template.items} items • {template.category}</p>
-                </div>
+                      </div>
                       <div className="flex space-x-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                          className=""
                           onClick={() => showSuccess(`${template.name} edited`)}
                         >
                           <i className="fas fa-edit" />
@@ -1401,7 +1362,7 @@ const DigitalHandover: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
+                          className=""
                           onClick={() => showSuccess(`${template.name} deleted`)}
                         >
                           <i className="fas fa-trash" />
@@ -1409,9 +1370,9 @@ const DigitalHandover: React.FC = () => {
                       </div>
                     </div>
                   ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Notification Settings */}
             <Card className="bg-white border-slate-200 shadow-sm">
@@ -1429,7 +1390,7 @@ const DigitalHandover: React.FC = () => {
                   { label: 'Daily handover summary reports', key: 'dailyReports' },
                   { label: 'Notify on checklist completion', key: 'checklistNotifications' }
                 ].map((setting, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div key={index} className="flex items-center justify-between p-3  rounded-lg">
                     <span className="text-slate-700">{setting.label}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1538,7 +1499,7 @@ const DigitalHandover: React.FC = () => {
             {/* Save Settings Button */}
             <div className="flex justify-end">
               <Button
-                className="!bg-[#2563eb] hover:!bg-blue-700 text-white px-8 py-3"
+                className=" px-8 py-3"
                 onClick={handleSaveSettings}
               >
                 <i className="fas fa-save mr-2" />
@@ -1547,9 +1508,9 @@ const DigitalHandover: React.FC = () => {
             </div>
           </div>
         )}
-        </div>
+      </div>
 
-        {/* Create Handover Modal */}
+      {/* Create Handover Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <Card className="backdrop-blur-xl bg-white/90 border-white/30 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -1657,7 +1618,7 @@ const DigitalHandover: React.FC = () => {
               {/* Checklist Items */}
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-slate-900">Checklist Items</h4>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-slate-700">Item Title</label>
@@ -1723,7 +1684,7 @@ const DigitalHandover: React.FC = () => {
 
                 <Button
                   onClick={addChecklistItem}
-                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  className=""
                 >
                   <i className="fas fa-plus mr-2" />
                   Add Checklist Item
@@ -1735,7 +1696,7 @@ const DigitalHandover: React.FC = () => {
                 <div className="space-y-2">
                   <h5 className="text-sm font-medium text-slate-900">Added Checklist Items:</h5>
                   {formData.checklistItems.map((item, index) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50/60 border border-slate-200/50 rounded-lg">
+                    <div key={item.id} className="flex items-center justify-between p-3 /60 border border-slate-200/50 rounded-lg">
                       <div>
                         <div className="font-medium text-slate-900">{item.title}</div>
                         <div className="text-sm text-slate-600">{item.category} • {item.priority}</div>
@@ -1747,7 +1708,7 @@ const DigitalHandover: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => removeChecklistItem(index)}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        className=""
                       >
                         <i className="fas fa-trash" />
                       </Button>
@@ -1764,14 +1725,14 @@ const DigitalHandover: React.FC = () => {
                     setShowCreateModal(false);
                     resetForm();
                   }}
-                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                  className=""
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreateHandover}
                   disabled={!formData.handoverFrom || !formData.handoverTo || !formData.handoverDate}
-                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  className=""
                 >
                   <i className="fas fa-plus mr-2" />
                   Create Handover
@@ -1798,7 +1759,7 @@ const DigitalHandover: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedHandover(null)}
-                  className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                  className=""
                 >
                   <i className="fas fa-times" />
                 </Button>
@@ -1857,7 +1818,7 @@ const DigitalHandover: React.FC = () => {
               {selectedHandover?.handoverNotes && (
                 <div>
                   <p className="text-sm font-medium text-slate-600 mb-2">Handover Notes</p>
-                  <p className="text-sm text-slate-900 bg-slate-50/60 border border-slate-200/50 p-3 rounded-lg">
+                  <p className="text-sm text-slate-900 /60 border border-slate-200/50 p-3 rounded-lg">
                     {selectedHandover?.handoverNotes}
                   </p>
                 </div>
@@ -1869,7 +1830,7 @@ const DigitalHandover: React.FC = () => {
                   <p className="text-sm font-medium text-slate-600 mb-3">Checklist Items</p>
                   <div className="space-y-2">
                     {selectedHandover?.checklistItems?.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50/60 border border-slate-200/50 rounded-lg">
+                      <div key={item.id} className="flex items-center justify-between p-3 /60 border border-slate-200/50 rounded-lg">
                         <div className="flex-1">
                           <div className="font-medium text-slate-900">{item.title}</div>
                           {item.description && (
@@ -1879,7 +1840,7 @@ const DigitalHandover: React.FC = () => {
                             <span className={cn(
                               "px-2.5 py-1 text-xs font-semibold rounded",
                               item.status === 'completed' ? 'text-green-800 bg-green-100' :
-                              item.status === 'skipped' ? 'text-slate-800 bg-slate-100' : 'text-yellow-800 bg-yellow-100'
+                                item.status === 'skipped' ? 'text-slate-800 bg-slate-100' : 'text-yellow-800 bg-yellow-100'
                             )}>
                               {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                             </span>
@@ -1906,8 +1867,11 @@ const DigitalHandover: React.FC = () => {
           </Card>
         </div>
       )}
-    </div>
+    </ModuleShell>
   );
 };
 
 export default DigitalHandover;
+
+
+

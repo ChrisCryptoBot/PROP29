@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/UI/Card';
 import { Button } from '../components/UI/Button';
 import { Badge } from '../components/UI/Badge';
+import ModuleShell from '../components/Layout/ModuleShell';
 
 interface TeamMember {
   id: string;
@@ -295,78 +296,79 @@ const AccountSettings: React.FC = () => {
     <div className="space-y-6">
       {/* Team Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-[color:var(--surface-card)] border border-white/5 shadow-2xl transition-all duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
                 <i className="fas fa-users text-white text-lg" />
               </div>
               <Badge variant="success" className="text-xs">Active</Badge>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{teamMembers.length}</h3>
-              <p className="text-slate-600 text-sm">Total Members</p>
+              <h3 className="text-2xl font-black text-[color:var(--text-main)]">{teamMembers.length}</h3>
+              <p className="text-[color:var(--text-sub)] text-[10px] font-bold uppercase tracking-widest">Total Members</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-[color:var(--surface-card)] border border-white/5 shadow-2xl transition-all duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
                 <i className="fas fa-user-check text-white text-lg" />
               </div>
               <Badge variant="success" className="text-xs">Online</Badge>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{teamMembers.filter(m => m.status === 'active').length}</h3>
-              <p className="text-slate-600 text-sm">Active Members</p>
+              <h3 className="text-2xl font-black text-[color:var(--text-main)]">{teamMembers.filter(m => m.status === 'active').length}</h3>
+              <p className="text-[color:var(--text-sub)] text-[10px] font-bold uppercase tracking-widest">Active Members</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-[color:var(--surface-card)] border border-white/5 shadow-2xl transition-all duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
                 <i className="fas fa-clock text-white text-lg" />
               </div>
               <Badge variant="warning" className="text-xs">Pending</Badge>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{teamMembers.filter(m => m.status === 'pending').length}</h3>
-              <p className="text-slate-600 text-sm">Pending Invites</p>
+              <h3 className="text-2xl font-black text-[color:var(--text-main)]">{teamMembers.filter(m => m.status === 'pending').length}</h3>
+              <p className="text-[color:var(--text-sub)] text-[10px] font-bold uppercase tracking-widest">Pending Invites</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+        <Card className="bg-[color:var(--surface-card)] border border-white/5 shadow-2xl transition-all duration-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
                 <i className="fas fa-building text-white text-lg" />
               </div>
               <Badge variant="default" className="text-xs">Teams</Badge>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-bold text-slate-900">{new Set(teamMembers.map(m => m.department)).size}</h3>
-              <p className="text-slate-600 text-sm">Departments</p>
+              <h3 className="text-2xl font-black text-[color:var(--text-main)]">{new Set(teamMembers.map(m => m.department)).size}</h3>
+              <p className="text-[color:var(--text-sub)] text-[10px] font-bold uppercase tracking-widest">Departments</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Team Members Table */}
-      <Card className="bg-white border-[1.5px] border-slate-200 shadow-sm">
+      <Card className="bg-[color:var(--surface-card)] border border-white/5 shadow-2xl">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-xl">
-              <i className="fas fa-users mr-3 text-slate-600" />
+            <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
+              <i className="fas fa-users mr-3 text-blue-400" />
               Team Members
             </CardTitle>
             <Button
               onClick={() => setShowAddMemberModal(true)}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              variant="glass"
+              className="text-[9px] font-black uppercase tracking-widest"
             >
               <i className="fas fa-plus mr-2" />
               Add Member
@@ -376,26 +378,26 @@ const AccountSettings: React.FC = () => {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50">
+              <thead className="bg-white/5">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Member</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Department</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Active</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Member</th>
+                  <th className="px-6 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Role</th>
+                  <th className="px-6 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Department</th>
+                  <th className="px-6 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Status</th>
+                  <th className="px-6 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Last Active</th>
+                  <th className="px-6 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-200">
+              <tbody className="bg-[color:var(--surface-card)] divide-y divide-white/5">
                 {teamMembers.map((member) => (
-                  <tr key={member.id} className="hover:bg-slate-50">
+                  <tr key={member.id} className="hover:bg-white/5">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-full flex items-center justify-center text-white font-semibold text-sm border border-white/5 shadow-2xl">
                           {member.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900">{member.name}</div>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">{member.name}</div>
                           <div className="text-sm text-slate-500">{member.email}</div>
                         </div>
                       </div>
@@ -419,7 +421,7 @@ const AccountSettings: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                          className=""
                           onClick={() => showSuccess(`Viewing ${member.name}'s profile`)}
                         >
                           <i className="fas fa-eye" />
@@ -427,7 +429,7 @@ const AccountSettings: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                          className=""
                           onClick={() => showSuccess(`Editing ${member.name}'s permissions`)}
                         >
                           <i className="fas fa-edit" />
@@ -435,7 +437,7 @@ const AccountSettings: React.FC = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-600 border-red-300 hover:bg-red-50"
+                          className=""
                           onClick={() => showSuccess(`Removing ${member.name} from team`)}
                         >
                           <i className="fas fa-trash" />
@@ -463,7 +465,7 @@ const AccountSettings: React.FC = () => {
             </CardTitle>
             <Button
               onClick={() => setEditMode('settings')}
-              className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+              className=""
             >
               <i className="fas fa-edit mr-2" />
               Edit Settings
@@ -611,7 +613,7 @@ const AccountSettings: React.FC = () => {
                 </Button>
                 <Button
                   onClick={() => handleUpdateSettings('Team settings')}
-                  className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                  className=""
                   disabled={loading}
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
@@ -671,7 +673,7 @@ const AccountSettings: React.FC = () => {
               <i className="fas fa-plug mr-3 text-slate-600" />
               System Integrations
             </CardTitle>
-            <Button className="!bg-[#2563eb] hover:!bg-blue-700 text-white">
+            <Button className="">
               <i className="fas fa-plus mr-2" />
               Add Integration
             </Button>
@@ -702,7 +704,7 @@ const AccountSettings: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess(`Testing ${integration.name} connection`)}
                   >
                     <i className="fas fa-sync-alt mr-1" />
@@ -711,7 +713,7 @@ const AccountSettings: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess(`Configuring ${integration.name}`)}
                   >
                     <i className="fas fa-cog mr-1" />
@@ -721,7 +723,7 @@ const AccountSettings: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      className=""
                       onClick={() => showSuccess(`Troubleshooting ${integration.name}`)}
                     >
                       <i className="fas fa-tools mr-1" />
@@ -768,7 +770,7 @@ const AccountSettings: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-slate-600 border-slate-300 hover:bg-slate-50"
+                    className=""
                     onClick={() => showSuccess(`Editing permissions for ${displayName}`)}
                   >
                     <i className="fas fa-edit mr-1" />
@@ -818,56 +820,31 @@ const AccountSettings: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="w-full backdrop-blur-xl bg-white/80 border-b border-white/20 shadow-lg relative">
-        <div className="flex items-center justify-center py-8">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg">
-                <i className="fas fa-cog text-white text-2xl" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
-                <i className="fas fa-check text-white text-xs" />
-              </div>
-            </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-slate-900">Account Settings</h1>
-              <p className="text-slate-600 font-medium">Manage your team and system configurations</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex justify-center pb-4">
-          <div className="flex space-x-1 bg-white/60 backdrop-blur-sm p-1 rounded-lg shadow-lg border border-white/30">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                }`}
-              >
-                <i className={`${tab.icon} mr-2`} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-6 py-6">
+    <ModuleShell
+      title="Account Settings"
+      subtitle="Manage your team and system configurations"
+      tabs={tabs.map((tab) => ({
+        id: tab.id,
+        label: (
+          <span className="flex items-center gap-2">
+            <i className={tab.icon} />
+            <span>{tab.label}</span>
+          </span>
+        )
+      }))}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+    >
+      <div className="space-y-6 profile-console-skin">
         {/* Error/Success Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-exclamation-triangle mr-2" />
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+          <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[10px] font-black uppercase tracking-widest">
             <i className="fas fa-check-circle mr-2" />
             {success}
           </div>
@@ -938,7 +915,7 @@ const AccountSettings: React.FC = () => {
                   </Button>
                   <Button
                     onClick={handleAddMember}
-                    className="!bg-[#2563eb] hover:!bg-blue-700 text-white"
+                    className=""
                     disabled={loading}
                   >
                     {loading ? 'Adding...' : 'Add Member'}
@@ -949,8 +926,11 @@ const AccountSettings: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </ModuleShell>
   );
 };
 
 export default AccountSettings;
+
+
+

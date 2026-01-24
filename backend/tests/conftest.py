@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from database import get_db, Base
-from models import User, Role, Permission
+from models import User, UserRole
 from schemas import UserCreate
 from services.auth_service import AuthService
 from services.user_service import UserService

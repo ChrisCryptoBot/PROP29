@@ -446,3 +446,4 @@ describe('BannedIndividuals Component', () => {
   });
 });
 
+

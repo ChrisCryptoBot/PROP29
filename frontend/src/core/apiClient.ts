@@ -1,8 +1,9 @@
 import type { ModuleAPI } from '../types/module';
+import { env } from '../config/env';
 
 class ApiClient {
   private static instance: ApiClient;
-  private baseUrl: string = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  private baseUrl: string = env.API_BASE_URL;
 
   private constructor() {}
 
@@ -14,7 +15,8 @@ class ApiClient {
   }
 
   createModuleApi(moduleId: string): ModuleAPI {
-    const moduleBaseUrl = `${this.baseUrl}/api/${moduleId}`;
+    const normalizedBase = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+    const moduleBaseUrl = `${normalizedBase}/${moduleId}`;
     
     return {
       baseUrl: moduleBaseUrl,
@@ -94,8 +96,7 @@ class ApiClient {
   }
 
   private getAuthToken(): string {
-    // Get token from localStorage or context
-    return localStorage.getItem('authToken') || '';
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || '';
   }
 
   setBaseUrl(url: string): void {

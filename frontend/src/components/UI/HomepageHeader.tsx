@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { SearchBar } from './SearchBar';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '../../services/logger';
 
 const HomepageHeader: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,7 +30,7 @@ const HomepageHeader: React.FC = () => {
     e.preventDefault();
     if (searchTerm.trim()) {
       // Handle search functionality
-      console.log('Searching for:', searchTerm);
+      logger.debug('HomepageHeader: Searching', { module: 'HomepageHeader', action: 'handleSearch', searchTerm });
       // You can implement search logic here
     }
   };
@@ -44,7 +46,7 @@ const HomepageHeader: React.FC = () => {
         break;
       case 'logout':
         // Handle logout
-        console.log('Logging out...');
+        logger.info('HomepageHeader: Logging out', { module: 'HomepageHeader', action: 'handleProfileAction', actionType: action });
         break;
       default:
         break;
@@ -72,35 +74,12 @@ const HomepageHeader: React.FC = () => {
       {/* Center: Search Bar */}
       <div className="header-center" style={{ flex: 1, maxWidth: '100%', margin: '0 4vw', minWidth: 0, display: 'flex', justifyContent: 'center' }}>
         <form onSubmit={handleSearch} style={{ position: 'relative', width: '100%', maxWidth: '1400px' }}>
-          <input
-            type="text"
-            placeholder="Search incidents, locations, staff, threats..."
+          <SearchBar
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 20px 12px 48px',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '18px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              outline: 'none',
-              transition: 'background-color 0.2s'
-            }}
-            onFocus={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-            onBlur={(e) => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-          />
-          <i 
-            className="fas fa-search" 
-            style={{
-              position: 'absolute',
-              left: '20px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontSize: '18px'
-            }}
+            onChange={setSearchTerm}
+            placeholder="Search incidents, locations, staff, threats..."
+            variant="dark"
+            className="w-full"
           />
           <input
             type="submit"

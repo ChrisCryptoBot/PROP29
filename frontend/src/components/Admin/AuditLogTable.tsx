@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DataTable from '../UI/DataTable';
 import apiService from '../../services/ApiService';
 import { showError } from '../../utils/toast';
+import { logger } from '../../services/logger';
 
 interface AuditLog {
   id: string;
@@ -37,23 +38,28 @@ const AuditLogTable: React.FC = () => {
 
   useEffect(() => {
     loadAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reload when filters change
+  useEffect(() => {
+    loadAuditLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.user_id, filters.action, filters.resource_type, filters.date_from, filters.date_to]);
 
   const loadAuditLogs = async () => {
     try {
       setLoading(true);
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/audit-logs');
-      if (response.ok) {
-        const data = await response.json();
-        setAuditLogs(data);
+      const response = await apiService.get<AuditLog[]>('/audit-logs', { params: filters });
+      if (response.data) {
+        setAuditLogs(response.data);
       } else {
         setAuditLogs([]);
       }
     } catch (error) {
       showError('Failed to load audit logs');
       setAuditLogs([]);
-      console.error('Audit log error:', error);
+      logger.error('Audit log error', error instanceof Error ? error : new Error(String(error)), { module: 'AuditLogTable', action: 'loadAuditLogs' });
     } finally {
       setLoading(false);
     }
@@ -124,7 +130,7 @@ const AuditLogTable: React.FC = () => {
       accessorKey: 'details',
       cell: ({ row }: any) => (
         <button
-          onClick={() => console.log('View details:', row.original.details)}
+          onClick={() => logger.debug('View audit log details', { module: 'AuditLogTable', action: 'viewDetails', logId: row.original.id, details: row.original.details })}
           className="text-blue-600 hover:text-blue-800 text-sm"
         >
           View

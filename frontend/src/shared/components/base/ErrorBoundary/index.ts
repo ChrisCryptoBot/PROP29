@@ -1,3 +1,6 @@
-export { ErrorBoundary, default as ErrorBoundaryDefault } from './ErrorBoundary';
-export { ModuleErrorFallback } from './ErrorBoundary';
-export type { ErrorFallbackProps, ErrorBoundaryProps, ErrorBoundaryState } from './ErrorBoundary';
+/**
+ * @deprecated Import from '../../../../components/UI/ErrorBoundary' instead
+ * This file maintains backward compatibility
+ */
+export { ErrorBoundary, default as ErrorBoundaryDefault } from '../../../../components/UI/ErrorBoundary';
+export type { ErrorFallbackProps, ErrorBoundaryProps } from '../../../../components/UI/ErrorBoundary';

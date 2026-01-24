@@ -3,6 +3,9 @@
  * Handles trend analysis and predictive insights
  */
 
+import { logger } from './logger';
+import { env } from '../config/env';
+
 interface Incident {
   id: number;
   title: string;
@@ -35,7 +38,11 @@ interface PredictiveInsight {
 }
 
 export class IncidentAIService {
-  private apiBaseUrl = 'http://localhost:8000';
+  private apiBaseUrl = env.API_BASE_URL;
+
+  private getAuthHeader(): string {
+    return localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+  }
 
   /**
    * Analyze incident trends using AI
@@ -46,7 +53,7 @@ export class IncidentAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ incidents })
       });
@@ -58,7 +65,7 @@ export class IncidentAIService {
       const data = await response.json();
       return data.trends || this.generateFallbackTrends(incidents);
     } catch (error) {
-      console.error('AI Trend Analysis Error:', error);
+      logger.error('AI Trend Analysis Error', error instanceof Error ? error : new Error(String(error)), { module: 'IncidentAIService', action: 'analyzeTrends' });
       return this.generateFallbackTrends(incidents);
     }
   }
@@ -72,7 +79,7 @@ export class IncidentAIService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`
+          'Authorization': `Bearer ${this.getAuthHeader()}`
         },
         body: JSON.stringify({ incidents })
       });
@@ -84,7 +91,7 @@ export class IncidentAIService {
       const data = await response.json();
       return data.predictions || this.generateFallbackPredictions(incidents);
     } catch (error) {
-      console.error('AI Prediction Error:', error);
+      logger.error('AI Prediction Error', error instanceof Error ? error : new Error(String(error)), { module: 'IncidentAIService', action: 'generatePredictions' });
       return this.generateFallbackPredictions(incidents);
     }
   }
