@@ -1,3 +1,4 @@
+import React from 'react';
 import toast from 'react-hot-toast';
 
 // Success notifications
@@ -41,6 +42,10 @@ export const showLoading = (message: string) => {
   });
 };
 
+export const dismissToast = (toastId: string) => {
+  toast.dismiss(toastId);
+};
+
 // Dismiss loading and show success
 export const dismissLoadingAndShowSuccess = (toastId: string, message: string) => {
   toast.dismiss(toastId);
@@ -51,6 +56,37 @@ export const dismissLoadingAndShowSuccess = (toastId: string, message: string) =
 export const dismissLoadingAndShowError = (toastId: string, message: string) => {
   toast.dismiss(toastId);
   showError(message);
+};
+
+/** Toast with Undo button. onUndo called when Undo clicked; toast dismissed. */
+export const showToastWithUndo = (
+  message: string,
+  onUndo: () => void,
+  durationMs = 5000
+) => {
+  const toastId = toast.custom(
+    (t) =>
+      React.createElement(
+        'div',
+        {
+          className: 'flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-800 border border-white/10 shadow-xl',
+          role: 'alert',
+        },
+        React.createElement('span', { className: 'text-sm text-white' }, message),
+        React.createElement('button', {
+          type: 'button',
+          onClick: () => {
+            onUndo();
+            toast.dismiss(t.id);
+          },
+          className:
+            'px-3 py-1 text-xs font-black uppercase tracking-widest rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30 transition-colors',
+          children: 'Undo',
+        })
+      ),
+    { duration: durationMs, position: 'top-right' }
+  );
+  return toastId;
 };
 
 // Admin-specific notifications

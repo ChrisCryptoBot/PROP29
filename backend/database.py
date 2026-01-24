@@ -76,6 +76,136 @@ def init_db():
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database initialized successfully")
+
+        # Lightweight migrations for SQLite
+        if engine.dialect.name == "sqlite":
+            with engine.connect() as connection:
+                columns = connection.execute(text("PRAGMA table_info(patrols)")).fetchall()
+                column_names = {row[1] for row in columns}
+                if "template_id" not in column_names:
+                    connection.execute(text("ALTER TABLE patrols ADD COLUMN template_id VARCHAR(36)"))
+                    logger.info("Added template_id column to patrols table")
+                if "version" not in column_names:
+                    connection.execute(text("ALTER TABLE patrols ADD COLUMN version INTEGER NOT NULL DEFAULT 0"))
+                    connection.commit()
+                    logger.info("Added version column to patrols table")
+
+                patrol_settings_columns = connection.execute(text("PRAGMA table_info(patrol_settings)")).fetchall()
+                patrol_settings_names = {row[1] for row in patrol_settings_columns}
+                patrol_settings_defaults = {
+                    "real_time_sync": "BOOLEAN DEFAULT 1",
+                    "offline_mode": "BOOLEAN DEFAULT 1",
+                    "auto_schedule_updates": "BOOLEAN DEFAULT 1",
+                    "push_notifications": "BOOLEAN DEFAULT 1",
+                    "location_tracking": "BOOLEAN DEFAULT 1",
+                    "emergency_alerts": "BOOLEAN DEFAULT 1",
+                    "checkpoint_missed_alert": "BOOLEAN DEFAULT 1",
+                    "patrol_completion_notification": "BOOLEAN DEFAULT 0",
+                    "shift_change_alerts": "BOOLEAN DEFAULT 0",
+                    "route_deviation_alert": "BOOLEAN DEFAULT 0",
+                    "system_status_alerts": "BOOLEAN DEFAULT 0",
+                    "gps_tracking": "BOOLEAN DEFAULT 1",
+                    "biometric_verification": "BOOLEAN DEFAULT 0",
+                    "auto_report_generation": "BOOLEAN DEFAULT 0",
+                    "audit_logging": "BOOLEAN DEFAULT 1",
+                    "two_factor_auth": "BOOLEAN DEFAULT 0",
+                    "session_timeout": "BOOLEAN DEFAULT 1",
+                    "ip_whitelist": "BOOLEAN DEFAULT 0",
+                    "mobile_app_sync": "BOOLEAN DEFAULT 1",
+                    "api_integration": "BOOLEAN DEFAULT 1",
+                    "database_sync": "BOOLEAN DEFAULT 1",
+                    "webhook_support": "BOOLEAN DEFAULT 0",
+                    "cloud_backup": "BOOLEAN DEFAULT 1",
+                    "role_based_access": "BOOLEAN DEFAULT 1",
+                    "data_encryption": "BOOLEAN DEFAULT 1",
+                    "default_patrol_duration_minutes": "INTEGER DEFAULT 45",
+                    "patrol_frequency": "VARCHAR(20) DEFAULT 'hourly'",
+                    "shift_handover_time": "VARCHAR(10) DEFAULT '06:00'",
+                    "emergency_response_minutes": "INTEGER DEFAULT 2",
+                    "patrol_buffer_minutes": "INTEGER DEFAULT 5",
+                    "max_concurrent_patrols": "INTEGER DEFAULT 5",
+                    "heartbeat_offline_threshold_minutes": "INTEGER DEFAULT 15",
+                }
+
+                for column_name, column_type in patrol_settings_defaults.items():
+                    if column_name not in patrol_settings_names:
+                        connection.execute(
+                            text(f"ALTER TABLE patrol_settings ADD COLUMN {column_name} {column_type}")
+                        )
+                        logger.info("Added %s column to patrol_settings table", column_name)
+        
+        # Seed basic admin user for development
+        db = SessionLocal()
+        try:
+            from models import User, Property, UserRole, UserRoleEnum, UserStatus, PropertyType
+            from services.auth_service import AuthService
+            import uuid
+            
+            # Check if admin user already exists
+            admin_user = db.query(User).filter(User.username == "admin").first()
+            if not admin_user:
+                logger.info("Seeding admin user...")
+                admin_user = User(
+                    user_id="1", # Use fixed ID for mock token compatibility if needed, or str(uuid.uuid4())
+                    email="admin@proper29.com",
+                    username="admin",
+                    password_hash=AuthService.get_password_hash("admin123"),
+                    first_name="Admin",
+                    last_name="User",
+                    status=UserStatus.ACTIVE
+                )
+                db.add(admin_user)
+                db.commit()
+                db.refresh(admin_user)
+                logger.info(f"Admin user seeded with ID: {admin_user.user_id}")
+            
+            # Check if default property exists
+            default_property = db.query(Property).filter(Property.property_name == "Default Hotel").first()
+            if not default_property:
+                logger.info("Seeding default property...")
+                default_property = Property(
+                    property_id="default-prop",
+                    property_name="Default Hotel",
+                    property_type=PropertyType.HOTEL,
+                    address={"street": "123 Security Blvd", "city": "Safe City", "state": "TX", "zip": "75001"},
+                    contact_info={"phone": "555-0100", "email": "frontdesk@hotel.com"},
+                    room_count=100,
+                    capacity=200,
+                    timezone="UTC",
+                    settings={}
+                )
+                db.add(default_property)
+                db.commit()
+                db.refresh(default_property)
+                logger.info(f"Default property seeded with ID: {default_property.property_id}")
+                
+            # Ensure admin user has admin role on default property
+            admin_role = db.query(UserRole).filter(
+                UserRole.user_id == admin_user.user_id,
+                UserRole.property_id == default_property.property_id,
+                UserRole.role_name == UserRoleEnum.ADMIN
+            ).first()
+            
+            if not admin_role:
+                logger.info("Seeding admin role...")
+                admin_role = UserRole(
+                    role_id=str(uuid.uuid4()),
+                    user_id=admin_user.user_id,
+                    property_id=default_property.property_id,
+                    role_name=UserRoleEnum.ADMIN,
+                    is_active=True,
+                    permissions={"all": True}
+                )
+                db.add(admin_role)
+                db.commit()
+                logger.info("Admin role seeded.")
+                
+        except Exception as seed_error:
+            logger.error(f"Seeding failed: {str(seed_error)}")
+            db.rollback()
+        finally:
+            db.close()
+            
     except Exception as e:
         logger.error(f"Database initialization failed: {str(e)}")
         raise

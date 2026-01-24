@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn';
+import { SearchBar } from './SearchBar';
+import { logger } from '../../services/logger';
 import './Sidebar.css';
 
 interface SidebarItem {
@@ -31,136 +33,38 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
       label: 'Enhanced Security Modules',
       icon: 'fas fa-shield-alt',
       children: [
-        {
-          id: 'patrol-command',
-          label: 'Patrol Command Center',
-          icon: 'fas fa-route',
-          path: '/modules/patrol'
-        },
-        {
-          id: 'access-control',
-          label: 'Access Control',
-          icon: 'fas fa-key',
-          path: '/modules/access-control'
-        },
-        {
-          id: 'event-log',
-          label: 'Incident Log',
-          icon: 'fas fa-list-alt',
-          path: '/modules/event-log'
-        },
-        {
-          id: 'lost-found',
-          label: 'Lost & Found',
-          icon: 'fas fa-search',
-          path: '/modules/lost-and-found'
-        },
-        {
-          id: 'packages',
-          label: 'Packages',
-          icon: 'fas fa-box',
-          path: '/modules/packages'
-        },
-        {
-          id: 'visitors',
-          label: 'Visitor Security',
-          icon: 'fas fa-users',
-          path: '/modules/visitors'
-        },
-        {
-          id: 'digital-handover',
-          label: 'Digital Handover',
-          icon: 'fas fa-exchange-alt',
-          path: '/modules/digital-handover'
-        },
-        {
-          id: 'smart-parking',
-          label: 'Smart Parking',
-          icon: 'fas fa-car',
-          path: '/modules/smart-parking'
-        },
-        {
-          id: 'system-admin',
-          label: 'System Administration',
-          icon: 'fas fa-cog',
-          path: '/modules/admin'
-        },
-        {
-          id: 'banned-individuals',
-          label: 'Banned Individuals',
-          icon: 'fas fa-user-times',
-          path: '/modules/banned-individuals'
-        },
-        {
-          id: 'smart-lockers',
-          label: 'Smart Lockers',
-          icon: 'fas fa-lock',
-          path: '/modules/smart-lockers'
-        },
-        {
-          id: 'emergency-alerts',
-          label: 'Emergency Alerts',
-          icon: 'fas fa-exclamation-triangle',
-          path: '/modules/emergency-alerts'
-        },
-        {
-          id: 'sound-monitoring',
-          label: 'Sound Monitoring',
-          icon: 'fas fa-volume-up',
-          path: '/modules/sound-monitoring'
-        },
-        {
-          id: 'guest-safety',
-          label: 'Guest Safety',
-          icon: 'fas fa-user-shield',
-          path: '/modules/guest-safety'
-        },
-        {
-          id: 'lockdown-facility',
-          label: 'Lockdown Facility',
-          icon: 'fas fa-lock',
-          path: '/modules/lockdown-facility'
-        },
-        {
-          id: 'view-cameras',
-          label: 'Security Operations Center',
-          icon: 'fas fa-video',
-          path: '/modules/camera-monitoring'
-        },
-        {
-          id: 'evacuation',
-          label: 'Evacuation',
-          icon: 'fas fa-exclamation-triangle',
-          path: '/modules/evacuation'
-        },
-        {
-          id: 'iot-environmental',
-          label: 'IoT Environmental',
-          icon: 'fas fa-thermometer-half',
-          path: '/modules/iot-environmental'
-        },
-        {
-          id: 'team-chat',
-          label: 'Team Chat',
-          icon: 'fas fa-comments',
-          path: '/modules/team-chat'
-        },
+        { id: 'patrol-command', label: 'Patrol Command Center', icon: 'fas fa-route', path: '/modules/patrol' },
+        { id: 'access-control', label: 'Access Control', icon: 'fas fa-key', path: '/modules/access-control' },
+        { id: 'security-operations-center', label: 'Security Operations Center', icon: 'fas fa-video', path: '/modules/security-operations-center' },
+        { id: 'event-log', label: 'Incident Log', icon: 'fas fa-list-alt', path: '/modules/event-log' },
+        { id: 'visitors', label: 'Visitor Security', icon: 'fas fa-users', path: '/modules/visitors' },
+        { id: 'banned-individuals', label: 'Banned Individuals', icon: 'fas fa-user-times', path: '/modules/banned-individuals' },
+        { id: 'guest-safety', label: 'Guest Safety', icon: 'fas fa-user-shield', path: '/modules/guest-safety' },
+        { id: 'evacuation', label: 'Evacuation', icon: 'fas fa-exclamation-triangle', path: '/modules/evacuation' },
+        { id: 'lost-found', label: 'Lost & Found', icon: 'fas fa-search', path: '/modules/lost-and-found' },
+        { id: 'packages', label: 'Packages', icon: 'fas fa-box', path: '/modules/packages' },
+        { id: 'smart-lockers', label: 'Smart Lockers', icon: 'fas fa-lock', path: '/modules/smart-lockers' },
+        { id: 'smart-parking', label: 'Smart Parking', icon: 'fas fa-car', path: '/modules/smart-parking' },
+        { id: 'digital-handover', label: 'Digital Handover', icon: 'fas fa-exchange-alt', path: '/modules/digital-handover' },
+        { id: 'team-chat', label: 'Team Chat', icon: 'fas fa-comments', path: '/modules/team-chat' },
+        { id: 'iot-environmental', label: 'IoT Environmental', icon: 'fas fa-thermometer-half', path: '/modules/iot-environmental' },
+        { id: 'sound-monitoring', label: 'Sound Monitoring', icon: 'fas fa-volume-up', path: '/modules/sound-monitoring' },
+        { id: 'system-admin', label: 'System Administration', icon: 'fas fa-cog', path: '/modules/system-administration' },
       ]
     }
   ];
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => 
-      prev.includes(sectionId) 
+    setExpandedSections(prev =>
+      prev.includes(sectionId)
         ? prev.filter(id => id !== sectionId)
         : [...prev, sectionId]
     );
   };
 
   const handleItemClick = (item: SidebarItem) => {
-    console.log('🚨 Sidebar: Item clicked:', item.label, 'Path:', item.path);
     if (item.path) {
-      console.log('🚨 Sidebar: Navigating to:', item.path);
+      logger.debug('Sidebar: Navigating to item', { module: 'Sidebar', action: 'handleItemClick', label: item.label, path: item.path });
       navigate(item.path);
     }
   };
@@ -210,10 +114,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
   };
 
   return (
-    <div 
+    <div
       className={cn(
-      "sidebar-container",
-      isCollapsed && "collapsed"
+        "sidebar-container",
+        isCollapsed && "collapsed"
       )}
     >
       {/* Sidebar Header */}
@@ -241,16 +145,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
       {/* Search Bar */}
       {!isCollapsed && (
         <div className="sidebar-search">
-          <div className="relative">
-            <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-            <input
-              type="text"
-              placeholder="Search modules..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search modules..."
+          />
         </div>
       )}
 
@@ -260,11 +159,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
           <div key={item.id} className="sidebar-section">
             <button
               onClick={() => toggleSection(item.id)}
-              className="sidebar-item"
+              className={cn(
+                "sidebar-item",
+                expandedSections.includes(item.id) && "expanded"
+              )}
             >
               <i className={item.icon}></i>
-                {!isCollapsed && (
-                  <>
+              {!isCollapsed && (
+                <>
                   <span className="sidebar-label">{item.label}</span>
                   <i className={cn(
                     "fas fa-chevron-down transition-transform duration-200",
@@ -286,15 +188,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
                     )}
                   >
                     <i className={child.icon}></i>
-                      <span className="sidebar-label">{child.label}</span>
-                      {child.badge && (
-                        <span className={cn(
+                    <span className="sidebar-label">{child.label}</span>
+                    {child.badge && (
+                      <span className={cn(
                         "badge text-xs px-2 py-1 rounded-full",
                         getBadgeColor(child.badgeColor || 'blue')
-                        )}>
-                          {child.badge}
-                        </span>
-                      )}
+                      )}>
+                        {child.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -342,23 +244,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
                 <div className="profile-dropdown-email">admin@proper29.com</div>
               </div>
             </div>
-            
+
             <div className="profile-dropdown-items">
-              <button 
+              <button
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('profile')}
               >
                 <i className="fas fa-user-cog"></i>
                 <span>Profile Settings</span>
               </button>
-              <button 
+              <button
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('settings')}
               >
                 <i className="fas fa-cog"></i>
                 <span>Account Settings</span>
               </button>
-              <button 
+              <button
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('notifications')}
               >
@@ -366,7 +268,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
                 <span>Notifications</span>
                 <span className="notification-count">3</span>
               </button>
-              <button 
+              <button
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('help')}
               >
@@ -374,7 +276,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
                 <span>Help & Support</span>
               </button>
               <div className="profile-dropdown-divider"></div>
-              <button 
+              <button
                 className="profile-dropdown-item logout-item"
                 onClick={() => handleProfileAction('logout')}
               >
@@ -389,9 +291,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
       {/* Footer */}
       <div className="sidebar-footer">
         {!isCollapsed && (
-          <div className="text-center">
-            <p className="text-sm text-gray-500">© 2024 Proper 2.9</p>
-            <p className="text-xs text-gray-400">Security Management System</p>
+          <div className="text-center space-y-3">
+            <div>
+              <p className="text-sm text-gray-500">© 2024 Proper 2.9</p>
+              <p className="text-xs text-gray-400">Security Management System</p>
+            </div>
           </div>
         )}
       </div>

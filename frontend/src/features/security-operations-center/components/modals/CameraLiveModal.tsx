@@ -6,10 +6,11 @@ import type { CameraEntry } from '../../types/security-operations.types';
 
 const MIN_W = 480;
 const MIN_H = 320;
-const MAX_W = 0.95 * (typeof window !== 'undefined' ? window.innerWidth : 1920);
-const MAX_H = 0.9 * (typeof window !== 'undefined' ? window.innerHeight : 1080);
 const DEFAULT_W = 900;
 const DEFAULT_H = 560;
+/** Max size as fraction of viewport; use 1 so you can go fullscreen. No upper bound beyond viewport. */
+const MAX_VIEWPORT_W = 1;
+const MAX_VIEWPORT_H = 1;
 
 export interface CameraLiveModalProps {
   isOpen: boolean;
@@ -20,18 +21,25 @@ export interface CameraLiveModalProps {
 export const CameraLiveModal: React.FC<CameraLiveModalProps> = ({ isOpen, onClose, camera }) => {
   const [width, setWidth] = useState(DEFAULT_W);
   const [height, setHeight] = useState(DEFAULT_H);
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [resizing, setResizing] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const startRef = useRef({ x: 0, y: 0, w: 0, h: 0 });
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
+  const justResizedRef = useRef(false);
+  const justDraggedRef = useRef(false);
 
   const clamp = useCallback((v: number, min: number, max: number) => Math.max(min, Math.min(max, v)), []);
 
   useEffect(() => {
     if (isOpen) {
-      const maxW = typeof window !== 'undefined' ? 0.95 * window.innerWidth : DEFAULT_W;
-      const maxH = typeof window !== 'undefined' ? 0.9 * window.innerHeight : DEFAULT_H;
+      const maxW = typeof window !== 'undefined' ? MAX_VIEWPORT_W * window.innerWidth : DEFAULT_W;
+      const maxH = typeof window !== 'undefined' ? MAX_VIEWPORT_H * window.innerHeight : DEFAULT_H;
       setWidth(clamp(DEFAULT_W, MIN_W, maxW));
       setHeight(clamp(DEFAULT_H, MIN_H, maxH));
+      setPosition(null);
+      setDragging(false);
     }
   }, [isOpen, clamp]);
 
@@ -49,17 +57,45 @@ export const CameraLiveModal: React.FC<CameraLiveModalProps> = ({ isOpen, onClos
   }, [isOpen, onClose]);
 
   useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: MouseEvent) => {
+      const el = panelRef.current;
+      if (!el) return;
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      const nextX = e.clientX - dragOffsetRef.current.x;
+      const nextY = e.clientY - dragOffsetRef.current.y;
+      const x = Math.max(0, Math.min(window.innerWidth - w, nextX));
+      const y = Math.max(0, Math.min(window.innerHeight - h, nextY));
+      setPosition({ x, y });
+    };
+    const onUp = () => {
+      justDraggedRef.current = true;
+      setDragging(false);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [dragging]);
+
+  useEffect(() => {
     if (!resizing) return;
-    const maxW = 0.95 * window.innerWidth;
-    const maxH = 0.9 * window.innerHeight;
+    const maxW = MAX_VIEWPORT_W * window.innerWidth;
+    const maxH = MAX_VIEWPORT_H * window.innerHeight;
 
     const onMove = (e: MouseEvent) => {
       const dx = e.clientX - startRef.current.x;
       const dy = e.clientY - startRef.current.y;
-      setWidth((w) => clamp(startRef.current.w + dx, MIN_W, maxW));
-      setHeight((h) => clamp(startRef.current.h + dy, MIN_H, maxH));
+      setWidth((_w) => clamp(startRef.current.w + dx, MIN_W, maxW));
+      setHeight((_h) => clamp(startRef.current.h + dy, MIN_H, maxH));
     };
-    const onUp = () => setResizing(false);
+    const onUp = () => {
+      justResizedRef.current = true;
+      setResizing(false);
+    };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -84,8 +120,45 @@ export const CameraLiveModal: React.FC<CameraLiveModalProps> = ({ isOpen, onClos
     [width, height]
   );
 
+  const handleDragStart = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const el = panelRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const px = position === null ? rect.left : position.x;
+      const py = position === null ? rect.top : position.y;
+      dragOffsetRef.current = { x: e.clientX - px, y: e.clientY - py };
+      if (position === null) setPosition({ x: rect.left, y: rect.top });
+      setDragging(true);
+    },
+    [position]
+  );
+
   if (!isOpen) return null;
   if (!camera) return null;
+
+  const maxW = typeof window !== 'undefined' ? MAX_VIEWPORT_W * window.innerWidth : width;
+  const maxH = typeof window !== 'undefined' ? MAX_VIEWPORT_H * window.innerHeight : height;
+  const styleW = Math.min(width, maxW);
+  const styleH = Math.min(height, maxH);
+  const panelStyle: React.CSSProperties =
+    position === null
+      ? { width: styleW, height: styleH, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }
+      : { width: styleW, height: styleH, left: position.x, top: position.y };
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target !== e.currentTarget) return;
+    if (justResizedRef.current) {
+      justResizedRef.current = false;
+      return;
+    }
+    if (justDraggedRef.current) {
+      justDraggedRef.current = false;
+      return;
+    }
+    onClose();
+  };
 
   return (
     <div
@@ -93,20 +166,25 @@ export const CameraLiveModal: React.FC<CameraLiveModalProps> = ({ isOpen, onClos
       role="dialog"
       aria-modal="true"
       aria-label={`Live view: ${camera.name}`}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={handleBackdropClick}
     >
       <div
         ref={panelRef}
         className={cn(
-          'relative bg-slate-900/90 rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col',
+          'absolute bg-slate-900/90 rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col',
           'border-white/10'
         )}
-        style={{ width: Math.min(width, 0.95 * window.innerWidth), height: Math.min(height, 0.9 * window.innerHeight) }}
+        style={panelStyle}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header — drag handle (exclude Close) */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 shrink-0">
-          <div className="flex items-center gap-3">
+          <div
+            role="presentation"
+            aria-label="Drag to reposition"
+            className="flex items-center gap-3 cursor-move select-none flex-1 min-w-0"
+            onMouseDown={handleDragStart}
+          >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/80 to-slate-900 flex items-center justify-center border border-white/5">
               <i className="fas fa-video text-white" aria-hidden />
             </div>

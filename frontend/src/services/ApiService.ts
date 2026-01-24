@@ -1,6 +1,9 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
+import { logger } from './logger';
+import { env } from '../config/env';
+import type { AccessEvent } from '../shared/types/access-control.types';
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;
@@ -40,7 +43,7 @@ export interface GuestSafetyIncident {
   description: string;
   location: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'reported' | 'investigating' | 'resolved';
+  status: 'reported' | 'investigating' | 'responding' | 'resolved';
   reported_by: string;
   reported_at: string;
   resolved_at?: string;
@@ -48,6 +51,7 @@ export interface GuestSafetyIncident {
   guest_involved?: string;
   room_number?: string;
   contact_info?: string;
+  assigned_team?: string;
 }
 
 export interface GuestSafetyAlert {
@@ -99,7 +103,7 @@ export interface Event {
   resolved: boolean;
   resolved_at?: string;
   resolved_by?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   message?: string;
   source?: string;
 }
@@ -112,7 +116,7 @@ export interface Report {
   created_at: string;
   completed_at?: string;
   file_url?: string;
-  parameters: any;
+  parameters: Record<string, unknown>;
 }
 
 export interface LostFoundItem {
@@ -151,8 +155,8 @@ export interface LostFoundAnalytics {
   returned_items: number;
   items_by_location: Record<string, number>;
   items_by_status: Record<string, number>;
-  recent_activity: any[];
-  trends: any[];
+  recent_activity: LostFoundItem[];
+  trends: Array<{ date: string; count: number }>;
   monthly_items: { month: string; found: number; claimed: number }[];
   items_by_category: Record<string, number>;
 }
@@ -192,14 +196,72 @@ export interface PackageAnalytics {
   pending_delivery: number;
   packages_by_status: Record<string, number>;
   packages_by_location: Record<string, number>;
-  recent_activity: any[];
-  trends: any[];
+  recent_activity: Package[];
+  trends: Array<{ date: string; count: number }>;
   expired_packages: number;
   packages_by_type: Record<string, number>;
   daily_packages: { date: string; count: number }[];
   average_delivery_time: number;
   delivery_success_rate: number;
   most_active_senders: { name: string; count: number }[];
+}
+
+export interface ParkingSpace {
+  space_id: string;
+  property_id: string;
+  label: string;
+  zone?: string;
+  type: string;
+  status: string;
+  current_guest_id?: string;
+  last_seen: string;
+  iot_sensor_data?: any;
+}
+
+export interface GuestParking {
+  registration_id: string;
+  property_id: string;
+  guest_id?: string;
+  guest_name: string;
+  plate: string;
+  vehicle_info: any;
+  space_id?: string;
+  checkin_at: string;
+  checkout_at?: string;
+  status: string;
+  valet_status: string;
+  notes?: string;
+}
+
+export interface ParkingHealth {
+  status: string;
+  components: {
+    database: string;
+    sensors: string;
+  };
+  metrics: {
+    total_spaces: number;
+    occupancy_rate: string;
+    offline_sensors: number;
+  };
+  timestamp: string;
+}
+
+export interface ParkingSettings {
+  settings_id: string;
+  property_id: string;
+  guest_hourly_rate: number;
+  guest_daily_rate: number;
+  valet_fee: number;
+  ev_charging_fee: number;
+  max_stay_hours: number;
+  grace_period_minutes: number;
+  late_fee_rate: number;
+  auto_checkout_enabled: boolean;
+  low_occupancy_alert: boolean;
+  maintenance_reminders: boolean;
+  billing_sync_enabled: boolean;
+  updated_at: string;
 }
 
 export interface SecurityThreat {
@@ -225,8 +287,8 @@ export interface SecurityAnalytics {
   critical_threats: number;
   threats_by_type: Record<string, number>;
   threats_by_severity: Record<string, number>;
-  recent_threats: any[];
-  trends: any[];
+  recent_threats: SecurityThreat[];
+  trends: Array<{ date: string; count: number }>;
   hourly_threats: { hour: string; count: number }[];
   security_score: number;
   blocked_attempts: number;
@@ -235,21 +297,27 @@ export interface SecurityAnalytics {
 export interface EnvironmentalData {
   id: string;
   sensor_id: string;
-  temperature: number;
-  humidity: number;
-  air_quality: number;
+  camera_id?: string;
+  camera_name?: string;
+  temperature?: number;
+  humidity?: number;
+  air_quality?: number;
   timestamp: string;
   location: string;
   sensor_type: string;
-  value: number;
-  unit: string;
-  status: 'normal' | 'warning' | 'critical' | 'offline';
-  noise_level?: number;
+  value?: number;
+  unit?: string;
+  status: 'normal' | 'warning' | 'critical';
+  threshold_min?: number;
+  threshold_max?: number;
   light_level?: number;
+  noise_level?: number;
 }
 
 export interface EnvironmentalAlert {
   id: string;
+  camera_id?: string;
+  camera_name?: string;
   alert_type: 'temperature' | 'humidity' | 'air_quality' | 'fire' | 'flood';
   severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
@@ -258,7 +326,20 @@ export interface EnvironmentalAlert {
   status: 'active' | 'acknowledged' | 'resolved';
   sensor_id: string;
   resolved: boolean;
-  acknowledged: boolean;
+  resolved_at?: string;
+  light_level?: number;
+  noise_level?: number;
+}
+
+export interface EnvironmentalSettings {
+  temperatureUnit: 'celsius' | 'fahrenheit';
+  refreshInterval: string;
+  enableNotifications: boolean;
+  criticalAlertsOnly: boolean;
+  autoAcknowledge: boolean;
+  dataRetention: string;
+  alertSoundEnabled: boolean;
+  emailNotifications: boolean;
 }
 
 export interface Patrol {
@@ -276,7 +357,7 @@ export interface Patrol {
   guard_name: string;
   checkpoints: string[];
   end_time?: string;
-  incidents?: any[];
+  incidents?: Record<string, unknown>[];
 }
 
 export interface Locker {
@@ -290,16 +371,6 @@ export interface Locker {
   features: string[];
 }
 
-export interface ParkingSpace {
-  id: string;
-  space_number: string;
-  location: string;
-  status: 'available' | 'occupied' | 'reserved' | 'maintenance';
-  assigned_user?: string;
-  assigned_at?: string;
-  vehicle_info?: string;
-  space_type: 'standard' | 'handicap' | 'electric' | 'vip';
-}
 
 export interface Visitor {
   id: string;
@@ -331,8 +402,8 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-    
+    this.baseURL = env.API_BASE_URL;
+
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
@@ -348,26 +419,47 @@ class ApiService {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
-        
-        console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+
+        const fullUrl = `${config.baseURL}${config.url}`;
+        logger.debug(`ApiService Request: ${config.method?.toUpperCase()} ${fullUrl}`, {
+          baseUrl: config.baseURL,
+          url: config.url,
+          fullUrl
+        });
+        logger.apiCall(config.url || '', config.method?.toUpperCase() || 'UNKNOWN', { endpoint: config.url, method: config.method });
         return config;
       },
       (error) => {
-        console.error('Request error:', error);
+        logger.error('Request error', error instanceof Error ? error : new Error(String(error)), { module: 'ApiService', action: 'request-interceptor' });
         return Promise.reject(error);
       }
     );
 
     this.api.interceptors.response.use(
       (response) => {
-        console.log(`API Response: ${response.config.url} - ${response.status}`);
+        logger.debug(`API Response: ${response.config.url} - ${response.status}`, { endpoint: response.config.url, status: response.status });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('api:network-ok'));
+        }
         return response;
       },
       (error: AxiosError) => {
-        console.error(`API Error: ${error.config?.url} - ${error.response?.status}`);
+        logger.apiError(error.config?.url || 'unknown', error instanceof Error ? error : new Error(String(error)), {
+          module: 'ApiService',
+          action: 'response-interceptor',
+          status: error.response?.status,
+          endpoint: error.config?.url
+        });
+        if (typeof window !== 'undefined' && !error.response) {
+          window.dispatchEvent(new CustomEvent('api:network-error'));
+        }
         return Promise.reject(error);
       }
     );
+  }
+
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private async handleRequest<T>(
@@ -380,10 +472,30 @@ class ApiService {
         success: true,
         message: 'Request successful'
       };
-    } catch (error: any) {
-      console.error('API request failed:', error);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      const method = axiosError.config?.method?.toLowerCase();
+      const canRetry = !axiosError.response && method === 'get';
+      if (canRetry) {
+        await this.delay(600);
+        try {
+          const retryResponse = await request();
+          return {
+            data: retryResponse.data,
+            success: true,
+            message: 'Request successful'
+          };
+        } catch (retryError) {
+          // fall through to error handling
+        }
+      }
+      logger.error('API request failed', error instanceof Error ? error : new Error(String(error)), {
+        module: 'ApiService',
+        action: 'handleRequest',
+        message: axiosError.response?.data || axiosError.message
+      });
       return {
-        error: error.response?.data?.message || error.message || 'Request failed',
+        error: (axiosError.response?.data as { message?: string })?.message || axiosError.message || 'Request failed',
         success: false,
         data: undefined
       };
@@ -391,8 +503,8 @@ class ApiService {
   }
 
   // Lost & Found Methods
-  async getLostFoundItems(params?: any): Promise<ApiResponse<LostFoundItem[]>> {
-    return this.handleRequest(() => this.api.get('/lost-found', { params }));
+  async getLostFoundItems(params?: Record<string, unknown>): Promise<ApiResponse<LostFoundItem[]>> {
+    return this.handleRequest(() => this.api.get<LostFoundItem[]>('/lost-found', { params }));
   }
 
   async createLostFoundItem(item: Omit<LostFoundItem, 'id'>): Promise<ApiResponse<LostFoundItem>> {
@@ -407,8 +519,8 @@ class ApiService {
     return this.handleRequest(() => this.api.delete(`/lost-found/${id}`));
   }
 
-  async claimLostFoundItem(id: string, claimData: any): Promise<ApiResponse<LostFoundItem>> {
-    return this.handleRequest(() => this.api.post(`/lost-found/${id}/claim`, claimData));
+  async claimLostFoundItem(id: string, claimData: Record<string, unknown>): Promise<ApiResponse<LostFoundItem>> {
+    return this.handleRequest(() => this.api.post<LostFoundItem>(`/lost-found/${id}/claim`, claimData));
   }
 
   async findLostFoundMatches(id: string): Promise<ApiResponse<LostFoundItem[]>> {
@@ -420,8 +532,8 @@ class ApiService {
   }
 
   // Package Methods
-  async getPackages(params?: any): Promise<ApiResponse<Package[]>> {
-    return this.handleRequest(() => this.api.get('/packages', { params }));
+  async getPackages(params?: Record<string, unknown>): Promise<ApiResponse<Package[]>> {
+    return this.handleRequest(() => this.api.get<Package[]>('/packages', { params }));
   }
 
   async createPackage(pkg: Omit<Package, 'id'>): Promise<ApiResponse<Package>> {
@@ -449,25 +561,37 @@ class ApiService {
   }
 
 
-  async getSecurityAlerts(params?: any): Promise<ApiResponse<any[]>> {
-    return this.handleRequest(() => this.api.get('/security/alerts', { params }));
+  async getSecurityAlerts(params?: Record<string, unknown>): Promise<ApiResponse<SecurityThreat[]>> {
+    return this.handleRequest(() => this.api.get<SecurityThreat[]>('/security/alerts', { params }));
   }
 
-  async createSecurityAlert(alert: any): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.post('/security/alerts', alert));
+  async createSecurityAlert(alert: Omit<SecurityThreat, 'id'>): Promise<ApiResponse<SecurityThreat>> {
+    return this.handleRequest(() => this.api.post<SecurityThreat>('/security/alerts', alert));
   }
 
   // Environmental/IoT Methods
-  async getEnvironmentalData(params?: any): Promise<ApiResponse<EnvironmentalData[]>> {
-    return this.handleRequest(() => this.api.get('/iot/environmental', { params }));
+  async getEnvironmentalData(params?: Record<string, unknown>): Promise<ApiResponse<EnvironmentalData[]>> {
+    return this.handleRequest(() => this.api.get<EnvironmentalData[]>('/iot/environmental', { params }));
   }
 
-  async getEnvironmentalAlerts(params?: any): Promise<ApiResponse<EnvironmentalAlert[]>> {
-    return this.handleRequest(() => this.api.get('/iot/environmental/alerts', { params }));
+  async getEnvironmentalAlerts(params?: Record<string, unknown>): Promise<ApiResponse<EnvironmentalAlert[]>> {
+    return this.handleRequest(() => this.api.get<EnvironmentalAlert[]>('/iot/environmental/alerts', { params }));
   }
 
-  async getEnvironmentalAnalytics(): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.get('/iot/environmental/analytics'));
+  async getEnvironmentalAnalytics(): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.get<Record<string, unknown>>('/iot/environmental/analytics'));
+  }
+
+  async createEnvironmentalSensor(payload: Partial<EnvironmentalData>): Promise<ApiResponse<EnvironmentalData>> {
+    return this.handleRequest(() => this.api.post<EnvironmentalData>('/iot/environmental/sensors', payload));
+  }
+
+  async updateEnvironmentalSensor(sensorId: string, payload: Partial<EnvironmentalData>): Promise<ApiResponse<EnvironmentalData>> {
+    return this.handleRequest(() => this.api.put<EnvironmentalData>(`/iot/environmental/sensors/${sensorId}`, payload));
+  }
+
+  async deleteEnvironmentalSensor(sensorId: string): Promise<ApiResponse<void>> {
+    return this.handleRequest(() => this.api.delete(`/iot/environmental/sensors/${sensorId}`));
   }
 
   async createEnvironmentalAlert(alert: Omit<EnvironmentalAlert, 'id'>): Promise<ApiResponse<EnvironmentalAlert>> {
@@ -482,9 +606,17 @@ class ApiService {
     return this.handleRequest(() => this.api.delete(`/iot/environmental/alerts/${id}`));
   }
 
+  async getEnvironmentalSettings(): Promise<ApiResponse<EnvironmentalSettings>> {
+    return this.handleRequest(() => this.api.get<EnvironmentalSettings>('/iot/environmental/settings'));
+  }
+
+  async updateEnvironmentalSettings(payload: Partial<EnvironmentalSettings>): Promise<ApiResponse<EnvironmentalSettings>> {
+    return this.handleRequest(() => this.api.put<EnvironmentalSettings>('/iot/environmental/settings', payload));
+  }
+
   // Visitor Methods
-  async getVisitors(params?: any): Promise<ApiResponse<Visitor[]>> {
-    return this.handleRequest(() => this.api.get('/visitors', { params }));
+  async getVisitors(params?: Record<string, unknown>): Promise<ApiResponse<Visitor[]>> {
+    return this.handleRequest(() => this.api.get<Visitor[]>('/visitors', { params }));
   }
 
   async createVisitor(visitor: Omit<Visitor, 'id'>): Promise<ApiResponse<Visitor>> {
@@ -507,16 +639,16 @@ class ApiService {
     return this.handleRequest(() => this.api.post(`/visitors/${id}/check-out`));
   }
 
-  async getVisitorAnalytics(): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.get('/visitors/analytics'));
+  async getVisitorAnalytics(): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.get<Record<string, unknown>>('/visitors/analytics'));
   }
 
   // Patrol Methods
-  async getPatrols(params?: any): Promise<ApiResponse<Patrol[]>> {
-    return this.handleRequest(() => this.api.get('/patrols', { params }));
+  async getPatrols(params?: Record<string, unknown>): Promise<ApiResponse<Patrol[]>> {
+    return this.handleRequest(() => this.api.get<Patrol[]>('/patrols', { params }));
   }
 
-  async getPatrolRoutes(params?: any): Promise<ApiResponse<Patrol[]>> {
+  async getPatrolRoutes(params?: Record<string, unknown>): Promise<ApiResponse<Patrol[]>> {
     return this.getPatrols(params);
   }
 
@@ -552,20 +684,20 @@ class ApiService {
     return this.handleRequest(() => this.api.post(`/patrols/${id}/complete`));
   }
 
-  async reportPatrolIncident(id: string, incidentData: any): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.post(`/patrols/${id}/incidents`, incidentData));
+  async reportPatrolIncident(id: string, incidentData: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.post<Record<string, unknown>>(`/patrols/${id}/incidents`, incidentData));
   }
 
-  async getPatrolAnalytics(): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.get('/patrols/analytics'));
+  async getPatrolAnalytics(): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.get<Record<string, unknown>>('/patrols/analytics'));
   }
 
   // Smart Locker Methods
-  async getSmartLockers(params?: any): Promise<ApiResponse<Locker[]>> {
-    return this.handleRequest(() => this.api.get('/smart-lockers', { params }));
+  async getSmartLockers(params?: Record<string, unknown>): Promise<ApiResponse<Locker[]>> {
+    return this.handleRequest(() => this.api.get<Locker[]>('/smart-lockers', { params }));
   }
 
-  async getLockers(params?: any): Promise<ApiResponse<Locker[]>> {
+  async getLockers(params?: Record<string, unknown>): Promise<ApiResponse<Locker[]>> {
     return this.getSmartLockers(params);
   }
 
@@ -593,101 +725,121 @@ class ApiService {
     return this.handleRequest(() => this.api.post(`/smart-lockers/${id}/release`));
   }
 
-  async getLockerAnalytics(): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.get('/smart-lockers/analytics'));
+  async getLockerAnalytics(): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.get<Record<string, unknown>>('/smart-lockers/analytics'));
   }
 
-  // Smart Parking Methods
-  async getParkingSpaces(params?: any): Promise<ApiResponse<ParkingSpace[]>> {
-    return this.handleRequest(() => this.api.get('/smart-parking', { params }));
-  }
 
-  async getSmartParking(params?: any): Promise<ApiResponse<ParkingSpace[]>> {
-    return this.getParkingSpaces(params);
-  }
-
-  async createParkingSpace(space: Omit<ParkingSpace, 'id'>): Promise<ApiResponse<ParkingSpace>> {
-    return this.handleRequest(() => this.api.post('/smart-parking', space));
-  }
-
-  async createSmartParking(space: Omit<ParkingSpace, 'id'>): Promise<ApiResponse<ParkingSpace>> {
-    return this.createParkingSpace(space);
-  }
-
-  async updateParkingSpace(id: string, space: Partial<ParkingSpace>): Promise<ApiResponse<ParkingSpace>> {
-    return this.handleRequest(() => this.api.put(`/smart-parking/${id}`, space));
-  }
-
-  async updateSmartParking(id: string, space: Partial<ParkingSpace>): Promise<ApiResponse<ParkingSpace>> {
-    return this.updateParkingSpace(id, space);
-  }
-
-  async deleteParkingSpace(id: string): Promise<ApiResponse<void>> {
-    return this.handleRequest(() => this.api.delete(`/smart-parking/${id}`));
-  }
-
-  async deleteSmartParking(id: string): Promise<ApiResponse<void>> {
-    return this.deleteParkingSpace(id);
-  }
-
-  async reserveParkingSpace(id: string, userId: string, vehicleInfo?: string): Promise<ApiResponse<ParkingSpace>> {
-    return this.handleRequest(() => 
-      this.api.post(`/smart-parking/${id}/reserve`, { 
-        user_id: userId, 
-        vehicle_info: vehicleInfo 
-      })
+  // ============= PARKING =============
+  async getParkingSettings(propertyId: string): Promise<ApiResponse<ParkingSettings>> {
+    return this.handleRequest<ParkingSettings>(() =>
+      this.api.get<ParkingSettings>('/parking/settings', { params: { property_id: propertyId } })
     );
   }
 
-  async releaseParkingSpace(id: string): Promise<ApiResponse<ParkingSpace>> {
-    return this.handleRequest(() => this.api.post(`/smart-parking/${id}/release`));
+  async updateParkingSettings(propertyId: string, data: Partial<ParkingSettings>): Promise<ApiResponse<ParkingSettings>> {
+    return this.handleRequest<ParkingSettings>(() =>
+      this.api.put('/parking/settings', data, { params: { property_id: propertyId } })
+    );
   }
 
-  async getParkingAnalytics(): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.get('/smart-parking/analytics'));
+  async getParkingSpaces(propertyId: string): Promise<ApiResponse<ParkingSpace[]>> {
+    return this.handleRequest<ParkingSpace[]>(() =>
+      this.api.get<ParkingSpace[]>('/parking/spaces', { params: { property_id: propertyId } })
+    );
+  }
+
+  async getParkingRegistrations(propertyId: string, status: string = 'all'): Promise<ApiResponse<GuestParking[]>> {
+    return this.handleRequest<GuestParking[]>(() =>
+      this.api.get<GuestParking[]>('/parking/registrations', { params: { property_id: propertyId, status } })
+    );
+  }
+
+  async createParkingSpace(data: Partial<ParkingSpace>): Promise<ApiResponse<ParkingSpace>> {
+    return this.handleRequest<ParkingSpace>(() =>
+      this.api.post('/parking/spaces', data)
+    );
+  }
+
+  async updateParkingSpace(spaceId: string, data: Partial<ParkingSpace>): Promise<ApiResponse<ParkingSpace>> {
+    return this.handleRequest<ParkingSpace>(() =>
+      this.api.put(`/parking/spaces/${spaceId}`, data)
+    );
+  }
+
+  async registerGuestParking(data: GuestParking): Promise<ApiResponse<GuestParking>> {
+    return this.handleRequest<GuestParking>(() =>
+      this.api.post('/parking/guest', data)
+    );
+  }
+
+  async checkoutGuestParking(registrationId: string): Promise<ApiResponse<GuestParking>> {
+    return this.handleRequest<GuestParking>(() =>
+      this.api.post(`/parking/guest/${registrationId}/checkout`)
+    );
+  }
+
+  async updateValetStatus(registrationId: string, status: string): Promise<ApiResponse<GuestParking>> {
+    return this.handleRequest<GuestParking>(() =>
+      this.api.post(`/parking/guest/${registrationId}/valet`, null, { params: { status } })
+    );
+  }
+
+  async getParkingHealth(propertyId: string): Promise<ApiResponse<ParkingHealth>> {
+    return this.handleRequest<ParkingHealth>(() =>
+      this.api.get<ParkingHealth>('/parking/health', { params: { property_id: propertyId } })
+    );
   }
 
   // Access Control Methods
-  async getAccessLogs(params?: any): Promise<ApiResponse<any[]>> {
-    return this.handleRequest(() => this.api.get('/access/logs', { params }));
+  async getAccessLogs(params?: Record<string, unknown>): Promise<ApiResponse<AccessEvent[]>> {
+    return this.handleRequest(() => this.api.get<AccessEvent[]>('/access/logs', { params }));
   }
 
   async grantAccess(userId: string, location: string): Promise<ApiResponse<void>> {
-    return this.handleRequest(() => 
+    return this.handleRequest(() =>
       this.api.post('/access/grant', { user_id: userId, location })
     );
   }
 
   async revokeAccess(userId: string, location: string): Promise<ApiResponse<void>> {
-    return this.handleRequest(() => 
+    return this.handleRequest(() =>
       this.api.post('/access/revoke', { user_id: userId, location })
     );
   }
 
   // Authentication Methods
-  async login(credentials: any): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.post('/auth/login', credentials));
+  async login(credentials: { username: string; password: string }): Promise<ApiResponse<{ access_token: string; refresh_token?: string; user: Record<string, unknown> }>> {
+    return this.handleRequest(() => this.api.post<{ access_token: string; refresh_token?: string; user: Record<string, unknown> }>('/auth/login', credentials));
   }
 
   async logout(): Promise<ApiResponse<void>> {
     return this.handleRequest(() => this.api.post('/auth/logout'));
   }
 
+  async getUserProperties(): Promise<ApiResponse<{ property_id: string; property_name: string; timezone?: string }[]>> {
+    return this.handleRequest(() => this.api.get('/users/properties'));
+  }
+
   // Generic Methods
-  async get<T>(endpoint: string, params?: any): Promise<ApiResponse<T>> {
-    return this.handleRequest(() => this.api.get(endpoint, { params }));
+  async get<T>(endpoint: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    return this.handleRequest(() => this.api.get<T>(endpoint, config));
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    return this.handleRequest(() => this.api.post(endpoint, data));
+  async post<T>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    return this.handleRequest(() => this.api.post<T>(endpoint, data, config));
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-    return this.handleRequest(() => this.api.put(endpoint, data));
+  async put<T>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    return this.handleRequest(() => this.api.put<T>(endpoint, data, config));
   }
 
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.handleRequest(() => this.api.delete(endpoint));
+  async patch<T>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    return this.handleRequest(() => this.api.patch<T>(endpoint, data, config));
+  }
+
+  async delete<T>(endpoint: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    return this.handleRequest(() => this.api.delete<T>(endpoint, config));
   }
 
   // Utility Methods
@@ -695,100 +847,101 @@ class ApiService {
     return this.baseURL;
   }
 
-  async healthCheck(): Promise<ApiResponse<any>> {
-    return this.handleRequest(() => this.api.get('/health'));
+  async healthCheck(): Promise<ApiResponse<{ status: string; timestamp: string }>> {
+    return this.handleRequest(() => this.api.get<{ status: string; timestamp: string }>('/health'));
   }
 
   // ============= BANNED INDIVIDUALS =============
-  async getBannedIndividuals(params?: any): Promise<ApiResponse<BannedIndividual[]>> {
-    return this.handleRequest<BannedIndividual[]>(() => 
-      this.api.get('/api/banned-individuals', { params })
+  async getBannedIndividuals(params?: Record<string, unknown>): Promise<ApiResponse<BannedIndividual[]>> {
+    return this.handleRequest<BannedIndividual[]>(() =>
+      this.api.get<BannedIndividual[]>('/banned-individuals', { params })
     );
   }
 
   async createBannedIndividual(data: Omit<BannedIndividual, 'id'>): Promise<ApiResponse<BannedIndividual>> {
-    return this.handleRequest<BannedIndividual>(() => 
-      this.api.post('/api/banned-individuals', data)
+    return this.handleRequest<BannedIndividual>(() =>
+      this.api.post('/banned-individuals', data)
     );
   }
 
   async updateBannedIndividual(id: string, data: Partial<BannedIndividual>): Promise<ApiResponse<BannedIndividual>> {
-    return this.handleRequest<BannedIndividual>(() => 
-      this.api.put(`/api/banned-individuals/${id}`, data)
+    return this.handleRequest<BannedIndividual>(() =>
+      this.api.put(`/banned-individuals/${id}`, data)
     );
   }
 
   async deleteBannedIndividual(id: string): Promise<ApiResponse<void>> {
-    return this.handleRequest<void>(() => 
-      this.api.delete(`/api/banned-individuals/${id}`)
+    return this.handleRequest<void>(() =>
+      this.api.delete(`/banned-individuals/${id}`)
     );
   }
 
   // ============= GUEST SAFETY =============
-  async getGuestSafetyIncidents(params?: any): Promise<ApiResponse<GuestSafetyIncident[]>> {
-    return this.handleRequest<GuestSafetyIncident[]>(() => 
-      this.api.get('/api/guest-safety/incidents', { params })
+  async getGuestSafetyIncidents(params?: Record<string, unknown>): Promise<ApiResponse<GuestSafetyIncident[]>> {
+    return this.handleRequest<GuestSafetyIncident[]>(() =>
+      this.api.get<GuestSafetyIncident[]>('/guest-safety/incidents', { params })
     );
   }
 
-  async getGuestSafetyAlerts(params?: any): Promise<ApiResponse<GuestSafetyAlert[]>> {
-    return this.handleRequest<GuestSafetyAlert[]>(() => 
-      this.api.get('/api/guest-safety/alerts', { params })
+  async getGuestSafetyAlerts(params?: Record<string, unknown>): Promise<ApiResponse<GuestSafetyAlert[]>> {
+    return this.handleRequest<GuestSafetyAlert[]>(() =>
+      this.api.get<GuestSafetyAlert[]>('/guest-safety/alerts', { params })
     );
   }
 
   async createGuestSafetyIncident(data: Omit<GuestSafetyIncident, 'id'>): Promise<ApiResponse<GuestSafetyIncident>> {
-    return this.handleRequest<GuestSafetyIncident>(() => 
-      this.api.post('/api/guest-safety/incidents', data)
+    return this.handleRequest<GuestSafetyIncident>(() =>
+      this.api.post('/guest-safety/incidents', data)
     );
   }
 
   async updateGuestSafetyIncident(id: string, data: Partial<GuestSafetyIncident>): Promise<ApiResponse<GuestSafetyIncident>> {
-    return this.handleRequest<GuestSafetyIncident>(() => 
-      this.api.put(`/api/guest-safety/incidents/${id}`, data)
+    return this.handleRequest<GuestSafetyIncident>(() =>
+      this.api.put(`/guest-safety/incidents/${id}`, data)
     );
   }
 
   async deleteGuestSafetyIncident(id: string): Promise<ApiResponse<void>> {
-    return this.handleRequest<void>(() => 
-      this.api.delete(`/api/guest-safety/incidents/${id}`)
+    return this.handleRequest<void>(() =>
+      this.api.delete(`/guest-safety/incidents/${id}`)
     );
   }
 
   async resolveGuestSafetyIncident(id: string): Promise<ApiResponse<GuestSafetyIncident>> {
-    return this.handleRequest<GuestSafetyIncident>(() => 
-      this.api.put(`/api/guest-safety/incidents/${id}/resolve`)
+    return this.handleRequest<GuestSafetyIncident>(() =>
+      this.api.put(`/guest-safety/incidents/${id}/resolve`)
     );
   }
 
   async createGuestSafetyAlert(data: Omit<GuestSafetyAlert, 'id'>): Promise<ApiResponse<GuestSafetyAlert>> {
-    return this.handleRequest<GuestSafetyAlert>(() => 
-      this.api.post('/api/guest-safety/alerts', data)
+    return this.handleRequest<GuestSafetyAlert>(() =>
+      this.api.post('/guest-safety/alerts', data)
     );
   }
 
   // ============= DIGITAL HANDOVER =============
-  async getHandovers(params?: any): Promise<ApiResponse<Handover[]>> {
-    return this.handleRequest<Handover[]>(() => 
-      this.api.get('/api/handovers', { params })
+  async getHandovers(params?: Record<string, unknown>): Promise<ApiResponse<Handover[]>> {
+    return this.handleRequest<Handover[]>(() =>
+      this.api.get<Handover[]>('/handovers', { params })
     );
   }
 
   async createHandover(data: Omit<Handover, 'id'>): Promise<ApiResponse<Handover>> {
-    return this.handleRequest<Handover>(() => 
-      this.api.post('/api/handovers', data)
+    return this.handleRequest<Handover>(() =>
+      this.api.post('/handovers', data)
     );
   }
 
+
   // ============= EVENT LOG =============
-  async getEvents(params?: any): Promise<ApiResponse<Event[]>> {
-    return this.handleRequest<Event[]>(() => 
-      this.api.get('/api/events', { params })
+  async getEvents(params?: Record<string, unknown>): Promise<ApiResponse<Event[]>> {
+    return this.handleRequest<Event[]>(() =>
+      this.api.get<Event[]>('/events', { params })
     );
   }
 
   // Fix method name - should be getSecurityAlerts, not getSecurityMetrics
-  async getSecurityMetrics(): Promise<ApiResponse<any>> {
+  async getSecurityMetrics(): Promise<ApiResponse<SecurityThreat[]>> {
     return this.getSecurityAlerts();
   }
 }

@@ -70,23 +70,24 @@ class AuthService:
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
         """Create a JWT access token with enhanced security"""
         to_encode = data.copy()
+        now = datetime.utcnow()
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = now + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        
+            expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        # Use numeric timestamps (NumericDate) for JWT compatibility
         to_encode.update({
-            "exp": expire,
+            "exp": int(expire.timestamp()),
             "type": "access",
-            "iat": datetime.utcnow(),
+            "iat": int(now.timestamp()),
             "iss": "proper29-api"
         })
         
         try:
             encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-            return encoded_jwt
+            return encoded_jwt if isinstance(encoded_jwt, str) else encoded_jwt.decode("utf-8")
         except Exception as e:
-            logger.error(f"Token creation error: {str(e)}")
+            logger.error(f"Token creation error: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Token creation failed"
@@ -96,19 +97,20 @@ class AuthService:
     def create_refresh_token(data: dict) -> str:
         """Create a JWT refresh token"""
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        now = datetime.utcnow()
+        expire = now + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({
-            "exp": expire,
+            "exp": int(expire.timestamp()),
             "type": "refresh",
-            "iat": datetime.utcnow(),
+            "iat": int(now.timestamp()),
             "iss": "proper29-api"
         })
         
         try:
             encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-            return encoded_jwt
+            return encoded_jwt if isinstance(encoded_jwt, str) else encoded_jwt.decode("utf-8")
         except Exception as e:
-            logger.error(f"Refresh token creation error: {str(e)}")
+            logger.error(f"Refresh token creation error: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Refresh token creation failed"
@@ -251,7 +253,26 @@ class AuthService:
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid token type"
                 )
-            
+            # Development fallback for mock admin user
+            if os.getenv("ENVIRONMENT") == "development" and payload.get("user_id") == "1":
+                token_data = {
+                    "sub": "1",
+                    "username": payload.get("username") or "admin",
+                    "email": payload.get("email") or "admin@proper29.com",
+                    "roles": payload.get("roles") or ["admin"]
+                }
+                access_token = AuthService.create_access_token(token_data)
+                new_refresh_token = AuthService.create_refresh_token(token_data)
+                return TokenResponse(
+                    access_token=access_token,
+                    refresh_token=new_refresh_token,
+                    token_type="bearer",
+                    expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+                    user_id="1",
+                    username=token_data["username"],
+                    roles=token_data["roles"]
+                )
+
             # Get user from database
             db = SessionLocal()
             try:

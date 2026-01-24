@@ -31,6 +31,7 @@ class IncidentStatus(str, enum.Enum):
     INVESTIGATING = "investigating"
     RESOLVED = "resolved"
     CLOSED = "closed"
+    PENDING_REVIEW = "pending_review"
 
 class PatrolType(str, enum.Enum):
     SCHEDULED = "scheduled"
@@ -54,6 +55,7 @@ class PropertyType(str, enum.Enum):
 class UserRoleEnum(str, enum.Enum):
     ADMIN = "admin"
     SECURITY_MANAGER = "security_manager"
+    SECURITY_OFFICER = "security_officer"
     GUARD = "guard"
     FRONT_DESK = "front_desk"
     MANAGER = "manager"
@@ -101,6 +103,8 @@ class SensorType(str, enum.Enum):
     AIR_QUALITY = "air_quality"
     PRESSURE = "pressure"
     VIBRATION = "vibration"
+    LIGHT = "light"
+    NOISE = "noise"
 
 class ThreatSeverity(str, enum.Enum):
     LOW = "low"
@@ -126,6 +130,16 @@ class PackageStatus(str, enum.Enum):
     NOTIFIED = "notified"
     DELIVERED = "delivered"
     EXPIRED = "expired"
+
+class CameraStatus(str, enum.Enum):
+    ONLINE = "online"
+    OFFLINE = "offline"
+    MAINTENANCE = "maintenance"
+
+class EvacuationStatus(str, enum.Enum):
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
 class LostFoundStatus(str, enum.Enum):
     LOST = "lost"
@@ -228,6 +242,11 @@ class Incident(Base):
     ai_confidence = Column(Float, nullable=True)
     follow_up_required = Column(Boolean, default=False)
     insurance_claim = Column(Boolean, default=False)
+    idempotency_key = Column(String(100), nullable=True, index=True)
+    source = Column(String(50), nullable=True)
+    source_agent_id = Column(String(100), nullable=True)
+    source_device_id = Column(String(100), nullable=True)
+    source_metadata = Column(JSON, nullable=True)
     
     # Relationships
     property = relationship("Property", foreign_keys=[property_id], back_populates="incidents")
@@ -239,7 +258,8 @@ class Patrol(Base):
     
     patrol_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
-    guard_id = Column(String(36), ForeignKey("users.user_id"), nullable=False)
+    guard_id = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    template_id = Column(String(36), ForeignKey("patrol_templates.template_id"), nullable=True)
     patrol_type = Column(Enum(PatrolType), default=PatrolType.SCHEDULED)
     route = Column(JSON, nullable=False)
     status = Column(Enum(PatrolStatus), default=PatrolStatus.PLANNED)
@@ -251,10 +271,104 @@ class Patrol(Base):
     observations = Column(Text, nullable=True)
     incidents_found = Column(JSON, nullable=True)
     efficiency_score = Column(Float, nullable=True)
+    version = Column(Integer, default=0, nullable=False)
     
-    # Relationships
     property = relationship("Property", foreign_keys=[property_id], back_populates="patrols")
     guard = relationship("User", foreign_keys=[guard_id], back_populates="patrols")
+
+class PatrolRoute(Base):
+    __tablename__ = "patrol_routes"
+    
+    route_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    checkpoints = Column(JSON, nullable=False, default=[])
+    estimated_duration = Column(String(50), nullable=True)
+    difficulty = Column(String(20), default="medium") # easy, medium, hard
+    frequency = Column(String(50), default="daily") # hourly, daily, weekly
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    
+    property = relationship("Property")
+    creator = relationship("User", foreign_keys=[created_by])
+    templates = relationship("PatrolTemplate", back_populates="route", cascade="all, delete-orphan")
+
+class PatrolTemplate(Base):
+    __tablename__ = "patrol_templates"
+    
+    template_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    route_id = Column(String(36), ForeignKey("patrol_routes.route_id", ondelete="CASCADE"), nullable=False)
+    assigned_officers = Column(JSON, nullable=True, default=[]) # List of user_ids
+    schedule = Column(JSON, nullable=True) # {startTime, endTime, days}
+    priority = Column(String(20), default="medium")
+    is_recurring = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    
+    property = relationship("Property")
+    route = relationship("PatrolRoute", back_populates="templates")
+    creator = relationship("User", foreign_keys=[created_by])
+
+class PatrolSettings(Base):
+    __tablename__ = "patrol_settings"
+    
+    settings_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    # JSON column for flexibility given the large number of boolean flags
+    # We will map the Pydantic schema to this JSON column or specific columns
+    # Given the 20+ booleans, a JSON column 'config' is cleaner than 20 separate columns
+    # But for consistency with other settings tables (which have specific columns), 
+    # let's see. GuestSafetySettings has explicit cols. 
+    # Let's use a mix: Primary ones explicit, others in JSON if needed.
+    # Actually, mapping all 20 booleans as columns is safer for querying if needed.
+    
+    real_time_sync = Column(Boolean, default=True)
+    offline_mode = Column(Boolean, default=True)
+    auto_schedule_updates = Column(Boolean, default=True)
+    push_notifications = Column(Boolean, default=True)
+    location_tracking = Column(Boolean, default=True)
+    emergency_alerts = Column(Boolean, default=True)
+    checkpoint_missed_alert = Column(Boolean, default=True)
+    patrol_completion_notification = Column(Boolean, default=False)
+    shift_change_alerts = Column(Boolean, default=False)
+    route_deviation_alert = Column(Boolean, default=False)
+    system_status_alerts = Column(Boolean, default=False)
+    gps_tracking = Column(Boolean, default=True)
+    biometric_verification = Column(Boolean, default=False)
+    auto_report_generation = Column(Boolean, default=False)
+    audit_logging = Column(Boolean, default=True)
+    two_factor_auth = Column(Boolean, default=False)
+    session_timeout = Column(Boolean, default=True)
+    ip_whitelist = Column(Boolean, default=False)
+    mobile_app_sync = Column(Boolean, default=True)
+    api_integration = Column(Boolean, default=True)
+    database_sync = Column(Boolean, default=True)
+    webhook_support = Column(Boolean, default=False)
+    cloud_backup = Column(Boolean, default=True)
+    role_based_access = Column(Boolean, default=True)
+    data_encryption = Column(Boolean, default=True)
+
+    # Operational defaults (minutes/time)
+    default_patrol_duration_minutes = Column(Integer, default=45)
+    patrol_frequency = Column(String(20), default="hourly")
+    shift_handover_time = Column(String(10), default="06:00")
+    emergency_response_minutes = Column(Integer, default=2)
+    patrol_buffer_minutes = Column(Integer, default=5)
+    max_concurrent_patrols = Column(Integer, default=5)
+    heartbeat_offline_threshold_minutes = Column(Integer, default=15)
+
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+
+    property = relationship("Property")
 
 class Guest(Base):
     __tablename__ = "guests"
@@ -292,11 +406,102 @@ class AccessControlEvent(Base):
     is_authorized = Column(Boolean, nullable=False)
     alert_triggered = Column(Boolean, default=False)
     photo_capture = Column(String(500), nullable=True)
+    # Agent/Mobile Device Support
+    source = Column(String(50), nullable=True, default="manager")  # 'manager', 'agent', 'device', 'sensor'
+    source_agent_id = Column(String(36), nullable=True)  # ID of agent who submitted
+    source_device_id = Column(String(100), nullable=True)  # Mobile device ID
+    source_metadata = Column(JSON, nullable=True, default={})  # Additional agent/device metadata
+    idempotency_key = Column(String(100), nullable=True, unique=True)  # For duplicate detection
+    review_status = Column(String(20), nullable=True, default="approved")  # 'pending', 'approved', 'rejected'
+    rejection_reason = Column(String(500), nullable=True)  # Reason if rejected
+    reviewed_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)  # Manager who reviewed
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)  # When reviewed
     
     # Relationships
     property = relationship("Property", foreign_keys=[property_id], back_populates="access_events")
     user = relationship("User", foreign_keys=[user_id])
     guest = relationship("Guest", foreign_keys=[guest_id], back_populates="access_events")
+
+class AccessPoint(Base):
+    __tablename__ = "access_points"
+
+    access_point_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    location = Column(String(150), nullable=False)
+    type = Column(String(20), nullable=False)
+    status = Column(String(20), nullable=False, default="active")
+    access_method = Column(String(20), nullable=False, default="card")
+    access_count = Column(Integer, default=0)
+    security_level = Column(String(20), default="medium")
+    permissions = Column(JSON, nullable=True, default=[])
+    is_online = Column(Boolean, default=True)
+    sensor_status = Column(String(20), nullable=True)
+    power_source = Column(String(20), nullable=True)
+    battery_level = Column(Integer, nullable=True)
+    last_access = Column(DateTime(timezone=True), nullable=True)
+    last_status_change = Column(DateTime(timezone=True), nullable=True)
+    cached_events = Column(JSON, nullable=True, default=[])
+    details = Column("metadata", JSON, nullable=True, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    property = relationship("Property")
+
+class AccessControlUser(Base):
+    __tablename__ = "access_control_users"
+
+    access_user_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(150), nullable=False)
+    email = Column(String(255), nullable=False)
+    role = Column(String(30), nullable=False, default="employee")
+    department = Column(String(100), nullable=False, default="Operations")
+    status = Column(String(20), nullable=False, default="active")
+    access_level = Column(String(20), nullable=False, default="standard")
+    access_count = Column(Integer, default=0)
+    avatar = Column(String(255), nullable=False, default="")
+    permissions = Column(JSON, nullable=True, default=[])
+    phone = Column(String(30), nullable=True)
+    employee_id = Column(String(50), nullable=True)
+    access_schedule = Column(JSON, nullable=True)
+    temporary_accesses = Column(JSON, nullable=True, default=[])
+    auto_revoke_at_checkout = Column(Boolean, default=False)
+    last_access = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    property = relationship("Property")
+
+class AccessControlEmergencyState(Base):
+    __tablename__ = "access_control_emergency_state"
+
+    emergency_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False, unique=True)
+    mode = Column(String(20), nullable=False, default="normal")
+    initiated_by = Column(String(150), nullable=True)
+    reason = Column(String(255), nullable=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    timeout_minutes = Column(Integer, nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    previous_statuses = Column(JSON, nullable=True, default=[])
+
+    property = relationship("Property")
+
+class AccessControlAuditLog(Base):
+    __tablename__ = "access_control_audit_logs"
+
+    audit_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=True)
+    actor = Column(String(150), nullable=False)
+    action = Column(String(200), nullable=False)
+    status = Column(String(20), nullable=False, default="info")
+    target = Column(String(200), nullable=True)
+    reason = Column(Text, nullable=True)
+    source = Column(String(50), nullable=True)  # 'web_admin' | 'mobile_agent' | 'system'
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+
+    property = relationship("Property")
 
 class UserActivity(Base):
     __tablename__ = "user_activities"
@@ -359,6 +564,60 @@ class GuestSafetyEvent(Base):
     user = relationship("User", foreign_keys=[user_id])
     resolver = relationship("User", foreign_keys=[resolved_by])
 
+
+class GuestSafetyIncident(Base):
+    __tablename__ = "guest_safety_incidents"
+    
+    incident_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    location = Column(String(255), nullable=False)
+    severity = Column(Enum(GuestSafetySeverity), default=GuestSafetySeverity.MEDIUM)
+    status = Column(String(50), default="reported")
+    reported_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    reported_at = Column(DateTime(timezone=True), server_default=func.now())
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    guest_involved = Column(String(255), nullable=True)
+    room_number = Column(String(50), nullable=True)
+    contact_info = Column(String(255), nullable=True)
+    assigned_team = Column(String(255), nullable=True)
+    
+    # Relationships
+    property = relationship("Property")
+    reporter = relationship("User", foreign_keys=[reported_by])
+    resolver = relationship("User", foreign_keys=[resolved_by])
+
+
+class GuestSafetyTeam(Base):
+    __tablename__ = "guest_safety_teams"
+    
+    team_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(120), nullable=False)
+    role = Column(String(120), nullable=False)
+    status = Column(String(30), default="available")
+    avatar = Column(String(10), default="GS")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    property = relationship("Property")
+
+
+class GuestSafetySettings(Base):
+    __tablename__ = "guest_safety_settings"
+    
+    settings_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False, unique=True)
+    alert_threshold = Column(Integer, default=5)
+    auto_escalation = Column(Boolean, default=True)
+    notification_channels = Column(JSON, default={"inApp": True, "sms": True, "email": True})
+    response_team_assignment = Column(String(30), default="automatic")
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    property = relationship("Property")
+
 class IoTEnvironmentalData(Base):
     __tablename__ = "iot_environmental_data"
     
@@ -366,7 +625,12 @@ class IoTEnvironmentalData(Base):
     property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
     sensor_id = Column(String(100), nullable=False)
     sensor_type = Column(Enum(SensorType), nullable=False)
+    camera_id = Column(String(36), ForeignKey("cameras.camera_id", ondelete="SET NULL"), nullable=True)
     location = Column(JSON, nullable=False)
+    value = Column(Float, nullable=True)
+    unit = Column(String(50), nullable=True)
+    light_level = Column(Float, nullable=True)
+    noise_level = Column(Float, nullable=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
     temperature = Column(Float, nullable=True)
     humidity = Column(Float, nullable=True)
@@ -378,38 +642,231 @@ class IoTEnvironmentalData(Base):
     vibration = Column(Float, nullable=True)
     battery_level = Column(Float, nullable=True)
     signal_strength = Column(Float, nullable=True)
+    threshold_min = Column(Float, nullable=True)
+    threshold_max = Column(Float, nullable=True)
     alerts_triggered = Column(JSON, nullable=True)
     status = Column(String(20), default="active")
     
     # Relationships
     property = relationship("Property")
+    camera = relationship("Camera")
 
-class DigitalHandover(Base):
-    __tablename__ = "digital_handovers"
+
+class IoTEnvironmentalAlert(Base):
+    __tablename__ = "iot_environmental_alerts"
+    
+    alert_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    sensor_id = Column(String(100), nullable=False)
+    camera_id = Column(String(36), ForeignKey("cameras.camera_id", ondelete="SET NULL"), nullable=True)
+    alert_type = Column(String(50), nullable=False)
+    severity = Column(Enum(ThreatSeverity), default=ThreatSeverity.MEDIUM)
+    message = Column(Text, nullable=False)
+    location = Column(JSON, nullable=False)
+    light_level = Column(Float, nullable=True)
+    noise_level = Column(Float, nullable=True)
+    status = Column(String(20), default="active")
+    resolved = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    
+    property = relationship("Property")
+    camera = relationship("Camera")
+
+
+class IoTEnvironmentalSettings(Base):
+    __tablename__ = "iot_environmental_settings"
+    
+    settings_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False, unique=True)
+    temperature_unit = Column(String(20), default="celsius")
+    refresh_interval = Column(String(10), default="30")
+    enable_notifications = Column(Boolean, default=True)
+    critical_alerts_only = Column(Boolean, default=False)
+    auto_acknowledge = Column(Boolean, default=False)
+    data_retention = Column(String(10), default="90")
+    alert_sound_enabled = Column(Boolean, default=True)
+    email_notifications = Column(Boolean, default=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    property = relationship("Property")
+
+class HandoverPriority(str, enum.Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class HandoverVerificationStatus(str, enum.Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
+    DISPUTED = "disputed"
+
+class ChecklistItemStatus(str, enum.Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    SKIPPED = "skipped"
+
+class ChecklistItemCategory(str, enum.Enum):
+    SECURITY = "security"
+    MAINTENANCE = "maintenance"
+    INCIDENTS = "incidents"
+    EQUIPMENT = "equipment"
+    GENERAL = "general"
+# Digital Handover Models
+class Handover(Base):
+    __tablename__ = "handovers"
     
     handover_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
-    from_user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False)
-    to_user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False)
-    shift_type = Column(Enum(ShiftType), nullable=False)
-    handover_time = Column(DateTime(timezone=True), server_default=func.now())
-    ai_briefing = Column(Text, nullable=True)
-    priority_alerts = Column(JSON, nullable=True)
-    pending_incidents = Column(JSON, nullable=True)
-    active_patrols = Column(JSON, nullable=True)
-    system_status = Column(JSON, nullable=True)
-    notes = Column(Text, nullable=True)
-    status = Column(Enum(HandoverStatus), default=HandoverStatus.PENDING)
-    acknowledged_at = Column(DateTime(timezone=True), nullable=True)
-    acknowledged_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
-    created_by = Column(String(36), ForeignKey("users.user_id"), nullable=False)
+    shiftType = Column(String(50), nullable=False)
+    handoverFrom = Column(String(255), nullable=False)
+    handoverTo = Column(String(255), nullable=False)
+    handoverDate = Column(DateTime, nullable=False)
+    startTime = Column(String(10), nullable=False)
+    endTime = Column(String(10), nullable=False)
+    status = Column(String(50), default="pending")
+    priority = Column(String(50), default="medium")
+    handoverNotes = Column(Text, nullable=True)
+    incidentsSummary = Column(Text, nullable=True)
+    specialInstructions = Column(Text, nullable=True)
+    equipmentStatus = Column(String(255), default="operational")
+    verificationStatus = Column(String(50), default="pending")
+    handoverRating = Column(Float, nullable=True)
+    feedback = Column(Text, nullable=True)
+    completedAt = Column(DateTime, nullable=True)
+    completedBy = Column(String(255), nullable=True)
+    verifiedAt = Column(DateTime, nullable=True)
+    verifiedBy = Column(String(255), nullable=True)
+    signatureFrom = Column(Text, nullable=True)
+    signatureTo = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     
     # Relationships
     property = relationship("Property")
-    from_user = relationship("User", foreign_keys=[from_user_id])
-    to_user = relationship("User", foreign_keys=[to_user_id])
-    acknowledged_by_user = relationship("User", foreign_keys=[acknowledged_by])
-    creator = relationship("User", foreign_keys=[created_by])
+    checklist_items = relationship("HandoverChecklistItem", back_populates="handover", cascade="all, delete-orphan")
+
+class HandoverChecklistItem(Base):
+    __tablename__ = "handover_checklist_items"
+    
+    item_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    handover_id = Column(String(36), ForeignKey("handovers.handover_id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    category = Column(String(50), nullable=False)
+    status = Column(String(50), default="pending")
+    priority = Column(String(50), default="medium")
+    assignedTo = Column(String(255), nullable=True)
+    dueDate = Column(DateTime, nullable=True)
+    completedAt = Column(DateTime, nullable=True)
+    completedBy = Column(String(255), nullable=True)
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+    handover = relationship("Handover", back_populates="checklist_items")
+
+class Equipment(Base):
+    __tablename__ = "equipment"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    category = Column(String(100), nullable=False)
+    status = Column(String(50), default="operational")
+    location = Column(String(255), nullable=True)
+    last_check_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    property = relationship("Property")
+
+class MaintenanceRequest(Base):
+    __tablename__ = "maintenance_requests"
+    
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    equipment_id = Column(String(36), ForeignKey("equipment.id", ondelete="CASCADE"), nullable=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    priority = Column(String(50), default="medium")
+    status = Column(String(50), default="pending")
+    location = Column(String(255), nullable=True)
+    reported_by = Column(String(255), nullable=True)
+    assigned_to = Column(String(255), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    completed_at = Column(DateTime, nullable=True)
+
+    # Relationships
+    property = relationship("Property")
+    equipment = relationship("Equipment")
+
+class HandoverSettings(Base):
+    __tablename__ = "handover_settings"
+    
+    settings_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), unique=True, nullable=False)
+    
+    # Shift configurations (stored as JSON)
+    shiftConfigurations = Column(JSON, default=lambda: {
+        "morning": {"start": "06:00", "end": "14:00"},
+        "afternoon": {"start": "14:00", "end": "22:00"},
+        "night": {"start": "22:00", "end": "06:00"}
+    })
+    
+    # Notification settings (stored as JSON)
+    notificationSettings = Column(JSON, default=lambda: {
+        "emailNotifications": True,
+        "smsNotifications": False,
+        "pushNotifications": True,
+        "reminderTime": "30",
+        "escalationTime": "2"
+    })
+    
+    # Template settings (stored as JSON)
+    templateSettings = Column(JSON, default=lambda: {
+        "defaultPriority": "medium",
+        "defaultCategory": "general",
+        "autoAssignTasks": True,
+        "requireApproval": False
+    })
+    
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    updated_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    
+    # Relationships
+    property = relationship("Property")
+
+class HandoverTemplate(Base):
+    __tablename__ = "handover_templates"
+    
+    template_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    category = Column(String(50), nullable=False)
+    operationalPost = Column(String(100), nullable=True)
+    isDefault = Column(Boolean, default=False)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    items = relationship("HandoverTemplateItem", back_populates="template", cascade="all, delete-orphan")
+
+class HandoverTemplateItem(Base):
+    __tablename__ = "handover_template_items"
+    
+    item_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    template_id = Column(String(36), ForeignKey("handover_templates.template_id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    category = Column(String(50), nullable=False)
+    priority = Column(String(50), default="medium")
+    assignedTo = Column(String(255), nullable=True)
+    
+    # Relationships
+    template = relationship("HandoverTemplate", back_populates="items")
 
 class SmartLocker(Base):
     __tablename__ = "smart_lockers"
@@ -435,29 +892,99 @@ class SmartLocker(Base):
     property = relationship("Property")
     guest = relationship("Guest")
 
-class SmartParking(Base):
-    __tablename__ = "smart_parking"
+class ParkingSpace(Base):
+    __tablename__ = "parking_spaces"
     
-    parking_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    space_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
-    spot_number = Column(String(20), nullable=False)
-    location = Column(JSON, nullable=False)
+    label = Column(String(50), nullable=False)
+    zone = Column(String(50), nullable=True)
+    type = Column(String(50), default="regular")  # regular, accessible, ev, staff, valet
     status = Column(Enum(ParkingStatus), default=ParkingStatus.AVAILABLE)
-    spot_type = Column(String(20), nullable=False)  # regular, handicap, vip, electric
-    current_guest_id = Column(String(36), ForeignKey("guests.guest_id"), nullable=True)
-    check_in_time = Column(DateTime(timezone=True), nullable=True)
-    check_out_time = Column(DateTime(timezone=True), nullable=True)
+    current_guest_id = Column(String(36), nullable=True)
+    last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     iot_sensor_data = Column(JSON, nullable=True)
-    last_maintenance = Column(DateTime(timezone=True), nullable=True)
-    next_maintenance = Column(DateTime(timezone=True), nullable=True)
-    battery_level = Column(Float, nullable=True)
-    signal_strength = Column(Float, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relationships
     property = relationship("Property")
+
+class ParkingOccupancyEvent(Base):
+    __tablename__ = "parking_occupancy_events"
+    
+    event_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    space_id = Column(String(36), ForeignKey("parking_spaces.space_id", ondelete="CASCADE"), nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    source = Column(String(50), nullable=False)  # sensor|lpr|manual
+    value = Column(Boolean, nullable=False)  # True for occupied, False for available
+    
+    # Relationships
+    space = relationship("ParkingSpace")
+
+class GuestParking(Base):
+    __tablename__ = "guest_parkings"
+    
+    registration_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    guest_id = Column(String(36), ForeignKey("guests.guest_id", ondelete="SET NULL"), nullable=True)
+    guest_name = Column(String(200), nullable=False)
+    plate = Column(String(20), nullable=False, index=True)
+    vehicle_info = Column(JSON, nullable=True)  # {make, model, color}
+    space_id = Column(String(36), ForeignKey("parking_spaces.space_id", ondelete="SET NULL"), nullable=True)
+    checkin_at = Column(DateTime(timezone=True), server_default=func.now())
+    checkout_at = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String(20), default="active")  # active, completed, overdue
+    valet_status = Column(String(20), default="idle") # idle, requested, retrieving, ready, delivered
+    notes = Column(Text, nullable=True)
+    
+    # Relationships
+
+    # Relationships
+    property = relationship("Property")
+    space = relationship("ParkingSpace")
     guest = relationship("Guest")
+    billing = relationship("ParkingBillingRecord", back_populates="registration", cascade="all, delete-orphan")
+
+class ParkingBillingRecord(Base):
+    """Financial record for a parking stay"""
+    __tablename__ = "parking_billing_records"
+    
+    billing_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    registration_id = Column(String(36), ForeignKey("guest_parkings.registration_id", ondelete="CASCADE"), nullable=False)
+    amount_cents = Column(Integer, nullable=False)
+    currency = Column(String(3), default="USD")
+    status = Column(String(20), default="pending")  # pending, paid, cancelled
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    registration = relationship("GuestParking", back_populates="billing")
+
+class ParkingSettings(Base):
+    """Global and per-property settings for the parking module"""
+    __tablename__ = "parking_settings"
+
+    settings_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), unique=True, nullable=False)
+    
+    # Pricing (stored as cents)
+    guest_hourly_rate = Column(Integer, default=500)
+    guest_daily_rate = Column(Integer, default=4000)
+    valet_fee = Column(Integer, default=1500)
+    ev_charging_fee = Column(Integer, default=250)
+    
+    # Policies
+    max_stay_hours = Column(Integer, default=24)
+    grace_period_minutes = Column(Integer, default=30)
+    late_fee_rate = Column(Float, default=1.5)
+    auto_checkout_enabled = Column(Boolean, default=True)
+    
+    # Notifications/Integrations
+    low_occupancy_alert = Column(Boolean, default=True)
+    maintenance_reminders = Column(Boolean, default=True)
+    billing_sync_enabled = Column(Boolean, default=True)
+    
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    property = relationship("Property")
 
 class BannedIndividual(Base):
     __tablename__ = "banned_individuals"
@@ -597,3 +1124,87 @@ class VisitorBadge(Base):
     visitor = relationship("Visitor", back_populates="badges")
     issuer = relationship("User", foreign_keys=[issued_by])
     returner = relationship("User", foreign_keys=[returned_to]) 
+
+class Camera(Base):
+    __tablename__ = "cameras"
+
+    camera_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="SET NULL"), nullable=True)
+    name = Column(String(200), nullable=False)
+    location = Column(JSON, nullable=False)
+    ip_address = Column(String(64), nullable=False)
+    stream_url = Column(Text, nullable=False)  # Browser-compatible/proxied URL only
+    source_stream_url = Column(Text, nullable=True)  # Raw hardware stream (RTSP), keep internal
+    credentials = Column(JSON, nullable=True)  # Sensitive, do not expose in responses
+    status = Column(Enum(CameraStatus), default=CameraStatus.OFFLINE)
+    hardware_status = Column(JSON, nullable=True)
+    is_recording = Column(Boolean, default=False)
+    motion_detection_enabled = Column(Boolean, default=True)
+    last_known_image_url = Column(String(500), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    property = relationship("Property")
+    health = relationship("CameraHealth", back_populates="camera", uselist=False, cascade="all, delete-orphan")
+
+class CameraHealth(Base):
+    __tablename__ = "camera_health"
+
+    health_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    camera_id = Column(String(36), ForeignKey("cameras.camera_id", ondelete="CASCADE"), nullable=False, unique=True)
+    last_ping_at = Column(DateTime(timezone=True), nullable=True)
+    last_metrics_at = Column(DateTime(timezone=True), nullable=True)
+    last_known_image_url = Column(String(500), nullable=True)
+    status = Column(Enum(CameraStatus), default=CameraStatus.OFFLINE)
+    metrics = Column(JSON, nullable=True)
+    latency_ms = Column(Float, nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    camera = relationship("Camera", back_populates="health")
+
+class EvacuationSession(Base):
+    __tablename__ = "evacuation_sessions"
+
+    session_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="SET NULL"), nullable=True)
+    status = Column(Enum(EvacuationStatus), default=EvacuationStatus.ACTIVE)
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+    initiated_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    completed_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    notes = Column(Text, nullable=True)
+    session_metadata = Column("metadata", JSON, nullable=True)
+
+    property = relationship("Property")
+    initiator = relationship("User", foreign_keys=[initiated_by])
+    completer = relationship("User", foreign_keys=[completed_by])
+    actions = relationship("EvacuationAction", back_populates="session", cascade="all, delete-orphan")
+
+class EvacuationAction(Base):
+    __tablename__ = "evacuation_actions"
+
+    action_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id = Column(String(36), ForeignKey("evacuation_sessions.session_id", ondelete="SET NULL"), nullable=True)
+    action_type = Column(String(100), nullable=False)
+    payload = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+
+    session = relationship("EvacuationSession", back_populates="actions")
+    creator = relationship("User", foreign_keys=[created_by])
+
+class EvacuationAssistance(Base):
+    __tablename__ = "evacuation_assistance"
+
+    assistance_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    session_id = Column(String(36), ForeignKey("evacuation_sessions.session_id", ondelete="SET NULL"), nullable=True)
+    guest_name = Column(String(200), nullable=False)
+    room = Column(String(50), nullable=False)
+    need = Column(Text, nullable=False)
+    priority = Column(String(20), nullable=False)
+    status = Column(String(20), default="pending")
+    assigned_staff = Column(String(200), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    session = relationship("EvacuationSession")

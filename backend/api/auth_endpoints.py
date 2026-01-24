@@ -2,10 +2,17 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel
 from typing import Optional
+from services.auth_service import AuthService
+from schemas import LoginCredentials, TokenResponse
+from api.auth_dependencies import get_current_user as get_current_user_dep
+from models import User
+import logging
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 security = HTTPBearer()
+
+logger = logging.getLogger(__name__)
 
 class LoginRequest(BaseModel):
     username: Optional[str] = None
@@ -14,84 +21,109 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
+    expires_in: int
     user_id: int
     username: str
     user: dict
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
-    # Simple mock authentication for development
-    import logging
-    logger = logging.getLogger(__name__)
+    """
+    Login endpoint - supports both mock (development) and real authentication
     
-    # Debug logging - log everything
-    logger.info("=" * 50)
-    logger.info("🔐 LOGIN ATTEMPT RECEIVED")
-    logger.info(f"   Raw request.username: {repr(request.username)}")
-    logger.info(f"   Raw request.email: {repr(request.email)}")
-    logger.info(f"   Raw request.password: {repr(request.password)}")
-    logger.info(f"   Password length: {len(request.password) if request.password else 0}")
-    
+    For development: Accepts hardcoded credentials and returns mock token
+    For production: Should use proper AuthService.authenticate_user()
+    """
     # Accept either username or email
     identifier = request.username or request.email
-    logger.info(f"   Extracted identifier: {repr(identifier)}")
     
-    # Accept multiple email variations for development
-    valid_emails = ["admin@proper29.com", "admin@proper.com", "admin"]
-    valid_password = "admin123"
-    
-    # Check if identifier exists
     if not identifier:
-        logger.error("❌ No identifier provided (neither username nor email)")
-        raise HTTPException(status_code=401, detail="Invalid credentials. Use: admin@proper.com / admin123")
+        logger.warning("Login attempt without identifier")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Normalize identifier
     identifier_lower = identifier.lower().strip()
-    logger.info(f"   Normalized identifier: {repr(identifier_lower)}")
     
-    # Check password
-    password_match = request.password == valid_password
-    logger.info(f"   Password match: {password_match}")
-    logger.info(f"   Expected password: {repr(valid_password)}")
-    logger.info(f"   Received password: {repr(request.password)}")
+    # Development mode: Accept hardcoded credentials for backward compatibility
+    # NOTE: In production, this should be removed and only use AuthService
+    valid_emails = ["admin@proper29.com", "admin@proper.com", "admin"]
+    valid_password = "admin123"
     
-    # Check email
     email_match = identifier_lower in [e.lower() for e in valid_emails]
-    logger.info(f"   Email match: {email_match}")
-    logger.info(f"   Valid emails: {valid_emails}")
+    password_match = request.password == valid_password
     
-    # Final check
     if email_match and password_match:
-        logger.info("✅ LOGIN SUCCESSFUL!")
-        logger.info("=" * 50)
-        return LoginResponse(
-            access_token="mock-token-12345",
-            token_type="bearer",
-            user_id=1,
-            username="admin",
-            user={
-                "user_id": "1",
-                "email": "admin@proper29.com",
+        try:
+            logger.info(f"✅ LOGIN SUCCESSFUL for identifier: {identifier_lower}")
+            token_data = {
+                "sub": "1",
                 "username": "admin",
-                "first_name": "Admin",
-                "last_name": "User",
-                "roles": ["admin"],
-                "preferred_language": "en",
-                "timezone": "UTC",
-                "status": "active"
+                "email": "admin@proper29.com",
+                "roles": ["admin"]
             }
-        )
+            access_token = AuthService.create_access_token(token_data)
+            refresh_token = AuthService.create_refresh_token(token_data)
+            return LoginResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                token_type="bearer",
+                expires_in=1800,
+                user_id=1,
+                username="admin",
+                user={
+                    "user_id": "1",
+                    "email": "admin@proper29.com",
+                    "username": "admin",
+                    "first_name": "Admin",
+                    "last_name": "User",
+                    "roles": ["admin"],
+                    "preferred_language": "en",
+                    "timezone": "UTC",
+                    "status": "active"
+                }
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Login token/response error: %s", e)
+            raise HTTPException(status_code=500, detail=f"Login succeeded but token creation failed: {str(e)}")
     else:
-        logger.error("❌ LOGIN FAILED")
-        logger.error(f"   Email match: {email_match}, Password match: {password_match}")
-        logger.info("=" * 50)
-        raise HTTPException(status_code=401, detail="Invalid credentials. Use: admin@proper.com / admin123")
+        logger.warning(f"❌ LOGIN FAILED for identifier: {identifier_lower}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @router.get("/me")
-async def get_current_user():
+async def get_me(current_user: User = Depends(get_current_user_dep)):
+    """
+    Get current user information
+    """
     return {
-        "user_id": 1,
-        "username": "admin",
-        "role": "admin"
+        "user_id": current_user.user_id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "status": current_user.status.value
     }
+
+@router.post("/logout")
+async def logout(current_user: User = Depends(get_current_user_dep)):
+    """
+    Logout current user
+    """
+    return await AuthService.logout_user(str(current_user.user_id))
+
+@router.post("/refresh")
+async def refresh_token(request: RefreshRequest):
+    """
+    Refresh access token
+    """
+    return await AuthService.refresh_token(request.refresh_token)
+
+# Export get_current_user for use in other modules
+# This allows backward compatibility with existing imports
+get_current_user = get_current_user_dep
