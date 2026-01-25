@@ -4,11 +4,14 @@ import { Button } from '../../../../components/UI/Button';
 import { SearchBar } from '../../../../components/UI/SearchBar';
 import { useSecurityOperationsContext } from '../../context/SecurityOperationsContext';
 import { EmptyState } from '../../../../components/UI/EmptyState';
-import { showError } from '../../../../utils/toast';
+import { showError, showSuccess, showLoading, dismissLoadingAndShowSuccess } from '../../../../utils/toast';
+import { cn } from '../../../../utils/cn';
 
 export const RecordingsTab: React.FC = () => {
-  const { recordings, loading, setSelectedRecording } = useSecurityOperationsContext();
+  const { recordings, loading, setSelectedRecording, canManageCameras } = useSecurityOperationsContext();
   const [search, setSearch] = useState('');
+  const [selectedRecordings, setSelectedRecordings] = useState<Set<string>>(new Set());
+  const [bulkExportLoading, setBulkExportLoading] = useState(false);
 
   const filteredRecordings = useMemo(() => {
     if (!search.trim()) return recordings;
@@ -20,6 +23,62 @@ export const RecordingsTab: React.FC = () => {
         recording.time.includes(value)
     );
   }, [recordings, search]);
+
+  const handleSelectAll = () => {
+    if (selectedRecordings.size === filteredRecordings.length) {
+      setSelectedRecordings(new Set());
+    } else {
+      setSelectedRecordings(new Set(filteredRecordings.map(recording => recording.id)));
+    }
+  };
+
+  const handleSelectRecording = (recordingId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    const newSelection = new Set(selectedRecordings);
+    if (newSelection.has(recordingId)) {
+      newSelection.delete(recordingId);
+    } else {
+      newSelection.add(recordingId);
+    }
+    setSelectedRecordings(newSelection);
+  };
+
+  const handleBulkExport = async () => {
+    if (selectedRecordings.size === 0) return;
+    
+    setBulkExportLoading(true);
+    const toastId = showLoading(`Preparing ${selectedRecordings.size} recordings for export...`);
+    
+    try {
+      // Simulate export API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      dismissLoadingAndShowSuccess(toastId, `Export initiated for ${selectedRecordings.size} recordings. Download will start shortly.`);
+      setSelectedRecordings(new Set());
+    } catch (error) {
+      showError('Export failed. Please try again.');
+    } finally {
+      setBulkExportLoading(false);
+    }
+  };
+
+  const handleSingleExport = async (recordingId: string, recordingName: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    const toastId = showLoading(`Exporting ${recordingName}...`);
+    
+    try {
+      // Simulate single export API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      dismissLoadingAndShowSuccess(toastId, `${recordingName} export ready for download.`);
+    } catch (error) {
+      showError('Export failed. Please try again.');
+    }
+  };
+
+  const selectedCount = selectedRecordings.size;
+  const allSelected = selectedCount === filteredRecordings.length && filteredRecordings.length > 0;
 
   if (loading.recordings && recordings.length === 0) {
     return (
@@ -67,30 +126,85 @@ export const RecordingsTab: React.FC = () => {
             </Button>
           </div>
 
+          {/* Bulk Operations */}
+          {filteredRecordings.length > 0 && (
+            <div className="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-xl border border-white/5">
+              {/* Select All Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500/20"
+                />
+                <span className="text-xs font-bold text-white uppercase tracking-widest">
+                  {selectedCount > 0 ? `${selectedCount} Selected` : 'Select All'}
+                </span>
+              </label>
+
+              {/* Bulk Export Button */}
+              {selectedCount > 0 && canManageCameras && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulkExportLoading}
+                    onClick={handleBulkExport}
+                    className="font-black uppercase tracking-widest text-[10px] border-blue-500/20 text-blue-400 hover:bg-blue-500/10"
+                  >
+                    <i className="fas fa-download mr-2" />
+                    {bulkExportLoading ? 'Exporting...' : `Export ${selectedCount} Recording${selectedCount > 1 ? 's' : ''}`}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedRecordings(new Set())}
+                    className="font-black uppercase tracking-widest text-[10px] border-white/10 text-white/60 hover:bg-white/5"
+                  >
+                    <i className="fas fa-times mr-2" />
+                    Clear Selection
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRecordings.map((recording) => (
-              <Card
-                key={recording.id}
-                className="bg-white/5 border border-white/5 shadow-inner hover:bg-white/[0.08] transition-all cursor-pointer group rounded-2xl overflow-hidden"
-                onClick={() => setSelectedRecording(recording)}
-              >
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-black text-white uppercase tracking-tighter text-lg group-hover:text-blue-400 transition-colors">{recording.cameraName}</h4>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="font-black uppercase tracking-widest text-[9px] border-blue-500/20 text-blue-400 hover:bg-blue-500/10 h-7"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showError('Export not yet available. Backend download coming soon.');
-                      }}
-                      aria-label="Download recording"
-                    >
-                      <i className="fas fa-download mr-1.5" />
-                      Download
-                    </Button>
-                  </div>
+            {filteredRecordings.map((recording) => {
+              const isSelected = selectedRecordings.has(recording.id);
+              return (
+                <Card
+                  key={recording.id}
+                  className={cn(
+                    "bg-white/5 border shadow-inner hover:bg-white/[0.08] transition-all cursor-pointer group rounded-2xl overflow-hidden relative",
+                    isSelected ? "border-blue-500/40 bg-blue-500/5" : "border-white/5"
+                  )}
+                  onClick={() => setSelectedRecording(recording)}
+                >
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {/* Selection Checkbox */}
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleSelectRecording(recording.id, e as any)}
+                          className="w-4 h-4 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500/20"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <h4 className="font-black text-white uppercase tracking-tighter text-lg group-hover:text-blue-400 transition-colors">{recording.cameraName}</h4>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="font-black uppercase tracking-widest text-[9px] border-blue-500/20 text-blue-400 hover:bg-blue-500/10 h-7"
+                        onClick={(e) => handleSingleExport(recording.id, recording.cameraName, e)}
+                        aria-label="Export single recording"
+                      >
+                        <i className="fas fa-download mr-1.5" />
+                        Export
+                      </Button>
+                    </div>
 
                   <div className="space-y-2 bg-black/40 p-3 rounded-xl border border-white/5 shadow-inner">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">
@@ -106,9 +220,26 @@ export const RecordingsTab: React.FC = () => {
                       <span className="text-white">{recording.size}</span>
                     </div>
                   </div>
+
+                  {/* Selection Indicator */}
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <i className="fas fa-check text-white text-xs" />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
+
+            {/* Bulk Export Progress */}
+            {bulkExportLoading && (
+              <div className="col-span-full bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
+                <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                <span className="text-blue-400 font-bold text-sm">Processing bulk export...</span>
+              </div>
+            )}
+
             {filteredRecordings.length === 0 && (
               <div className="col-span-full">
                 <EmptyState

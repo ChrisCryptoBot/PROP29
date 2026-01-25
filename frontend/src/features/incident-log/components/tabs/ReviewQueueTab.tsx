@@ -1,11 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
-import { IncidentStatus } from '../../types/incident-log.types';
+import { IncidentStatus, AgentTrustLevel, BulkOperationResult } from '../../types/incident-log.types';
 import { cn } from '../../../../utils/cn';
 import { Modal } from '../../../../components/UI/Modal';
+import BulkOperationConfirmModal from '../modals/BulkOperationConfirmModal';
 
 export const ReviewQueueTab: React.FC = () => {
     const {
@@ -13,16 +14,24 @@ export const ReviewQueueTab: React.FC = () => {
         loading,
         updateIncident,
         setSelectedIncident,
-        refreshIncidents
+        refreshIncidents,
+        modals,
+        // Enhanced bulk operations
+        bulkApprove,
+        bulkReject,
+        bulkOperationResult,
+        // Agent trust functionality
+        getAgentTrustLevel,
+        agentPerformanceMetrics,
+        // New modal controls
+        setShowBulkOperationModal
     } = useIncidentLogContext();
 
-    const [confirmAction, setConfirmAction] = useState<{
-        ids: string[];
-        nextStatus: IncidentStatus;
-        label: string;
-    } | null>(null);
-    const [rejectReason, setRejectReason] = useState('');
     const [sourceFilter, setSourceFilter] = useState<'all' | 'manager' | 'agent' | 'device' | 'sensor'>('all');
+    
+    // Enhanced bulk selection state
+    const [selectedIncidentIds, setSelectedIncidentIds] = useState<Set<string>>(new Set());
+    const [bulkActionInProgress, setBulkActionInProgress] = useState(false);
 
     const pendingIncidents = useMemo(() => {
         const pending = incidents.filter((incident) => incident.status === IncidentStatus.PENDING_REVIEW);
@@ -48,40 +57,130 @@ export const ReviewQueueTab: React.FC = () => {
         }
     };
 
+    // Get agent trust level and styling
+    const getAgentTrustBadge = (incidentSourceAgentId?: string) => {
+        if (!incidentSourceAgentId) return null;
+        
+        const trustLevel = getAgentTrustLevel(incidentSourceAgentId);
+        const agent = agentPerformanceMetrics.find(a => a.agent_id === incidentSourceAgentId);
+        
+        switch (trustLevel) {
+            case AgentTrustLevel.HIGH:
+                return {
+                    icon: 'fas fa-shield-check',
+                    text: `High Trust (${agent?.trust_score || 'N/A'}%)`,
+                    className: 'text-green-300 bg-green-500/20 border border-green-500/30'
+                };
+            case AgentTrustLevel.MEDIUM:
+                return {
+                    icon: 'fas fa-shield-exclamation',
+                    text: `Medium Trust (${agent?.trust_score || 'N/A'}%)`,
+                    className: 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/30'
+                };
+            case AgentTrustLevel.LOW:
+                return {
+                    icon: 'fas fa-shield-x',
+                    text: `Low Trust (${agent?.trust_score || 'N/A'}%)`,
+                    className: 'text-red-300 bg-red-500/20 border border-red-500/30'
+                };
+            default:
+                return {
+                    icon: 'fas fa-shield-question',
+                    text: 'Unknown Trust',
+                    className: 'text-slate-300 bg-slate-500/20 border border-slate-500/30'
+                };
+        }
+    };
+
+    // Bulk selection handlers
+    const toggleIncidentSelection = useCallback((incidentId: string) => {
+        setSelectedIncidentIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(incidentId)) {
+                newSet.delete(incidentId);
+            } else {
+                newSet.add(incidentId);
+            }
+            return newSet;
+        });
+    }, []);
+
+    const selectAllIncidents = useCallback(() => {
+        setSelectedIncidentIds(new Set(pendingIncidents.map(i => i.incident_id)));
+    }, [pendingIncidents]);
+
+    const deselectAllIncidents = useCallback(() => {
+        setSelectedIncidentIds(new Set());
+    }, []);
+
+    // Enhanced bulk operations using new modal system
+    const handleBulkApprove = async () => {
+        if (selectedIncidentIds.size === 0) return;
+        
+        setShowBulkOperationModal(true, {
+            type: 'approve',
+            incidentIds: Array.from(selectedIncidentIds),
+            title: `Approve ${selectedIncidentIds.size} Selected Incidents`,
+            description: `This will approve ${selectedIncidentIds.size} incidents submitted by mobile agents.`
+        });
+    };
+
+    const handleBulkReject = async () => {
+        if (selectedIncidentIds.size === 0) return;
+        
+        setShowBulkOperationModal(true, {
+            type: 'reject',
+            incidentIds: Array.from(selectedIncidentIds),
+            title: `Reject ${selectedIncidentIds.size} Selected Incidents`,
+            description: `This will reject ${selectedIncidentIds.size} incidents and require a detailed reason for audit purposes.`
+        });
+    };
+
+    // Handler for bulk operation modal confirmation
+    const handleBulkOperationConfirm = async (reason?: string): Promise<BulkOperationResult | boolean | null> => {
+        if (!modals.bulkOperation) return false;
+        
+        setBulkActionInProgress(true);
+        try {
+            let result;
+            if (modals.bulkOperation.type === 'approve') {
+                result = await bulkApprove(modals.bulkOperation.incidentIds, reason || 'Bulk approval via Review Queue');
+            } else if (modals.bulkOperation.type === 'reject') {
+                result = await bulkReject(modals.bulkOperation.incidentIds, reason || 'Bulk rejection via Review Queue');
+            }
+            
+            if (result && result.failed === 0) {
+                setSelectedIncidentIds(new Set());
+                await refreshIncidents();
+            }
+            
+            return result || false;
+        } catch (error) {
+            console.error('Bulk operation failed:', error);
+            return false;
+        } finally {
+            setBulkActionInProgress(false);
+        }
+    };
+
     const approveIncident = (id: string) => {
-        setConfirmAction({
-            ids: [id],
-            nextStatus: IncidentStatus.OPEN,
-            label: 'Approve incident'
+        setShowBulkOperationModal(true, {
+            type: 'approve',
+            incidentIds: [id],
+            title: 'Approve Incident',
+            description: 'This will approve the incident submitted by a mobile agent.'
         });
     };
 
     const rejectIncident = (id: string) => {
-        setConfirmAction({
-            ids: [id],
-            nextStatus: IncidentStatus.CLOSED,
-            label: 'Reject incident'
+        setShowBulkOperationModal(true, {
+            type: 'reject',
+            incidentIds: [id],
+            title: 'Reject Incident',
+            description: 'This will reject the incident and require a detailed reason for audit purposes.'
         });
     };
 
-    const handleConfirm = async () => {
-        if (!confirmAction) return;
-        if (confirmAction.nextStatus === IncidentStatus.CLOSED && !rejectReason.trim()) {
-            return;
-        }
-        await Promise.all(
-            confirmAction.ids.map((id) => updateIncident(id, {
-                status: confirmAction.nextStatus,
-                ...(confirmAction.nextStatus === IncidentStatus.CLOSED
-                    ? { source_metadata: { rejection_reason: rejectReason.trim() } }
-                    : {})
-            }))
-        );
-        setConfirmAction(null);
-        setRejectReason('');
-        // Refresh incidents to update pending list
-        refreshIncidents();
-    };
 
     return (
         <div className="space-y-6">
@@ -158,32 +257,66 @@ export const ReviewQueueTab: React.FC = () => {
                             Managers
                         </Button>
                     </div>
+                    {/* Bulk Selection Controls */}
                     {pendingIncidents.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setConfirmAction({
-                                    ids: pendingIncidents.map((incident) => incident.incident_id),
-                                    nextStatus: IncidentStatus.OPEN,
-                                    label: `Approve ${pendingIncidents.length} incidents`
-                                })}
-                                className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 font-black uppercase tracking-widest text-[10px] px-4"
-                            >
-                                Approve All
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setConfirmAction({
-                                    ids: pendingIncidents.map((incident) => incident.incident_id),
-                                    nextStatus: IncidentStatus.CLOSED,
-                                    label: `Reject ${pendingIncidents.length} incidents`
-                                })}
-                                className="border-red-500/30 text-red-300 hover:bg-red-500/10 font-black uppercase tracking-widest text-[10px] px-4"
-                            >
-                                Reject All
-                            </Button>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={selectAllIncidents}
+                                    disabled={selectedIncidentIds.size === pendingIncidents.length}
+                                    className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+                                >
+                                    <i className="fas fa-check-square mr-1" />
+                                    Select All
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={deselectAllIncidents}
+                                    disabled={selectedIncidentIds.size === 0}
+                                    className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+                                >
+                                    <i className="fas fa-square mr-1" />
+                                    Deselect All
+                                </Button>
+                                {selectedIncidentIds.size > 0 && (
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-300">
+                                        {selectedIncidentIds.size} Selected
+                                    </span>
+                                )}
+                            </div>
+                            
+                            {/* Enhanced Bulk Actions - Only show when items selected */}
+                            {selectedIncidentIds.size > 0 && (
+                                <div className="flex gap-2 pl-4 border-l border-white/10">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={handleBulkApprove}
+                                        disabled={bulkActionInProgress}
+                                        className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 font-black uppercase tracking-widest text-[10px] px-4"
+                                    >
+                                        {bulkActionInProgress ? (
+                                            <i className="fas fa-spinner fa-spin mr-1" />
+                                        ) : (
+                                            <i className="fas fa-check mr-1" />
+                                        )}
+                                        Approve Selected ({selectedIncidentIds.size})
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={handleBulkReject}
+                                        disabled={bulkActionInProgress}
+                                        className="border-red-500/30 text-red-300 hover:bg-red-500/10 font-black uppercase tracking-widest text-[10px] px-4"
+                                    >
+                                        <i className="fas fa-times mr-1" />
+                                        Reject Selected ({selectedIncidentIds.size})
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardHeader>
@@ -202,12 +335,31 @@ export const ReviewQueueTab: React.FC = () => {
                                     || (incident.source_metadata && typeof incident.source_metadata === 'object' && 'source' in incident.source_metadata
                                         ? String(incident.source_metadata.source)
                                         : undefined);
+                                
+                                // Get agent trust badge if this is an agent-submitted incident
+                                const isAgentSubmitted = sourceLabel === 'agent' || incident.source === 'agent';
+                                const trustBadge = isAgentSubmitted ? getAgentTrustBadge(incident.source_agent_id) : null;
+                                const isSelected = selectedIncidentIds.has(incident.incident_id);
+                                
                                 return (
                                     <div
                                         key={incident.incident_id}
-                                        className="p-4 border border-white/5 rounded-lg bg-white/5 hover:bg-white/10 transition-all"
+                                        className={cn(
+                                            "p-4 border rounded-lg bg-white/5 hover:bg-white/10 transition-all",
+                                            isSelected ? "border-blue-400/50 bg-blue-500/10" : "border-white/5"
+                                        )}
                                     >
-                                        <div className="flex items-start justify-between gap-4">
+                                        <div className="flex items-start gap-4">
+                                            {/* Selection Checkbox */}
+                                            <div className="flex items-center pt-1">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleIncidentSelection(incident.incident_id)}
+                                                    className="h-4 w-4 text-blue-400 bg-slate-800 border-white/20 rounded focus:ring-blue-500/20 focus:ring-2"
+                                                />
+                                            </div>
+                                            
                                             <div className="flex-1">
                                                 <div className="flex items-center space-x-3 mb-2">
                                                     <h4 className="font-bold text-white uppercase tracking-wide text-sm">{incident.title}</h4>
@@ -216,7 +368,15 @@ export const ReviewQueueTab: React.FC = () => {
                                                     </span>
                                                     {sourceLabel && (
                                                         <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-500/30 text-blue-200 bg-blue-500/10">
+                                                            <i className="fas fa-user mr-1" />
                                                             {sourceLabel}
+                                                        </span>
+                                                    )}
+                                                    {/* Agent Trust Score Badge */}
+                                                    {trustBadge && (
+                                                        <span className={cn("px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded", trustBadge.className)}>
+                                                            <i className={`${trustBadge.icon} mr-1`} />
+                                                            {trustBadge.text}
                                                         </span>
                                                     )}
                                                 </div>
@@ -224,6 +384,10 @@ export const ReviewQueueTab: React.FC = () => {
                                                 <div className="flex items-center space-x-4 text-xs text-slate-500 font-medium">
                                                     <span><i className="fas fa-map-marker-alt mr-1" />{typeof incident.location === 'string' ? incident.location : incident.location?.area || 'Unknown'}</span>
                                                     <span><i className="fas fa-clock mr-1" />{incident.created_at}</span>
+                                                    {/* Show agent name if available */}
+                                                    {isAgentSubmitted && incident.source_agent_id && (
+                                                        <span><i className="fas fa-user-badge mr-1" />Agent ID: {incident.source_agent_id.slice(0, 8)}...</span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="flex flex-col gap-2">
@@ -329,53 +493,13 @@ export const ReviewQueueTab: React.FC = () => {
                 </CardContent>
             </Card>
 
-            <Modal
-                isOpen={Boolean(confirmAction)}
-                onClose={() => setConfirmAction(null)}
-                title="Confirm Action"
-                size="md"
-                footer={(
-                    <>
-                        <Button
-                            variant="subtle"
-                            onClick={() => setConfirmAction(null)}
-                            className="text-[9px] font-black uppercase tracking-widest"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="glass"
-                            onClick={handleConfirm}
-                            disabled={loading.incidents || (confirmAction?.nextStatus === IncidentStatus.CLOSED && !rejectReason.trim())}
-                            className="text-[9px] font-black uppercase tracking-widest"
-                        >
-                            Confirm
-                        </Button>
-                    </>
-                )}
-            >
-                <div className="space-y-3">
-                    <p className="text-sm text-[color:var(--text-sub)]">
-                        {confirmAction?.label}
-                    </p>
-                    <p className="text-xs text-[color:var(--text-sub)]">
-                        This will update the incident status for the selected items.
-                    </p>
-                    {confirmAction?.nextStatus === IncidentStatus.CLOSED && (
-                        <div className="space-y-2">
-                            <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">
-                                Rejection Reason
-                            </label>
-                            <textarea
-                                value={rejectReason}
-                                onChange={(event) => setRejectReason(event.target.value)}
-                                className="w-full min-h-[80px] px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30"
-                                placeholder="Describe why this incident was rejected"
-                            />
-                        </div>
-                    )}
-                </div>
-            </Modal>
+            {/* Enhanced Bulk Operation Confirmation Modal */}
+            <BulkOperationConfirmModal
+                isOpen={modals.showBulkOperationModal}
+                onClose={() => setShowBulkOperationModal(false)}
+                operation={modals.bulkOperation}
+                onConfirm={handleBulkOperationConfirm}
+            />
         </div>
     );
 };

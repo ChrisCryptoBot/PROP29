@@ -17,6 +17,9 @@ export const ManagementTab: React.FC = () => {
         selectedIndividuals,
         handleBulkExport,
         handleBulkDelete,
+        handleToggleSelection,
+        handleSelectAll,
+        handleDeselectAll,
         setSelectedIndividual,
         setShowDetailsModal,
         setShowPhotoUploadModal
@@ -53,6 +56,53 @@ export const ManagementTab: React.FC = () => {
         }
     };
 
+    const getSourceBadge = (individual: any) => {
+        const source = individual.source || 'MANAGER';
+        const sourceMetadata = individual.sourceMetadata || {};
+        
+        switch (source) {
+            case 'MOBILE_AGENT':
+                return {
+                    icon: 'fa-mobile-alt',
+                    label: 'Agent',
+                    color: 'text-blue-400 bg-blue-500/20 border-blue-500/30',
+                    tooltip: sourceMetadata.agentName 
+                        ? `Submitted by ${sourceMetadata.agentName}${sourceMetadata.agentTrustScore ? ` (Trust: ${sourceMetadata.agentTrustScore})` : ''}`
+                        : 'Submitted by mobile agent'
+                };
+            case 'HARDWARE_DEVICE':
+                return {
+                    icon: 'fa-video',
+                    label: 'Device',
+                    color: 'text-purple-400 bg-purple-500/20 border-purple-500/30',
+                    tooltip: sourceMetadata.deviceName 
+                        ? `Detected by ${sourceMetadata.deviceName}`
+                        : 'Detected by hardware device'
+                };
+            case 'AUTO_APPROVED':
+                return {
+                    icon: 'fa-check-circle',
+                    label: 'Auto',
+                    color: 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
+                    tooltip: 'Auto-approved based on trust score'
+                };
+            case 'BULK_IMPORT':
+                return {
+                    icon: 'fa-file-import',
+                    label: 'Import',
+                    color: 'text-amber-400 bg-amber-500/20 border-amber-500/30',
+                    tooltip: 'Bulk imported'
+                };
+            default:
+                return {
+                    icon: 'fa-user-shield',
+                    label: 'Manager',
+                    color: 'text-slate-400 bg-white/5 border-white/10',
+                    tooltip: 'Manually created by manager'
+                };
+        }
+    };
+
     const handleViewDetails = (individual: any) => {
         setSelectedIndividual(individual);
         setShowDetailsModal(true);
@@ -60,8 +110,18 @@ export const ManagementTab: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            {/* Page Header */}
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Records</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Search and modify ban records
+                    </p>
+                </div>
+            </div>
+
             {/* Search and Filters */}
-            <Card>
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
                 <CardContent className="pt-6 px-6 pb-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
                         <div>
@@ -81,6 +141,27 @@ export const ManagementTab: React.FC = () => {
                         </div>
                     </div>
 
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        <div className="flex items-center gap-2 mr-4">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleSelectAll}
+                                className="text-[10px] px-3 h-8"
+                            >
+                                Select All
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleDeselectAll}
+                                className="text-[10px] px-3 h-8"
+                            >
+                                Deselect All
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className="flex flex-wrap gap-2 mb-8">
                         {['ALL', 'ACTIVE', 'EXPIRED', 'REMOVED'].map((status) => (
                             <Button
@@ -91,7 +172,7 @@ export const ManagementTab: React.FC = () => {
                                 className={cn(
                                     "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all",
                                     filterStatus === status
-                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 border-none"
+                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg border-none"
                                         : "border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                                 )}
                             >
@@ -160,10 +241,10 @@ export const ManagementTab: React.FC = () => {
                 </CardContent>
             </Card>
 
-            <Card className="overflow-hidden bg-[color:var(--surface-card)] border-[1.5px] border-[color:var(--border-subtle)]">
+            <Card className="overflow-hidden bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
                 <CardHeader className="bg-white/5 border-b border-white/5 py-4 group cursor-pointer">
-                    <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3 group-hover:scale-110 transition-transform">
+                    <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
                             <i className="fas fa-clipboard-list text-white text-lg" />
                         </div>
                         Found {filteredIndividuals.length} Match{filteredIndividuals.length !== 1 ? 'es' : ''}
@@ -193,10 +274,19 @@ export const ManagementTab: React.FC = () => {
                             filteredIndividuals.map((individual) => (
                                 <div
                                     key={individual.id}
-                                    className="flex flex-col md:flex-row md:items-center justify-between p-5 hover:bg-white/5 transition-all cursor-pointer group"
-                                    onClick={() => handleViewDetails(individual)}
+                                    className="flex flex-col md:flex-row md:items-center justify-between p-5 hover:bg-white/5 transition-all group"
                                 >
                                     <div className="flex items-center space-x-5 mb-4 md:mb-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIndividuals.includes(individual.id)}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                handleToggleSelection(individual.id);
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="w-5 h-5 accent-blue-600 cursor-pointer rounded border-white/10 bg-white/5"
+                                        />
                                         <div className="relative">
                                             <div className="w-14 h-14 bg-gradient-to-br from-slate-400 to-slate-500 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
                                                 {individual.photoUrl ? (
@@ -209,7 +299,10 @@ export const ManagementTab: React.FC = () => {
                                             </div>
                                             <div className={cn("absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-[color:var(--surface-card)]", individual.status === 'ACTIVE' ? 'bg-green-500' : 'bg-slate-500')} />
                                         </div>
-                                        <div className="flex-1 min-w-[200px]">
+                                        <div 
+                                            className="flex-1 min-w-[200px] cursor-pointer"
+                                            onClick={() => handleViewDetails(individual)}
+                                        >
                                             <h3 className="font-black uppercase tracking-tighter text-[color:var(--text-main)] text-xl group-hover:text-blue-400 transition-colors">
                                                 {individual.firstName} {individual.lastName}
                                             </h3>
@@ -224,6 +317,18 @@ export const ManagementTab: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-2">
+                                        {(() => {
+                                            const sourceBadge = getSourceBadge(individual);
+                                            return (
+                                                <span 
+                                                    className={cn("px-2.5 py-1 text-xs font-semibold rounded flex items-center gap-1.5", sourceBadge.color)}
+                                                    title={sourceBadge.tooltip}
+                                                >
+                                                    <i className={cn("fas text-[10px]", sourceBadge.icon)} />
+                                                    {sourceBadge.label}
+                                                </span>
+                                            );
+                                        })()}
                                         <span className={cn("px-2.5 py-1 text-xs font-semibold rounded", getRiskLevelBadgeClass(individual.riskLevel))}>
                                             {individual.riskLevel}
                                         </span>

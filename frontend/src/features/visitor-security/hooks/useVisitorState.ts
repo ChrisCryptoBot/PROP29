@@ -27,19 +27,34 @@ import type {
   SecurityRequestCreate,
   SecurityRequestFilters,
   VisitorStatus,
-  VisitorMetrics
+  VisitorMetrics,
+  // Mobile Agent & Hardware Integration Types
+  MobileAgentDevice,
+  MobileAgentSubmission,
+  HardwareDevice,
+  SystemConnectivity,
+  EnhancedVisitorSettings,
+  BulkVisitorOperation
 } from '../types/visitor-security.types';
 import { VisitorStatus as StatusEnum } from '../types/visitor-security.types';
 import visitorService from '../services/VisitorService';
 
 export interface UseVisitorStateReturn {
-  // Data
+  // Data - Core
   visitors: Visitor[];
   events: Event[];
   securityRequests: SecurityRequest[];
   selectedVisitor: Visitor | null;
   selectedEvent: Event | null;
   metrics: VisitorMetrics | null;
+
+  // Data - Mobile Agent & Hardware Integration
+  mobileAgentDevices: MobileAgentDevice[];
+  mobileAgentSubmissions: MobileAgentSubmission[];
+  hardwareDevices: HardwareDevice[];
+  systemConnectivity: SystemConnectivity | null;
+  enhancedSettings: EnhancedVisitorSettings | null;
+  bulkOperations: BulkVisitorOperation[];
 
   // Loading states
   loading: {
@@ -48,6 +63,13 @@ export interface UseVisitorStateReturn {
     events: boolean;
     event: boolean;
     securityRequests: boolean;
+    // Mobile Agent & Hardware Loading States
+    mobileAgents: boolean;
+    agentSubmissions: boolean;
+    hardwareDevices: boolean;
+    systemStatus: boolean;
+    settings: boolean;
+    bulkOperation: boolean;
   };
 
   // Filters
@@ -100,6 +122,31 @@ export interface UseVisitorStateReturn {
   // Actions - Bulk Operations
   bulkDeleteVisitors: (visitorIds: string[]) => Promise<boolean>;
   bulkStatusChange: (visitorIds: string[], status: VisitorStatus | string) => Promise<boolean>;
+
+  // Actions - Mobile Agent Management  
+  refreshMobileAgents: () => Promise<void>;
+  registerMobileAgent: (agentData: any) => Promise<MobileAgentDevice | null>;
+  refreshAgentSubmissions: (agentId?: string) => Promise<void>;
+  processAgentSubmission: (submissionId: string, action: 'approve' | 'reject', reason?: string) => Promise<boolean>;
+  syncMobileAgent: (agentId: string) => Promise<boolean>;
+
+  // Actions - Hardware Device Management
+  refreshHardwareDevices: () => Promise<void>;
+  getDeviceStatus: (deviceId: string) => Promise<HardwareDevice | null>;
+  printVisitorBadge: (visitorId: string, printerId?: string) => Promise<boolean>;
+
+  // Actions - System Connectivity & Health
+  refreshSystemStatus: () => Promise<void>;
+  checkSystemHealth: () => Promise<boolean>;
+
+  // Actions - Enhanced Settings Management
+  refreshEnhancedSettings: () => Promise<void>;
+  updateEnhancedSettings: (settings: EnhancedVisitorSettings) => Promise<boolean>;
+
+  // Actions - MSO Desktop Support
+  getCachedDataSummary: () => { visitors_count: number; events_count: number; last_sync: string | null; offline_mode: boolean };
+  enableOfflineMode: () => void;
+  syncOfflineData: () => Promise<boolean>;
 }
 
 export function useVisitorState(): UseVisitorStateReturn {
@@ -111,12 +158,20 @@ export function useVisitorState(): UseVisitorStateReturn {
     return currentUser?.roles?.[0] || 'default-property-id';
   }, [currentUser]);
 
-  // State
+  // State - Core
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [securityRequests, setSecurityRequests] = useState<SecurityRequest[]>([]);
   const [selectedVisitor, setSelectedVisitor] = useState<Visitor | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
+  // State - Mobile Agent & Hardware Integration
+  const [mobileAgentDevices, setMobileAgentDevices] = useState<MobileAgentDevice[]>([]);
+  const [mobileAgentSubmissions, setMobileAgentSubmissions] = useState<MobileAgentSubmission[]>([]);
+  const [hardwareDevices, setHardwareDevices] = useState<HardwareDevice[]>([]);
+  const [systemConnectivity, setSystemConnectivity] = useState<SystemConnectivity | null>(null);
+  const [enhancedSettings, setEnhancedSettings] = useState<EnhancedVisitorSettings | null>(null);
+  const [bulkOperations, setBulkOperations] = useState<BulkVisitorOperation[]>([]);
 
   // Loading states
   const [loading, setLoading] = useState({
@@ -125,6 +180,13 @@ export function useVisitorState(): UseVisitorStateReturn {
     events: false,
     event: false,
     securityRequests: false,
+    // Mobile Agent & Hardware Loading States
+    mobileAgents: false,
+    agentSubmissions: false,
+    hardwareDevices: false,
+    systemStatus: false,
+    settings: false,
+    bulkOperation: false,
   });
 
   // Filters
@@ -562,23 +624,387 @@ export function useVisitorState(): UseVisitorStateReturn {
     }
   }, []);
 
-  // Auto-fetch on mount
+  // =======================================================
+  // MOBILE AGENT & HARDWARE INTEGRATION - MSO PRODUCTION READINESS
+  // =======================================================
+
+  // Mobile Agent Management
+  const refreshMobileAgents = useCallback(async (): Promise<void> => {
+    setLoading(prev => ({ ...prev, mobileAgents: true }));
+    try {
+      const response = await visitorService.getMobileAgentDevices(propertyId);
+      if (response.data) {
+        setMobileAgentDevices(response.data);
+        logger.info('Mobile agents refreshed', { 
+          module: 'VisitorSecurity',
+          action: 'refreshMobileAgents',
+          count: response.data.length
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to fetch mobile agents', error instanceof Error ? error : new Error(String(error)), {
+        module: 'VisitorSecurity',
+        action: 'refreshMobileAgents'
+      });
+      // Don't show error for background refresh
+    } finally {
+      setLoading(prev => ({ ...prev, mobileAgents: false }));
+    }
+  }, [propertyId]);
+
+  const registerMobileAgent = useCallback(async (agentData: {
+    agent_name: string;
+    device_id: string;
+    device_model?: string;
+    app_version: string;
+    assigned_properties: string[];
+  }): Promise<MobileAgentDevice | null> => {
+    const toastId = showLoading('Registering mobile agent device...');
+    try {
+      const response = await visitorService.registerMobileAgent(agentData);
+      if (response.data) {
+        setMobileAgentDevices(prev => [response.data!, ...prev]);
+        dismissLoadingAndShowSuccess(toastId, 'Mobile agent registered successfully');
+        return response.data;
+      }
+      dismissLoadingAndShowError(toastId, 'Failed to register mobile agent');
+      return null;
+    } catch (error) {
+      logger.error('Failed to register mobile agent', error instanceof Error ? error : new Error(String(error)));
+      dismissLoadingAndShowError(toastId, 'Failed to register mobile agent');
+      return null;
+    }
+  }, []);
+
+  const refreshAgentSubmissions = useCallback(async (agentId?: string): Promise<void> => {
+    setLoading(prev => ({ ...prev, agentSubmissions: true }));
+    try {
+      const response = await visitorService.getMobileAgentSubmissions(agentId, 'pending');
+      if (response.data) {
+        setMobileAgentSubmissions(response.data);
+      }
+    } catch (error) {
+      logger.error('Failed to fetch agent submissions', error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      setLoading(prev => ({ ...prev, agentSubmissions: false }));
+    }
+  }, []);
+
+  const processAgentSubmission = useCallback(async (
+    submissionId: string, 
+    action: 'approve' | 'reject', 
+    reason?: string
+  ): Promise<boolean> => {
+    const toastId = showLoading(`${action === 'approve' ? 'Approving' : 'Rejecting'} mobile agent submission...`);
+    try {
+      const response = await visitorService.processMobileAgentSubmission(submissionId, action, reason);
+      if (!response.error) {
+        // Update submissions list
+        setMobileAgentSubmissions(prev => 
+          prev.map(sub => sub.submission_id === submissionId 
+            ? { ...sub, status: action === 'approve' ? 'processed' : 'rejected' }
+            : sub
+          )
+        );
+        // If approved and created a visitor, refresh visitors
+        if (action === 'approve' && response.data) {
+          await refreshVisitors();
+        }
+        dismissLoadingAndShowSuccess(toastId, `Submission ${action}ed successfully`);
+        return true;
+      }
+      dismissLoadingAndShowError(toastId, `Failed to ${action} submission`);
+      return false;
+    } catch (error) {
+      logger.error('Failed to process agent submission', error instanceof Error ? error : new Error(String(error)));
+      dismissLoadingAndShowError(toastId, `Failed to ${action} submission`);
+      return false;
+    }
+  }, [refreshVisitors]);
+
+  const syncMobileAgent = useCallback(async (agentId: string): Promise<boolean> => {
+    const toastId = showLoading('Synchronizing mobile agent data...');
+    try {
+      const response = await visitorService.syncMobileAgentData(agentId);
+      if (response.data) {
+        const { synced_items, errors } = response.data;
+        if (errors.length === 0) {
+          dismissLoadingAndShowSuccess(toastId, `Synchronized ${synced_items} items successfully`);
+        } else {
+          showError(`Synchronized ${synced_items} items with ${errors.length} errors`);
+        }
+        await refreshVisitors();
+        await refreshAgentSubmissions(agentId);
+        return true;
+      }
+      dismissLoadingAndShowError(toastId, 'Failed to synchronize mobile agent');
+      return false;
+    } catch (error) {
+      logger.error('Failed to sync mobile agent', error instanceof Error ? error : new Error(String(error)));
+      dismissLoadingAndShowError(toastId, 'Failed to synchronize mobile agent');
+      return false;
+    }
+  }, [refreshVisitors, refreshAgentSubmissions]);
+
+  // Hardware Device Management
+  const refreshHardwareDevices = useCallback(async (): Promise<void> => {
+    setLoading(prev => ({ ...prev, hardwareDevices: true }));
+    try {
+      const response = await visitorService.getHardwareDevices(propertyId);
+      if (response.data) {
+        setHardwareDevices(response.data);
+        logger.info('Hardware devices refreshed', {
+          module: 'VisitorSecurity',
+          action: 'refreshHardwareDevices',
+          count: response.data.length
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to fetch hardware devices', error instanceof Error ? error : new Error(String(error)));
+      // Don't show error for background refresh
+    } finally {
+      setLoading(prev => ({ ...prev, hardwareDevices: false }));
+    }
+  }, [propertyId]);
+
+  const getDeviceStatus = useCallback(async (deviceId: string): Promise<HardwareDevice | null> => {
+    try {
+      const response = await visitorService.getHardwareDeviceStatus(deviceId);
+      if (response.data) {
+        // Update device in the list
+        setHardwareDevices(prev => 
+          prev.map(device => device.device_id === deviceId ? response.data! : device)
+        );
+        return response.data;
+      }
+      return null;
+    } catch (error) {
+      logger.error('Failed to get device status', error instanceof Error ? error : new Error(String(error)));
+      return null;
+    }
+  }, []);
+
+  const printVisitorBadge = useCallback(async (visitorId: string, printerId?: string): Promise<boolean> => {
+    const toastId = showLoading('Sending badge to printer...');
+    try {
+      const response = await visitorService.printVisitorBadge(visitorId, printerId);
+      if (response.data) {
+        const { print_job_id, status } = response.data;
+        if (status === 'queued' || status === 'printing') {
+          dismissLoadingAndShowSuccess(toastId, `Badge print job ${print_job_id} queued`);
+          return true;
+        } else if (status === 'completed') {
+          dismissLoadingAndShowSuccess(toastId, 'Badge printed successfully');
+          return true;
+        }
+      }
+      dismissLoadingAndShowError(toastId, 'Failed to print badge');
+      return false;
+    } catch (error) {
+      logger.error('Failed to print badge', error instanceof Error ? error : new Error(String(error)));
+      dismissLoadingAndShowError(toastId, 'Failed to print badge');
+      return false;
+    }
+  }, []);
+
+  // System Connectivity & Health
+  const refreshSystemStatus = useCallback(async (): Promise<void> => {
+    setLoading(prev => ({ ...prev, systemStatus: true }));
+    try {
+      const response = await visitorService.getSystemConnectivity();
+      if (response.data) {
+        setSystemConnectivity(response.data);
+      }
+    } catch (error) {
+      logger.error('Failed to get system connectivity', error instanceof Error ? error : new Error(String(error)));
+      // Set offline status on error
+      setSystemConnectivity({
+        network_status: 'offline',
+        backend_status: 'disconnected',
+        mobile_agents_connected: 0,
+        hardware_devices_connected: 0,
+        last_sync: new Date().toISOString(),
+        pending_sync_items: 0,
+        connectivity_errors: ['Connection failed']
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, systemStatus: false }));
+    }
+  }, []);
+
+  const checkSystemHealth = useCallback(async (): Promise<boolean> => {
+    try {
+      const response = await visitorService.checkSystemHealth();
+      return response.data?.status === 'healthy';
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Enhanced Settings Management
+  const refreshEnhancedSettings = useCallback(async (): Promise<void> => {
+    setLoading(prev => ({ ...prev, settings: true }));
+    try {
+      const response = await visitorService.getEnhancedSettings(propertyId);
+      if (response.data) {
+        setEnhancedSettings(response.data);
+      }
+    } catch (error) {
+      logger.error('Failed to load enhanced settings', error instanceof Error ? error : new Error(String(error)));
+      // Set default settings on error
+      setEnhancedSettings({
+        visitor_retention_days: 365,
+        auto_checkout_hours: 24,
+        require_photo: true,
+        require_host_approval: false,
+        mobile_agent_settings: {
+          enabled: true,
+          require_location: true,
+          auto_sync_enabled: true,
+          offline_mode_duration_hours: 8,
+          photo_quality: 'medium',
+          allow_bulk_operations: true,
+          require_supervisor_approval: false
+        },
+        hardware_settings: {
+          card_reader_enabled: false,
+          camera_integration_enabled: false,
+          printer_integration_enabled: false,
+          auto_badge_printing: false,
+          device_health_monitoring: true,
+          alert_on_device_offline: true,
+          maintenance_reminder_days: 30
+        },
+        mso_settings: {
+          offline_mode_enabled: true,
+          cache_size_limit_mb: 500,
+          sync_interval_seconds: 300,
+          auto_backup_enabled: true,
+          backup_retention_days: 30,
+          hardware_timeout_seconds: 30,
+          mobile_agent_timeout_seconds: 60,
+          network_retry_attempts: 3
+        },
+        api_settings: {
+          mobile_agent_endpoint: '/api/visitors/mobile-agents',
+          hardware_device_endpoint: '/api/visitors/hardware',
+          websocket_endpoint: '/api/visitors/ws',
+          api_key_mobile: 'mobile_key_placeholder',
+          api_key_hardware: 'hardware_key_placeholder',
+          encryption_enabled: true
+        }
+      });
+    } finally {
+      setLoading(prev => ({ ...prev, settings: false }));
+    }
+  }, [propertyId]);
+
+  const updateEnhancedSettings = useCallback(async (settings: EnhancedVisitorSettings): Promise<boolean> => {
+    const toastId = showLoading('Updating settings...');
+    try {
+      const response = await visitorService.updateEnhancedSettings(settings, propertyId);
+      if (response.data) {
+        setEnhancedSettings(response.data);
+        dismissLoadingAndShowSuccess(toastId, 'Settings updated successfully');
+        return true;
+      }
+      dismissLoadingAndShowError(toastId, 'Failed to update settings');
+      return false;
+    } catch (error) {
+      logger.error('Failed to update enhanced settings', error instanceof Error ? error : new Error(String(error)));
+      dismissLoadingAndShowError(toastId, 'Failed to update settings');
+      return false;
+    }
+  }, [propertyId]);
+
+  // MSO Desktop Support
+  const getCachedDataSummary = useCallback(() => {
+    return visitorService.getCachedDataSummary();
+  }, []);
+
+  const enableOfflineMode = useCallback(() => {
+    // Cache current data for offline use
+    visitorService.cacheDataLocally({
+      visitors,
+      events,
+      securityRequests
+    });
+    showSuccess('Offline mode enabled - data cached locally');
+  }, [visitors, events, securityRequests]);
+
+  const syncOfflineData = useCallback(async (): Promise<boolean> => {
+    const toastId = showLoading('Synchronizing offline data...');
+    try {
+      // Refresh all data from server
+      await Promise.all([
+        refreshVisitors(),
+        refreshEvents(),
+        refreshSecurityRequests(),
+        refreshMobileAgents(),
+        refreshHardwareDevices()
+      ]);
+      
+      // Update cached data
+      visitorService.cacheDataLocally({
+        visitors,
+        events,
+        securityRequests
+      });
+      
+      dismissLoadingAndShowSuccess(toastId, 'Data synchronized successfully');
+      return true;
+    } catch (error) {
+      logger.error('Failed to sync offline data', error instanceof Error ? error : new Error(String(error)));
+      dismissLoadingAndShowError(toastId, 'Failed to synchronize data');
+      return false;
+    }
+  }, [visitors, events, securityRequests, refreshVisitors, refreshEvents, refreshSecurityRequests, refreshMobileAgents, refreshHardwareDevices]);
+
+  // Auto-fetch on mount - Enhanced for Production Readiness
   useEffect(() => {
     if (propertyId && propertyId !== 'default-property-id') {
+      // Core data
       refreshVisitors({ property_id: propertyId });
       refreshEvents({ property_id: propertyId });
       refreshSecurityRequests({ property_id: propertyId });
+      
+      // Mobile Agent & Hardware data
+      refreshMobileAgents();
+      refreshHardwareDevices();
+      refreshSystemStatus();
+      refreshEnhancedSettings();
+      
+      // Check for pending mobile agent submissions
+      refreshAgentSubmissions();
     }
-  }, [propertyId, refreshVisitors, refreshEvents, refreshSecurityRequests]);
+  }, [
+    propertyId, 
+    refreshVisitors, 
+    refreshEvents, 
+    refreshSecurityRequests,
+    refreshMobileAgents,
+    refreshHardwareDevices,
+    refreshSystemStatus,
+    refreshEnhancedSettings,
+    refreshAgentSubmissions
+  ]);
 
   return {
-    // Data
+    // Data - Core
     visitors,
     events,
     securityRequests,
     selectedVisitor,
     selectedEvent,
     metrics,
+
+    // Data - Mobile Agent & Hardware Integration
+    mobileAgentDevices,
+    mobileAgentSubmissions,
+    hardwareDevices,
+    systemConnectivity,
+    enhancedSettings,
+    bulkOperations,
 
     // Loading states
     loading,
@@ -633,5 +1059,30 @@ export function useVisitorState(): UseVisitorStateReturn {
     // Actions - Bulk Operations
     bulkDeleteVisitors,
     bulkStatusChange,
+
+    // Actions - Mobile Agent Management
+    refreshMobileAgents,
+    registerMobileAgent,
+    refreshAgentSubmissions,
+    processAgentSubmission,
+    syncMobileAgent,
+
+    // Actions - Hardware Device Management
+    refreshHardwareDevices,
+    getDeviceStatus,
+    printVisitorBadge,
+
+    // Actions - System Connectivity & Health
+    refreshSystemStatus,
+    checkSystemHealth,
+
+    // Actions - Enhanced Settings Management
+    refreshEnhancedSettings,
+    updateEnhancedSettings,
+
+    // Actions - MSO Desktop Support
+    getCachedDataSummary,
+    enableOfflineMode,
+    syncOfflineData,
   };
 }

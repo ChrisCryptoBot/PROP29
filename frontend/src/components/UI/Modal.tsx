@@ -120,10 +120,8 @@ const Modal: React.FC<ModalProps> = ({
       >
         {draggable ? (
           <div
-            role="presentation"
-            aria-label="Drag to reposition"
             className={cn(
-              'cursor-move select-none -mx-6 -mt-6 px-6 pt-6 pb-2 mb-6 border-b border-white/5',
+              'cursor-default hover:cursor-move select-none -mx-6 -mt-6 px-6 pt-6 pb-2 mb-6 border-b border-white/5',
               title ? 'flex items-center' : 'min-h-[2rem]'
             )}
             onMouseDown={handleDragStart}

@@ -27,6 +27,7 @@ sys.path.insert(0, str(current_dir))
 from database import init_db
 from services.camera_health_service import CameraHealthService
 from services.auth_service import AuthService
+from services.analytics_engine_service import analytics_engine
 
 # Configure logging
 logging.basicConfig(
@@ -54,6 +55,7 @@ from api.patrol_endpoints import router as patrol_router
 from api.handover_endpoints import router as handover_router
 from api.equipment_endpoints import router as equipment_router
 from api.lockdown_endpoints import router as lockdown_router
+from api.mobile_agent_endpoints import router as mobile_agent_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -68,6 +70,8 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     init_db()
+    # Initialize analytics engine with sample data
+    await analytics_engine.simulate_realtime_data()
     # CameraHealthService.start_background_service()
 
 # Global Exception Handler
@@ -153,6 +157,7 @@ api_router.include_router(patrol_router)
 api_router.include_router(handover_router)
 api_router.include_router(equipment_router)
 api_router.include_router(lockdown_router)
+api_router.include_router(mobile_agent_router)
 
 # Include the consolidated API router in the app
 app.include_router(api_router)

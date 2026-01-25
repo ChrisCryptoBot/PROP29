@@ -16,64 +16,135 @@ import type {
   EscalationRule,
   UserActivity,
   PatternRecognitionRequest,
-  PatternRecognitionResponse
+  PatternRecognitionResponse,
+  // Production Readiness Enhancement Types
+  AgentPerformanceMetrics,
+  DeviceHealthStatus,
+  BulkOperationResult,
+  EnhancedIncidentSettings,
+  AgentTrustLevel,
+  HardwareIncidentMetadata
 } from '../types/incident-log.types';
 import { IncidentStatus, IncidentType } from '../types/incident-log.types';
 
 export interface IncidentLogContextValue {
-  // Data
-  incidents: Incident[];
-  selectedIncident: Incident | null;
-  aiSuggestion: AIClassificationResponse | null;
-  escalationRules: EscalationRule[];
-  activityByIncident: Record<string, UserActivity[]>;
-  lastSynced: Date | null;
+    // Data - Core
+    incidents: Incident[];
+    selectedIncident: Incident | null;
+    aiSuggestion: AIClassificationResponse | null;
+    escalationRules: EscalationRule[];
+    activityByIncident: Record<string, UserActivity[]>;
+    lastSynced: Date | null;
 
-  // Loading states
-  loading: {
-    incidents: boolean;
-    incident: boolean;
-    ai: boolean;
-    related: boolean;
-    evidence: boolean;
-    activity: boolean;
-  };
+    // Data - Production Readiness Enhancements
+    agentPerformanceMetrics: AgentPerformanceMetrics[];
+    hardwareDevices: DeviceHealthStatus[];
+    enhancedSettings: EnhancedIncidentSettings | null;
+    bulkOperationResult: BulkOperationResult | null;
 
-  // Actions - CRUD Operations
-  refreshIncidents: (filters?: IncidentFilters) => Promise<void>;
-  getIncident: (incidentId: string) => Promise<Incident | null>;
-  createIncident: (incident: IncidentCreate, useAI?: boolean) => Promise<Incident | null>;
-  updateIncident: (incidentId: string, updates: IncidentUpdate) => Promise<Incident | null>;
-  deleteIncident: (incidentId: string) => Promise<boolean>;
+    // Loading states (enhanced)
+    loading: {
+        incidents: boolean;
+        incident: boolean;
+        ai: boolean;
+        related: boolean;
+        evidence: boolean;
+        activity: boolean;
+        // New loading states
+        agentPerformance: boolean;
+        hardwareDevices: boolean;
+        bulkOperation: boolean;
+        settings: boolean;
+    };
 
-  // Actions - Incident Management
-  assignIncident: (incidentId: string, assigneeId: string) => Promise<boolean>;
-  resolveIncident: (incidentId: string) => Promise<boolean>;
-  escalateIncident: (incidentId: string, reason: string) => Promise<boolean>;
+    // Modal states - New enhanced modal management
+    modals: {
+        showCreateModal: boolean;
+        showEditModal: boolean;
+        showDetailsModal: boolean;
+        showEscalationModal: boolean;
+        showAdvancedFilters: boolean;
+        showReportModal: boolean;
+        showEmergencyAlertModal: boolean;
+        // New production-ready modals
+        showAgentPerformanceModal: boolean;
+        showBulkOperationModal: boolean;
+        showAutoApprovalSettingsModal: boolean;
+        selectedAgentId: string | null;
+        bulkOperation: {
+            type: 'approve' | 'reject' | 'delete' | 'status_change' | null;
+            incidentIds: string[];
+            reason?: string;
+            newStatus?: IncidentStatus;
+            title: string;
+            description: string;
+        } | null;
+    };
 
-  // Actions - AI & Analysis
-  getAIClassification: (title: string, description: string, location?: any) => Promise<AIClassificationResponse | null>;
-  getIncidentActivity: (incidentId: string) => Promise<UserActivity[]>;
-  getPatternRecognition: (request: PatternRecognitionRequest) => Promise<PatternRecognitionResponse | null>;
+    // Actions - CRUD Operations
+    refreshIncidents: (filters?: IncidentFilters) => Promise<void>;
+    getIncident: (incidentId: string) => Promise<Incident | null>;
+    createIncident: (incident: IncidentCreate, useAI?: boolean) => Promise<Incident | null>;
+    updateIncident: (incidentId: string, updates: IncidentUpdate) => Promise<Incident | null>;
+    deleteIncident: (incidentId: string) => Promise<boolean>;
 
-  // Actions - Emergency
-  createEmergencyAlert: (alert: any) => Promise<EmergencyAlertResponse | null>;
+    // Actions - Incident Management
+    assignIncident: (incidentId: string, assigneeId: string) => Promise<boolean>;
+    resolveIncident: (incidentId: string) => Promise<boolean>;
+    escalateIncident: (incidentId: string, reason: string) => Promise<boolean>;
 
-  // Actions - Selection
-  setSelectedIncident: (incident: Incident | null) => void;
+    // Actions - AI & Analysis
+    getAIClassification: (title: string, description: string, location?: any) => Promise<AIClassificationResponse | null>;
+    getIncidentActivity: (incidentId: string) => Promise<UserActivity[]>;
+    getPatternRecognition: (request: PatternRecognitionRequest) => Promise<PatternRecognitionResponse | null>;
 
-  // Actions - Bulk Operations
-  bulkDelete: (incidentIds: string[]) => Promise<boolean>;
-  bulkStatusChange: (incidentIds: string[], status: IncidentStatus) => Promise<boolean>;
+    // Actions - Emergency
+    createEmergencyAlert: (alert: any) => Promise<EmergencyAlertResponse | null>;
+    convertEmergencyAlert: (alertId: string, overrides?: Partial<IncidentCreate>) => Promise<Incident | null>;
 
-  // Actions - Modal UI Controls
-  setShowCreateModal: (show: boolean) => void;
-  setShowEditModal: (show: boolean) => void;
-  setShowDetailsModal: (show: boolean) => void;
-  setShowEscalationModal: (show: boolean) => void;
-  setShowAdvancedFilters: (show: boolean) => void;
-  setShowReportModal: (show: boolean) => void;
-  setShowEmergencyAlertModal: (show: boolean) => void;
+    // Actions - Selection
+    setSelectedIncident: (incident: Incident | null) => void;
+
+    // Actions - Bulk Operations (Enhanced)
+    bulkDelete: (incidentIds: string[]) => Promise<boolean>;
+    bulkStatusChange: (incidentIds: string[], status: IncidentStatus) => Promise<boolean>;
+    bulkApprove: (incidentIds: string[], reason?: string) => Promise<BulkOperationResult | null>;
+    bulkReject: (incidentIds: string[], reason: string) => Promise<BulkOperationResult | null>;
+
+    // Actions - Mobile Agent Performance
+    refreshAgentPerformance: (agentId?: string) => Promise<void>;
+    getAgentTrustLevel: (agentId: string) => AgentTrustLevel;
+    calculateAgentTrustScore: (agentId: string) => Promise<number>;
+
+    // Actions - Hardware Device Integration  
+    refreshHardwareDevices: () => Promise<void>;
+    getHardwareDeviceStatus: (deviceId: string) => Promise<DeviceHealthStatus | null>;
+    getHardwareMetadata: (incident: Incident) => HardwareIncidentMetadata | null;
+
+    // Actions - Enhanced Settings
+    refreshEnhancedSettings: () => Promise<void>;
+    updateEnhancedSettings: (settings: EnhancedIncidentSettings) => Promise<boolean>;
+
+    // Actions - Modal UI Controls (Enhanced)
+    setShowCreateModal: (show: boolean) => void;
+    setShowEditModal: (show: boolean) => void;
+    setShowDetailsModal: (show: boolean) => void;
+    setShowEscalationModal: (show: boolean) => void;
+    setShowAdvancedFilters: (show: boolean) => void;
+    setShowReportModal: (show: boolean) => void;
+    setShowEmergencyAlertModal: (show: boolean) => void;
+    
+    // New modal controls for production-ready features
+    setShowAgentPerformanceModal: (show: boolean, agentId?: string) => void;
+    setShowBulkOperationModal: (show: boolean, operation?: {
+        type: 'approve' | 'reject' | 'delete' | 'status_change';
+        incidentIds: string[];
+        reason?: string;
+        newStatus?: IncidentStatus;
+        title: string;
+        description: string;
+    }) => void;
+    setShowAutoApprovalSettingsModal: (show: boolean) => void;
 }
 
 export const IncidentLogContext = createContext<IncidentLogContextValue | undefined>(undefined);

@@ -13,6 +13,7 @@ import { DetailsModal } from './components/modals/DetailsModal';
 import { BulkImportModal } from './components/modals/BulkImportModal';
 import { AdvancedFiltersModal } from './components/modals/AdvancedFiltersModal';
 import { PhotoUploadModal } from './components/modals/PhotoUploadModal';
+import { VideoFootageModal } from './components/modals/VideoFootageModal';
 
 import { cn } from '../../utils/cn';
 import ModuleShell from '../../components/Layout/ModuleShell';
@@ -56,7 +57,7 @@ const OrchestratorContent: React.FC = () => {
                 <Button
                     onClick={() => setShowCreateModal(true)}
                     variant="destructive"
-                    className="font-black uppercase tracking-widest px-8 shadow-lg shadow-red-500/20"
+                    className="font-black uppercase tracking-widest px-8 shadow-lg"
                 >
                     <i className="fas fa-plus mr-2" />
                     Add Individual
@@ -77,6 +78,19 @@ const OrchestratorContent: React.FC = () => {
             <BulkImportModal />
             <AdvancedFiltersModal />
             <PhotoUploadModal />
+            <VideoFootageModal />
+
+            {/* Quick Action FAB - Gold Standard */}
+            <div className="fixed bottom-8 right-8 z-50">
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-red-700 hover:scale-110 transition-all group"
+                    title="Add Banned Individual"
+                    aria-label="Add Banned Individual"
+                >
+                    <i className="fas fa-user-plus text-xl group-hover:scale-110 transition-transform" />
+                </button>
+            </div>
         </ModuleShell >
     );
 };

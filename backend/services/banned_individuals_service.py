@@ -413,3 +413,65 @@ class BannedIndividualsService:
         except Exception as e:
             logger.error(f"Error getting facial recognition status: {str(e)}")
             raise e
+    
+    def get_detection_alerts(self, property_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get detection alerts"""
+        # Placeholder - in production this would query a detections table
+        return []
+    
+    def mark_detection_false_positive(self, detection_id: str, notes: Optional[str] = None) -> bool:
+        """Mark a detection as false positive"""
+        # Placeholder - in production this would update the detection status
+        return True
+    
+    def acknowledge_detection(self, detection_id: str, action_taken: str, notes: Optional[str] = None) -> bool:
+        """Acknowledge a detection"""
+        # Placeholder - in production this would update the detection
+        return True
+    
+    def get_detection_footage(self, detection_id: str) -> Optional[str]:
+        """Get video footage URL for a detection"""
+        # Placeholder - in production this would return actual footage URL
+        return None
+    
+    def bulk_import(self, csv_data: str) -> Dict[str, Any]:
+        """Bulk import banned individuals from CSV"""
+        # Placeholder - in production this would parse CSV and import
+        return {"success": 0, "failed": 0, "errors": []}
+    
+    def get_settings(self, property_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get banned individuals settings"""
+        # Placeholder - in production this would fetch from settings table
+        return {
+            "auto_share_permanent_bans": True,
+            "facial_recognition_alerts": True,
+            "strict_id_verification": False,
+            "audit_logs_retention": "180",
+            "biometric_data_purge": "30",
+            "confidence_threshold": 85,
+            "retention_days": 180
+        }
+    
+    def update_settings(self, settings: Dict[str, Any]) -> bool:
+        """Update banned individuals settings"""
+        # Placeholder - in production this would save to settings table
+        return True
+    
+    def update_fr_config(self, confidence_threshold: int, retention_days: int) -> bool:
+        """Update facial recognition configuration"""
+        # Placeholder - in production this would update config
+        return True
+    
+    def trigger_training(self) -> str:
+        """Trigger facial recognition model training"""
+        # Placeholder - in production this would start training job
+        return str(uuid.uuid4())
+    
+    def get_analytics(self, start_date: Optional[str] = None, end_date: Optional[str] = None, property_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get analytics data"""
+        # Placeholder - in production this would calculate real analytics
+        return {
+            "detection_frequency": "2.3",
+            "security_effectiveness": "96.8",
+            "monthly_trends": []
+        }

@@ -35,25 +35,38 @@ export const VisitorsTab: React.FC = React.memo(() => {
   }
 
   return (
-    <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-      <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10" aria-hidden="true">
-              <i className="fas fa-users text-white text-sm" />
-            </div>
-            Visitor List
-          </CardTitle>
-          <Button
-            onClick={() => setShowRegisterModal(true)}
-            variant="primary"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-[10px] px-8 h-10 border-none shadow-lg shadow-blue-500/20"
-          >
-            <i className="fas fa-user-plus mr-2" />
-            Add Visitor
-          </Button>
+    <div className="space-y-6">
+      {/* Page Header - Gold Standard Structure */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Visitor Security</p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Visitor Registry & Management</h2>
+          <p className="text-[11px] text-slate-400">
+            Complete visitor lifecycle management with mobile agent integration and hardware verification.
+          </p>
         </div>
-      </CardHeader>
+        
+        <Button
+          onClick={() => setShowRegisterModal(true)}
+          variant="glass"
+          className="text-xs font-black uppercase tracking-widest px-6"
+        >
+          <i className="fas fa-user-plus mr-2" />
+          Register Visitor
+        </Button>
+      </div>
+
+      <Card className="glass-card border border-white/5 shadow-2xl">
+        <CardHeader className="bg-white/5 border-b border-white/5 py-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center mr-3">
+                <i className="fas fa-users text-white text-sm" />
+              </div>
+              Active Visitor Registry
+            </CardTitle>
+          </div>
+        </CardHeader>
       <CardContent className="pt-6 px-6 pb-6">
         {/* Expired Badge Alert Banner */}
         {filteredVisitors.filter(v => v.status === 'overdue').length > 0 && (
@@ -137,6 +150,7 @@ export const VisitorsTab: React.FC = React.memo(() => {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 });
 

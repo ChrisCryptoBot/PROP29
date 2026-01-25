@@ -396,4 +396,35 @@ export class PatrolEndpoint {
         return response.data;
     }
 
+    /**
+     * Get patrol alerts
+     */
+    static async getAlerts(): Promise<any[]> {
+        const response = await axios.get(`${API_BASE_URL}/patrols/alerts`, {
+            headers: getAuthHeaders()
+        });
+        return response.data.alerts || [];
+    }
+
+    /**
+     * Get dashboard data (alerts, weather, emergency status)
+     */
+    static async getDashboardData(propertyId?: string): Promise<any> {
+        const response = await axios.get(`${API_BASE_URL}/patrols/dashboard-data`, {
+            params: propertyId ? { property_id: propertyId } : undefined,
+            headers: getAuthHeaders()
+        });
+        return response.data;
+    }
+
+    /**
+     * Get emergency status
+     */
+    static async getEmergencyStatus(): Promise<any> {
+        const response = await axios.get(`${API_BASE_URL}/patrols/emergency-status`, {
+            headers: getAuthHeaders()
+        });
+        return response.data;
+    }
+
 }

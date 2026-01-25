@@ -383,10 +383,23 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
       return;
     }
 
+    // Find current camera for version tracking
+    const currentCamera = cameras.find(c => c.id === cameraId);
+    if (!currentCamera) {
+      showError('Camera not found');
+      return;
+    }
+
     const toastId = showLoading('Updating camera...');
     setLoading((prev) => ({ ...prev, actions: true }));
     try {
-      const updated = await securityOpsService.updateCamera(cameraId, payload);
+      // Add version info for optimistic locking (if available)
+      const updatePayload = {
+        ...payload,
+        version: (currentCamera as any).version || 1
+      };
+
+      const updated = await securityOpsService.updateCamera(cameraId, updatePayload);
       if (updated) {
         setCameras((prev) => prev.map((camera) => (camera.id === cameraId ? updated : camera)));
         dismissLoadingAndShowSuccess(toastId, 'Camera updated successfully');
@@ -394,16 +407,24 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
         throw new Error('Failed to update camera');
       }
     } catch (error) {
-      dismissLoadingAndShowError(toastId, 'Failed to update camera');
+      // Handle optimistic locking conflicts
+      if (error instanceof Error && error.message.includes('conflict')) {
+        dismissLoadingAndShowError(toastId, 'Camera was modified by another user. Refreshing...');
+        await refreshCameras(); // Reload fresh data
+      } else {
+        dismissLoadingAndShowError(toastId, 'Failed to update camera');
+      }
+      
       logger.error('Failed to update camera', error instanceof Error ? error : new Error(String(error)), {
         module: 'SecurityOperations',
         action: 'updateCamera',
+        cameraId,
       });
       throw error;
     } finally {
       setLoading((prev) => ({ ...prev, actions: false }));
     }
-  }, [canManageCameras]);
+  }, [canManageCameras, cameras, refreshCameras]);
 
   const deleteCamera = useCallback(async (cameraId: string) => {
     if (!canManageCameras) {

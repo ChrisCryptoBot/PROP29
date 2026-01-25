@@ -18,7 +18,17 @@ import type {
   SecurityRequest,
   SecurityRequestCreate,
   SecurityRequestFilters,
-  QRCodeResponse
+  QRCodeResponse,
+  // Mobile Agent & Hardware Integration Types
+  MobileAgentDevice,
+  MobileAgentSubmission,
+  HardwareDevice,
+  CardReaderEvent,
+  CameraEvent,
+  SystemConnectivity,
+  EnhancedVisitorSettings,
+  VisitorRealtimeEvent,
+  BulkVisitorOperation
 } from '../types/visitor-security.types';
 
 class VisitorService {
@@ -183,6 +193,316 @@ class VisitorService {
     requestData: SecurityRequestCreate
   ): Promise<ApiResponse<SecurityRequest>> {
     return apiService.post<SecurityRequest>('/visitors/security-requests', requestData);
+  }
+
+  // =======================================================
+  // MOBILE AGENT & HARDWARE INTEGRATION - MSO PRODUCTION READINESS
+  // =======================================================
+
+  /**
+   * MOBILE AGENT MANAGEMENT METHODS
+   */
+
+  /**
+   * Get all registered mobile agent devices
+   * GET /api/visitors/mobile-agents?property_id=xxx
+   */
+  async getMobileAgentDevices(propertyId?: string): Promise<ApiResponse<MobileAgentDevice[]>> {
+    const params = propertyId ? { property_id: propertyId } : undefined;
+    return apiService.get<MobileAgentDevice[]>('/visitors/mobile-agents', { params });
+  }
+
+  /**
+   * Register a new mobile agent device
+   * POST /api/visitors/mobile-agents/register
+   */
+  async registerMobileAgent(agentData: {
+    agent_name: string;
+    device_id: string;
+    device_model?: string;
+    app_version: string;
+    assigned_properties: string[];
+  }): Promise<ApiResponse<MobileAgentDevice>> {
+    return apiService.post<MobileAgentDevice>('/visitors/mobile-agents/register', agentData);
+  }
+
+  /**
+   * Get mobile agent submissions (pending sync)
+   * GET /api/visitors/mobile-agents/submissions?status=pending&agent_id=xxx
+   */
+  async getMobileAgentSubmissions(
+    agentId?: string,
+    status?: 'pending' | 'processed' | 'rejected'
+  ): Promise<ApiResponse<MobileAgentSubmission[]>> {
+    const params: Record<string, string> = {};
+    if (agentId) params.agent_id = agentId;
+    if (status) params.status = status;
+    
+    return apiService.get<MobileAgentSubmission[]>('/visitors/mobile-agents/submissions', {
+      params: Object.keys(params).length > 0 ? params : undefined
+    });
+  }
+
+  /**
+   * Process mobile agent submission
+   * POST /api/visitors/mobile-agents/submissions/{submission_id}/process
+   */
+  async processMobileAgentSubmission(
+    submissionId: string,
+    action: 'approve' | 'reject',
+    reason?: string
+  ): Promise<ApiResponse<Visitor | null>> {
+    return apiService.post<Visitor | null>(`/visitors/mobile-agents/submissions/${submissionId}/process`, {
+      action,
+      reason
+    });
+  }
+
+  /**
+   * Sync mobile agent data
+   * POST /api/visitors/mobile-agents/{agent_id}/sync
+   */
+  async syncMobileAgentData(agentId: string): Promise<ApiResponse<{
+    synced_items: number;
+    pending_items: number;
+    errors: string[];
+  }>> {
+    return apiService.post(`/visitors/mobile-agents/${agentId}/sync`);
+  }
+
+  /**
+   * HARDWARE DEVICE INTEGRATION METHODS
+   */
+
+  /**
+   * Get all hardware devices
+   * GET /api/visitors/hardware/devices?property_id=xxx&type=xxx
+   */
+  async getHardwareDevices(
+    propertyId?: string,
+    deviceType?: string
+  ): Promise<ApiResponse<HardwareDevice[]>> {
+    const params: Record<string, string> = {};
+    if (propertyId) params.property_id = propertyId;
+    if (deviceType) params.type = deviceType;
+    
+    return apiService.get<HardwareDevice[]>('/visitors/hardware/devices', {
+      params: Object.keys(params).length > 0 ? params : undefined
+    });
+  }
+
+  /**
+   * Get hardware device status
+   * GET /api/visitors/hardware/devices/{device_id}/status
+   */
+  async getHardwareDeviceStatus(deviceId: string): Promise<ApiResponse<HardwareDevice>> {
+    return apiService.get<HardwareDevice>(`/visitors/hardware/devices/${deviceId}/status`);
+  }
+
+  /**
+   * Get card reader events
+   * GET /api/visitors/hardware/card-reader/events?device_id=xxx&limit=50
+   */
+  async getCardReaderEvents(
+    deviceId?: string,
+    limit: number = 50
+  ): Promise<ApiResponse<CardReaderEvent[]>> {
+    const params: Record<string, string> = { limit: limit.toString() };
+    if (deviceId) params.device_id = deviceId;
+    
+    return apiService.get<CardReaderEvent[]>('/visitors/hardware/card-reader/events', { params });
+  }
+
+  /**
+   * Get camera events
+   * GET /api/visitors/hardware/camera/events?device_id=xxx&limit=50
+   */
+  async getCameraEvents(
+    deviceId?: string,
+    limit: number = 50
+  ): Promise<ApiResponse<CameraEvent[]>> {
+    const params: Record<string, string> = { limit: limit.toString() };
+    if (deviceId) params.device_id = deviceId;
+    
+    return apiService.get<CameraEvent[]>('/visitors/hardware/camera/events', { params });
+  }
+
+  /**
+   * Trigger badge printing
+   * POST /api/visitors/hardware/printer/print-badge
+   */
+  async printVisitorBadge(visitorId: string, printerId?: string): Promise<ApiResponse<{
+    print_job_id: string;
+    status: 'queued' | 'printing' | 'completed' | 'error';
+    estimated_completion?: string;
+  }>> {
+    return apiService.post('/visitors/hardware/printer/print-badge', {
+      visitor_id: visitorId,
+      printer_id: printerId
+    });
+  }
+
+  /**
+   * SYSTEM CONNECTIVITY & HEALTH METHODS
+   */
+
+  /**
+   * Get system connectivity status
+   * GET /api/visitors/system/connectivity
+   */
+  async getSystemConnectivity(): Promise<ApiResponse<SystemConnectivity>> {
+    return apiService.get<SystemConnectivity>('/visitors/system/connectivity');
+  }
+
+  /**
+   * Ping backend health
+   * GET /api/visitors/system/health
+   */
+  async checkSystemHealth(): Promise<ApiResponse<{
+    status: 'healthy' | 'degraded' | 'unhealthy';
+    components: Record<string, 'up' | 'down' | 'unknown'>;
+    timestamp: string;
+  }>> {
+    return apiService.get('/visitors/system/health');
+  }
+
+  /**
+   * ENHANCED SETTINGS MANAGEMENT
+   */
+
+  /**
+   * Get enhanced visitor settings (includes mobile agent & hardware)
+   * GET /api/visitors/settings/enhanced?property_id=xxx
+   */
+  async getEnhancedSettings(propertyId?: string): Promise<ApiResponse<EnhancedVisitorSettings>> {
+    const params = propertyId ? { property_id: propertyId } : undefined;
+    return apiService.get<EnhancedVisitorSettings>('/visitors/settings/enhanced', { params });
+  }
+
+  /**
+   * Update enhanced visitor settings
+   * PUT /api/visitors/settings/enhanced?property_id=xxx
+   */
+  async updateEnhancedSettings(
+    settings: EnhancedVisitorSettings,
+    propertyId?: string
+  ): Promise<ApiResponse<EnhancedVisitorSettings>> {
+    const url = propertyId 
+      ? `/visitors/settings/enhanced?property_id=${encodeURIComponent(propertyId)}`
+      : '/visitors/settings/enhanced';
+    
+    return apiService.put<EnhancedVisitorSettings>(url, settings);
+  }
+
+  /**
+   * BULK OPERATIONS FOR MOBILE AGENT DATA
+   */
+
+  /**
+   * Process bulk visitor operations
+   * POST /api/visitors/bulk/{operation_type}
+   */
+  async bulkProcessVisitors(
+    operationType: 'bulk_checkin' | 'bulk_checkout' | 'bulk_update',
+    visitorIds: string[],
+    sourceAgentId?: string,
+    data?: Record<string, unknown>
+  ): Promise<ApiResponse<BulkVisitorOperation>> {
+    return apiService.post<BulkVisitorOperation>(`/visitors/bulk/${operationType}`, {
+      visitor_ids: visitorIds,
+      source_agent_id: sourceAgentId,
+      data
+    });
+  }
+
+  /**
+   * Get bulk operation status
+   * GET /api/visitors/bulk/operations/{operation_id}
+   */
+  async getBulkOperationStatus(operationId: string): Promise<ApiResponse<BulkVisitorOperation>> {
+    return apiService.get<BulkVisitorOperation>(`/visitors/bulk/operations/${operationId}`);
+  }
+
+  /**
+   * MSO DESKTOP SPECIFIC METHODS
+   */
+
+  /**
+   * Get cached data summary for offline mode
+   */
+  getCachedDataSummary(): {
+    visitors_count: number;
+    events_count: number;
+    last_sync: string | null;
+    offline_mode: boolean;
+  } {
+    try {
+      const cached = localStorage.getItem('visitor-security-cache');
+      if (!cached) return { 
+        visitors_count: 0, 
+        events_count: 0, 
+        last_sync: null, 
+        offline_mode: false 
+      };
+      
+      const data = JSON.parse(cached);
+      return {
+        visitors_count: data.visitors?.length || 0,
+        events_count: data.events?.length || 0,
+        last_sync: data.last_sync || null,
+        offline_mode: !navigator.onLine
+      };
+    } catch {
+      return { 
+        visitors_count: 0, 
+        events_count: 0, 
+        last_sync: null, 
+        offline_mode: !navigator.onLine 
+      };
+    }
+  }
+
+  /**
+   * Cache data locally for offline mode
+   */
+  cacheDataLocally(data: {
+    visitors: Visitor[];
+    events: Event[];
+    securityRequests: SecurityRequest[];
+  }): void {
+    try {
+      const cacheData = {
+        ...data,
+        last_sync: new Date().toISOString(),
+        cached_at: new Date().toISOString()
+      };
+      localStorage.setItem('visitor-security-cache', JSON.stringify(cacheData));
+    } catch (error) {
+      console.warn('Failed to cache data locally:', error);
+    }
+  }
+
+  /**
+   * Get cached data for offline mode
+   */
+  getCachedData(): {
+    visitors: Visitor[];
+    events: Event[];
+    securityRequests: SecurityRequest[];
+  } | null {
+    try {
+      const cached = localStorage.getItem('visitor-security-cache');
+      if (!cached) return null;
+      
+      const data = JSON.parse(cached);
+      return {
+        visitors: data.visitors || [],
+        events: data.events || [],
+        securityRequests: data.securityRequests || []
+      };
+    } catch {
+      return null;
+    }
   }
 }
 

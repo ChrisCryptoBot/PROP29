@@ -27,19 +27,31 @@ import type {
     EscalationRule,
     UserActivity,
     PatternRecognitionRequest,
-    PatternRecognitionResponse
+    PatternRecognitionResponse,
+    // Production Readiness Enhancement Types
+    AgentPerformanceMetrics,
+    DeviceHealthStatus,
+    BulkOperationResult,
+    EnhancedIncidentSettings,
+    HardwareIncidentMetadata
 } from '../types/incident-log.types';
-import { IncidentStatus, IncidentSeverity } from '../types/incident-log.types';
+import { IncidentStatus, IncidentSeverity, AgentTrustLevel } from '../types/incident-log.types';
 import incidentService from '../services/IncidentService';
 
 export interface UseIncidentLogStateReturn {
-    // Data
+    // Data - Core
     incidents: Incident[];
     selectedIncident: Incident | null;
     aiSuggestion: AIClassificationResponse | null;
     escalationRules: EscalationRule[];
     activityByIncident: Record<string, UserActivity[]>;
     lastSynced: Date | null;
+
+    // Data - Production Readiness Enhancements
+    agentPerformanceMetrics: AgentPerformanceMetrics[];
+    hardwareDevices: DeviceHealthStatus[];
+    enhancedSettings: EnhancedIncidentSettings | null;
+    bulkOperationResult: BulkOperationResult | null;
 
     // Loading states
     loading: {
@@ -49,6 +61,35 @@ export interface UseIncidentLogStateReturn {
         related: boolean;
         evidence: boolean;
         activity: boolean;
+        // New loading states
+        agentPerformance: boolean;
+        hardwareDevices: boolean;
+        bulkOperation: boolean;
+        settings: boolean;
+    };
+
+    // Modal states - New enhanced modal management
+    modals: {
+        showCreateModal: boolean;
+        showEditModal: boolean;
+        showDetailsModal: boolean;
+        showEscalationModal: boolean;
+        showAdvancedFilters: boolean;
+        showReportModal: boolean;
+        showEmergencyAlertModal: boolean;
+        // New production-ready modals
+        showAgentPerformanceModal: boolean;
+        showBulkOperationModal: boolean;
+        showAutoApprovalSettingsModal: boolean;
+        selectedAgentId: string | null;
+        bulkOperation: {
+            type: 'approve' | 'reject' | 'delete' | 'status_change' | null;
+            incidentIds: string[];
+            reason?: string;
+            newStatus?: IncidentStatus;
+            title: string;
+            description: string;
+        } | null;
     };
 
     // Actions - CRUD Operations
@@ -70,25 +111,69 @@ export interface UseIncidentLogStateReturn {
 
     // Actions - Emergency
     createEmergencyAlert: (alert: any) => Promise<EmergencyAlertResponse | null>;
+    convertEmergencyAlert: (alertId: string, overrides?: Partial<IncidentCreate>) => Promise<Incident | null>;
 
     // Actions - Selection
     setSelectedIncident: (incident: Incident | null) => void;
 
-    // Actions - Bulk Operations
+    // Actions - Bulk Operations (Enhanced)
     bulkDelete: (incidentIds: string[]) => Promise<boolean>;
     bulkStatusChange: (incidentIds: string[], status: IncidentStatus) => Promise<boolean>;
+    bulkApprove: (incidentIds: string[], reason?: string) => Promise<BulkOperationResult | null>;
+    bulkReject: (incidentIds: string[], reason: string) => Promise<BulkOperationResult | null>;
+
+    // Actions - Mobile Agent Performance
+    refreshAgentPerformance: (agentId?: string) => Promise<void>;
+    getAgentTrustLevel: (agentId: string) => AgentTrustLevel;
+    calculateAgentTrustScore: (agentId: string) => Promise<number>;
+
+    // Actions - Hardware Device Integration
+    refreshHardwareDevices: () => Promise<void>;
+    getHardwareDeviceStatus: (deviceId: string) => Promise<DeviceHealthStatus | null>;
+    getHardwareMetadata: (incident: Incident) => HardwareIncidentMetadata | null;
+
+    // Actions - Enhanced Settings
+    refreshEnhancedSettings: () => Promise<void>;
+    updateEnhancedSettings: (settings: EnhancedIncidentSettings) => Promise<boolean>;
+
+    // Actions - Modal UI Controls (Enhanced)
+    setShowCreateModal: (show: boolean) => void;
+    setShowEditModal: (show: boolean) => void;
+    setShowDetailsModal: (show: boolean) => void;
+    setShowEscalationModal: (show: boolean) => void;
+    setShowAdvancedFilters: (show: boolean) => void;
+    setShowReportModal: (show: boolean) => void;
+    setShowEmergencyAlertModal: (show: boolean) => void;
+    
+    // New modal controls for production-ready features
+    setShowAgentPerformanceModal: (show: boolean, agentId?: string) => void;
+    setShowBulkOperationModal: (show: boolean, operation?: {
+        type: 'approve' | 'reject' | 'delete' | 'status_change';
+        incidentIds: string[];
+        reason?: string;
+        newStatus?: IncidentStatus;
+        title: string;
+        description: string;
+    }) => void;
+    setShowAutoApprovalSettingsModal: (show: boolean) => void;
 }
 
 export function useIncidentLogState(): UseIncidentLogStateReturn {
     const { user: currentUser } = useAuth();
 
-    // State
+    // State - Core
     const [incidents, setIncidents] = useState<Incident[]>([]);
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
     const [aiSuggestion, setAiSuggestion] = useState<AIClassificationResponse | null>(null);
     const [escalationRules, setEscalationRules] = useState<EscalationRule[]>([]);
     const [activityByIncident, setActivityByIncident] = useState<Record<string, UserActivity[]>>({});
     const [lastSynced, setLastSynced] = useState<Date | null>(null);
+
+    // State - Production Readiness Enhancements
+    const [agentPerformanceMetrics, setAgentPerformanceMetrics] = useState<AgentPerformanceMetrics[]>([]);
+    const [hardwareDevices, setHardwareDevices] = useState<DeviceHealthStatus[]>([]);
+    const [enhancedSettings, setEnhancedSettings] = useState<EnhancedIncidentSettings | null>(null);
+    const [bulkOperationResult, setBulkOperationResult] = useState<BulkOperationResult | null>(null);
 
     // Loading states
     const [loading, setLoading] = useState({
@@ -98,6 +183,35 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         related: false,
         evidence: false,
         activity: false,
+        // New loading states
+        agentPerformance: false,
+        hardwareDevices: false,
+        bulkOperation: false,
+        settings: false,
+    });
+
+    // Modal states - Enhanced modal management
+    const [modals, setModals] = useState({
+        showCreateModal: false,
+        showEditModal: false,
+        showDetailsModal: false,
+        showEscalationModal: false,
+        showAdvancedFilters: false,
+        showReportModal: false,
+        showEmergencyAlertModal: false,
+        // New production-ready modals
+        showAgentPerformanceModal: false,
+        showBulkOperationModal: false,
+        showAutoApprovalSettingsModal: false,
+        selectedAgentId: null as string | null,
+        bulkOperation: null as {
+            type: 'approve' | 'reject' | 'delete' | 'status_change' | null;
+            incidentIds: string[];
+            reason?: string;
+            newStatus?: IncidentStatus;
+            title: string;
+            description: string;
+        } | null
     });
 
     // Fetch Incidents
@@ -378,35 +492,407 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         }
     }, [refreshIncidents]);
 
-    // Initial load
+    // =======================================================
+    // PRODUCTION READINESS ENHANCEMENTS
+    // Mobile Agent Integration & Hardware Device Support
+    // =======================================================
+
+    // Mobile Agent Performance Methods
+    const refreshAgentPerformance = useCallback(async (agentId?: string): Promise<void> => {
+        setLoading(prev => ({ ...prev, agentPerformance: true }));
+        try {
+            const response = await incidentService.getAgentPerformanceMetrics(agentId);
+            if (response.data) {
+                setAgentPerformanceMetrics(response.data);
+                logger.info('Agent performance metrics refreshed', { module: 'IncidentLog', count: response.data.length });
+            }
+        } catch (error) {
+            logger.error('Failed to fetch agent performance metrics', error instanceof Error ? error : new Error(String(error)));
+        } finally {
+            setLoading(prev => ({ ...prev, agentPerformance: false }));
+        }
+    }, []);
+
+    const getAgentTrustLevel = useCallback((agentId: string): AgentTrustLevel => {
+        const agent = agentPerformanceMetrics.find(a => a.agent_id === agentId);
+        if (!agent) return AgentTrustLevel.UNKNOWN;
+        
+        if (agent.trust_score >= 80) return AgentTrustLevel.HIGH;
+        if (agent.trust_score >= 50) return AgentTrustLevel.MEDIUM;
+        return AgentTrustLevel.LOW;
+    }, [agentPerformanceMetrics]);
+
+    const calculateAgentTrustScore = useCallback(async (agentId: string): Promise<number> => {
+        try {
+            const response = await incidentService.getAgentTrustScore(agentId);
+            if (response.data) {
+                return response.data.trust_score;
+            }
+            return 0;
+        } catch (error) {
+            logger.error('Failed to calculate agent trust score', error instanceof Error ? error : new Error(String(error)));
+            return 0;
+        }
+    }, []);
+
+    // Enhanced Bulk Operations
+    const bulkApprove = useCallback(async (
+        incidentIds: string[], 
+        reason?: string
+    ): Promise<BulkOperationResult | null> => {
+        setLoading(prev => ({ ...prev, bulkOperation: true }));
+        const toastId = showLoading(`Approving ${incidentIds.length} incidents...`);
+        
+        try {
+            const propertyId = localStorage.getItem('propertyId') || undefined;
+            const response = await incidentService.bulkApproveIncidents(incidentIds, reason, propertyId);
+            
+            if (response.data) {
+                setBulkOperationResult(response.data);
+                await refreshIncidents(); // Refresh to get latest state
+                
+                const { successful, failed, total } = response.data;
+                if (failed === 0) {
+                    dismissLoadingAndShowSuccess(toastId, `Successfully approved all ${total} incidents`);
+                } else {
+                    showError(`${successful} approved, ${failed} failed. Check operation details.`);
+                }
+                return response.data;
+            }
+            throw new Error('No response data');
+        } catch (error) {
+            dismissLoadingAndShowError(toastId, 'Bulk approval failed');
+            ErrorHandlerService.logError(error, 'bulkApprove');
+            return null;
+        } finally {
+            setLoading(prev => ({ ...prev, bulkOperation: false }));
+        }
+    }, [refreshIncidents]);
+
+    const bulkReject = useCallback(async (
+        incidentIds: string[], 
+        reason: string
+    ): Promise<BulkOperationResult | null> => {
+        setLoading(prev => ({ ...prev, bulkOperation: true }));
+        const toastId = showLoading(`Rejecting ${incidentIds.length} incidents...`);
+        
+        try {
+            const propertyId = localStorage.getItem('propertyId') || undefined;
+            const response = await incidentService.bulkRejectIncidents(incidentIds, reason, propertyId);
+            
+            if (response.data) {
+                setBulkOperationResult(response.data);
+                await refreshIncidents(); // Refresh to get latest state
+                
+                const { successful, failed, total } = response.data;
+                if (failed === 0) {
+                    dismissLoadingAndShowSuccess(toastId, `Successfully rejected all ${total} incidents`);
+                } else {
+                    showError(`${successful} rejected, ${failed} failed. Check operation details.`);
+                }
+                return response.data;
+            }
+            throw new Error('No response data');
+        } catch (error) {
+            dismissLoadingAndShowError(toastId, 'Bulk rejection failed');
+            ErrorHandlerService.logError(error, 'bulkReject');
+            return null;
+        } finally {
+            setLoading(prev => ({ ...prev, bulkOperation: false }));
+        }
+    }, [refreshIncidents]);
+
+    // Hardware Device Integration Methods
+    const refreshHardwareDevices = useCallback(async (): Promise<void> => {
+        setLoading(prev => ({ ...prev, hardwareDevices: true }));
+        try {
+            const propertyId = localStorage.getItem('propertyId') || undefined;
+            const response = await incidentService.getAllDeviceHealth(propertyId);
+            if (response.data) {
+                setHardwareDevices(response.data);
+                logger.info('Hardware devices status refreshed', { module: 'IncidentLog', count: response.data.length });
+            }
+        } catch (error) {
+            logger.error('Failed to fetch hardware devices', error instanceof Error ? error : new Error(String(error)));
+            // Don't show error to user - this is background data
+        } finally {
+            setLoading(prev => ({ ...prev, hardwareDevices: false }));
+        }
+    }, []);
+
+    const getHardwareDeviceStatus = useCallback(async (deviceId: string): Promise<DeviceHealthStatus | null> => {
+        try {
+            const response = await incidentService.getHardwareDeviceStatus(deviceId);
+            return response.data || null;
+        } catch (error) {
+            logger.error('Failed to get hardware device status', error instanceof Error ? error : new Error(String(error)), { deviceId });
+            return null;
+        }
+    }, []);
+
+    const getHardwareMetadata = useCallback((incident: Incident): HardwareIncidentMetadata | null => {
+        if (!incident.source_metadata || !incident.source_device_id) return null;
+        
+        // Try to extract hardware metadata from incident
+        const metadata = incident.source_metadata as any;
+        if (metadata.device_type) {
+            return {
+                device_id: incident.source_device_id,
+                device_name: metadata.device_name,
+                device_type: metadata.device_type,
+                device_status: metadata.device_status || 'unknown',
+                signal_strength: metadata.signal_strength,
+                battery_level: metadata.battery_level,
+                location_accuracy: metadata.location_accuracy,
+                data_quality_score: metadata.data_quality_score,
+                firmware_version: metadata.firmware_version,
+                last_maintenance: metadata.last_maintenance,
+                coordinates: metadata.coordinates
+            } as HardwareIncidentMetadata;
+        }
+        
+        return null;
+    }, []);
+
+    // Emergency Alert Conversion
+    const convertEmergencyAlert = useCallback(async (
+        alertId: string, 
+        overrides?: Partial<IncidentCreate>
+    ): Promise<Incident | null> => {
+        const toastId = showLoading('Converting emergency alert to incident...');
+        try {
+            const response = await incidentService.convertEmergencyAlertToIncident(alertId, overrides);
+            if (response.data) {
+                await refreshIncidents(); // Refresh to show new incident
+                dismissLoadingAndShowSuccess(toastId, 'Emergency alert converted to incident');
+                return response.data;
+            }
+            throw new Error('No data returned from server');
+        } catch (error) {
+            dismissLoadingAndShowError(toastId, 'Failed to convert emergency alert');
+            ErrorHandlerService.logError(error, 'convertEmergencyAlert');
+            return null;
+        }
+    }, [refreshIncidents]);
+
+    // Enhanced Settings Management
+    const refreshEnhancedSettings = useCallback(async (): Promise<void> => {
+        setLoading(prev => ({ ...prev, settings: true }));
+        try {
+            const propertyId = localStorage.getItem('propertyId') || undefined;
+            const response = await incidentService.getEnhancedSettings(propertyId);
+            if (response.data) {
+                setEnhancedSettings(response.data);
+                logger.info('Enhanced settings loaded', { module: 'IncidentLog' });
+            }
+        } catch (error) {
+            logger.error('Failed to load enhanced settings', error instanceof Error ? error : new Error(String(error)));
+            // Use default settings if API unavailable
+            setEnhancedSettings({
+                agent_settings: {
+                    auto_approval_enabled: false,
+                    auto_approval_threshold: 80,
+                    bulk_approval_enabled: true,
+                    agent_performance_alerts: true,
+                    low_trust_score_threshold: 50,
+                    require_manager_review_below_threshold: true,
+                    performance_metrics_retention_days: 90,
+                    auto_flag_declining_agents: true,
+                    notification_preferences: {
+                        email_low_trust_alerts: true,
+                        email_bulk_operation_results: false,
+                        email_agent_performance_reports: true
+                    }
+                },
+                hardware_settings: {
+                    auto_create_incidents_from_events: false,
+                    device_offline_alert_enabled: true,
+                    device_offline_threshold_minutes: 15,
+                    supported_device_types: ['camera', 'sensor', 'access_control'],
+                    auto_assign_hardware_incidents: false,
+                    hardware_incident_default_severity: IncidentSeverity.MEDIUM,
+                    device_maintenance_alerts: true,
+                    low_battery_alert_threshold: 20
+                },
+                emergency_alert_settings: {
+                    auto_convert_to_incident: true,
+                    default_converted_severity: IncidentSeverity.HIGH,
+                    require_manager_approval: false,
+                    preserve_original_alert: true,
+                    notification_workflow: 'immediate',
+                    auto_assign_converted_incidents: true
+                }
+            });
+        } finally {
+            setLoading(prev => ({ ...prev, settings: false }));
+        }
+    }, []);
+
+    const updateEnhancedSettings = useCallback(async (settings: EnhancedIncidentSettings): Promise<boolean> => {
+        const toastId = showLoading('Saving enhanced settings...');
+        try {
+            const propertyId = localStorage.getItem('propertyId') || undefined;
+            const response = await incidentService.updateEnhancedSettings(settings, propertyId);
+            if (response.data) {
+                setEnhancedSettings(response.data);
+                dismissLoadingAndShowSuccess(toastId, 'Settings saved successfully');
+                return true;
+            }
+            throw new Error('No data returned from server');
+        } catch (error) {
+            dismissLoadingAndShowError(toastId, 'Failed to save settings');
+            ErrorHandlerService.logError(error, 'updateEnhancedSettings');
+            return false;
+        }
+    }, []);
+
+    // Modal UI Controls - Enhanced
+    const setShowCreateModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showCreateModal: show }));
+    }, []);
+
+    const setShowEditModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showEditModal: show }));
+    }, []);
+
+    const setShowDetailsModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showDetailsModal: show }));
+    }, []);
+
+    const setShowEscalationModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showEscalationModal: show }));
+    }, []);
+
+    const setShowAdvancedFilters = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showAdvancedFilters: show }));
+    }, []);
+
+    const setShowReportModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showReportModal: show }));
+    }, []);
+
+    const setShowEmergencyAlertModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showEmergencyAlertModal: show }));
+    }, []);
+
+    // New production-ready modal controls
+    const setShowAgentPerformanceModal = useCallback((show: boolean, agentId?: string) => {
+        setModals(prev => ({ 
+            ...prev, 
+            showAgentPerformanceModal: show,
+            selectedAgentId: show ? (agentId || null) : null
+        }));
+    }, []);
+
+    const setShowBulkOperationModal = useCallback((show: boolean, operation?: {
+        type: 'approve' | 'reject' | 'delete' | 'status_change';
+        incidentIds: string[];
+        reason?: string;
+        newStatus?: IncidentStatus;
+        title: string;
+        description: string;
+    }) => {
+        setModals(prev => ({ 
+            ...prev, 
+            showBulkOperationModal: show,
+            bulkOperation: show ? (operation || null) : null
+        }));
+    }, []);
+
+    const setShowAutoApprovalSettingsModal = useCallback((show: boolean) => {
+        setModals(prev => ({ ...prev, showAutoApprovalSettingsModal: show }));
+    }, []);
+
+    // Initial load - Enhanced for Production Readiness
     useEffect(() => {
         if (currentUser) {
+            // Load core data
             refreshIncidents();
+            
+            // Load production readiness enhancements in background
+            refreshAgentPerformance();
+            refreshHardwareDevices();
+            refreshEnhancedSettings();
         }
-    }, [currentUser, refreshIncidents]);
+    }, [currentUser, refreshIncidents, refreshAgentPerformance, refreshHardwareDevices, refreshEnhancedSettings]);
 
     return {
+        // Data - Core
         incidents,
         selectedIncident,
         aiSuggestion,
         escalationRules,
         activityByIncident,
         lastSynced,
+
+        // Data - Production Readiness Enhancements
+        agentPerformanceMetrics,
+        hardwareDevices,
+        enhancedSettings,
+        bulkOperationResult,
+
+        // Loading states (enhanced)
         loading,
+
+        // Modal states - New enhanced modal management
+        modals,
+
+        // Actions - CRUD Operations
         refreshIncidents,
         getIncident,
         createIncident,
         updateIncident,
         deleteIncident,
+
+        // Actions - Incident Management
         assignIncident,
         resolveIncident,
         escalateIncident,
+
+        // Actions - AI & Analysis
         getAIClassification,
         getIncidentActivity,
         getPatternRecognition,
+
+        // Actions - Emergency
         createEmergencyAlert,
+        convertEmergencyAlert,
+
+        // Actions - Selection
         setSelectedIncident,
+
+        // Actions - Bulk Operations (Enhanced)
         bulkDelete,
         bulkStatusChange,
+        bulkApprove,
+        bulkReject,
+
+        // Actions - Mobile Agent Performance
+        refreshAgentPerformance,
+        getAgentTrustLevel,
+        calculateAgentTrustScore,
+
+        // Actions - Hardware Device Integration
+        refreshHardwareDevices,
+        getHardwareDeviceStatus,
+        getHardwareMetadata,
+
+        // Actions - Enhanced Settings
+        refreshEnhancedSettings,
+        updateEnhancedSettings,
+
+        // Actions - Modal UI Controls (Enhanced)
+        setShowCreateModal,
+        setShowEditModal,
+        setShowDetailsModal,
+        setShowEscalationModal,
+        setShowAdvancedFilters,
+        setShowReportModal,
+        setShowEmergencyAlertModal,
+        
+        // New modal controls for production-ready features
+        setShowAgentPerformanceModal,
+        setShowBulkOperationModal,
+        setShowAutoApprovalSettingsModal,
     };
 }

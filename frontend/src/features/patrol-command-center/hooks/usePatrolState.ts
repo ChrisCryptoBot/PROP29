@@ -193,8 +193,8 @@ export const usePatrolState = (): PatrolContextValue => {
                 }
             };
 
-            // Fetch patrols, officers, routes, templates, settings, metrics, health, weather
-            const [patrolsData, officersData, routesData, templatesData, settingsData, metricsData, healthData, weatherData] = await Promise.all([
+            // Fetch all patrol data including alerts and emergency status
+            const [patrolsData, officersData, routesData, templatesData, settingsData, metricsData, healthData, weatherData, alertsData, emergencyData] = await Promise.all([
                 PatrolEndpoint.getPatrols(undefined, selectedPropertyId || undefined),
                 PatrolEndpoint.getOfficers(),
                 PatrolEndpoint.getRoutes(selectedPropertyId || undefined),
@@ -202,7 +202,9 @@ export const usePatrolState = (): PatrolContextValue => {
                 PatrolEndpoint.getSettings(selectedPropertyId || undefined),
                 PatrolEndpoint.getMetrics(selectedPropertyId || undefined),
                 PatrolEndpoint.getOfficersHealth(selectedPropertyId || undefined).catch(() => ({})),
-                PatrolEndpoint.getWeather().catch(() => null)
+                PatrolEndpoint.getWeather().catch(() => null),
+                PatrolEndpoint.getAlerts().catch(() => []),
+                PatrolEndpoint.getEmergencyStatus().catch(() => null)
             ]);
             const health = (healthData || {}) as Record<string, { last_heartbeat?: string; connection_status?: 'online' | 'offline' | 'unknown' }>;
             if (weatherData) {
@@ -212,6 +214,33 @@ export const usePatrolState = (): PatrolContextValue => {
                     windSpeed: weatherData.windSpeed,
                     visibility: weatherData.visibility,
                     patrolRecommendation: weatherData.patrolRecommendation
+                });
+            }
+
+            // Set alerts data
+            if (alertsData && Array.isArray(alertsData)) {
+                setAlerts(alertsData.map((alert: any) => ({
+                    id: alert.id,
+                    type: alert.type,
+                    message: alert.message,
+                    timestamp: alert.timestamp,
+                    severity: alert.severity,
+                    isRead: alert.isRead,
+                    patrol_id: alert.patrol_id,
+                    officer_id: alert.officer_id,
+                    officer: alert.officer,
+                    incident_id: alert.incident_id,
+                    location: alert.location
+                })));
+            }
+
+            // Set emergency status
+            if (emergencyData) {
+                setEmergencyStatus({
+                    level: emergencyData.level || 'normal',
+                    message: emergencyData.message || 'All systems operational',
+                    lastUpdated: 'Just now',
+                    activeAlerts: emergencyData.activeAlerts || 0
                 });
             }
 

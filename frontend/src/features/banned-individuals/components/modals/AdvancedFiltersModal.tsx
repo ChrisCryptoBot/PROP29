@@ -17,11 +17,11 @@ export const AdvancedFiltersModal: React.FC = () => {
     const nationalities = Array.from(new Set(bannedIndividuals.map(i => i.nationality))).sort();
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
             <Card className="glass-card border-white/10 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/10 pb-4 mb-2 group cursor-pointer">
                     <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
                             <i className="fas fa-layer-group text-white text-lg" />
                         </div>
                         Advanced Filters
@@ -76,7 +76,7 @@ export const AdvancedFiltersModal: React.FC = () => {
                             </Button>
                             <Button
                                 variant="primary"
-                                className="font-black uppercase tracking-widest text-[10px] px-10 shadow-lg shadow-blue-500/20"
+                                className="font-black uppercase tracking-widest text-[10px] px-10 shadow-lg"
                                 onClick={() => setShowAdvancedFiltersModal(false)}
                             >
                                 Apply

@@ -16,7 +16,12 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
     visitors,
     securityRequests,
     loading,
-    updateVisitor
+    updateVisitor,
+    // Mobile Agent & Hardware Integration
+    mobileAgentSubmissions,
+    hardwareDevices,
+    processAgentSubmission,
+    refreshAgentSubmissions
   } = useVisitorContext();
 
   const handleAssign = async (requestId: string, visitorId: string) => {
@@ -55,15 +60,122 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
   }
 
   return (
-    <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-      <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-        <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-700 to-red-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-            <i className="fas fa-shield-alt text-white text-sm" />
-          </div>
-          Clearance & Incident Log
-        </CardTitle>
-      </CardHeader>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Visitor Security</p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Security Requests & Agent Submissions</h2>
+          <p className="text-[11px] text-[color:var(--text-sub)]">
+            Process mobile agent submissions, security clearances, and incident escalations.
+          </p>
+        </div>
+        
+        <Button
+          onClick={() => refreshAgentSubmissions()}
+          variant="outline"
+          disabled={loading.agentSubmissions}
+          className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+        >
+          <i className={cn("fas fa-sync-alt mr-1", loading.agentSubmissions && "animate-spin")} />
+          Refresh Submissions
+        </Button>
+      </div>
+
+      {/* Mobile Agent Submissions Queue */}
+      {mobileAgentSubmissions.length > 0 && (
+        <Card className="glass-card border border-white/5 shadow-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl text-white">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+                <i className="fas fa-mobile-alt text-white" />
+              </div>
+              <span className="uppercase tracking-tight">Pending Mobile Agent Submissions ({mobileAgentSubmissions.length})</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {mobileAgentSubmissions.map((submission) => (
+                <div 
+                  key={submission.submission_id}
+                  className="p-4 border border-blue-500/20 rounded-lg bg-blue-500/5 hover:bg-blue-500/10 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          <i className="fas fa-mobile-alt mr-1" />
+                          {submission.submission_type.replace('_', ' ')}
+                        </span>
+                        <span className={cn(
+                          "px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded border",
+                          submission.status === 'pending' ? "text-yellow-300 bg-yellow-500/20 border-yellow-500/30" :
+                          submission.status === 'processed' ? "text-green-300 bg-green-500/20 border-green-500/30" :
+                          "text-red-300 bg-red-500/20 border-red-500/30"
+                        )}>
+                          {submission.status}
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-white mb-1">
+                        Agent {submission.agent_id.slice(0, 8)} - {submission.submission_type.replace('_', ' ')}
+                      </h4>
+                      <p className="text-sm text-slate-400 mb-2">
+                        {submission.visitor_id ? `Visitor ID: ${submission.visitor_id}` : 'New visitor registration'}
+                      </p>
+                      <div className="text-[10px] text-slate-500">
+                        <i className="fas fa-clock mr-1" />
+                        {new Date(submission.timestamp).toLocaleString()}
+                        {submission.location && (
+                          <>
+                            <i className="fas fa-map-marker-alt ml-3 mr-1" />
+                            GPS: {submission.location.lat.toFixed(6)}, {submission.location.lng.toFixed(6)}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {submission.status === 'pending' && (
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => processAgentSubmission(submission.submission_id, 'approve')}
+                          disabled={loading.agentSubmissions}
+                          className="text-[9px] font-black uppercase tracking-widest border-green-500/30 text-green-300 hover:bg-green-500/10"
+                        >
+                          <i className="fas fa-check mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => processAgentSubmission(submission.submission_id, 'reject', 'Requires additional verification')}
+                          disabled={loading.agentSubmissions}
+                          className="text-[9px] font-black uppercase tracking-widest border-red-500/30 text-red-300 hover:bg-red-500/10"
+                        >
+                          <i className="fas fa-times mr-1" />
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Traditional Security Requests - Gold Standard Pattern */}
+      <Card className="glass-card border border-white/5 shadow-2xl">
+        <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
+          <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center mr-3">
+              <i className="fas fa-shield-alt text-white text-sm" />
+            </div>
+            Security Clearance Requests ({allSecurityRequests.length})
+          </CardTitle>
+        </CardHeader>
       <CardContent className="px-6 pb-6">
         {allSecurityRequests.length === 0 ? (
           <EmptyState
@@ -77,7 +189,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
             {allSecurityRequests.map(({ request, visitor }) => (
               <div
                 key={request.id}
-                className="p-5 rounded-xl border border-[color:var(--border-subtle)]/20 bg-[color:var(--console-dark)]/20 hover:border-orange-500/30 transition-all group"
+                className="p-5 rounded-xl border border-white/5 bg-slate-900/30 hover:border-orange-500/30 transition-all group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -87,7 +199,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                         request.type === 'emergency_alert' ? 'text-red-400 bg-red-500/10 border-red-500/20' :
                           request.type === 'incident_report' ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' :
                             request.type === 'access_request' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
-                              'text-[color:var(--text-sub)] bg-[color:var(--border-subtle)]/10 border-[color:var(--border-subtle)]/20'
+                              'text-slate-500 bg-white/5 border-white/5'
                       )}>
                         {request.type.replace('_', ' ')}
                       </span>
@@ -96,7 +208,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                         request.priority === 'urgent' ? 'text-red-400 bg-red-500/10 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' :
                           request.priority === 'high' ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' :
                             request.priority === 'normal' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
-                              'text-[color:var(--text-sub)] bg-[color:var(--border-subtle)]/10 border-[color:var(--border-subtle)]/20'
+                              'text-slate-500 bg-white/5 border-white/5'
                       )}>
                         {request.priority}
                       </span>
@@ -105,13 +217,13 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                         request.status === 'pending' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' :
                           request.status === 'in_progress' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
                             request.status === 'completed' ? 'text-green-400 bg-green-500/10 border-green-500/20' :
-                              'text-[color:var(--text-sub)] bg-[color:var(--border-subtle)]/10 border-[color:var(--border-subtle)]/20'
+                              'text-slate-500 bg-white/5 border-white/5'
                       )}>
                         {request.status.replace('_', ' ')}
                       </span>
                     </div>
-                    <p className="text-[color:var(--text-main)] font-black text-lg mb-1 leading-tight group-hover:text-blue-400 transition-colors">{request.description}</p>
-                    <p className="text-sm text-[color:var(--text-sub)]/80 italic font-medium">
+                    <p className="text-white font-black text-lg mb-1 leading-tight group-hover:text-blue-400 transition-colors">{request.description}</p>
+                    <p className="text-sm text-slate-400 italic font-medium">
                       Source: {visitor?.first_name} {visitor?.last_name}
                       {request.location && ` <span className="mx-2 opacity-30">•</span> Zone: ${request.location}`}
                     </p>
@@ -140,6 +252,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
         )}
       </CardContent>
     </Card>
+  </div>
   );
 });
 

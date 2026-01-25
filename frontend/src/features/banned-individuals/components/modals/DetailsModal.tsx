@@ -42,13 +42,60 @@ export const DetailsModal: React.FC = () => {
         }
     };
 
+    const getSourceBadge = (individual: any) => {
+        const source = individual.source || 'MANAGER';
+        const sourceMetadata = individual.sourceMetadata || {};
+        
+        switch (source) {
+            case 'MOBILE_AGENT':
+                return {
+                    icon: 'fa-mobile-alt',
+                    label: 'Mobile Agent',
+                    color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+                    tooltip: sourceMetadata.agentName 
+                        ? `Submitted by ${sourceMetadata.agentName}${sourceMetadata.agentTrustScore ? ` (Trust: ${sourceMetadata.agentTrustScore})` : ''}`
+                        : 'Submitted by mobile agent'
+                };
+            case 'HARDWARE_DEVICE':
+                return {
+                    icon: 'fa-video',
+                    label: 'Hardware Device',
+                    color: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+                    tooltip: sourceMetadata.deviceName 
+                        ? `Detected by ${sourceMetadata.deviceName}`
+                        : 'Detected by hardware device'
+                };
+            case 'AUTO_APPROVED':
+                return {
+                    icon: 'fa-check-circle',
+                    label: 'Auto-Approved',
+                    color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+                    tooltip: 'Auto-approved based on trust score'
+                };
+            case 'BULK_IMPORT':
+                return {
+                    icon: 'fa-file-import',
+                    label: 'Bulk Import',
+                    color: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+                    tooltip: 'Bulk imported'
+                };
+            default:
+                return {
+                    icon: 'fa-user-shield',
+                    label: 'Manager',
+                    color: 'text-slate-400 bg-white/5 border-white/10',
+                    tooltip: 'Manually created by manager'
+                };
+        }
+    };
+
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
             <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
                 <CardHeader className="pb-2 border-b border-white/10 mb-6">
                     <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
-                            <i className="fas fa-user-shield text-white" />
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
+                            <i className="fas fa-user-shield text-white text-lg" />
                         </div>
                         Ban Details
                     </CardTitle>
@@ -57,7 +104,7 @@ export const DetailsModal: React.FC = () => {
                     <div className="space-y-6">
                         <div className="flex items-center space-x-6 p-5 border border-white/10 rounded-2xl bg-white/5">
                             <div className="relative">
-                                <div className="w-20 h-20 bg-gradient-to-br from-blue-700 to-blue-900 rounded-full flex items-center justify-center shadow-lg border-2 border-white/10">
+                                <div className="w-20 h-20 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-full flex items-center justify-center shadow-2xl border border-white/5">
                                     <span className="text-white font-bold text-2xl">
                                         {selectedIndividual.firstName.charAt(0)}{selectedIndividual.lastName.charAt(0)}
                                     </span>
@@ -73,6 +120,18 @@ export const DetailsModal: React.FC = () => {
                                     {selectedIndividual.firstName} {selectedIndividual.lastName}
                                 </h3>
                                 <div className="flex flex-wrap items-center gap-2 mt-4">
+                                    {(() => {
+                                        const sourceBadge = getSourceBadge(selectedIndividual);
+                                        return (
+                                            <span 
+                                                className={cn("px-2.5 py-1 text-[10px] font-bold rounded border uppercase tracking-widest shadow-sm flex items-center gap-1.5", sourceBadge.color)}
+                                                title={sourceBadge.tooltip}
+                                            >
+                                                <i className={cn("fas text-[9px]", sourceBadge.icon)} />
+                                                {sourceBadge.label}
+                                            </span>
+                                        );
+                                    })()}
                                     <span className={cn("px-2.5 py-1 text-[10px] font-bold rounded border uppercase tracking-widest shadow-sm", getRiskLevelBadgeClass(selectedIndividual.riskLevel))}>
                                         {selectedIndividual.riskLevel} Risk
                                     </span>
@@ -148,7 +207,7 @@ export const DetailsModal: React.FC = () => {
                         <div className="flex justify-end pt-5 border-t border-white/5">
                             <Button
                                 onClick={() => setShowDetailsModal(false)}
-                                variant="primary" className="font-bold uppercase text-[10px] tracking-widest px-10 py-3 shadow-lg shadow-blue-600/20"
+                                variant="primary" className="font-bold uppercase text-[10px] tracking-widest px-10 py-3 shadow-lg"
                             >
                                 Close
                             </Button>
@@ -162,8 +221,8 @@ export const DetailsModal: React.FC = () => {
 
 const DetailRow: React.FC<{ label: string; value: string; icon: string }> = ({ label, value, icon }) => (
     <div className="flex items-center space-x-3 p-2 group">
-        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 group-hover:bg-blue-600/20 group-hover:text-blue-400 transition-all border border-white/5 group-hover:border-blue-500/30">
-            <i className={cn("fas text-xs", icon)} />
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600/80 to-slate-900 flex items-center justify-center text-white group-hover:scale-110 transition-all border border-white/5 shadow-2xl">
+            <i className={cn("fas", icon, "text-xs")} />
         </div>
         <div>
             <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1.5">{label}</span>

@@ -157,3 +157,190 @@ async def delete_banned_individual(
     except Exception as e:
         logger.error(f"Error deleting banned individual: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/detections")
+async def get_detections(
+    property_id: Optional[str] = Query(None),
+    limit: int = Query(100),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get detection alerts"""
+    try:
+        service = BannedIndividualsService(db)
+        return service.get_detection_alerts(property_id=property_id, limit=limit)
+    except Exception as e:
+        logger.error(f"Error getting detections: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/detections/{detection_id}/false-positive")
+async def mark_false_positive(
+    detection_id: str,
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mark a detection as false positive"""
+    try:
+        service = BannedIndividualsService(db)
+        result = service.mark_detection_false_positive(detection_id, notes)
+        return {"success": result}
+    except Exception as e:
+        logger.error(f"Error marking false positive: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/detections/{detection_id}/acknowledge")
+async def acknowledge_detection(
+    detection_id: str,
+    action_taken: str,
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Acknowledge a detection"""
+    try:
+        service = BannedIndividualsService(db)
+        result = service.acknowledge_detection(detection_id, action_taken, notes)
+        return {"success": result}
+    except Exception as e:
+        logger.error(f"Error acknowledging detection: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/detections/{detection_id}/footage")
+async def get_detection_footage(
+    detection_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get video footage URL for a detection"""
+    try:
+        service = BannedIndividualsService(db)
+        footage_url = service.get_detection_footage(detection_id)
+        if not footage_url:
+            raise HTTPException(status_code=404, detail="Footage not found")
+        return {"video_url": footage_url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting footage: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{banned_id}/photo")
+async def upload_photo(
+    banned_id: str,
+    photo: Any,  # File upload
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload photo for a banned individual"""
+    try:
+        service = BannedIndividualsService(db)
+        # In production, this would handle actual file upload
+        photo_url = f"/api/banned-individuals/{banned_id}/photo"
+        result = service.update_banned_individual(banned_id, photo_url=photo_url)
+        return {
+            "photo_url": photo_url,
+            "training_triggered": True
+        }
+    except Exception as e:
+        logger.error(f"Error uploading photo: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/bulk-import")
+async def bulk_import(
+    csv_data: str,
+    current_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db)
+):
+    """Bulk import banned individuals from CSV"""
+    try:
+        service = BannedIndividualsService(db)
+        result = service.bulk_import(csv_data)
+        return result
+    except Exception as e:
+        logger.error(f"Error bulk importing: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/settings")
+async def get_settings(
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get banned individuals settings"""
+    try:
+        service = BannedIndividualsService(db)
+        return service.get_settings(property_id)
+    except Exception as e:
+        logger.error(f"Error getting settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/settings")
+async def update_settings(
+    settings: Dict[str, Any],
+    current_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db)
+):
+    """Update banned individuals settings"""
+    try:
+        service = BannedIndividualsService(db)
+        result = service.update_settings(settings)
+        return {"success": result}
+    except Exception as e:
+        logger.error(f"Error updating settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/facial-recognition/config")
+async def update_fr_config(
+    config: Dict[str, Any],
+    current_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db)
+):
+    """Update facial recognition configuration"""
+    try:
+        service = BannedIndividualsService(db)
+        result = service.update_fr_config(
+            confidence_threshold=config.get("confidence_threshold", 85),
+            retention_days=config.get("retention_days", 180)
+        )
+        return {"success": result}
+    except Exception as e:
+        logger.error(f"Error updating FR config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/facial-recognition/train")
+async def trigger_training(
+    current_user: User = Depends(require_admin_role),
+    db: Session = Depends(get_db)
+):
+    """Trigger facial recognition model training"""
+    try:
+        service = BannedIndividualsService(db)
+        training_id = service.trigger_training()
+        return {
+            "training_id": training_id,
+            "status": "TRAINING"
+        }
+    except Exception as e:
+        logger.error(f"Error triggering training: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics")
+async def get_analytics(
+    startDate: Optional[str] = Query(None),
+    endDate: Optional[str] = Query(None),
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get analytics data"""
+    try:
+        service = BannedIndividualsService(db)
+        return service.get_analytics(
+            start_date=startDate,
+            end_date=endDate,
+            property_id=property_id
+        )
+    except Exception as e:
+        logger.error(f"Error getting analytics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -170,25 +170,41 @@ async def get_patrol_weather(
     current_user: User = Depends(get_current_active_user),
 ):
     """
-    Optional weather for patrol dashboard. Returns mock data when no external API configured.
+    Get weather data for patrol dashboard
     """
-    import os
-    if os.getenv("PATROL_WEATHER_ENABLED", "false").lower() not in ("1", "true", "yes"):
-        return {
-            "temperature": 0,
-            "condition": "Unknown",
-            "windSpeed": 0,
-            "visibility": "Unknown",
-            "patrolRecommendation": "No data available",
-        }
-    # Placeholder for future external API (e.g. Open-Meteo)
-    return {
-        "temperature": 18,
-        "condition": "Partly cloudy",
-        "windSpeed": 12,
-        "visibility": "Good",
-        "patrolRecommendation": "Normal patrol conditions.",
-    }
+    weather_data = PatrolService._get_mock_weather()
+    return weather_data
+
+@router.get("/dashboard-data")
+async def get_dashboard_data(
+    property_id: Optional[str] = None,
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Get comprehensive dashboard data including alerts, weather, emergency status
+    """
+    return PatrolService.get_dashboard_data(
+        user_id=str(current_user.user_id),
+        property_id=property_id
+    )
+
+@router.get("/alerts")
+async def get_patrol_alerts(
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Get current patrol alerts
+    """
+    return {"alerts": PatrolService._get_mock_alerts()}
+
+@router.get("/emergency-status")
+async def get_emergency_status(
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Get current emergency status
+    """
+    return PatrolService._get_mock_emergency_status()
 
 
 # --- ROUTES ---

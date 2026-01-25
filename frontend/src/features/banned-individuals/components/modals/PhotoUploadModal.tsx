@@ -14,11 +14,11 @@ export const PhotoUploadModal: React.FC = () => {
     if (!showPhotoUploadModal || !selectedIndividual) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
             <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/10 mb-6 group cursor-pointer">
                     <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-lg mr-3 group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
                             <i className="fas fa-camera text-white" />
                         </div>
                         Photo Upload
@@ -27,8 +27,8 @@ export const PhotoUploadModal: React.FC = () => {
                 <CardContent>
                     <div className="space-y-6">
                         <div className="flex items-center space-x-4 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
-                            <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center shadow-sm border border-white/10">
-                                <i className="fas fa-user text-blue-400" />
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
+                                <i className="fas fa-user text-white text-lg" />
                             </div>
                             <div>
                                 <h4 className="font-black text-blue-400 uppercase tracking-tighter text-sm">Name: {selectedIndividual.firstName} {selectedIndividual.lastName}</h4>
@@ -60,8 +60,8 @@ export const PhotoUploadModal: React.FC = () => {
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
                             <div className="space-y-4">
-                                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto shadow-sm border border-white/10 group-hover:border-blue-500/30 transition-all">
-                                    <i className="fas fa-fingerprint text-3xl text-slate-500 group-hover:text-blue-400 transition-colors" />
+                                <div className="w-16 h-16 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                    <i className="fas fa-fingerprint text-white text-2xl" />
                                 </div>
                                 <div>
                                     <p className="text-white font-bold uppercase tracking-widest text-xs">Select Biometric Image</p>
@@ -72,7 +72,7 @@ export const PhotoUploadModal: React.FC = () => {
 
                         {selectedIndividual.photoUrl && (
                             <div className="mt-4 p-5 border border-white/10 rounded-2xl bg-white/5 flex items-center space-x-5 shadow-inner">
-                                <div className="w-16 h-16 overflow-hidden rounded-xl shadow-lg border border-white/10">
+                                <div className="w-16 h-16 overflow-hidden rounded-xl shadow-2xl border border-white/5">
                                     <img
                                         src={selectedIndividual.photoUrl}
                                         alt="Current biometric"

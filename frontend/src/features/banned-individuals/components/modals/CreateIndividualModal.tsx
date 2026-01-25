@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { useBannedIndividualsContext } from '../../context/BannedIndividualsContext';
@@ -8,10 +8,15 @@ export const CreateIndividualModal: React.FC = () => {
     const {
         showCreateModal,
         setShowCreateModal,
-        handleCreateIndividual
+        handleCreateIndividual,
+        handlePhotoUpload
     } = useBannedIndividualsContext();
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [createdIndividualId, setCreatedIndividualId] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     if (!showCreateModal) return null;
 
@@ -34,32 +39,63 @@ export const CreateIndividualModal: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error('File size must be less than 10MB');
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                toast.error('File must be an image');
+                return;
+            }
+            setPhotoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
         if (validateForm(data)) {
-            handleCreateIndividual(data);
-            toast.success('Banned individual record created successfully');
+            try {
+                // Create the individual
+                await handleCreateIndividual(data);
+                
+                // Reset photo state
+                setPhotoFile(null);
+                setPhotoPreview(null);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+                
+                // Note: Photo can be uploaded separately after creation via the "Add Photo" button
+                // This keeps the creation flow simple and allows for better error handling
+            } catch (error) {
+                console.error('Error creating individual:', error);
+            }
         } else {
             toast.error('Please fix the errors in the form');
         }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
             <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/10 flex flex-row items-center justify-between pb-4 mb-2">
                     <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center shadow-lg mr-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
                             <i className="fas fa-user-plus text-white text-lg" />
                         </div>
                         Add Record
                     </CardTitle>
-                    <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
-                        <i className="fas fa-times text-lg" />
-                    </button>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <form onSubmit={onSubmit} className="space-y-6">
@@ -151,6 +187,57 @@ export const CreateIndividualModal: React.FC = () => {
                             {errors.banStartDate && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.banStartDate}</p>}
                         </div>
 
+                        {/* Photo Upload Section */}
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                                Biometric Photo <span className="text-blue-400">(Optional)</span>
+                            </label>
+                            <div className="relative group border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoChange}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                />
+                                {photoPreview ? (
+                                    <div className="space-y-3">
+                                        <div className="relative mx-auto w-32 h-32 rounded-xl overflow-hidden border-2 border-blue-500/30 shadow-xl">
+                                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setPhotoFile(null);
+                                                    setPhotoPreview(null);
+                                                    if (fileInputRef.current) {
+                                                        fileInputRef.current.value = '';
+                                                    }
+                                                }}
+                                                className="absolute top-1 right-1 w-6 h-6 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition-colors"
+                                            >
+                                                <i className="fas fa-times text-white text-xs" />
+                                            </button>
+                                        </div>
+                                        <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">Photo Selected</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                            <i className="fas fa-camera text-white text-xl" />
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-bold text-sm">Click to upload photo</p>
+                                            <p className="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest">JPG, PNG, WEBP (Max 10MB)</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-[10px] text-slate-500 italic px-1">
+                                Upload a clear, front-facing photo for facial recognition. Can be added later if needed.
+                            </p>
+                        </div>
+
                         <div className="flex items-center space-x-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl group cursor-pointer transition-colors hover:bg-blue-500/10">
                             <div className="relative flex items-center">
                                 <input
@@ -181,7 +268,7 @@ export const CreateIndividualModal: React.FC = () => {
                             <Button
                                 type="submit"
                                 variant="destructive"
-                                className="font-black uppercase tracking-widest px-8 py-3 shadow-lg shadow-red-500/20"
+                                className="font-black uppercase tracking-widest px-8 py-3 shadow-lg"
                             >
                                 Add Individual
                             </Button>

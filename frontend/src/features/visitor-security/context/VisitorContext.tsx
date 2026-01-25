@@ -7,8 +7,11 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useVisitorState, UseVisitorStateReturn } from '../hooks/useVisitorState';
 
-// Define the context value type (matches the hook return type)
-export interface VisitorContextValue extends UseVisitorStateReturn {}
+// Define the context value type (matches the hook return type) 
+export interface VisitorContextValue extends UseVisitorStateReturn {
+  // All properties are inherited from UseVisitorStateReturn
+  // This includes the enhanced mobile agent and hardware integration functionality
+}
 
 // Create the context
 const VisitorContext = createContext<VisitorContextValue | undefined>(undefined);
