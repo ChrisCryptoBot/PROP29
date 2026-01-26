@@ -146,7 +146,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="glass-card border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <Card className="glass-card border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
@@ -176,7 +176,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                 <select
                   value={formData.shiftType}
                   onChange={(e) => setFormData({ ...formData, shiftType: e.target.value as ShiftType })}
-                  className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer hover:border-white/20"
+                  className="w-full h-11 px-4 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer hover:border-white/20"
                 >
                   {SHIFT_TYPES.map((type) => (
                     <option key={type} value={type} className="bg-slate-900 text-white">
@@ -196,7 +196,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, handoverDate: e.target.value })}
                   className={cn(
                     "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:border-white/20",
-                    errors.handoverDate ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10"
+                    errors.handoverDate ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                 />
                 {errors.handoverDate && (
@@ -214,7 +214,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, handoverFrom: e.target.value })}
                   className={cn(
                     "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20",
-                    errors.handoverFrom ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10"
+                    errors.handoverFrom ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                   placeholder="Enter officer name"
                 />
@@ -233,7 +233,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, handoverTo: e.target.value })}
                   className={cn(
                     "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20",
-                    errors.handoverTo ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10"
+                    errors.handoverTo ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                   placeholder="Enter officer name"
                 />
@@ -252,7 +252,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                   className={cn(
                     "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:border-white/20",
-                    errors.startTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10"
+                    errors.startTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                 />
                 {errors.startTime && (
@@ -270,7 +270,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                   className={cn(
                     "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:border-white/20",
-                    errors.endTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10"
+                    errors.endTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                 />
                 {errors.endTime && (
@@ -283,7 +283,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
-                  className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer hover:border-white/20"
+                  className="w-full h-11 px-4 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer hover:border-white/20"
                 >
                   {PRIORITIES.map((priority) => (
                     <option key={priority} value={priority} className="bg-slate-900 text-white">
@@ -299,7 +299,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   type="text"
                   value={formData.operationalPost}
                   onChange={(e) => setFormData({ ...formData, operationalPost: e.target.value })}
-                  className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20"
+                  className="w-full h-11 px-4 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20"
                   placeholder="e.g., Lobby, Loading Dock, Patrol"
                 />
               </div>
@@ -311,7 +311,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               <textarea
                 value={formData.handoverNotes}
                 onChange={(e) => setFormData({ ...formData, handoverNotes: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20 min-h-[120px]"
+                className="w-full px-4 py-3 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20 min-h-[120px]"
                 placeholder="Enter handover notes and important information"
               />
             </div>
@@ -332,7 +332,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                 variant="outline"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="border-white/10 text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-8 h-11"
+                className="border-white/5 text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-8 h-11"
               >
                 Cancel
               </Button>

@@ -89,7 +89,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
             onClick={() => refreshMobileAgents()}
             variant="outline"
             disabled={loading.mobileAgents}
-            className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+            className="text-[9px] font-black uppercase tracking-widest border-white/5 text-slate-300 hover:bg-white/5"
           >
             <i className={cn("fas fa-sync-alt mr-1", loading.mobileAgents && "animate-spin")} />
             Refresh
@@ -295,7 +295,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
                   value={newAgentForm.agent_name}
                   onChange={(e) => setNewAgentForm({...newAgentForm, agent_name: e.target.value})}
                   placeholder="e.g., Security Guard Alpha"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               
@@ -308,7 +308,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
                   value={newAgentForm.device_id}
                   onChange={(e) => setNewAgentForm({...newAgentForm, device_id: e.target.value})}
                   placeholder="e.g., DEVICE_001_ALPHA"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               
@@ -322,7 +322,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
                     value={newAgentForm.device_model}
                     onChange={(e) => setNewAgentForm({...newAgentForm, device_model: e.target.value})}
                     placeholder="e.g., iPhone 14"
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
                 
@@ -334,7 +334,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
                     type="text"
                     value={newAgentForm.app_version}
                     onChange={(e) => setNewAgentForm({...newAgentForm, app_version: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>

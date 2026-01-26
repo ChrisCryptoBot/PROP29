@@ -100,10 +100,11 @@ export interface UseVisitorStateReturn {
   updateVisitor: (visitorId: string, updates: VisitorUpdate) => Promise<Visitor | null>;
   deleteVisitor: (visitorId: string) => Promise<boolean>;
 
-  // Actions - Visitor Management
-  checkInVisitor: (visitorId: string) => Promise<boolean>;
-  checkOutVisitor: (visitorId: string) => Promise<boolean>;
-  getVisitorQRCode: (visitorId: string) => Promise<string | null>;
+    // Actions - Visitor Management
+    checkInVisitor: (visitorId: string) => Promise<boolean>;
+    checkOutVisitor: (visitorId: string) => Promise<boolean>;
+    getVisitorQRCode: (visitorId: string) => Promise<string | null>;
+    checkBannedIndividual: (name: string) => Promise<{ is_banned: boolean; matches: any[] }>;
 
   // Actions - Event CRUD Operations
   refreshEvents: (filters?: EventFilters) => Promise<void>;
@@ -267,7 +268,42 @@ export function useVisitorState(): UseVisitorStateReturn {
   }, []);
 
   // Create Visitor
+  // Check banned individual
+  const checkBannedIndividual = useCallback(async (name: string): Promise<{ is_banned: boolean; matches: any[] }> => {
+    try {
+      const result = await visitorService.checkBannedIndividual(name);
+      return result;
+    } catch (error) {
+      logger.error('Failed to check banned individual', error instanceof Error ? error : new Error(String(error)), {
+        module: 'VisitorSecurity',
+        action: 'checkBannedIndividual'
+      });
+      return { is_banned: false, matches: [] };
+    }
+  }, []);
+
   const createVisitor = useCallback(async (visitor: VisitorCreate): Promise<Visitor | null> => {
+    // Check banned individuals before creating
+    const fullName = `${visitor.first_name} ${visitor.last_name}`.trim();
+    const bannedCheck = await checkBannedIndividual(fullName);
+    
+    if (bannedCheck.is_banned && bannedCheck.matches.length > 0) {
+      // Show warning but allow override for admins
+      const isAdmin = currentUser?.roles?.some((role: string) => role.toUpperCase() === 'ADMIN');
+      const shouldProceed = isAdmin 
+        ? window.confirm(
+            `⚠️ WARNING: Visitor "${fullName}" matches ${bannedCheck.matches.length} banned individual(s).\n\n` +
+            `Reason: ${bannedCheck.matches[0]?.reason || 'Unknown'}\n\n` +
+            `As an administrator, do you want to proceed with registration?`
+          )
+        : false;
+      
+      if (!shouldProceed) {
+        showError(`Registration blocked: Visitor matches banned individual database. Please contact security.`);
+        return null;
+      }
+    }
+
     const toastId = showLoading('Issuing ingress credentials...');
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
@@ -278,7 +314,10 @@ export function useVisitorState(): UseVisitorStateReturn {
       if (response.data) {
         const newVisitor = response.data;
         setVisitors(prev => [newVisitor, ...prev]);
-        dismissLoadingAndShowSuccess(toastId, 'Ingress registration complete');
+        dismissLoadingAndShowSuccess(toastId, bannedCheck.is_banned 
+          ? 'Ingress registration complete (Banned match overridden by admin)'
+          : 'Ingress registration complete'
+        );
         return newVisitor;
       }
       dismissLoadingAndShowError(toastId, 'Failed to process ingress registration');
@@ -293,7 +332,7 @@ export function useVisitorState(): UseVisitorStateReturn {
     } finally {
       setLoading(prev => ({ ...prev, visitors: false }));
     }
-  }, [propertyId]);
+  }, [propertyId, checkBannedIndividual, currentUser]);
 
   // Update Visitor
   const updateVisitor = useCallback(async (visitorId: string, updates: VisitorUpdate): Promise<Visitor | null> => {
@@ -1041,6 +1080,7 @@ export function useVisitorState(): UseVisitorStateReturn {
     checkInVisitor,
     checkOutVisitor,
     getVisitorQRCode,
+    checkBannedIndividual,
 
     // Actions - Event CRUD
     refreshEvents,

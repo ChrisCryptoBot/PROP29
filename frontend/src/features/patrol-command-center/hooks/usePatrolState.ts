@@ -14,14 +14,26 @@ import {
     PatrolProperty
 } from '../types';
 import { PatrolContextValue } from '../context/PatrolContext';
-import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showToastWithUndo, dismissToast } from '../../../utils/toast';
+import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showToastWithUndo, dismissToast, showWarning } from '../../../utils/toast';
 import { StateUpdateService } from '../../../services/StateUpdateService';
 import { ConfigService } from '../../../services/ConfigService';
 import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import { PatrolEndpoint } from '../../../services/PatrolEndpoint';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
 import apiService from '../../../services/ApiService';
 import { useCheckInQueue } from './useCheckInQueue';
 import { usePatrolActions } from './usePatrolActions';
+import { useRequestDeduplication } from './useRequestDeduplication';
+import { useEdgeCaseHandling } from './useEdgeCaseHandling';
+import { usePatrolTelemetry } from './usePatrolTelemetry';
+import {
+    validatePatrolOfficersArray,
+    validateUpcomingPatrolsArray,
+    validatePatrolRoutesArray,
+    validatePatrolTemplatesArray,
+    validateAlertsArray,
+    validatePatrolMetrics
+} from '../utils/validatePatrolData';
 
 export const usePatrolState = (): PatrolContextValue => {
     // Data State
@@ -110,6 +122,7 @@ export const usePatrolState = (): PatrolContextValue => {
     const [isOffline, setIsOffline] = useState(() =>
         typeof navigator === 'undefined' ? false : !navigator.onLine
     );
+    const [lastSyncTimestamp, setLastSyncTimestamp] = useState<Date | null>(null);
 
     useEffect(() => {
         const handleOnline = () => setIsOffline(false);
@@ -151,7 +164,14 @@ export const usePatrolState = (): PatrolContextValue => {
         let isMounted = true;
         const loadProperties = async () => {
             try {
-                const response = await apiService.getUserProperties();
+                const response = await retryWithBackoff(
+                    () => apiService.getUserProperties(),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000
+                    }
+                );
                 const props = (response.data || []).map((item) => ({
                     id: item.property_id,
                     name: item.property_name,
@@ -159,13 +179,23 @@ export const usePatrolState = (): PatrolContextValue => {
                 }));
                 if (isMounted) {
                     setProperties(props);
+                    // Only auto-select if no property is selected and we have properties
                     if (!selectedPropertyId && props.length > 0) {
                         setSelectedPropertyId(props[0].id);
+                    }
+                    // Handle case where selected property was deleted
+                    if (selectedPropertyId && !props.find(p => p.id === selectedPropertyId)) {
+                        if (props.length > 0) {
+                            setSelectedPropertyId(props[0].id);
+                        } else {
+                            setSelectedPropertyId(null);
+                        }
                     }
                 }
             } catch (error) {
                 if (isMounted) {
-                    setProperties([]);
+                    // Keep existing properties if load fails (graceful degradation)
+                    ErrorHandlerService.handle(error, 'loadProperties');
                 }
             }
         };
@@ -193,14 +223,32 @@ export const usePatrolState = (): PatrolContextValue => {
                 }
             };
 
-            // Fetch all patrol data including alerts and emergency status
+            // Fetch all patrol data including alerts and emergency status with retry
             const [patrolsData, officersData, routesData, templatesData, settingsData, metricsData, healthData, weatherData, alertsData, emergencyData] = await Promise.all([
-                PatrolEndpoint.getPatrols(undefined, selectedPropertyId || undefined),
-                PatrolEndpoint.getOfficers(),
-                PatrolEndpoint.getRoutes(selectedPropertyId || undefined),
-                PatrolEndpoint.getTemplates(selectedPropertyId || undefined),
-                PatrolEndpoint.getSettings(selectedPropertyId || undefined),
-                PatrolEndpoint.getMetrics(selectedPropertyId || undefined),
+                retryWithBackoff(
+                    () => PatrolEndpoint.getPatrols(undefined, selectedPropertyId || undefined),
+                    { maxRetries: 3, baseDelay: 1000, maxDelay: 5000 }
+                ),
+                retryWithBackoff(
+                    () => PatrolEndpoint.getOfficers(),
+                    { maxRetries: 3, baseDelay: 1000, maxDelay: 5000 }
+                ),
+                retryWithBackoff(
+                    () => PatrolEndpoint.getRoutes(selectedPropertyId || undefined),
+                    { maxRetries: 3, baseDelay: 1000, maxDelay: 5000 }
+                ),
+                retryWithBackoff(
+                    () => PatrolEndpoint.getTemplates(selectedPropertyId || undefined),
+                    { maxRetries: 3, baseDelay: 1000, maxDelay: 5000 }
+                ),
+                retryWithBackoff(
+                    () => PatrolEndpoint.getSettings(selectedPropertyId || undefined),
+                    { maxRetries: 3, baseDelay: 1000, maxDelay: 5000 }
+                ),
+                retryWithBackoff(
+                    () => PatrolEndpoint.getMetrics(selectedPropertyId || undefined),
+                    { maxRetries: 3, baseDelay: 1000, maxDelay: 5000 }
+                ),
                 PatrolEndpoint.getOfficersHealth(selectedPropertyId || undefined).catch(() => ({})),
                 PatrolEndpoint.getWeather().catch(() => null),
                 PatrolEndpoint.getAlerts().catch(() => []),
@@ -217,9 +265,9 @@ export const usePatrolState = (): PatrolContextValue => {
                 });
             }
 
-            // Set alerts data
+            // Set alerts data with validation
             if (alertsData && Array.isArray(alertsData)) {
-                setAlerts(alertsData.map((alert: any) => ({
+                const mappedAlerts = alertsData.map((alert: any) => ({
                     id: alert.id,
                     type: alert.type,
                     message: alert.message,
@@ -231,7 +279,10 @@ export const usePatrolState = (): PatrolContextValue => {
                     officer: alert.officer,
                     incident_id: alert.incident_id,
                     location: alert.location
-                })));
+                }));
+                // Validate and sanitize alerts
+                const validatedAlerts = validateAlertsArray(mappedAlerts);
+                setAlerts(validatedAlerts);
             }
 
             // Set emergency status
@@ -269,9 +320,11 @@ export const usePatrolState = (): PatrolContextValue => {
                 };
             });
 
-            setUpcomingPatrols(mappedPatrols);
+            // Validate and sanitize patrols data
+            const validatedPatrols = validateUpcomingPatrolsArray(mappedPatrols);
+            setUpcomingPatrols(validatedPatrols);
 
-            const mappedSchedule: PatrolSchedule[] = mappedPatrols.map((patrol) => ({
+            const mappedSchedule: PatrolSchedule[] = validatedPatrols.map((patrol) => ({
                 id: patrol.id,
                 title: patrol.name,
                 date: formatDateInTimezone(patrol.startTime || new Date().toISOString(), selectedPropertyTimezone),
@@ -287,7 +340,7 @@ export const usePatrolState = (): PatrolContextValue => {
             setSchedule(mappedSchedule);
 
             // Map officers (merge health: last_heartbeat, connection_status)
-            const mappedOfficers = (officersData || []).map((u: any) => {
+            const mappedOfficersRaw = (officersData || []).map((u: any) => {
                 const officerName = `${u.first_name} ${u.last_name}`.trim();
                 const activePatrol = mappedPatrols.find(p => p.assignedOfficer === officerName && p.status === 'in-progress');
                 const oid = String(u.user_id ?? '');
@@ -310,10 +363,12 @@ export const usePatrolState = (): PatrolContextValue => {
                     })
                 };
             });
-            setOfficers(mappedOfficers as unknown as PatrolOfficer[]);
+            // Validate and sanitize officers data
+            const validatedOfficers = validatePatrolOfficersArray(mappedOfficersRaw);
+            setOfficers(validatedOfficers);
 
             // Map Routes
-            const mappedRoutes = (routesData || []).map((r: any) => ({
+            const mappedRoutesRaw = (routesData || []).map((r: any) => ({
                 id: r.route_id,
                 name: r.name,
                 description: r.description,
@@ -325,10 +380,12 @@ export const usePatrolState = (): PatrolContextValue => {
                 lastUsed: r.updated_at,
                 performanceScore: 90
             }));
-            setRoutes(mappedRoutes as unknown as PatrolRoute[]);
+            // Validate and sanitize routes data
+            const validatedRoutes = validatePatrolRoutesArray(mappedRoutesRaw);
+            setRoutes(validatedRoutes);
 
             // Map Templates
-            const mappedTemplates = (templatesData || []).map((t: any) => ({
+            const mappedTemplatesRaw = (templatesData || []).map((t: any) => ({
                 id: t.template_id,
                 name: t.name,
                 description: t.description,
@@ -338,7 +395,9 @@ export const usePatrolState = (): PatrolContextValue => {
                 priority: t.priority,
                 isRecurring: t.is_recurring
             }));
-            setTemplates(mappedTemplates as unknown as PatrolTemplate[]);
+            // Validate and sanitize templates data
+            const validatedTemplates = validatePatrolTemplatesArray(mappedTemplatesRaw);
+            setTemplates(validatedTemplates);
 
             // Map Settings
             if (settingsData) {
@@ -381,18 +440,23 @@ export const usePatrolState = (): PatrolContextValue => {
             }
 
             if (metricsData) {
+                // Validate and sanitize metrics
+                const validatedMetrics = validatePatrolMetrics(metricsData);
                 setMetrics(prev => ({
                     ...prev,
-                    totalPatrols: metricsData.total_patrols ?? prev.totalPatrols,
-                    completedPatrols: metricsData.completed_patrols ?? prev.completedPatrols,
-                    averageEfficiencyScore: metricsData.average_efficiency_score ?? prev.averageEfficiencyScore,
-                    averagePatrolDurationMinutes: metricsData.average_duration ?? prev.averagePatrolDurationMinutes,
-                    averagePatrolDuration: metricsData.average_duration ? `${Math.round(metricsData.average_duration)} min` : prev.averagePatrolDuration,
-                    incidentsFound: metricsData.incidents_found ?? prev.incidentsFound
+                    totalPatrols: validatedMetrics.totalPatrols ?? prev.totalPatrols,
+                    completedPatrols: validatedMetrics.completedPatrols ?? prev.completedPatrols,
+                    averageEfficiencyScore: validatedMetrics.averageEfficiencyScore ?? prev.averageEfficiencyScore,
+                    averagePatrolDurationMinutes: validatedMetrics.averagePatrolDurationMinutes ?? prev.averagePatrolDurationMinutes,
+                    averagePatrolDuration: validatedMetrics.averagePatrolDurationMinutes ? `${Math.round(validatedMetrics.averagePatrolDurationMinutes)} min` : prev.averagePatrolDuration,
+                    incidentsFound: validatedMetrics.incidentsFound ?? prev.incidentsFound
                 }));
             }
+            
+            // Update last sync timestamp on successful fetch
+            setLastSyncTimestamp(new Date());
         } catch (error) {
-            console.error('Failed to fetch patrol data', error);
+            ErrorHandlerService.handle(error, 'fetchPatrolData');
         } finally {
             setIsLoading(false);
         }
@@ -402,6 +466,23 @@ export const usePatrolState = (): PatrolContextValue => {
         onSynced: fetchData,
         flushIntervalMs: settings.realTimeSync ? 60000 : 120000
     });
+
+    // Request deduplication for mobile agent integration
+    const requestDedup = useRequestDeduplication();
+
+    // Edge case handling
+    const edgeCaseHandling = useEdgeCaseHandling({
+        properties,
+        selectedPropertyId,
+        setSelectedPropertyId,
+        officers,
+        upcomingPatrols,
+        setOfficers,
+        setUpcomingPatrols
+    });
+
+    // Telemetry for observability (must be at top level, not in callbacks)
+    const { trackAction, trackPerformance, trackError: trackTelemetryError } = usePatrolTelemetry();
 
     // Initialize Data from Backend
     useEffect(() => {
@@ -428,6 +509,95 @@ export const usePatrolState = (): PatrolContextValue => {
         }));
     }, [upcomingPatrols, officers, routes, alerts]);
 
+    // Automatic offline detection based on heartbeat threshold
+    useEffect(() => {
+        if (!settings.heartbeatOfflineThresholdMinutes) return;
+
+        const checkOfflineStatus = () => {
+            const thresholdMs = settings.heartbeatOfflineThresholdMinutes! * 60 * 1000;
+            const now = Date.now();
+
+            setOfficers(prev => prev.map(officer => {
+                if (!officer.last_heartbeat) {
+                    // No heartbeat data - keep current status or mark as unknown
+                    return officer.connection_status === 'offline' ? officer : { ...officer, connection_status: 'unknown' as const };
+                }
+
+                try {
+                    const lastHeartbeat = new Date(officer.last_heartbeat).getTime();
+                    const elapsed = now - lastHeartbeat;
+                    const shouldBeOffline = elapsed > thresholdMs;
+
+                    if (shouldBeOffline && officer.connection_status !== 'offline') {
+                        return { ...officer, connection_status: 'offline' as const };
+                    }
+                    if (!shouldBeOffline && officer.connection_status === 'offline') {
+                        return { ...officer, connection_status: 'online' as const };
+                    }
+                } catch {
+                    // Invalid date - mark as unknown
+                    return { ...officer, connection_status: 'unknown' as const };
+                }
+
+                return officer;
+            }));
+        };
+
+        // Check immediately
+        checkOfflineStatus();
+
+        // Check every minute
+        const interval = setInterval(checkOfflineStatus, 60000);
+
+        return () => clearInterval(interval);
+    }, [settings.heartbeatOfflineThresholdMinutes, officers, setOfficers]);
+
+    // State reconciliation: Fix officer/patrol status mismatches
+    useEffect(() => {
+        const reconcileState = () => {
+            // Find officers marked on-duty but not assigned to any active patrol
+            const onDutyOfficers = officers.filter(o => o.status === 'on-duty');
+            const activePatrols = upcomingPatrols.filter(p => p.status === 'in-progress');
+            
+            onDutyOfficers.forEach(officer => {
+                const hasActivePatrol = activePatrols.some(p => 
+                    p.assignedOfficer === officer.name && p.id === officer.currentPatrol
+                );
+                
+                if (!hasActivePatrol && officer.currentPatrol) {
+                    // Officer marked on-duty but patrol is not active - reconcile
+                    const patrol = upcomingPatrols.find(p => p.id === officer.currentPatrol);
+                    if (patrol && patrol.status !== 'in-progress') {
+                        // Patrol is not in-progress, mark officer as off-duty
+                        setOfficers(prev => StateUpdateService.updateItem(prev, officer.id, {
+                            status: 'off-duty',
+                            currentPatrol: undefined
+                        }));
+                    }
+                }
+            });
+
+            // Find active patrols without assigned officers or with officers marked off-duty
+            activePatrols.forEach(patrol => {
+                if (patrol.assignedOfficer) {
+                    const assignedOfficer = officers.find(o => o.name === patrol.assignedOfficer);
+                    if (assignedOfficer && assignedOfficer.status !== 'on-duty') {
+                        // Patrol is active but officer is not on-duty - reconcile
+                        setOfficers(prev => StateUpdateService.updateItem(prev, assignedOfficer.id, {
+                            status: 'on-duty',
+                            currentPatrol: patrol.id
+                        }));
+                    }
+                }
+            });
+        };
+
+        // Reconcile on data changes
+        if (officers.length > 0 && upcomingPatrols.length > 0) {
+            reconcileState();
+        }
+    }, [officers, upcomingPatrols, setOfficers]);
+
     const {
         handleDeployOfficer,
         handleCompletePatrol,
@@ -435,6 +605,7 @@ export const usePatrolState = (): PatrolContextValue => {
         handleCancelPatrol,
         handleEmergencyAlert
     } = usePatrolActions({
+        emergencyStatus,
         officers,
         upcomingPatrols,
         setOfficers,
@@ -444,7 +615,7 @@ export const usePatrolState = (): PatrolContextValue => {
         selectedPropertyId
     });
 
-    const handleCheckpointCheckIn = useCallback(async (patrolId: string, checkpointId: string, notes?: string) => {
+    const handleCheckpointCheckIn = useCallback(async (patrolId: string, checkpointId: string, notes?: string, deviceId?: string) => {
         if (!patrolId || !checkpointId) {
             showError('Invalid patrol or checkpoint ID');
             return;
@@ -481,6 +652,21 @@ export const usePatrolState = (): PatrolContextValue => {
 
         const toastId = showLoading('Checking in to checkpoint...');
         const requestId = crypto.randomUUID();
+        const startTime = Date.now();
+        
+        // Check for duplicate request (mobile agent integration)
+        if (requestDedup.isDuplicate(requestId)) {
+            dismissToast(toastId);
+            showError('Duplicate check-in request detected. Please wait.');
+            return;
+        }
+        
+        // Record request for deduplication
+        requestDedup.recordRequest(requestId, patrolId, checkpointId);
+        
+        // Track action start
+        trackAction('checkpoint_checkin_start', 'checkpoint', { patrolId, checkpointId, requestId, ...(deviceId && { deviceId }) });
+        
         try {
             const updatedCheckpoints = patrolCheckpoints.map(cp => {
                 if (cp && cp.id === checkpointId) {
@@ -495,11 +681,27 @@ export const usePatrolState = (): PatrolContextValue => {
                 return cp;
             });
 
-            const response = await PatrolEndpoint.checkInCheckpoint(patrolId, checkpointId, {
-                notes,
-                method: 'manual',
-                request_id: requestId
-            });
+            const response = await retryWithBackoff(
+                () => PatrolEndpoint.checkInCheckpoint(patrolId, checkpointId, {
+                    notes,
+                    method: deviceId ? 'mobile' : 'manual',
+                    request_id: requestId,
+                    device_id: deviceId,
+                    version: patrol.version
+                }),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 5000,
+                    shouldRetry: (error) => {
+                        const status = (error as { response?: { status?: number } })?.response?.status;
+                        // Don't retry on 4xx errors
+                        if (status && status >= 400 && status < 500) return false;
+                        // Retry on 5xx or network errors
+                        return true;
+                    }
+                }
+            );
 
             const base = response?.checkpoints || updatedCheckpoints;
             const responseCheckpoints = (base as Checkpoint[]).map(c =>
@@ -509,8 +711,21 @@ export const usePatrolState = (): PatrolContextValue => {
                 checkpoints: responseCheckpoints
             }));
 
+            // Update last sync timestamp on successful check-in
+            setLastSyncTimestamp(new Date());
+            // Clear request from deduplication cache
+            requestDedup.clearRequest(requestId);
+            
+            // Track success
+            const duration = Date.now() - startTime;
+            trackPerformance('checkpoint_checkin', duration, { patrolId, checkpointId, requestId, ...(deviceId && { deviceId }) });
+            trackAction('checkpoint_checkin_success', 'checkpoint', { patrolId, checkpointId, requestId, ...(deviceId && { deviceId }), duration });
+            
             dismissLoadingAndShowSuccess(toastId, `Checked in to ${checkpoint.name} successfully!`);
         } catch (error) {
+            // Track error (startTime is in scope from above)
+            const duration = Date.now() - startTime;
+            trackTelemetryError(error as Error, { action: 'checkpoint_checkin', patrolId, checkpointId, requestId, ...(deviceId && { deviceId }), duration });
             const isNetworkIssue = !navigator.onLine || !(error as { response?: unknown }).response;
             if (isNetworkIssue) {
                 const queuedId = checkInQueue.enqueue({
@@ -562,7 +777,10 @@ export const usePatrolState = (): PatrolContextValue => {
     }, [upcomingPatrols, routes, officers, checkInQueue.enqueue, checkInQueue.removeQueuedCheckIn]);
 
     const handleDeleteTemplate = useCallback(async (templateId: string) => {
-        if (!templateId) return;
+        if (!templateId) {
+            showError('Invalid template ID');
+            return;
+        }
 
         const template = templates.find(t => t.id === templateId);
         if (!template) {
@@ -583,19 +801,31 @@ export const usePatrolState = (): PatrolContextValue => {
         }
 
         const toastId = showLoading('Deleting template...');
+        const startTime = Date.now();
+        trackAction('delete_template_start', 'template', { templateId });
         try {
-            await PatrolEndpoint.deleteTemplate(templateId);
+            await retryWithBackoff(
+                () => PatrolEndpoint.deleteTemplate(templateId),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 5000
+                }
+            );
             setTemplates(prev => StateUpdateService.removeItem(prev, templateId));
             dismissLoadingAndShowSuccess(toastId, 'Template deleted successfully');
         } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Failed to delete template');
+            dismissLoadingAndShowError(toastId, 'Failed to delete template. Please try again.');
             ErrorHandlerService.handle(error, 'deleteTemplate');
         }
     }, [upcomingPatrols, templates]);
 
 
     const handleDeleteRoute = useCallback(async (routeId: string) => {
-        if (!routeId) return;
+        if (!routeId) {
+            showError('Invalid route ID');
+            return;
+        }
 
         const route = routes.find(r => r.id === routeId);
         if (!route) {
@@ -614,43 +844,78 @@ export const usePatrolState = (): PatrolContextValue => {
         }
 
         const toastId = showLoading('Deleting route...');
+        const startTime = Date.now();
+        trackAction('delete_route_start', 'route', { routeId });
         try {
-            await PatrolEndpoint.deleteRoute(routeId);
+            await retryWithBackoff(
+                () => PatrolEndpoint.deleteRoute(routeId),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 5000
+                }
+            );
             setRoutes(prev => StateUpdateService.removeItem(prev, routeId));
             dismissLoadingAndShowSuccess(toastId, 'Route deleted successfully');
         } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Failed to delete route');
+            dismissLoadingAndShowError(toastId, 'Failed to delete route. Please try again.');
             ErrorHandlerService.handle(error, 'deleteRoute');
         }
     }, [routes, upcomingPatrols]);
 
     const handleDeleteCheckpoint = useCallback(async (checkpointId: string, routeId: string) => {
-        const route = routes.find(r => r.id === routeId);
-        if (!route) return;
+        if (!checkpointId || !routeId) {
+            showError('Invalid checkpoint or route ID');
+            return;
+        }
 
-        const activeOnRoute = upcomingPatrols.filter(
-            (p) => p?.status === 'in-progress' && (p.routeId === routeId || p.location === route.name)
-        );
-        if (activeOnRoute.length > 0) {
-            showError('Cannot delete checkpoints while an active patrol uses this route. Complete or cancel the patrol first.');
+        const route = routes.find(r => r.id === routeId);
+        if (!route) {
+            showError('Route not found');
+            return;
+        }
+
+        const checkpoint = route.checkpoints.find(cp => cp.id === checkpointId);
+        if (!checkpoint) {
+            showError('Checkpoint not found');
+            return;
+        }
+
+        // Use edge case handler for validation
+        if (!edgeCaseHandling.validateCheckpointDeletion(routeId)) {
             return;
         }
 
         const toastId = showLoading('Deleting checkpoint...');
+        const startTime = Date.now();
+        trackAction('delete_checkpoint_start', 'checkpoint', { checkpointId, routeId });
         try {
             const updatedCheckpoints = route.checkpoints.filter(cp => cp.id !== checkpointId);
-            const response = await PatrolEndpoint.updateRoute(routeId, {
-                checkpoints: updatedCheckpoints
-            });
+            const response = await retryWithBackoff(
+                () => PatrolEndpoint.updateRoute(routeId, {
+                    checkpoints: updatedCheckpoints
+                }),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 5000
+                }
+            );
             setRoutes(prev => prev.map(r => r.id === routeId ? {
                 ...r,
                 checkpoints: response.checkpoints || updatedCheckpoints
             } : r));
+            const duration = Date.now() - startTime;
+            trackPerformance('delete_checkpoint', duration, { checkpointId, routeId });
+            trackAction('delete_checkpoint_success', 'checkpoint', { checkpointId, routeId, duration });
             dismissLoadingAndShowSuccess(toastId, 'Checkpoint deleted successfully');
         } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Failed to delete checkpoint');
+            const duration = Date.now() - startTime;
+            trackTelemetryError(error as Error, { action: 'delete_checkpoint', checkpointId, routeId, duration });
+            dismissLoadingAndShowError(toastId, 'Failed to delete checkpoint. Please try again.');
+            ErrorHandlerService.handle(error, 'deleteCheckpoint');
         }
-    }, [routes, upcomingPatrols]);
+    }, [routes, upcomingPatrols, edgeCaseHandling, trackAction, trackPerformance, trackTelemetryError]);
 
     // Helpers
     const updatePatrolStatus = (patrolId: string, status: UpcomingPatrol['status']) => {
@@ -706,6 +971,7 @@ export const usePatrolState = (): PatrolContextValue => {
         checkInQueueFailedCount: checkInQueue.failedCount,
         isOffline,
         activeTab,
-        setActiveTab
+        setActiveTab,
+        lastSyncTimestamp
     };
 };

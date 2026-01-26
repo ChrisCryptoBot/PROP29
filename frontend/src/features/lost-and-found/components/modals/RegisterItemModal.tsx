@@ -99,8 +99,8 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-4">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl text-white">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
                             <i className="fas fa-plus text-white text-lg" />
@@ -121,7 +121,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Basic Item Information */}
                         <div className="space-y-4">
-                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center border-b border-white/10 pb-2">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center border-b border-white/5 pb-2">
                                 <i className="fas fa-info-circle text-blue-400 mr-2" />
                                 Basic Item Information
                             </h3>
@@ -136,7 +136,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                         id="item-name"
                                         value={formData.name || ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        className="w-full px-4 py-3 bg-slate-900/90 border border-white/5 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         placeholder="e.g., iPhone 14 Pro, Gold Ring"
                                         required
                                     />
@@ -150,7 +150,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                         id="category"
                                         value={formData.category || ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
+                                        className="w-full px-4 py-3 bg-slate-900/90 border border-white/5 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
                                         required
                                     >
                                         <option value="">Select Category</option>
@@ -188,7 +188,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                     rows={3}
                                     value={formData.description || ''}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-slate-900/90 border border-white/5 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                     placeholder="Provide a detailed description of the item including color, brand, size, etc."
                                     required
                                 />
@@ -204,7 +204,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                         id="location-found"
                                         value={typeof formData.location_found === 'string' ? formData.location_found : ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-slate-900/90 border border-white/10 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        className="w-full px-4 py-3 bg-slate-900/90 border border-white/5 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         placeholder="e.g., Pool Deck, Lobby, Parking Garage"
                                         required
                                     />
@@ -219,7 +219,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                         id="estimated-value"
                                         value={formData.value_estimate || ''}
                                         onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                        className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                         placeholder="0.00"
                                         min="0"
                                         step="0.01"
@@ -235,7 +235,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                     id="storage-location"
                                     value={formData.storageLocation || ''}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
+                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
                                 >
                                     <option value="">Select Storage Location</option>
                                     <option value="Storage Room A - Shelf 1">Storage Room A - Shelf 1</option>
@@ -258,19 +258,19 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                                     rows={2}
                                     value={formData.notes || ''}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                     placeholder="Any additional information about the item"
                                 />
                             </div>
                         </div>
 
                         {/* Form Actions */}
-                        <div className="flex justify-end space-x-3 pt-6 border-t border-white/10">
+                        <div className="flex justify-end space-x-3 pt-6 border-t border-white/5">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={onClose}
-                                className="border-white/10 text-slate-300 hover:bg-white/5 disabled:opacity-50"
+                                className="border-white/5 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                                 disabled={loading.items}
                             >
                                 Cancel
@@ -278,7 +278,7 @@ export const RegisterItemModal: React.FC<RegisterItemModalProps> = ({ isOpen, on
                             <Button
                                 type="submit"
                                 variant="primary"
-                                className="bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                                className="bg-blue-600 hover:bg-blue-500 text-white font-bold disabled:opacity-50"
                                 disabled={loading.items || !formData.name || !formData.category || !formData.description || !formData.location_found}
                             >
                                 {loading.items ? (

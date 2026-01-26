@@ -103,14 +103,14 @@ export const AnalyticsTab: React.FC = () => {
                                 type="date"
                                 value={dateRange.startDate}
                                 onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                                className="px-3 py-2 border border-white/10 bg-white/5 text-white rounded-lg text-sm"
+                                className="px-3 py-2 border border-white/5 bg-white/5 text-white rounded-lg text-sm"
                             />
                             <span className="text-white">to</span>
                             <input
                                 type="date"
                                 value={dateRange.endDate}
                                 onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                                className="px-3 py-2 border border-white/10 bg-white/5 text-white rounded-lg text-sm"
+                                className="px-3 py-2 border border-white/5 bg-white/5 text-white rounded-lg text-sm"
                             />
                             <Button
                                 variant="outline"

@@ -736,18 +736,6 @@ export class ModuleService {
     }
   }
 
-  async initiateEvacuation(evacuationData: Record<string, unknown>): Promise<Record<string, unknown>> {
-    try {
-      const response = await this.apiService.post<Record<string, unknown>>('/emergency/evacuation', evacuationData);
-      if (!response.data) {
-        throw new Error('No data returned from API');
-      }
-      return response.data;
-    } catch (error) {
-      logger.error('Failed to initiate evacuation', error instanceof Error ? error : new Error(String(error)), { module: 'ModuleService', action: 'initiateEvacuation', evacuationData });
-      throw new Error('Failed to initiate evacuation');
-    }
-  }
 
   // IoT Environmental Operations
   async getEnvironmentalData(): Promise<Record<string, unknown>[]> {

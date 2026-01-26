@@ -76,7 +76,7 @@ const OrchestratorContent: React.FC = () => {
           ].map((metric, i) => (
             <div
               key={i}
-              className="group bg-black/20 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:bg-black/30"
+              className="group bg-black/20 border border-white/5 rounded-2xl p-6 backdrop-blur-xl shadow-2xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:bg-black/30"
             >
               <div className={cn(
                 "absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-5 transition-opacity group-hover:opacity-10",

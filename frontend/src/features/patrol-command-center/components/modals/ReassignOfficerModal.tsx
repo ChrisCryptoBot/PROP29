@@ -42,7 +42,7 @@ export const ReassignOfficerModal: React.FC<ReassignOfficerModalProps> = ({ isOp
                         onClick={() => setSelectedOfficerId(officer.id)}
                         className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all duration-200 ${selectedOfficerId === officer.id
                                 ? 'border-blue-500/50 bg-blue-500/10'
-                                : 'border-white/10 bg-white/5 hover:bg-white/10'
+                                : 'border-white/5 bg-white/5 hover:bg-white/10'
                             }`}
                     >
                         <Avatar className="h-10 w-10 mr-4 ring-2 ring-white/10">

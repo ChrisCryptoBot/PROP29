@@ -52,7 +52,7 @@ export interface PatrolContextValue {
     // Handlers
     handleDeployOfficer: (officerId: string, patrolId: string) => Promise<void>;
     handleCompletePatrol: (patrolId: string) => Promise<void>;
-    handleCheckpointCheckIn: (patrolId: string, checkpointId: string, notes?: string) => Promise<void>;
+    handleCheckpointCheckIn: (patrolId: string, checkpointId: string, notes?: string, deviceId?: string) => Promise<void>;
     handleReassignOfficer: (patrolId: string, newOfficerId: string) => Promise<void>;
     handleCancelPatrol: (patrolId: string) => Promise<void>;
     handleDeleteTemplate: (templateId: string) => Promise<void>;
@@ -72,6 +72,9 @@ export interface PatrolContextValue {
     // Update Logic
     updatePatrolStatus: (patrolId: string, status: UpcomingPatrol['status']) => void;
     updateOfficerStatus: (officerId: string, status: PatrolOfficer['status']) => void;
+    
+    // Sync State
+    lastSyncTimestamp: Date | null;
 }
 
 export const PatrolContext = createContext<PatrolContextValue | undefined>(undefined);

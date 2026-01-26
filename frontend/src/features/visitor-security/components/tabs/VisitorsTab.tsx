@@ -107,7 +107,7 @@ export const VisitorsTab: React.FC = React.memo(() => {
                 "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all",
                 filter === filterType
                   ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 border-none"
-                  : "border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                  : "border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
               )}
             >
               {filterType === 'all' ? 'All Subjects' : filterType.replace('_', ' ')}
@@ -121,7 +121,7 @@ export const VisitorsTab: React.FC = React.memo(() => {
             icon="fas fa-search"
             title="No Matching Records"
             description="No visitors match your current filter criteria."
-            className="bg-black/20 border-dashed border-2 border-white/10"
+            className="bg-black/20 border-dashed border-2 border-white/5"
             action={{
               label: "ADD VISITOR",
               onClick: () => setShowRegisterModal(true),

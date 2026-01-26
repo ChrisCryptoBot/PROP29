@@ -387,7 +387,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                         <textarea
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            className="w-full min-h-[100px] px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                            className="w-full min-h-[100px] px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/30"
                             placeholder={`Describe why these ${operation.incidentIds.length} incidents are being ${operation.type || 'processed'}ed. This reason will be logged for audit purposes.`}
                             disabled={isProcessing}
                         />

@@ -32,7 +32,7 @@ export const CheckpointCheckInModal: React.FC<CheckpointCheckInModalProps> = ({ 
                 <div>
                     <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Notes (Optional)</label>
                     <textarea
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                         rows={4}
                         placeholder="Add observations or notes"
                         value={notes}

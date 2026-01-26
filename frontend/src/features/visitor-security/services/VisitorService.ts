@@ -111,6 +111,28 @@ class VisitorService {
   }
 
   /**
+   * Check if visitor matches banned individuals
+   * POST /api/banned-individuals/check
+   */
+  async checkBannedIndividual(name: string): Promise<{ is_banned: boolean; matches: any[]; individuals?: any[] }> {
+    try {
+      const response = await apiService.post<{ is_banned: boolean; matches: number; individuals: any[] }>('/banned-individuals/check', { name });
+      if (response.success && response.data) {
+        return {
+          is_banned: response.data.is_banned || false,
+          matches: response.data.individuals || [],
+          individuals: response.data.individuals || []
+        };
+      }
+      return { is_banned: false, matches: [], individuals: [] };
+    } catch (error) {
+      // If check fails, allow registration but log error
+      console.error('Failed to check banned individuals:', error);
+      return { is_banned: false, matches: [], individuals: [] };
+    }
+  }
+
+  /**
    * Get QR code for a visitor badge
    * GET /api/visitors/{visitor_id}/qr-code
    */

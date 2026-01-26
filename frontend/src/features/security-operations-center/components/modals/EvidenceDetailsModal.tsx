@@ -98,7 +98,7 @@ export const EvidenceDetailsModal: React.FC = () => {
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as EvidenceStatus)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer"
+                  className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer"
                 >
                   <option value="pending" className="bg-[#1a1c1e] text-white">Pending</option>
                   <option value="reviewed" className="bg-[#1a1c1e] text-white">Reviewed</option>
@@ -112,7 +112,7 @@ export const EvidenceDetailsModal: React.FC = () => {
                       ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
                       : selectedEvidence.status === 'reviewed'
                         ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                        : 'text-slate-400 bg-white/5 border-white/10'
+                        : 'text-slate-400 bg-white/5 border-white/5'
                   )}
                 >
                   {selectedEvidence.status}

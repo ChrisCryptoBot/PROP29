@@ -6,8 +6,11 @@ import { EmptyState } from '../../../../components/UI/EmptyState';
 import { ScheduleSuggestionsPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
-import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess } from '../../../../utils/toast';
+import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { patrolAI } from '../../../../services/PatrolAIService';
+import { useDataStaleness } from '../../hooks/useDataStaleness';
 
 interface DashboardTabProps {
     setActiveTab: (tab: string) => void;
@@ -32,10 +35,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
         routes,
         officers,
         setAlerts,
-        selectedPropertyTimezone
+        selectedPropertyTimezone,
+        lastSyncTimestamp,
+        settings
     } = usePatrolContext();
     const { lastRefreshedAt } = useGlobalRefresh();
     const weatherEnabled = weather && weather.condition && weather.condition !== 'Unknown';
+    
+    // Data staleness detection
+    const stalenessInfo = useDataStaleness(lastSyncTimestamp, settings);
 
     const formatDateKey = (date: Date, timeZone?: string) => {
         if (!timeZone) {
@@ -53,6 +61,26 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
 
     return (
         <div className="space-y-6" role="main" aria-label="Patrol Command Center Dashboard">
+            {/* Data Staleness Warning Banner */}
+            {stalenessInfo.shouldWarn && (
+                <div className="bg-amber-500/20 border border-amber-500/50 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <i className="fas fa-exclamation-triangle text-amber-400 text-lg" />
+                            <div>
+                                <p className="text-sm font-black text-amber-400 uppercase tracking-widest">
+                                    Stale Data Warning
+                                </p>
+                                <p className="text-xs text-amber-300 mt-1">
+                                    Data last synced {stalenessInfo.stalenessMessage}. Some information may be outdated.
+                                    {stalenessInfo.stalenessMinutes > 15 && ' This may indicate a connectivity issue.'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Dashboard</h2>
@@ -60,11 +88,26 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
                         Live patrol operations overview
                     </p>
                 </div>
-                {lastRefreshedAt && (
-                    <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
-                        Data as of {lastRefreshedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Refreshed {formatRefreshedAgo(lastRefreshedAt)}
-                    </p>
-                )}
+                <div className="flex items-center gap-4">
+                    {lastRefreshedAt && (
+                        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
+                            Data as of {lastRefreshedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Refreshed {formatRefreshedAgo(lastRefreshedAt)}
+                        </p>
+                    )}
+                    {lastSyncTimestamp && (
+                        <div className="flex items-center gap-2">
+                            <p className={`text-[10px] font-mono uppercase tracking-widest ${stalenessInfo.isStale ? 'text-amber-400' : 'text-slate-500'}`} aria-live="polite">
+                                Last sync: {lastSyncTimestamp.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                {stalenessInfo.isStale && ` (${stalenessInfo.stalenessMessage})`}
+                            </p>
+                            {stalenessInfo.shouldWarn && (
+                                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded">
+                                    STALE DATA
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
             {/* Metrics Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -243,14 +286,25 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
                                         const withStatus = (officers || []).filter(o => o.connection_status);
                                         const online = withStatus.filter(o => o.connection_status === 'online').length;
                                         const offline = withStatus.filter(o => o.connection_status === 'offline').length;
+                                        const unknown = withStatus.filter(o => o.connection_status === 'unknown').length;
                                         return withStatus.length > 0 ? (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-slate-400">Officer devices:</span>
-                                                <span className="text-white font-mono">
-                                                    <span className="text-emerald-400">📡 {online} online</span>
-                                                    {offline > 0 && <span className="text-amber-400 ml-2">⚠ {offline} offline</span>}
-                                                </span>
-                                            </div>
+                                            <>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-slate-400">Officer devices:</span>
+                                                    <span className="text-white font-mono">
+                                                        <span className="text-emerald-400">📡 {online} online</span>
+                                                        {offline > 0 && <span className="text-amber-400 ml-2">⚠ {offline} offline</span>}
+                                                        {unknown > 0 && <span className="text-slate-500 ml-2">? {unknown} unknown</span>}
+                                                    </span>
+                                                </div>
+                                                {offline > 0 && (
+                                                    <div className="mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                                        <p className="text-[9px] font-black uppercase tracking-widest text-amber-400">
+                                                            {offline} device{offline !== 1 ? 's' : ''} offline — check hardware connections
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </>
                                         ) : (
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-400">Officer devices:</span>
@@ -291,9 +345,20 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
                                         variant="glass"
                                         className="h-7 border-white/5 hover:border-blue-500/30"
                                         onClick={async () => {
+                                            if (!alerts || alerts.length === 0) {
+                                                showError('No alerts to prioritize');
+                                                return;
+                                            }
                                             const toastId = showLoading('Prioritizing alerts with AI...');
                                             try {
-                                                const priorities = await patrolAI.prioritizeAlerts(alerts as unknown as Record<string, unknown>[]);
+                                                const priorities = await retryWithBackoff(
+                                                    () => patrolAI.prioritizeAlerts(alerts as unknown as Record<string, unknown>[]),
+                                                    {
+                                                        maxRetries: 2,
+                                                        baseDelay: 1000,
+                                                        maxDelay: 3000
+                                                    }
+                                                );
                                                 const sortedAlerts = [...alerts].sort((a, b) => {
                                                     const aPriority = (priorities || []).find(p => p && p.alertId === a.id)?.score || 0;
                                                     const bPriority = (priorities || []).find(p => p && p.alertId === b.id)?.score || 0;
@@ -302,7 +367,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
                                                 setAlerts(sortedAlerts);
                                                 dismissLoadingAndShowSuccess(toastId, 'Alerts prioritized by AI');
                                             } catch (error) {
-                                                showError('Failed to prioritize alerts');
+                                                dismissLoadingAndShowError(toastId, 'Failed to prioritize alerts. Please try again.');
+                                                ErrorHandlerService.handle(error, 'prioritizeAlerts');
                                             }
                                         }}
                                     >
@@ -436,7 +502,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
                                     <span className="text-sm font-black uppercase tracking-widest">Patrol Schedule</span>
                                 </span>
                                 <div className="flex items-center space-x-2">
-                                    <span className="px-2 py-0.5 text-[10px] font-black tracking-widest text-slate-400 bg-white/5 border border-white/10 rounded uppercase">
+                                    <span className="px-2 py-0.5 text-[10px] font-black tracking-widest text-slate-400 bg-white/5 border border-white/5 rounded uppercase">
                                         {(schedule || []).filter(item => {
                                             if (!item || !item.date) return false;
                                             const today = formatDateKey(new Date(), selectedPropertyTimezone);
@@ -555,12 +621,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({ setActiveTab }) => {
                     schedule={(schedule || []).filter(s => s)}
                     incidents={[]}
                     routes={(routes || []).filter(r => r)}
-                    onApplySuggestion={(suggestion) => {
+                    onApplySuggestion={async (suggestion) => {
                         if (!suggestion || !suggestion.recommendation) {
                             showError('Invalid suggestion received');
                             return;
                         }
+                        // Validate suggestion has required data
+                        if (!suggestion.patrolId && !suggestion.routeId) {
+                            showError('Suggestion missing required route or patrol information');
+                            return;
+                        }
                         showSuccess(`Schedule suggestion applied: ${suggestion.recommendation}`);
+                        // Note: Actual application would require API call - this is a placeholder
                     }}
                 />
             ) : null}

@@ -7,6 +7,8 @@
 import apiService from '../../../services/ApiService';
 import { env } from '../../../config/env';
 import type { ApiResponse } from '../../../services/ApiService';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
+import { lostFoundCircuitBreaker } from '../../property-items/services/PropertyItemsCircuitBreaker';
 import type {
   LostFoundItem,
   LostFoundItemCreate,
@@ -34,7 +36,12 @@ class LostFoundService {
     if (filters?.dateTo) params.date_to = filters.dateTo;
     if (filters?.search) params.search = filters.search;
 
-    return apiService.get<LostFoundItem[]>('/lost-found/items', { params });
+    return lostFoundCircuitBreaker.execute(() =>
+      retryWithBackoff(
+        () => apiService.get<LostFoundItem[]>('/lost-found/items', { params }),
+        { maxRetries: 3, baseDelay: 1000 }
+      )
+    );
   }
 
   /**
@@ -42,7 +49,10 @@ class LostFoundService {
    * GET /api/lost-found/items/{item_id}
    */
   async getItem(itemId: string): Promise<ApiResponse<LostFoundItem>> {
-    return apiService.get<LostFoundItem>(`/lost-found/items/${itemId}`);
+    return retryWithBackoff(
+      () => apiService.get<LostFoundItem>(`/lost-found/items/${itemId}`),
+      { maxRetries: 3, baseDelay: 1000 }
+    );
   }
 
   /**
@@ -117,7 +127,10 @@ class LostFoundService {
     if (dateFrom) params.date_from = dateFrom;
     if (dateTo) params.date_to = dateTo;
 
-    return apiService.get<LostFoundMetrics>('/lost-found/metrics', { params });
+    return retryWithBackoff(
+      () => apiService.get<LostFoundMetrics>('/lost-found/metrics', { params }),
+      { maxRetries: 3, baseDelay: 1000 }
+    );
   }
 
   /**

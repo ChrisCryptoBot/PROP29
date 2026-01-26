@@ -91,7 +91,7 @@ export const FacialRecognitionTab: React.FC = () => {
                             <select 
                                 value={settings.retentionDays.toString()}
                                 onChange={(e) => setSettings(prev => ({ ...prev, retentionDays: parseInt(e.target.value) }))}
-                                className="px-6 py-2.5 border border-white/10 bg-black/40 text-xs font-bold uppercase tracking-widest text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer min-w-[150px] shadow-inner text-center"
+                                className="px-6 py-2.5 border border-white/5 bg-black/40 text-xs font-bold uppercase tracking-widest text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer min-w-[150px] shadow-inner text-center"
                             >
                                 <option value="90" className="bg-slate-900">90 Days</option>
                                 <option value="180" className="bg-slate-900">180 Days</option>
@@ -206,7 +206,7 @@ const StatCard: React.FC<{ icon: string; label: string; value: string; color: 's
                 <i className={`fas ${icon} text-white text-3xl transition-transform duration-500 group-hover:rotate-12 ${isSpinning ? 'animate-spin-slow' : ''}`} />
             </div>
             <h3 className="text-[10px] font-bold text-slate-500 mb-3 uppercase tracking-[0.2em] italic opacity-70">{label}</h3>
-            <span className="text-sm font-black bg-black/40 px-6 py-2 rounded-full border border-white/10 inline-block shadow-lg uppercase tracking-widest text-white">
+            <span className="text-sm font-black bg-black/40 px-6 py-2 rounded-full border border-white/5 inline-block shadow-lg uppercase tracking-widest text-white">
                 {value}
             </span>
         </div>

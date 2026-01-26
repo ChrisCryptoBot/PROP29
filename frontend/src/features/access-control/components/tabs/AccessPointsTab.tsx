@@ -673,7 +673,7 @@ const AccessPointsTabComponent: React.FC = () => {
             <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
               <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">{offlineCount} access point(s) offline. Acknowledge before bulk actions.</p>
               <label className="mt-3 flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-slate-500 cursor-pointer">
-                <input type="checkbox" checked={bulkAcknowledgeOffline} onChange={(e) => setBulkAcknowledgeOffline(e.target.checked)} className="h-4 w-4 rounded border-white/10 bg-white/5 focus:ring-2 focus:ring-blue-500/20" />
+                <input type="checkbox" checked={bulkAcknowledgeOffline} onChange={(e) => setBulkAcknowledgeOffline(e.target.checked)} className="h-4 w-4 rounded border-white/5 bg-white/5 focus:ring-2 focus:ring-blue-500/20" />
                 Acknowledge hardware risk
               </label>
             </div>
@@ -714,7 +714,7 @@ const AccessPointsTabComponent: React.FC = () => {
               value={bulkReason}
               onChange={(e) => setBulkReason(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
               placeholder="Short reason for this bulk action."
             />
           </div>

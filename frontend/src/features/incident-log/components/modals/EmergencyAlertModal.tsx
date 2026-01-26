@@ -201,7 +201,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                                     "w-full px-3 py-2 bg-white/5 border rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:bg-white/10",
                                     errors['alert-property_id']
                                         ? "border-red-500/50 focus:ring-red-500/30"
-                                        : "border-white/10 focus:ring-red-500/20"
+                                        : "border-white/5 focus:ring-red-500/20"
                                 )}
                                 placeholder="Enter property UUID"
                             />
@@ -223,7 +223,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                                     "w-full px-3 py-2 bg-white/5 border rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:bg-white/10",
                                     errors['alert-alert_type']
                                         ? "border-red-500/50 focus:ring-red-500/30"
-                                        : "border-white/10 focus:ring-red-500/20"
+                                        : "border-white/5 focus:ring-red-500/20"
                                 )}
                             >
                                 <option value="" className="bg-slate-900">Select emergency type</option>
@@ -250,7 +250,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                                     "w-full px-3 py-2 bg-white/5 border rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:bg-white/10",
                                     errors['alert-location']
                                         ? "border-red-500/50 focus:ring-red-500/30"
-                                        : "border-white/10 focus:ring-red-500/20"
+                                        : "border-white/5 focus:ring-red-500/20"
                                 )}
                                 placeholder="Enter location (e.g., Main Lobby, Room 302, Parking Lot)"
                             />
@@ -273,7 +273,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                                     "w-full px-3 py-2 bg-white/5 border rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:bg-white/10",
                                     errors['alert-description']
                                         ? "border-red-500/50 focus:ring-red-500/30"
-                                        : "border-white/10 focus:ring-red-500/20"
+                                        : "border-white/5 focus:ring-red-500/20"
                                 )}
                                 placeholder="Provide detailed information about the emergency..."
                             />
@@ -290,7 +290,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                                 id="contact-emergency-services"
                                 checked={formData.contact_emergency_services ?? true}
                                 onChange={handleChange}
-                                className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-red-500/30"
+                                className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/30"
                             />
                             <label htmlFor="contact-emergency-services" className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">
                                 Contact emergency services (police, fire, medical)

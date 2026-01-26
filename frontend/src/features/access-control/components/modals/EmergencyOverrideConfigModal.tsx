@@ -154,7 +154,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                       onConfigChange({ lockdownDuration: parseInt(e.target.value) || 60 });
                       setIsFormDirty(true);
                     }}
-                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                   />
                 </div>
 
@@ -172,7 +172,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                       onConfigChange({ unlockDuration: parseInt(e.target.value) || 30 });
                       setIsFormDirty(true);
                     }}
-                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                   />
                 </div>
               </div>
@@ -249,7 +249,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                       onConfigChange({ notificationRecipients: emails });
                       setIsFormDirty(true);
                     }}
-                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                     placeholder="e.g. security@station-g.net, admin@station-g.net"
                   />
                 </div>

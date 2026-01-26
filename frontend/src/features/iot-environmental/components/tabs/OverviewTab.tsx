@@ -22,8 +22,8 @@ const OverviewTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Current Environmental Readings */}
-      <div className="bg-black/20 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
-        <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+      <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
+        <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
           <h2 className="text-lg font-black text-white uppercase tracking-tighter flex items-center">
             <i className="fas fa-chart-line mr-3 text-blue-500" />
             LIVE TELEMETRY FEED
@@ -37,7 +37,7 @@ const OverviewTab: React.FC = () => {
               { label: 'Humidity', value: analytics.average_humidity.toFixed(1) + '%', type: 'humidity', color: 'blue' },
               { label: 'Air Quality', value: analytics.average_air_quality.toFixed(0) + ' PPM', type: 'air_quality', color: 'green' }
             ].map((stat, idx) => (
-              <div key={idx} className="group relative p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all duration-500 overflow-hidden">
+              <div key={idx} className="group relative p-6 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all duration-500 overflow-hidden">
                 <div className={cn(
                   "absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-10 transition-opacity duration-500 group-hover:opacity-20",
                   stat.color === 'red' ? 'bg-red-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
@@ -106,10 +106,10 @@ const OverviewTab: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sensorSnapshot.map((sensor) => (
-              <div key={sensor.id} className="group p-5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-sm">
+              <div key={sensor.id} className="group p-5 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white/5 border border-white/10 rounded flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-10 h-10 bg-white/5 border border-white/5 rounded flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
                       {renderSensorIcon(sensor.sensor_type, 18)}
                     </div>
                     <div>

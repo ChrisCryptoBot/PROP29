@@ -460,7 +460,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                                     ...prev, 
                                                     maxBulkSize: parseInt(e.target.value) || 1
                                                 }))}
-                                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm"
+                                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm"
                                             />
                                         </div>
                                     </div>
@@ -513,7 +513,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                                     ...prev, 
                                                     timeoutMinutes: parseInt(e.target.value) || 60
                                                 }))}
-                                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm"
+                                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm"
                                             />
                                         </div>
                                     </div>

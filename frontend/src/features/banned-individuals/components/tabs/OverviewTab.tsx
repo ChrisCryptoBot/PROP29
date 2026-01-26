@@ -19,7 +19,7 @@ export const OverviewTab: React.FC = () => {
             case 'MEDIUM': return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
             case 'HIGH': return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
             case 'CRITICAL': return 'text-red-400 bg-red-500/20 border-red-500/30';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
@@ -28,16 +28,16 @@ export const OverviewTab: React.FC = () => {
             case 'TEMPORARY': return 'text-blue-400 bg-blue-500/20 border-blue-500/30';
             case 'PERMANENT': return 'text-red-400 bg-red-500/20 border-red-500/30';
             case 'CONDITIONAL': return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
     const getStatusBadgeClass = (status: string): string => {
         switch (status) {
             case 'ACTIVE': return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
-            case 'EXPIRED': return 'text-slate-400 bg-white/5 border-white/10';
+            case 'EXPIRED': return 'text-slate-400 bg-white/5 border-white/5';
             case 'REMOVED': return 'text-red-400 bg-red-500/20 border-red-500/30';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
@@ -82,7 +82,7 @@ export const OverviewTab: React.FC = () => {
                 return {
                     icon: 'fa-user-shield',
                     label: 'Manager',
-                    color: 'text-slate-400 bg-white/5 border-white/10',
+                    color: 'text-slate-400 bg-white/5 border-white/5',
                     tooltip: 'Manually created by manager'
                 };
         }

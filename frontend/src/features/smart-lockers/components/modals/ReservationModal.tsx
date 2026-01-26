@@ -72,9 +72,9 @@ export const ReservationModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="glass-card border-white/10 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl animate-in zoom-in duration-300">
+      <div className="glass-card border-white/5 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl animate-in zoom-in duration-300">
         {/* Header */}
-        <div className="px-6 py-6 border-b border-white/10 flex items-center justify-between bg-white/5">
+        <div className="px-6 py-6 border-b border-white/5 flex items-center justify-between bg-white/5">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <i className="fas fa-calendar-plus text-white text-xl" />
@@ -105,7 +105,7 @@ export const ReservationModal: React.FC = () => {
               onChange={(e) => setFormData((prev: CreateReservationInput) => ({ ...prev, lockerId: e.target.value }))}
               className={cn(
                 "w-full px-4 py-3 bg-black/40 border rounded-xl text-white appearance-none focus:outline-none focus:ring-2 transition-all shadow-inner",
-                errors.lockerId ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                errors.lockerId ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
               )}
             >
               <option value="" className="bg-slate-900">Select an available locker</option>
@@ -131,7 +131,7 @@ export const ReservationModal: React.FC = () => {
               onChange={(e) => setFormData((prev: CreateReservationInput) => ({ ...prev, guestId: e.target.value }))}
               className={cn(
                 "w-full px-4 py-3 bg-black/40 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner",
-                errors.guestId ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                errors.guestId ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
               )}
               placeholder="G-XXXXX"
             />
@@ -151,7 +151,7 @@ export const ReservationModal: React.FC = () => {
               onChange={(e) => setFormData((prev: CreateReservationInput) => ({ ...prev, guestName: e.target.value }))}
               className={cn(
                 "w-full px-4 py-3 bg-black/40 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner",
-                errors.guestName ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                errors.guestName ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
               )}
               placeholder="John Doe"
             />
@@ -172,7 +172,7 @@ export const ReservationModal: React.FC = () => {
                 onChange={(e) => setFormData((prev: CreateReservationInput) => ({ ...prev, startTime: e.target.value }))}
                 className={cn(
                   "w-full px-4 py-3 bg-black/40 border rounded-xl text-white focus:outline-none focus:ring-2 transition-all shadow-inner",
-                  errors.startTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                  errors.startTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
                 )}
               />
               {errors.startTime && (
@@ -191,7 +191,7 @@ export const ReservationModal: React.FC = () => {
                 onChange={(e) => setFormData((prev: CreateReservationInput) => ({ ...prev, endTime: e.target.value }))}
                 className={cn(
                   "w-full px-4 py-3 bg-black/40 border rounded-xl text-white focus:outline-none focus:ring-2 transition-all shadow-inner",
-                  errors.endTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                  errors.endTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
                 )}
               />
               {errors.endTime && (
@@ -211,7 +211,7 @@ export const ReservationModal: React.FC = () => {
               rows={3}
               className={cn(
                 "w-full px-4 py-3 bg-black/40 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner resize-none",
-                errors.purpose ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                errors.purpose ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
               )}
               placeholder="Operational requirement or reason for access..."
             />
@@ -221,11 +221,11 @@ export const ReservationModal: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-4 pt-8 border-t border-white/10 bg-white/5 -mx-8 -mb-8 px-8 py-6 rounded-b-2xl">
+          <div className="flex justify-end space-x-4 pt-8 border-t border-white/5 bg-white/5 -mx-8 -mb-8 px-8 py-6 rounded-b-2xl">
             <Button
               type="button"
               variant="outline"
-              className="font-black uppercase tracking-widest border-white/10 text-slate-400 hover:text-white"
+              className="font-black uppercase tracking-widest border-white/5 text-slate-400 hover:text-white"
               onClick={handleClose}
             >
               Abeyance

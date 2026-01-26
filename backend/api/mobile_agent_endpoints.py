@@ -187,6 +187,70 @@ async def submit_incident_report(
         # Store incident report
         _incident_reports.append(incident)
         
+        # Create Guest Safety Incident from mobile agent report
+        try:
+            from services.guest_safety_service import GuestSafetyService
+            from schemas import GuestSafetyIncidentCreate
+            from models import GuestSafetySeverity
+            
+            severity_map = {
+                "low": GuestSafetySeverity.LOW,
+                "medium": GuestSafetySeverity.MEDIUM,
+                "high": GuestSafetySeverity.HIGH,
+                "critical": GuestSafetySeverity.CRITICAL
+            }
+            
+            location_str = location.get("address") or location.get("room") or location.get("location") or "Unknown"
+            
+            guest_safety_incident = GuestSafetyIncidentCreate(
+                title=incident_type or "Mobile Agent Report",
+                description=description,
+                location=location_str,
+                severity=severity_map.get(severity.lower(), GuestSafetySeverity.MEDIUM),
+                status="reported",
+                room_number=location.get("room"),
+                source="MOBILE_AGENT",
+                source_metadata={
+                    "agent_id": agent_id,
+                    "agent_name": current_user.username if current_user else None,
+                    "submission_timestamp": timestamp.isoformat(),
+                    "evidence_files": incident.get("evidence_files", [])
+                }
+            )
+            
+            # Create in guest safety system
+            guest_safety_incident_response = GuestSafetyService.create_incident(guest_safety_incident, user_id=str(current_user.user_id) if current_user else None)
+            logger.info(f"Mobile agent incident {incident_id} linked to guest safety incident {guest_safety_incident_response.id}")
+            
+            # Broadcast via WebSocket
+            try:
+                from main import manager
+                if manager and manager.active_connections:
+                    message = {
+                        "type": "guest_safety_incident",
+                        "incident": {
+                            "id": guest_safety_incident_response.id,
+                            "title": guest_safety_incident_response.title,
+                            "description": guest_safety_incident_response.description,
+                            "location": guest_safety_incident_response.location,
+                            "severity": guest_safety_incident_response.severity.value if hasattr(guest_safety_incident_response.severity, 'value') else str(guest_safety_incident_response.severity),
+                            "status": guest_safety_incident_response.status,
+                            "reported_at": guest_safety_incident_response.reported_at.isoformat() if hasattr(guest_safety_incident_response.reported_at, 'isoformat') else str(guest_safety_incident_response.reported_at),
+                            "source": getattr(guest_safety_incident_response, 'source', 'MOBILE_AGENT'),
+                            "source_metadata": getattr(guest_safety_incident_response, 'source_metadata', None),
+                        }
+                    }
+                    for user_id, connections in manager.active_connections.items():
+                        for ws in connections:
+                            try:
+                                await ws.send_json(message)
+                            except Exception as ws_err:
+                                logger.warning(f"Failed to send WebSocket message: {ws_err}")
+            except Exception as ws_error:
+                logger.warning(f"WebSocket broadcast failed: {ws_error}")
+        except Exception as e:
+            logger.error(f"Failed to create guest safety incident from mobile agent report: {e}")
+        
         # Trigger alert if high severity
         if severity in ["high", "critical"]:
             await trigger_incident_alert(incident)

@@ -25,7 +25,7 @@ const DashboardTabContent: React.FC = () => {
                     { label: 'Available Slots', value: availableSpaces.length, icon: 'fa-check-circle', color: 'from-indigo-600/80 to-slate-900', secondary: 'text-indigo-400' },
                     { label: 'System Health', value: '100%', icon: 'fa-shield-alt', color: 'from-slate-600/80 to-slate-900', secondary: 'text-white' }
                 ].map((stat, i) => (
-                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/10 transition-all duration-300 group">
+                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/5 transition-all duration-300 group">
                         <CardContent className="pt-6 px-6 pb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className={cn("w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-white/5", stat.color)}>

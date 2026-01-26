@@ -108,55 +108,71 @@ export const AnalyticsTab: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
+            {/* Gold Standard Page Header */}
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Analytics & Reports</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Lost & Found performance metrics and insights
+                    </p>
+                </div>
+            </div>
+
             {/* Key Performance Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-2">
-                            <i className="fas fa-percentage text-slate-400 text-xl group-hover:scale-110 transition-transform" />
-                            <i className="fas fa-arrow-up text-green-400 text-sm" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-percentage text-white text-lg"></i>
+                            </div>
                         </div>
-                        <h3 className="text-3xl font-black text-white mb-1">
-                            {analyticsData.recoveryRate}%
-                        </h3>
-                        <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Recovery Rate</p>
-                        <p className="text-xs text-green-400 mt-1">+5% from last month</p>
+                        <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Recovery Rate</p>
+                            <h3 className="text-3xl font-black text-white">{analyticsData.recoveryRate}%</h3>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-2">
-                            <i className="fas fa-clock text-slate-400 text-xl group-hover:scale-110 transition-transform" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-clock text-white text-lg"></i>
+                            </div>
                         </div>
-                        <h3 className="text-3xl font-black text-white mb-1">2.3</h3>
-                        <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Avg Days to Claim</p>
-                        <p className="text-xs text-slate-500 mt-1">Industry avg: 4.5 days</p>
+                        <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Days to Claim</p>
+                            <h3 className="text-3xl font-black text-white">2.3</h3>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-2">
-                            <i className="fas fa-dollar-sign text-slate-400 text-xl group-hover:scale-110 transition-transform" />
-                            <i className="fas fa-arrow-up text-green-400 text-sm" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-dollar-sign text-white text-lg"></i>
+                            </div>
                         </div>
-                        <h3 className="text-3xl font-black text-white mb-1">
-                            ${analyticsData.totalValue.toLocaleString()}
-                        </h3>
-                        <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Total Value Recovered</p>
-                        <p className="text-xs text-green-400 mt-1">+12% from last month</p>
+                        <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Value Recovered</p>
+                            <h3 className="text-3xl font-black text-white">${analyticsData.totalValue.toLocaleString()}</h3>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-2">
-                            <i className="fas fa-box text-slate-400 text-xl group-hover:scale-110 transition-transform" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-box text-white text-lg"></i>
+                            </div>
                         </div>
-                        <h3 className="text-3xl font-black text-white mb-1">{items.length}</h3>
-                        <p className="text-sm text-slate-400 font-medium uppercase tracking-wider">Total Items This Month</p>
-                        <p className="text-xs text-slate-500 mt-1">Across all categories</p>
+                        <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Items This Month</p>
+                            <h3 className="text-3xl font-black text-white">{items.length}</h3>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -164,17 +180,20 @@ export const AnalyticsTab: React.FC = React.memo(() => {
             {/* Charts Row 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Recovery Rate Trend - Real data from backend */}
-                <Card className="glass-card border-white/10 shadow-lg">
-                    <CardHeader className="border-b border-white/10 pb-4">
-                        <CardTitle className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
-                                <i className="fas fa-chart-line text-white" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                    <CardHeader className="border-b border-white/5 pb-4">
+                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
+                                <i className="fas fa-chart-line text-white text-lg" />
                             </div>
                             Recovery Rate Trend
                             {loading.metrics && (
                                 <i className="fas fa-spinner fa-spin ml-2 text-blue-400" />
                             )}
                         </CardTitle>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                            Monthly recovery performance trends
+                        </p>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <ResponsiveContainer width="100%" height={300}>
@@ -206,14 +225,17 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                 </Card>
 
                 {/* Common Items */}
-                <Card className="glass-card border-white/10 shadow-lg">
-                    <CardHeader className="border-b border-white/10 pb-4">
-                        <CardTitle className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
-                                <i className="fas fa-chart-bar text-white" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                    <CardHeader className="border-b border-white/5 pb-4">
+                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
+                                <i className="fas fa-chart-bar text-white text-lg" />
                             </div>
                             Most Common Items
                         </CardTitle>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                            Items by category frequency
+                        </p>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <ResponsiveContainer width="100%" height={300}>
@@ -244,14 +266,17 @@ export const AnalyticsTab: React.FC = React.memo(() => {
             {/* Charts Row 2 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Status Distribution */}
-                <Card className="glass-card border-white/10 shadow-lg">
-                    <CardHeader className="border-b border-white/10 pb-4">
-                        <CardTitle className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
-                                <i className="fas fa-chart-pie text-white" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                    <CardHeader className="border-b border-white/5 pb-4">
+                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
+                                <i className="fas fa-chart-pie text-white text-lg" />
                             </div>
                             Status Distribution
                         </CardTitle>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                            Item status breakdown by percentage
+                        </p>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <ResponsiveContainer width="100%" height={300}>
@@ -284,12 +309,17 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                 </Card>
 
                 {/* Value Recovered Over Time */}
-                <Card className="glass-card border-white/10 shadow-lg">
-                    <CardHeader className="border-b border-white/10 pb-4">
-                        <CardTitle className="flex items-center text-white">
-                            <i className="fas fa-dollar-sign text-slate-400 mr-2" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                    <CardHeader className="border-b border-white/5 pb-4">
+                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
+                                <i className="fas fa-dollar-sign text-white text-lg" />
+                            </div>
                             Value Recovered Over Time
                         </CardTitle>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                            Monthly value recovery trends
+                        </p>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <ResponsiveContainer width="100%" height={300}>
@@ -327,15 +357,18 @@ export const AnalyticsTab: React.FC = React.memo(() => {
             </div>
 
             {/* Export Reports */}
-            <Card className="glass-card border-white/10 shadow-lg">
-                <CardHeader className="border-b border-white/10 pb-4">
-                    <CardTitle className="text-white">Export Reports</CardTitle>
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <CardHeader className="border-b border-white/5 pb-4">
+                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Export Reports</CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Generate and download analytics reports
+                    </p>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <Button
-                            variant="primary"
-                            className="bg-blue-600 hover:bg-blue-500 text-white uppercase tracking-wider font-bold shadow-lg shadow-blue-500/20"
+                            variant="outline"
+                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                             onClick={() => handleExportReport('pdf', 'daily')}
                         >
                             <i className="fas fa-file-pdf mr-2" />
@@ -343,7 +376,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="border-white/10 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
+                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                             onClick={() => handleExportReport('csv', 'weekly')}
                         >
                             <i className="fas fa-file-excel mr-2" />
@@ -351,7 +384,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="border-white/10 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
+                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                             onClick={() => handleExportReport('pdf', 'monthly')}
                         >
                             <i className="fas fa-file-alt mr-2" />
@@ -359,7 +392,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="border-white/10 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
+                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                             onClick={() => handleExportReport('csv', 'custom')}
                         >
                             <i className="fas fa-cog mr-2" />

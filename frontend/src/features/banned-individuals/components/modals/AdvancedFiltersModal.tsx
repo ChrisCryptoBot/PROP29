@@ -18,8 +18,8 @@ export const AdvancedFiltersModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/10 pb-4 mb-2 group cursor-pointer">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
+                <CardHeader className="border-b border-white/5 pb-4 mb-2 group cursor-pointer">
                     <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
                             <i className="fas fa-layer-group text-white text-lg" />
@@ -34,7 +34,7 @@ export const AdvancedFiltersModal: React.FC = () => {
                             <select
                                 value={filterBanType}
                                 onChange={(e) => setFilterBanType(e.target.value)}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner shadow-black/20"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner shadow-black/20"
                             >
                                 <option value="ALL" className="bg-slate-900">All Ban Durations</option>
                                 <option value="TEMPORARY" className="bg-slate-900">Temporary Only</option>
@@ -48,7 +48,7 @@ export const AdvancedFiltersModal: React.FC = () => {
                             <select
                                 value={filterNationality}
                                 onChange={(e) => setFilterNationality(e.target.value)}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner shadow-black/20"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner shadow-black/20"
                             >
                                 <option value="ALL" className="bg-slate-900">All Nationalities</option>
                                 {nationalities.map(nat => (
@@ -57,7 +57,7 @@ export const AdvancedFiltersModal: React.FC = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-center space-x-3 p-5 border border-white/10 rounded-2xl bg-white/5 shadow-inner">
+                        <div className="flex items-center space-x-3 p-5 border border-white/5 rounded-2xl bg-white/5 shadow-inner">
                             <input type="checkbox" className="w-5 h-5 accent-blue-600 cursor-pointer rounded-lg rounded-full" />
                             <span className="text-xs font-bold text-white uppercase tracking-widest">Show only flagged "Expiring Soon"</span>
                         </div>

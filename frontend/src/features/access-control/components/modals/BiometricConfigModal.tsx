@@ -79,7 +79,7 @@ export const BiometricConfigModal: React.FC<BiometricConfigModalProps> = ({
 
           {config.enabled && (
             <>
-            <div className="space-y-3 pl-4 border-l border-white/10">
+            <div className="space-y-3 pl-4 border-l border-white/5">
                 <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 transition-colors">
                   <div>
                     <p className="text-xs font-bold text-white uppercase tracking-wider">Fingerprint</p>
@@ -189,7 +189,7 @@ export const BiometricConfigModal: React.FC<BiometricConfigModalProps> = ({
                     max={365}
                     value={config.retentionPeriod}
                     onChange={(e) => { onConfigChange({ retentionPeriod: parseInt(e.target.value, 10) || 1 }); setIsFormDirty(true); }}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">1 – 365 days</p>
                 </div>

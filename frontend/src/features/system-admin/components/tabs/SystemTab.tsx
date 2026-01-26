@@ -22,7 +22,7 @@ export const SystemTab: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <Button
                         variant="glass"
-                        className="border-white/10 hover:bg-white/10 shadow-xl font-bold uppercase text-[10px] tracking-widest px-6"
+                        className="border-white/5 hover:bg-white/10 shadow-xl font-bold uppercase text-[10px] tracking-widest px-6"
                         onClick={() => showSuccess('Resetting settings to defaults')}
                     >
                         <i className="fas fa-undo mr-2 opacity-70"></i>
@@ -67,7 +67,7 @@ export const SystemTab: React.FC = () => {
                                     type="text"
                                     value={settings.systemName}
                                     onChange={(e) => handleInputChange('systemName', e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/10 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 hover:bg-white/10 transition-all placeholder:text-slate-700"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 hover:bg-white/10 transition-all placeholder:text-slate-700"
                                     placeholder="Enter system designation..."
                                 />
                             </div>
@@ -80,7 +80,7 @@ export const SystemTab: React.FC = () => {
                                     <select
                                         value={settings.timezone}
                                         onChange={(e) => handleInputChange('timezone', e.target.value)}
-                                        className="w-full pl-11 pr-10 py-3 border border-white/10 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
+                                        className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
                                     >
                                         <option value="UTC" className="bg-slate-900">UTC Standard</option>
                                         <option value="EST" className="bg-slate-900">Eastern Time</option>
@@ -98,7 +98,7 @@ export const SystemTab: React.FC = () => {
                                     <select
                                         value={settings.language}
                                         onChange={(e) => handleInputChange('language', e.target.value)}
-                                        className="w-full pl-11 pr-10 py-3 border border-white/10 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
+                                        className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
                                     >
                                         <option value="en" className="bg-slate-900">English (Global)</option>
                                         <option value="es" className="bg-slate-900">Español</option>
@@ -117,7 +117,7 @@ export const SystemTab: React.FC = () => {
                                 <select
                                     value={settings.dateFormat}
                                     onChange={(e) => handleInputChange('dateFormat', e.target.value)}
-                                    className="w-full pl-11 pr-10 py-3 border border-white/10 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all"
+                                    className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all"
                                 >
                                     <option value="MM/DD/YYYY" className="bg-slate-900">MM / DD / YYYY (US)</option>
                                     <option value="DD/MM/YYYY" className="bg-slate-900">DD / MM / YYYY (EU)</option>
@@ -186,7 +186,7 @@ export const SystemTab: React.FC = () => {
                                     type="number"
                                     value={settings.cacheTtl}
                                     onChange={(e) => handleInputChange('cacheTtl', parseInt(e.target.value))}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/10 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
                                     placeholder="3600"
                                 />
                             </div>
@@ -199,7 +199,7 @@ export const SystemTab: React.FC = () => {
                                     type="number"
                                     value={settings.maxConnections}
                                     onChange={(e) => handleInputChange('maxConnections', parseInt(e.target.value))}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/10 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
                                     placeholder="100"
                                 />
                             </div>
@@ -212,7 +212,7 @@ export const SystemTab: React.FC = () => {
                                     type="number"
                                     value={settings.sessionTimeout}
                                     onChange={(e) => handleInputChange('sessionTimeout', parseInt(e.target.value))}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/10 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
                                     placeholder="30"
                                 />
                             </div>

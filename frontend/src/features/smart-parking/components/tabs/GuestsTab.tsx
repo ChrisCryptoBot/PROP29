@@ -68,7 +68,7 @@ const GuestsTabContent: React.FC<GuestsTabProps> = ({ onRegisterGuest }) => {
                     { label: 'Completed Today', count: completedGuestParkings.length, icon: 'fa-history', color: 'from-emerald-600/80 to-slate-900', secondary: 'text-emerald-400' },
                     { label: 'Violation Alerts', count: overdueGuestParkings.length, icon: 'fa-exclamation-triangle', color: 'from-red-600/80 to-slate-900', secondary: 'text-red-400' }
                 ].map((stat, i) => (
-                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/10 transition-all duration-300 group">
+                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/5 transition-all duration-300 group">
                         <CardContent className="pt-6 px-6 pb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className={cn("w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-white/5", stat.color)}>

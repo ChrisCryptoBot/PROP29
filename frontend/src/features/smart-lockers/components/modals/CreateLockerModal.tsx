@@ -71,9 +71,9 @@ export const CreateLockerModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="glass-card border-white/10 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl animate-in zoom-in duration-300">
+      <div className="glass-card border-white/5 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl animate-in zoom-in duration-300">
         {/* Header */}
-        <div className="px-6 py-6 border-b border-white/10 flex items-center justify-between bg-white/5">
+        <div className="px-6 py-6 border-b border-white/5 flex items-center justify-between bg-white/5">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
               <i className="fas fa-lock text-white text-xl" />
@@ -105,7 +105,7 @@ export const CreateLockerModal: React.FC = () => {
               onChange={(e) => setFormData((prev: CreateLockerInput) => ({ ...prev, lockerNumber: e.target.value.toUpperCase() }))}
               className={cn(
                 "w-full px-4 py-3 bg-black/40 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner",
-                errors.lockerNumber ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                errors.lockerNumber ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
               )}
               placeholder="L-XXXX"
             />
@@ -125,7 +125,7 @@ export const CreateLockerModal: React.FC = () => {
               onChange={(e) => setFormData((prev: CreateLockerInput) => ({ ...prev, location: e.target.value }))}
               className={cn(
                 "w-full px-4 py-3 bg-black/40 border rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner",
-                errors.location ? "border-red-500/50 focus:ring-red-500/30" : "border-white/10 focus:ring-blue-500/50"
+                errors.location ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5 focus:ring-blue-500/50"
               )}
               placeholder="Lobby, Floor 2, Zone C"
             />
@@ -142,7 +142,7 @@ export const CreateLockerModal: React.FC = () => {
             <select
               value={formData.size}
               onChange={(e) => setFormData((prev: CreateLockerInput) => ({ ...prev, size: e.target.value as 'small' | 'medium' | 'large' }))}
-              className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner"
+              className="w-full px-4 py-3 bg-black/40 border border-white/5 rounded-xl text-white appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all shadow-inner"
             >
               {LOCKER_SIZES.map((size) => (
                 <option key={size} value={size} className="bg-slate-900">
@@ -172,7 +172,7 @@ export const CreateLockerModal: React.FC = () => {
                     type="checkbox"
                     checked={formData.features?.includes(feature) || false}
                     onChange={() => toggleFeature(feature)}
-                    className="rounded border-white/10 text-blue-600 focus:ring-blue-500/50 bg-black/40"
+                    className="rounded border-white/5 text-blue-600 focus:ring-blue-500/50 bg-black/40"
                   />
                   <span className="text-xs font-bold uppercase tracking-wider">{feature}</span>
                 </label>
@@ -181,11 +181,11 @@ export const CreateLockerModal: React.FC = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-4 pt-8 border-t border-white/10 bg-white/5 -mx-8 -mb-8 px-8 py-6 rounded-b-2xl">
+          <div className="flex justify-end space-x-4 pt-8 border-t border-white/5 bg-white/5 -mx-8 -mb-8 px-8 py-6 rounded-b-2xl">
             <Button
               type="button"
               variant="outline"
-              className="font-black uppercase tracking-widest border-white/10 text-slate-400 hover:text-white"
+              className="font-black uppercase tracking-widest border-white/5 text-slate-400 hover:text-white"
               onClick={handleClose}
             >
               Abeyance

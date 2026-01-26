@@ -74,7 +74,7 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
                 </div>
 
                 {/* Instructions */}
-                <div className="rounded-lg p-4 space-y-2 bg-white/5 border border-white/10">
+                <div className="rounded-lg p-4 space-y-2 bg-white/5 border border-white/5">
                     <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-2">How to scan:</h4>
                     <ul className="space-y-1 text-sm text-slate-300">
                         <li className="flex items-start">
@@ -93,23 +93,23 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
                 </div>
 
                 {/* Manual Entry Fallback */}
-                <div className="border-t border-white/10 pt-4">
+                <div className="border-t border-white/5 pt-4">
                     <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
                         Or Enter Tracking Number Manually
                     </label>
                     <input
                         type="text"
                         placeholder="Enter tracking number"
-                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                     />
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-white/10">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-white/5">
                     <Button
                         variant="outline"
                         onClick={onClose}
-                        className="border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+                        className="border-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
                     >
                         Close
                     </Button>

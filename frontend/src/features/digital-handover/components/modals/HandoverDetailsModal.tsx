@@ -34,8 +34,8 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="glass-card border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-        <CardHeader className="px-8 pt-8 pb-6 border-b border-white/10">
+      <Card className="glass-card border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <CardHeader className="px-8 pt-8 pb-6 border-b border-white/5">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center text-2xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-900 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
@@ -49,7 +49,7 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => onEdit(handover)}
-                  className="border-white/10 text-blue-300 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-6 h-10 shadow-lg shadow-blue-500/10"
+                  className="border-white/5 text-blue-300 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-6 h-10 shadow-lg shadow-blue-500/10"
                 >
                   <i className="fas fa-edit mr-2" />
                   Edit Entry
@@ -74,7 +74,7 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={onClose}
-                className="border-white/10 text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-4 h-10"
+                className="border-white/5 text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-4 h-10"
               >
                 <i className="fas fa-times" />
               </Button>
@@ -84,13 +84,13 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
         <CardContent className="p-8 space-y-8">
           {/* Status Bar */}
           <div className="flex flex-wrap items-center gap-4 bg-white/5 border border-white/5 p-4 rounded-xl">
-            <div className="flex items-center space-x-3 pr-6 border-r border-white/10">
+            <div className="flex items-center space-x-3 pr-6 border-r border-white/5">
               <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Operation Status</div>
               <span className={cn('px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded border', getStatusBadgeClass(handover.status))}>
                 {handover.status.toUpperCase().replace('_', ' ')}
               </span>
             </div>
-            <div className="flex items-center space-x-3 pr-6 border-r border-white/10">
+            <div className="flex items-center space-x-3 pr-6 border-r border-white/5">
               <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">Hazard Level</div>
               <span className={cn('px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded border', getPriorityBadgeClass(handover.priority))}>
                 {handover.priority.toUpperCase()}
@@ -226,7 +226,7 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
                         </span>
                         <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 opacity-60 truncate">{item.category}</span>
                         {item.assignedTo && (
-                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 opacity-60 border-l border-white/10 pl-3">Ref: {item.assignedTo}</span>
+                          <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 opacity-60 border-l border-white/5 pl-3">Ref: {item.assignedTo}</span>
                         )}
                       </div>
                     </div>
@@ -235,7 +235,7 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
                         <i className="fas fa-check text-green-400 text-xs" />
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center ml-4">
+                      <div className="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center ml-4">
                         <i className="fas fa-hourglass-half text-slate-600 text-xs" />
                       </div>
                     )}
@@ -246,7 +246,7 @@ export const HandoverDetailsModal: React.FC<HandoverDetailsModalProps> = ({
           )}
 
           {/* Footer Metadata */}
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-white/10">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-white/5">
             <div className="flex items-center space-x-6">
               <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
                 System Artifact: <span className="text-slate-400 font-mono">DH-{handover.id.slice(0, 8).toUpperCase()}</span>

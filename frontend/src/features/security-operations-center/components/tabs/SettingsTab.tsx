@@ -95,7 +95,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Recording Quality</label>
               <select
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.recordingQuality}
                 onChange={(e) => handleChange('recordingQuality', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -108,7 +108,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Archive Period</label>
               <select
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.recordingDuration}
                 onChange={(e) => handleChange('recordingDuration', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -121,7 +121,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Motion Sensitivity</label>
               <select
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.motionSensitivity}
                 onChange={(e) => handleChange('motionSensitivity', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -134,7 +134,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Retention Policy</label>
               <select
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.storageRetention}
                 onChange={(e) => handleChange('storageRetention', e.target.value)}
                 disabled={!canUpdateSettings}

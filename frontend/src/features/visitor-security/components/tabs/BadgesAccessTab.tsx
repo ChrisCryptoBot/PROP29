@@ -90,7 +90,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
             variant="outline"
             size="sm"
             disabled={loading.hardwareDevices}
-            className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+            className="text-[9px] font-black uppercase tracking-widest border-white/5 text-slate-300 hover:bg-white/5"
           >
             <i className={cn("fas fa-sync-alt mr-1", loading.hardwareDevices && "animate-spin")} />
             Refresh Hardware
@@ -212,7 +212,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
               icon="fas fa-id-badge"
               title="No Active Credentials in Registry"
               description="Security credentials are only generated for personnel with an active check-in status."
-              className="bg-black/20 border-dashed border-2 border-white/10"
+              className="bg-black/20 border-dashed border-2 border-white/5"
             />
           ) : (
             <div className="space-y-4 mt-4">

@@ -19,7 +19,7 @@ const TeamChatContent: React.FC = () => {
                 <div className="flex space-x-3">
                     <Button
                         onClick={() => setShowSettings(true)}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/10 font-black uppercase tracking-widest text-[10px]"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/5 font-black uppercase tracking-widest text-[10px]"
                         aria-label="Chat Settings"
                     >
                         <i className="fas fa-cog mr-2" />
@@ -36,7 +36,7 @@ const TeamChatContent: React.FC = () => {
                 </div>
             }
         >
-            <div className="h-[75vh] flex overflow-hidden glass-card rounded-2xl border border-white/10 relative">
+            <div className="h-[75vh] flex overflow-hidden glass-card rounded-2xl border border-white/5 relative">
                 <Sidebar />
                 <ChatArea />
             </div>

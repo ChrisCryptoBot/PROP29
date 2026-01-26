@@ -35,7 +35,7 @@ export const BulkImportModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full animate-in fade-in zoom-in duration-300">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl font-bold text-white">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
@@ -59,7 +59,7 @@ export const BulkImportModal: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="relative group border-2 border-dashed border-white/10 rounded-2xl p-12 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
+                        <div className="relative group border-2 border-dashed border-white/5 rounded-2xl p-12 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
                             <input
                                 type="file"
                                 accept=".csv"

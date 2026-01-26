@@ -45,7 +45,8 @@ function saveQueue(queue: QueuedCheckInEntry[]) {
     try {
         localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
     } catch (e) {
-        console.error('Failed to save check-in queue', e);
+        // Silently fail - queue persistence is best-effort
+        // ErrorHandlerService.handle would be too noisy for localStorage failures
     }
 }
 

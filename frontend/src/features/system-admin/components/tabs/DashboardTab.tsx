@@ -128,7 +128,7 @@ export const DashboardTab: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Recent Activity Feed */}
                 <div className="glass-card overflow-hidden border-white/5 shadow-2xl">
-                    <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+                    <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                         <h4 className="text-white font-black uppercase text-xs tracking-widest flex items-center">
                             <i className="fas fa-fingerprint mr-2 text-blue-400"></i>
                             Administrative Event Log
@@ -151,7 +151,7 @@ export const DashboardTab: React.FC = () => {
                             />
                         ) : (
                             recentActivity.map((activity) => (
-                                <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group">
+                                <div key={activity.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
                                     <div className="flex items-center space-x-4">
                                         <div className={`w-3 h-3 rounded-full shadow-sm ${activity.type === 'user_management' ? 'bg-blue-500' :
                                             activity.type === 'system' ? 'bg-green-500' :
@@ -171,7 +171,7 @@ export const DashboardTab: React.FC = () => {
 
                 {/* System Alerts Feed */}
                 <div className="glass-card overflow-hidden border-white/5 shadow-2xl">
-                    <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+                    <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
                         <h4 className="text-white font-black uppercase text-xs tracking-widest flex items-center">
                             <i className="fas fa-bell mr-2 text-amber-400"></i>
                             Security Notifications
@@ -194,7 +194,7 @@ export const DashboardTab: React.FC = () => {
                             />
                         ) : (
                             systemAlerts.map((alert) => (
-                                <div key={alert.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group">
+                                <div key={alert.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
                                     <div className="flex items-center space-x-4">
                                         <div className={cn(
                                             "w-10 h-10 rounded-xl flex items-center justify-center border shadow-inner transition-transform group-hover:scale-110",
@@ -243,7 +243,7 @@ const MetricCard: React.FC<{
                 "px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full border shadow-sm",
                 trend.includes('+') || trend.includes('Online') || trend.includes('Excellent') || trend.includes('Compliant')
                     ? "text-green-400 bg-green-500/10 border-green-500/20"
-                    : "text-slate-400 bg-white/5 border-white/10"
+                    : "text-slate-400 bg-white/5 border-white/5"
             )}>{trend}</span>
         </div>
         <div>
@@ -271,7 +271,7 @@ const ResourceCard: React.FC<{
 }> = ({ icon, label, value, status, detail, subDetail }) => (
     <div className="glass-card p-6 flex flex-col h-full hover:border-emerald-500/30 transition-all duration-300 group">
         <div className="flex items-start justify-between mb-6">
-            <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+            <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                 <i className={`fas ${icon} text-slate-300 text-xl`}></i>
             </div>
             <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-sm">{status}</span>

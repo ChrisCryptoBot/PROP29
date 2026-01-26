@@ -10,8 +10,8 @@ const AnalyticsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-black/20 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
-        <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+      <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
+        <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
           <h2 className="text-lg font-black text-white uppercase tracking-tighter flex items-center">
             <i className="fas fa-chart-bar mr-3 text-blue-500" />
             ENVIRONMENTAL ANALYTICS
@@ -30,7 +30,7 @@ const AnalyticsTab: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {Object.entries(analytics.sensorsByType).map(([type, count]) => (
-                <div key={type} className="group p-5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-center">
+                <div key={type} className="group p-5 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all text-center">
                   <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-3 transition-transform group-hover:scale-110">
                     {renderSensorIcon(type as SensorType, 20)}
                   </div>
@@ -48,7 +48,7 @@ const AnalyticsTab: React.FC = () => {
                 <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">SYSTEM HEALTH</h3>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
-              <div className="p-8 bg-white/5 border border-white/10 rounded-2xl relative overflow-hidden group hover:bg-white/[0.07] transition-all duration-500 shadow-2xl">
+              <div className="p-8 bg-white/5 border border-white/5 rounded-2xl relative overflow-hidden group hover:bg-white/[0.07] transition-all duration-500 shadow-2xl">
                 <div className="absolute -right-4 -top-4 w-32 h-32 bg-blue-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="flex items-center space-x-4 mb-8 relative z-10">
                   <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center text-blue-500 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
@@ -84,7 +84,7 @@ const AnalyticsTab: React.FC = () => {
                 <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">DATA FEED</h3>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
-              <div className="p-8 bg-white/5 border border-white/10 rounded-2xl relative overflow-hidden group hover:bg-white/[0.07] transition-all duration-500 shadow-2xl">
+              <div className="p-8 bg-white/5 border border-white/5 rounded-2xl relative overflow-hidden group hover:bg-white/[0.07] transition-all duration-500 shadow-2xl">
                 <div className="absolute -right-4 -top-4 w-32 h-32 bg-purple-500/10 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                 <div className="flex items-center space-x-4 mb-8 relative z-10">
                   <div className="w-12 h-12 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center text-purple-500 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">

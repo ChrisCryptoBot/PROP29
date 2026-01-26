@@ -34,7 +34,7 @@ const AnalyticsTabContent: React.FC = () => {
                     { label: 'Weekly Revenue', value: `$${analytics.revenue.thisWeek}`, icon: 'fa-calendar-week', color: 'from-blue-600/80 to-slate-900', secondary: 'text-blue-400' },
                     { label: 'Monthly Forecast', value: `$${analytics.revenue.thisMonth}`, icon: 'fa-calendar-alt', color: 'from-purple-600/80 to-slate-900', secondary: 'text-purple-400' }
                 ].map((stat, i) => (
-                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/10 transition-all duration-300 group">
+                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/5 transition-all duration-300 group">
                         <CardContent className="pt-6 px-6 pb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <div className={cn("w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-white/5", stat.color)}>
@@ -101,7 +101,7 @@ const AnalyticsTabContent: React.FC = () => {
                                         className="w-full bg-gradient-to-t from-indigo-600/20 to-indigo-500/40 border-t border-indigo-400/30 rounded-t-sm transition-all duration-500 group-hover:from-indigo-500/40 group-hover:to-indigo-400/60"
                                         style={{ height: `${(hour.occupancy / 100) * 100}%` }}
                                     >
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-white/10 px-1.5 py-0.5 rounded text-[8px] font-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-white/5 px-1.5 py-0.5 rounded text-[8px] font-black text-white opacity-0 group-hover:opacity-100 transition-opacity">
                                             {hour.occupancy}%
                                         </div>
                                     </div>

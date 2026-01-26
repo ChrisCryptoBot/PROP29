@@ -28,7 +28,7 @@ export const AddRoleModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl font-bold text-white">
                         <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center mr-3 border border-blue-500/30">
@@ -45,7 +45,7 @@ export const AddRoleModal: React.FC = () => {
                                 type="text"
                                 value={roleData.title}
                                 onChange={(e) => setRoleData({ ...roleData, title: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
                                 placeholder="e.g. System Auditor"
                             />
                         </div>
@@ -55,7 +55,7 @@ export const AddRoleModal: React.FC = () => {
                             <textarea
                                 value={roleData.description}
                                 onChange={(e) => setRoleData({ ...roleData, description: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner h-24 resize-none"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner h-24 resize-none"
                                 placeholder="Describe the scope of this role..."
                             />
                         </div>
@@ -66,7 +66,7 @@ export const AddRoleModal: React.FC = () => {
                                 <select
                                     value={roleData.badge}
                                     onChange={(e) => setRoleData({ ...roleData, badge: e.target.value })}
-                                    className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
+                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
                                 >
                                     <option value="Active" className="bg-slate-900">Active</option>
                                     <option value="Standard" className="bg-slate-900">Standard</option>
@@ -78,7 +78,7 @@ export const AddRoleModal: React.FC = () => {
                                 <select
                                     value={roleData.permissions}
                                     onChange={(e) => setRoleData({ ...roleData, permissions: e.target.value })}
-                                    className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
+                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
                                 >
                                     <option value="Read (25%)" className="bg-slate-900">Level 1 (25%)</option>
                                     <option value="Limited (50%)" className="bg-slate-900">Level 2 (50%)</option>

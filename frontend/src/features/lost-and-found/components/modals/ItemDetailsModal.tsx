@@ -86,8 +86,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-4">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl text-white">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
                             <i className={cn("text-lg", getCategoryIcon(category))} />
@@ -109,11 +109,11 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                         {/* Left Column - Item Details */}
                         <div className="space-y-6">
                             <div>
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Item Information</h3>
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Item Information</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between py-2 border-b border-white/5">
                                         <span className="text-sm text-slate-400">Category</span>
-                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded text-slate-300 bg-white/5 border border-white/10">{category}</span>
+                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded text-slate-300 bg-white/5 border border-white/5">{category}</span>
                                     </div>
                                     <div className="flex items-center justify-between py-2 border-b border-white/5">
                                         <span className="text-sm text-slate-400">Status</span>
@@ -159,16 +159,16 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/10 pb-2">Description</h3>
-                                <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/5 pb-2">Description</h3>
+                                <div className="p-4 bg-white/5 rounded-lg border border-white/5">
                                     <p className="text-sm text-slate-300 leading-relaxed italic">"{selectedItem.description}"</p>
                                 </div>
                             </div>
 
                             {selectedItem.qrCode && (
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/10 pb-2">QR Code</h3>
-                                    <div className="p-6 bg-white/5 border border-white/10 rounded-lg text-center">
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/5 pb-2">QR Code</h3>
+                                    <div className="p-6 bg-white/5 border border-white/5 rounded-lg text-center">
                                         <div className="w-32 h-32 bg-white p-2 rounded-lg flex items-center justify-center mx-auto mb-3 shadow-lg">
                                             <i className="fas fa-qrcode text-6xl text-slate-900" />
                                         </div>
@@ -184,8 +184,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                         <div className="space-y-6">
                             {selectedItem.guestInfo && (
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Guest Information</h3>
-                                    <Card className="glass-card border-white/10 bg-white/5">
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Guest Information</h3>
+                                    <Card className="glass-card border-white/5 bg-white/5">
                                         <CardContent className="p-4 space-y-3">
                                             <div className="flex items-center space-x-3">
                                                 <Avatar className="w-12 h-12 ring-2 ring-white/10">
@@ -198,7 +198,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                                                     <p className="text-sm text-slate-400">Room {selectedItem.guestInfo.room}</p>
                                                 </div>
                                             </div>
-                                            <div className="space-y-2 pt-3 border-t border-white/10">
+                                            <div className="space-y-2 pt-3 border-t border-white/5">
                                                 <div className="flex items-center space-x-2 text-sm">
                                                     <i className="fas fa-phone text-slate-500 w-4" />
                                                     <span className="text-slate-300">{selectedItem.guestInfo.phone}</span>
@@ -220,8 +220,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                             )}
 
                             <div>
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Notifications</h3>
-                                <Card className="glass-card border-white/10 bg-white/5">
+                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Notifications</h3>
+                                <Card className="glass-card border-white/5 bg-white/5">
                                     <CardContent className="p-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <span className="text-sm text-slate-400">Notifications Sent</span>
@@ -238,7 +238,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                                         {selectedItem.status === LostFoundStatus.FOUND && selectedItem.guestInfo && (
                                             <Button
                                                 variant="primary"
-                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20"
+                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold"
                                                 onClick={handleNotifyGuest}
                                                 disabled={loading.items}
                                             >
@@ -252,8 +252,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
 
                             {selectedItem.legalCompliance && (
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Legal Compliance</h3>
-                                    <Card className="glass-card border-white/10 bg-white/5">
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Legal Compliance</h3>
+                                    <Card className="glass-card border-white/5 bg-white/5">
                                         <CardContent className="p-4 space-y-2">
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-slate-400">Retention Period</span>
@@ -280,7 +280,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
 
                             {category === 'Weapons' && (
                                 <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Manager Approval</h3>
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Manager Approval</h3>
                                     {selectedItem.managerApproved === false ? (
                                         <Card className="bg-red-500/10 border-red-500/30">
                                             <CardContent className="p-4">
@@ -333,7 +333,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                                 {selectedItem.status === LostFoundStatus.FOUND && (
                                     <Button
                                         variant="primary"
-                                        className="w-full bg-green-600 hover:bg-green-500 text-white font-bold shadow-lg shadow-green-500/20"
+                                        className="w-full bg-green-600 hover:bg-green-500 text-white font-bold"
                                         onClick={handleClaimItem}
                                         disabled={loading.items}
                                     >
@@ -354,7 +354,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                                 )}
                                 <Button
                                     variant="outline"
-                                    className="w-full border-white/10 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
+                                    className="w-full border-white/5 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
                                     onClick={() => {
                                         // Print QR code functionality
                                         onClose();

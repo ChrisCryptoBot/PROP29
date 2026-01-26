@@ -14,7 +14,7 @@ export const AnalyticsTab: React.FC = () => {
   if (loading.metrics) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/10 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-600 rounded-full animate-spin" />
       </div>
     );
   }

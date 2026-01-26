@@ -15,8 +15,8 @@ export const PhotoUploadModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/10 mb-6 group cursor-pointer">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full animate-in fade-in zoom-in duration-300">
+                <CardHeader className="border-b border-white/5 mb-6 group cursor-pointer">
                     <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
                             <i className="fas fa-camera text-white" />
@@ -71,7 +71,7 @@ export const PhotoUploadModal: React.FC = () => {
                         </div>
 
                         {selectedIndividual.photoUrl && (
-                            <div className="mt-4 p-5 border border-white/10 rounded-2xl bg-white/5 flex items-center space-x-5 shadow-inner">
+                            <div className="mt-4 p-5 border border-white/5 rounded-2xl bg-white/5 flex items-center space-x-5 shadow-inner">
                                 <div className="w-16 h-16 overflow-hidden rounded-xl shadow-2xl border border-white/5">
                                     <img
                                         src={selectedIndividual.photoUrl}
@@ -90,7 +90,7 @@ export const PhotoUploadModal: React.FC = () => {
                             <Button
                                 variant="outline"
                                 onClick={() => setShowPhotoUploadModal(false)}
-                                className="px-8 py-3 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-white border-white/10 hover:border-white/20 transition-all"
+                                className="px-8 py-3 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-white border-white/5 hover:border-white/20 transition-all"
                             >
                                 Cancel
                             </Button>

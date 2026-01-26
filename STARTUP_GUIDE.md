@@ -9,12 +9,19 @@
 
 ## ⚡ Quick Start (1 Command)
 
-```bash
+### Option 1: Enhanced PowerShell Script (Recommended)
+```powershell
 # Run this from project root:
-npm run dev:all
+.\start-dev.ps1
 ```
 
-This will start both backend and frontend automatically.
+### Option 2: NPM Script
+```bash
+# Run this from project root:
+npm run dev
+```
+
+Both will start both backend and frontend automatically.
 
 ---
 
@@ -161,5 +168,7 @@ If issues persist:
 
 ---
 
-**Last Updated**: 2026-01-24
+**Last Updated**: 2026-01-26
 **Version**: 2.9.0
+
+**Note:** `start.ps1` and `start.bat` have been replaced by `start-dev.ps1` (renamed to `.old`). Use `start-dev.ps1` or `npm run dev` instead.

@@ -5,11 +5,15 @@ import { Badge } from '../../../../components/UI/Badge';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { Avatar } from '../../../../components/UI/Avatar';
 import { SearchBar } from '../../../../components/UI/SearchBar';
+import { Select } from '../../../../components/UI/Select';
 import { OfficerMatchingPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
-import { showSuccess, showError } from '../../../../utils/toast';
+import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { CreateOfficerModal } from '../modals/CreateOfficerModal';
 import { DeploymentConfirmationModal } from '../modals/DeploymentConfirmationModal';
+import { ConfirmDeleteModal } from '../modals/ConfirmDeleteModal';
 import { PatrolEndpoint } from '../../../../services/PatrolEndpoint';
 import { PatrolOfficer, UpcomingPatrol } from '../../types';
 
@@ -30,6 +34,9 @@ export const DeploymentTab: React.FC = () => {
     const [deployOfficer, setDeployOfficer] = useState<PatrolOfficer | null>(null);
     const [deployPatrol, setDeployPatrol] = useState<UpcomingPatrol | null>(null);
     const [isDeployConfirming, setIsDeployConfirming] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deletingOfficerId, setDeletingOfficerId] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const requestDeploy = (officer: PatrolOfficer, patrol: UpcomingPatrol) => {
         if (isOffline) {
@@ -59,15 +66,45 @@ export const DeploymentTab: React.FC = () => {
         setShowCreateOfficerModal(true);
     };
 
-    const handleDeleteOfficer = async (officerId: string) => {
-        if (confirm('Are you sure you want to delete this officer? This action cannot be undone.')) {
-            try {
-                await PatrolEndpoint.deleteOfficer(officerId);
-                setOfficers(prev => prev.filter(officer => officer.id !== officerId));
-                showSuccess('Officer removed successfully');
-            } catch (e) {
-                showError('Failed to delete officer');
+    const handleDeleteOfficer = (officerId: string) => {
+        setDeletingOfficerId(officerId);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDeleteOfficer = async () => {
+        if (!deletingOfficerId) return;
+        setIsDeleting(true);
+        const toastId = showLoading('Deleting officer...');
+        
+        // Check if officer is assigned to active patrol
+        const officer = officers.find(o => o.id === deletingOfficerId);
+        if (officer && officer.status === 'on-duty' && officer.currentPatrol) {
+            const activePatrol = upcomingPatrols.find(p => p.id === officer.currentPatrol && p.status === 'in-progress');
+            if (activePatrol) {
+                dismissLoadingAndShowError(toastId, 'Cannot delete officer assigned to active patrol. Reassign or complete patrol first.');
+                setIsDeleting(false);
+                return;
             }
+        }
+
+        try {
+            await retryWithBackoff(
+                () => PatrolEndpoint.deleteOfficer(deletingOfficerId),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 5000
+                }
+            );
+            setOfficers(prev => prev.filter(officer => officer.id !== deletingOfficerId));
+            dismissLoadingAndShowSuccess(toastId, 'Officer removed successfully');
+            setShowDeleteConfirm(false);
+            setDeletingOfficerId(null);
+        } catch (e) {
+            dismissLoadingAndShowError(toastId, 'Failed to delete officer. Please try again.');
+            ErrorHandlerService.handle(e, 'deleteOfficer');
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -130,9 +167,30 @@ export const DeploymentTab: React.FC = () => {
                         ).length
                     }))}
                     onSelectOfficer={(officerId) => {
-                        if (!officerId) { showError('Invalid officer ID'); return; }
+                        if (!officerId) {
+                            showError('Invalid officer ID');
+                            return;
+                        }
                         const officer = officers.find(o => o.id === officerId);
-                        if (!officer) { showError('Officer not found'); return; }
+                        if (!officer) {
+                            showError('Officer not found');
+                            return;
+                        }
+                        // Validate officer is available
+                        if (officer.status === 'on-duty') {
+                            showError('Officer is already on duty');
+                            return;
+                        }
+                        if (officer.status === 'unavailable') {
+                            showError('Officer is unavailable');
+                            return;
+                        }
+                        // Validate patrol is still scheduled
+                        const currentPatrol = upcomingPatrols.find(p => p.id === nextScheduledPatrol.id);
+                        if (!currentPatrol || currentPatrol.status !== 'scheduled') {
+                            showError('Patrol is no longer available for deployment');
+                            return;
+                        }
                         requestDeploy(officer, nextScheduledPatrol);
                     }}
                 />
@@ -179,17 +237,17 @@ export const DeploymentTab: React.FC = () => {
                             />
                         </div>
                         <div className="md:w-64">
-                            <select
+                            <Select
                                 value={officerStatusFilter}
-                                onChange={(e) => setOfficerStatusFilter(e.target.value as any)}
-                                className="w-full px-4 py-2 border border-white/5 rounded-xl text-xs font-black uppercase tracking-widest bg-slate-900/50 text-slate-300 focus:ring-0 focus:border-indigo-500/40 h-11 transition-all"
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setOfficerStatusFilter(e.target.value as 'all' | 'on-duty' | 'off-duty' | 'break' | 'unavailable')}
+                                className="h-11"
                             >
-                                <option value="all" className="bg-slate-900">ALL STATUSES</option>
-                                <option value="on-duty" className="bg-slate-900">ON DUTY</option>
-                                <option value="off-duty" className="bg-slate-900">OFF DUTY</option>
-                                <option value="break" className="bg-slate-900">MANDATORY BREAK</option>
-                                <option value="unavailable" className="bg-slate-900">UNAVAILABLE</option>
-                            </select>
+                                <option value="all">ALL STATUSES</option>
+                                <option value="on-duty">ON DUTY</option>
+                                <option value="off-duty">OFF DUTY</option>
+                                <option value="break">MANDATORY BREAK</option>
+                                <option value="unavailable">UNAVAILABLE</option>
+                            </Select>
                         </div>
                     </div>
                     {/* List */}
@@ -204,7 +262,7 @@ export const DeploymentTab: React.FC = () => {
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-3xl rounded-full -mr-12 -mt-12 group-hover:bg-indigo-500/10 transition-all"></div>
 
                                         <div className="flex items-center space-x-4 mb-5">
-                                            <Avatar className="h-14 w-14 border border-white/10 shadow-2xl rounded-xl overflow-hidden ring-4 ring-indigo-500/5 group-hover:ring-indigo-500/15 transition-all">
+                                            <Avatar className="h-14 w-14 border border-white/5 shadow-2xl rounded-xl overflow-hidden ring-4 ring-indigo-500/5 group-hover:ring-indigo-500/15 transition-all">
                                                 <div className="flex items-center justify-center h-full w-full bg-gradient-to-br from-blue-600/80 to-slate-900 text-white text-base font-black shadow-inner">
                                                     {officer.avatar || '?'}
                                                 </div>
@@ -294,6 +352,15 @@ export const DeploymentTab: React.FC = () => {
                 patrol={deployPatrol}
                 onConfirm={handleConfirmDeploy}
                 isConfirming={isDeployConfirming}
+            />
+            <ConfirmDeleteModal
+                isOpen={showDeleteConfirm}
+                onClose={() => { setShowDeleteConfirm(false); setDeletingOfficerId(null); }}
+                onConfirm={confirmDeleteOfficer}
+                title="Delete Officer"
+                message="Are you sure you want to delete this officer?"
+                itemName={deletingOfficerId ? officers.find(o => o.id === deletingOfficerId)?.name : undefined}
+                isDeleting={isDeleting}
             />
         </div >
     );

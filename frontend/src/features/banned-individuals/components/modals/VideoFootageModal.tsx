@@ -14,8 +14,8 @@ export const VideoFootageModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/10 pb-4 mb-6">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
+                <CardHeader className="border-b border-white/5 pb-4 mb-6">
                     <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
                             <i className="fas fa-video text-white text-lg" />
@@ -25,7 +25,7 @@ export const VideoFootageModal: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
-                        <div className="relative bg-black rounded-xl overflow-hidden border border-white/10">
+                        <div className="relative bg-black rounded-xl overflow-hidden border border-white/5">
                             <video
                                 src={selectedVideoUrl}
                                 controls

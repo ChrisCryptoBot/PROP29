@@ -283,7 +283,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-6 border-t border-white/10">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-6 border-t border-white/5">
                         <Button
                             variant="outline"
                             onClick={handleAssignToMe}
@@ -315,7 +315,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-white/10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-white/5">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Evidence</h4>
@@ -371,7 +371,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                                         <select
                                             value={evidenceType}
                                             onChange={(event) => setEvidenceType(event.target.value as 'photos' | 'videos' | 'documents' | 'cctv_clips')}
-                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                         >
                                             <option value="photos">Photos</option>
                                             <option value="videos">Videos</option>
@@ -386,7 +386,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                                                 type="text"
                                                 value={evidenceUrl}
                                                 onChange={(event) => setEvidenceUrl(event.target.value)}
-                                                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+                                                className="flex-1 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                                                 placeholder="https://..."
                                             />
                                             <input
@@ -420,7 +420,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                                             />
                                             <label
                                                 htmlFor="evidence-file-upload"
-                                                className="px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white cursor-pointer hover:bg-white/10 transition-colors flex items-center"
+                                                className="px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white cursor-pointer hover:bg-white/10 transition-colors flex items-center"
                                             >
                                                 <i className="fas fa-upload mr-2" />
                                                 Upload

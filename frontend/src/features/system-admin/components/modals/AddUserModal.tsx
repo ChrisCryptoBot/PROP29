@@ -16,7 +16,7 @@ export const AddUserModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl font-bold text-white">
                         <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center mr-3 border border-blue-500/30">
@@ -35,7 +35,7 @@ export const AddUserModal: React.FC = () => {
                                     type="text"
                                     value={newUser.name}
                                     onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                                    className="w-full pl-12 pr-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
+                                    className="w-full pl-12 pr-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
                                     placeholder="e.g. Alexander Pierce"
                                 />
                             </div>
@@ -49,7 +49,7 @@ export const AddUserModal: React.FC = () => {
                                     type="email"
                                     value={newUser.email}
                                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                    className="w-full pl-12 pr-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
+                                    className="w-full pl-12 pr-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
                                     placeholder="admin@proper.security"
                                 />
                             </div>
@@ -61,7 +61,7 @@ export const AddUserModal: React.FC = () => {
                                 <select
                                     value={newUser.role}
                                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                                    className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
+                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
                                 >
                                     <option value="admin" className="bg-slate-900">Administrator</option>
                                     <option value="user" className="bg-slate-900">Staff Member</option>
@@ -73,7 +73,7 @@ export const AddUserModal: React.FC = () => {
                                 <select
                                     value={newUser.status}
                                     onChange={(e) => setNewUser({ ...newUser, status: e.target.value as any })}
-                                    className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
+                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
                                 >
                                     <option value="active" className="bg-slate-900">Active</option>
                                     <option value="inactive" className="bg-slate-900">Inactive</option>

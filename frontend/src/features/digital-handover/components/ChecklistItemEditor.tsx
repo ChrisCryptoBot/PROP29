@@ -74,7 +74,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
             type="text"
             value={currentItem.title}
             onChange={(e) => setCurrentItem({ ...currentItem, title: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 text-[color:var(--text-main)] placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all"
+            className="w-full px-3 py-2 border border-white/5 rounded-lg bg-white/5 text-[color:var(--text-main)] placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all"
             placeholder="Enter checklist item title"
           />
         </div>
@@ -86,7 +86,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
             onChange={(e) =>
               setCurrentItem({ ...currentItem, category: e.target.value as ChecklistCategory })
             }
-            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 text-[color:var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all cursor-pointer"
+            className="w-full px-3 py-2 border border-white/5 rounded-lg bg-white/5 text-[color:var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all cursor-pointer"
           >
             {CHECKLIST_CATEGORIES.map((cat: ChecklistCategory) => (
               <option key={cat} value={cat} className="bg-slate-900 text-white">
@@ -103,7 +103,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
             onChange={(e) =>
               setCurrentItem({ ...currentItem, priority: e.target.value as ChecklistItemPriority })
             }
-            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 text-[color:var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all cursor-pointer"
+            className="w-full px-3 py-2 border border-white/5 rounded-lg bg-white/5 text-[color:var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all cursor-pointer"
           >
             {CHECKLIST_ITEM_PRIORITIES.map((priority: ChecklistItemPriority) => (
               <option key={priority} value={priority} className="bg-slate-900 text-white">
@@ -119,7 +119,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
             type="text"
             value={currentItem.assignedTo || ''}
             onChange={(e) => setCurrentItem({ ...currentItem, assignedTo: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 text-[color:var(--text-main)] placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all"
+            className="w-full px-3 py-2 border border-white/5 rounded-lg bg-white/5 text-[color:var(--text-main)] placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all"
             placeholder="Enter assigned person"
           />
         </div>
@@ -129,7 +129,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
           <textarea
             value={currentItem.description || ''}
             onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
-            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 text-[color:var(--text-main)] placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all"
+            className="w-full px-3 py-2 border border-white/5 rounded-lg bg-white/5 text-[color:var(--text-main)] placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:border-white/20 transition-all"
             rows={2}
             placeholder="Enter description"
           />
@@ -153,7 +153,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
           {items.map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+              className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 transition-colors"
             >
               <div>
                 <div className="font-medium text-[color:var(--text-main)] text-sm">{item.title}</div>
@@ -176,7 +176,7 @@ export const ChecklistItemEditor: React.FC<ChecklistItemEditorProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => removeItem(index)}
-                className="border-white/10 text-[color:var(--text-sub)] hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
+                className="border-white/5 text-[color:var(--text-sub)] hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
               >
                 <i className="fas fa-trash" />
               </Button>

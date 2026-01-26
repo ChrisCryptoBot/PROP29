@@ -45,7 +45,6 @@ from api.visitor_endpoints import router as visitor_router
 from api.access_control_endpoints import router as access_control_router
 from api.lost_found_endpoints import router as lost_found_router
 from api.package_endpoints import router as package_router
-from api.evacuation_endpoints import router as evacuation_router
 from api.parking_endpoints import router as parking_router
 from api.security_operations_endpoints import router as security_operations_router
 from api.iot_environmental_endpoints import router as iot_environmental_router
@@ -148,7 +147,6 @@ api_router.include_router(access_control_router)
 api_router.include_router(lost_found_router)
 api_router.include_router(package_router)
 api_router.include_router(security_operations_router)
-api_router.include_router(evacuation_router)
 api_router.include_router(iot_environmental_router)
 api_router.include_router(hardware_control_router)
 api_router.include_router(parking_router)

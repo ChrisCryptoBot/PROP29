@@ -192,7 +192,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               onChange={(e) => updateFormData({ name: e.target.value })}
               className={cn(
                 'w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500',
-                errors.name ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-blue-500/20'
+                errors.name ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20'
               )}
               placeholder="e.g. John Smith"
               aria-label="User full name"
@@ -209,7 +209,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               onChange={(e) => updateFormData({ email: e.target.value })}
               className={cn(
                 'w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500',
-                errors.email ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-blue-500/20'
+                errors.email ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20'
               )}
               placeholder="user@example.com"
               aria-label="User email address"
@@ -227,7 +227,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 onChange={(e) => updateFormData({ department: e.target.value })}
                 className={cn(
                   'w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500',
-                  errors.department ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-blue-500/20'
+                  errors.department ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20'
                 )}
                 placeholder="e.g. Security"
                 aria-label="User department"
@@ -241,7 +241,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 id="user-phone"
                 value={formData.phone || ''}
                 onChange={(e) => updateFormData({ phone: e.target.value })}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                 placeholder="+1 555 000 0000"
                 aria-label="User phone number"
               />
@@ -255,7 +255,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               id="user-employee-id"
               value={formData.employeeId || ''}
               onChange={(e) => updateFormData({ employeeId: e.target.value })}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
               placeholder="e.g. EMP-001"
               aria-label="Employee ID"
             />
@@ -271,7 +271,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 id="user-role"
                 value={formData.role}
                 onChange={(e) => updateFormData({ role: e.target.value as UserRole })}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900"
               >
                 {AVAILABLE_ROLES.map(role => (
                   <option key={role} value={role}>{role}</option>
@@ -284,7 +284,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 id="user-status"
                 value={formData.status}
                 onChange={(e) => updateFormData({ status: e.target.value as UserStatus })}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900"
               >
                 {AVAILABLE_STATUSES.map(status => (
                   <option key={status} value={status}>{status}</option>
@@ -297,7 +297,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 id="user-access-level"
                 value={formData.accessLevel}
                 onChange={(e) => updateFormData({ accessLevel: e.target.value as AccessLevel })}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900"
               >
                 {AVAILABLE_ACCESS_LEVELS.map(level => (
                   <option key={level} value={level}>{level}</option>
@@ -337,7 +337,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   id="schedule-start-time"
                   value={formData.accessSchedule.startTime}
                   onChange={(e) => updateFormData({ accessSchedule: { ...formData.accessSchedule!, startTime: e.target.value } })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                   aria-label="Access schedule start time"
                 />
               </div>
@@ -348,7 +348,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   id="schedule-end-time"
                   value={formData.accessSchedule.endTime}
                   onChange={(e) => updateFormData({ accessSchedule: { ...formData.accessSchedule!, endTime: e.target.value } })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                   aria-label="Access schedule end time"
                 />
               </div>
@@ -367,7 +367,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               type="checkbox"
               checked={formData.autoRevokeAtCheckout || false}
               onChange={(e) => updateFormData({ autoRevokeAtCheckout: e.target.checked })}
-              className="h-4 w-4 rounded border-white/10 bg-white/5 focus:ring-2 focus:ring-blue-500/20"
+              className="h-4 w-4 rounded border-white/5 bg-white/5 focus:ring-2 focus:ring-blue-500/20"
             />
           </label>
         </div>

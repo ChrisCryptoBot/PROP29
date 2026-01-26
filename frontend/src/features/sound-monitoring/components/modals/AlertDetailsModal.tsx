@@ -77,13 +77,13 @@ export const AlertDetailsModal: React.FC<AlertDetailsModalProps> = ({
 
             {/* Status and Severity */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
+              <div className="bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-2">Status</span>
                 <span className={cn("inline-block px-3 py-1 text-[10px] font-black rounded uppercase tracking-widest border shadow-sm", getStatusBadgeClass(alert.status))}>
                   {alert.status}
                 </span>
               </div>
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 shadow-inner">
+              <div className="bg-white/5 p-4 rounded-xl border border-white/5 shadow-inner">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-2">Severity</span>
                 <span className={cn("inline-block px-3 py-1 text-[10px] font-black rounded uppercase tracking-widest border shadow-sm", getSeverityBadgeClass(alert.severity))}>
                   {alert.severity}
@@ -138,7 +138,7 @@ export const AlertDetailsModal: React.FC<AlertDetailsModalProps> = ({
           <Button
             variant="outline"
             onClick={onClose}
-            className="border-white/10 hover:bg-white/5 text-slate-400 font-black uppercase tracking-widest px-8"
+            className="border-white/5 hover:bg-white/5 text-slate-400 font-black uppercase tracking-widest px-8"
           >
             Close
           </Button>

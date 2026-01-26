@@ -105,7 +105,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                     onConfigChange({ defaultTimeout: parseInt(e.target.value) || 60 });
                     setIsFormDirty(true);
                   }}
-                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                 />
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Standard session duration (1-1440 minutes)</p>
               </div>
@@ -124,7 +124,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                     onConfigChange({ temporaryAccessTimeout: parseInt(e.target.value) || 30 });
                     setIsFormDirty(true);
                   }}
-                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                 />
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Temporary access window (5-1440 minutes)</p>
               </div>
@@ -143,7 +143,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                     onConfigChange({ emergencyTimeout: parseInt(e.target.value) || 30 });
                     setIsFormDirty(true);
                   }}
-                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                 />
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Auto relock after emergency (1-1440 minutes)</p>
               </div>
@@ -162,7 +162,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                     onConfigChange({ visitorTimeout: parseInt(e.target.value) || 24 });
                     setIsFormDirty(true);
                   }}
-                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                 />
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Guest access duration (1-168 hours)</p>
               </div>
@@ -211,7 +211,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                         onConfigChange({ warningDuration: parseInt(e.target.value) || 5 });
                         setIsFormDirty(true);
                       }}
-                      className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                      className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                     />
                   </div>
                 )}

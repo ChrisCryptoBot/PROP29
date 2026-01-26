@@ -246,7 +246,7 @@ export const DashboardTab: React.FC = React.memo(() => {
               icon="fas fa-users-slash"
               title="No Active Visitor Records"
               description="Initialize a new registration to begin security monitoring of on-site personnel."
-              className="bg-black/20 border-dashed border-2 border-white/10"
+              className="bg-black/20 border-dashed border-2 border-white/5"
               action={{
                 label: "REGISTER VISITOR",
                 onClick: () => setShowRegisterModal(true),
@@ -269,7 +269,7 @@ export const DashboardTab: React.FC = React.memo(() => {
                     className="flex items-center justify-between p-4 rounded-xl border border-[color:var(--border-subtle)]/10 bg-[color:var(--console-dark)]/20 hover:bg-[color:var(--border-subtle)]/10 hover:border-blue-500/30 transition-all group"
                   >
                     <div className="flex items-center space-x-4">
-                      <Avatar className="bg-gradient-to-br from-blue-700 to-indigo-900 border border-white/10">
+                      <Avatar className="bg-gradient-to-br from-blue-700 to-indigo-900 border border-white/5">
                         {visitor.first_name[0]}{visitor.last_name[0]}
                       </Avatar>
                       <div>

@@ -266,7 +266,7 @@ export const ReviewQueueTab: React.FC = () => {
                                     variant="outline"
                                     onClick={selectAllIncidents}
                                     disabled={selectedIncidentIds.size === pendingIncidents.length}
-                                    className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+                                    className="text-[9px] font-black uppercase tracking-widest border-white/5 text-slate-300 hover:bg-white/5"
                                 >
                                     <i className="fas fa-check-square mr-1" />
                                     Select All
@@ -276,7 +276,7 @@ export const ReviewQueueTab: React.FC = () => {
                                     variant="outline"
                                     onClick={deselectAllIncidents}
                                     disabled={selectedIncidentIds.size === 0}
-                                    className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+                                    className="text-[9px] font-black uppercase tracking-widest border-white/5 text-slate-300 hover:bg-white/5"
                                 >
                                     <i className="fas fa-square mr-1" />
                                     Deselect All
@@ -290,7 +290,7 @@ export const ReviewQueueTab: React.FC = () => {
                             
                             {/* Enhanced Bulk Actions - Only show when items selected */}
                             {selectedIncidentIds.size > 0 && (
-                                <div className="flex gap-2 pl-4 border-l border-white/10">
+                                <div className="flex gap-2 pl-4 border-l border-white/5">
                                     <Button
                                         size="sm"
                                         variant="outline"

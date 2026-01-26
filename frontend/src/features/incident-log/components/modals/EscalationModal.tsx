@@ -86,7 +86,7 @@ export const EscalationModal: React.FC<EscalationModalProps> = ({ isOpen, onClos
                             id="escalation-reason"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            className="w-full p-3 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 resize-none"
+                            className="w-full p-3 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 resize-none"
                             rows={4}
                             placeholder="Enter reason for escalation..."
                         />
@@ -105,7 +105,7 @@ export const EscalationModal: React.FC<EscalationModalProps> = ({ isOpen, onClos
                                             if (e.target.checked) setNotifyRecipients(prev => [...prev, recipient]);
                                             else setNotifyRecipients(prev => prev.filter(r => r !== recipient));
                                         }}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20 mr-3"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20 mr-3"
                                     />
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">{recipient}</span>
                                 </label>

@@ -174,9 +174,9 @@ export const UsersTab: React.FC = () => {
                                     Showing <span className="font-medium text-[color:var(--text-main)]">1</span> to <span className="font-medium text-[color:var(--text-main)]">{filteredUsers.length}</span> of <span className="font-medium text-[color:var(--text-main)]">{filteredUsers.length}</span> users
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <Button size="sm" variant="glass" className="text-[color:var(--text-sub)] border-white/10" disabled>Previous</Button>
+                                    <Button size="sm" variant="glass" className="text-[color:var(--text-sub)] border-white/5" disabled>Previous</Button>
                                     <Button size="sm" variant="primary">1</Button>
-                                    <Button size="sm" variant="glass" className="text-[color:var(--text-sub)] border-white/10" disabled>Next</Button>
+                                    <Button size="sm" variant="glass" className="text-[color:var(--text-sub)] border-white/5" disabled>Next</Button>
                                 </div>
                             </div>
                         </div>

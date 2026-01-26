@@ -133,6 +133,51 @@ def init_db():
                             text(f"ALTER TABLE patrol_settings ADD COLUMN {column_name} {column_type}")
                         )
                         logger.info("Added %s column to patrol_settings table", column_name)
+                
+                # Add source tracking to guest_safety_incidents
+                try:
+                    guest_safety_columns = connection.execute(text("PRAGMA table_info(guest_safety_incidents)")).fetchall()
+                    guest_safety_names = {row[1] for row in guest_safety_columns}
+                    if "source" not in guest_safety_names:
+                        connection.execute(text("ALTER TABLE guest_safety_incidents ADD COLUMN source VARCHAR(50) DEFAULT 'MANAGER'"))
+                        logger.info("Added source column to guest_safety_incidents table")
+                    if "source_metadata" not in guest_safety_names:
+                        connection.execute(text("ALTER TABLE guest_safety_incidents ADD COLUMN source_metadata TEXT"))
+                        logger.info("Added source_metadata column to guest_safety_incidents table")
+                    connection.commit()
+                except Exception as e:
+                    logger.warning(f"Could not add source columns to guest_safety_incidents: {e}")
+                
+                # Create guest_messages table if it doesn't exist
+                try:
+                    tables = connection.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name='guest_messages'")).fetchall()
+                    if not tables:
+                        connection.execute(text("""
+                            CREATE TABLE guest_messages (
+                                message_id VARCHAR(36) PRIMARY KEY,
+                                property_id VARCHAR(36) NOT NULL,
+                                incident_id VARCHAR(36),
+                                guest_id VARCHAR(255),
+                                guest_name VARCHAR(255),
+                                room_number VARCHAR(50),
+                                message_text TEXT NOT NULL,
+                                message_type VARCHAR(50) DEFAULT 'request',
+                                direction VARCHAR(20) DEFAULT 'guest_to_staff',
+                                is_read BOOLEAN DEFAULT 0,
+                                read_at DATETIME,
+                                read_by VARCHAR(36),
+                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                                source VARCHAR(50) DEFAULT 'GUEST_APP',
+                                source_metadata TEXT,
+                                FOREIGN KEY (property_id) REFERENCES properties(property_id) ON DELETE CASCADE,
+                                FOREIGN KEY (incident_id) REFERENCES guest_safety_incidents(incident_id) ON DELETE CASCADE,
+                                FOREIGN KEY (read_by) REFERENCES users(user_id)
+                            )
+                        """))
+                        connection.commit()
+                        logger.info("Created guest_messages table")
+                except Exception as e:
+                    logger.warning(f"Could not create guest_messages table: {e}")
         
         # Seed basic admin user for development
         db = SessionLocal()

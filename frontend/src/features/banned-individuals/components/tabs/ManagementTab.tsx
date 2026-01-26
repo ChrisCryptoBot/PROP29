@@ -34,7 +34,7 @@ export const ManagementTab: React.FC = () => {
             case 'MEDIUM': return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
             case 'HIGH': return 'text-orange-400 bg-orange-500/20 border-orange-500/30';
             case 'CRITICAL': return 'text-red-400 bg-red-500/20 border-red-500/30';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
@@ -43,16 +43,16 @@ export const ManagementTab: React.FC = () => {
             case 'TEMPORARY': return 'text-blue-400 bg-blue-500/20 border-blue-500/30';
             case 'PERMANENT': return 'text-red-400 bg-red-500/20 border-red-500/30';
             case 'CONDITIONAL': return 'text-amber-400 bg-amber-500/20 border-amber-500/30';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
     const getStatusBadgeClass = (status: string): string => {
         switch (status) {
             case 'ACTIVE': return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
-            case 'EXPIRED': return 'text-slate-400 bg-white/5 border-white/10';
+            case 'EXPIRED': return 'text-slate-400 bg-white/5 border-white/5';
             case 'REMOVED': return 'text-red-400 bg-red-500/20 border-red-500/30';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
@@ -97,7 +97,7 @@ export const ManagementTab: React.FC = () => {
                 return {
                     icon: 'fa-user-shield',
                     label: 'Manager',
-                    color: 'text-slate-400 bg-white/5 border-white/10',
+                    color: 'text-slate-400 bg-white/5 border-white/5',
                     tooltip: 'Manually created by manager'
                 };
         }
@@ -173,7 +173,7 @@ export const ManagementTab: React.FC = () => {
                                     "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all",
                                     filterStatus === status
                                         ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg border-none"
-                                        : "border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                                        : "border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                                 )}
                             >
                                 {status === 'ALL' ? 'All Records' : status}
@@ -192,7 +192,7 @@ export const ManagementTab: React.FC = () => {
                         <select
                             value={filterRiskLevel}
                             onChange={(e) => setFilterRiskLevel(e.target.value)}
-                            className="px-4 py-2 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-black uppercase tracking-widest text-white text-[10px] cursor-pointer appearance-none"
+                            className="px-4 py-2 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-black uppercase tracking-widest text-white text-[10px] cursor-pointer appearance-none"
                         >
                             <option value="ALL" className="bg-[#1a1c1e] text-white">All Risks</option>
                             <option value="LOW" className="bg-[#1a1c1e] text-white">Low Risk</option>
@@ -285,7 +285,7 @@ export const ManagementTab: React.FC = () => {
                                                 handleToggleSelection(individual.id);
                                             }}
                                             onClick={(e) => e.stopPropagation()}
-                                            className="w-5 h-5 accent-blue-600 cursor-pointer rounded border-white/10 bg-white/5"
+                                            className="w-5 h-5 accent-blue-600 cursor-pointer rounded border-white/5 bg-white/5"
                                         />
                                         <div className="relative">
                                             <div className="w-14 h-14 bg-gradient-to-br from-slate-400 to-slate-500 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
@@ -347,7 +347,7 @@ export const ManagementTab: React.FC = () => {
                                                 setSelectedIndividual(individual);
                                                 setShowPhotoUploadModal(true);
                                             }}
-                                            className="text-[color:var(--text-sub)] border-white/10 hover:border-blue-500/50 hover:text-blue-400 rounded-lg px-3"
+                                            className="text-[color:var(--text-sub)] border-white/5 hover:border-blue-500/50 hover:text-blue-400 rounded-lg px-3"
                                             disabled={!hasManagementAccess}
                                         >
                                             <i className="fas fa-fingerprint mr-2" />

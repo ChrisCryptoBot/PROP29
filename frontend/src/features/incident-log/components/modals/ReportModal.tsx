@@ -155,7 +155,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                                     type="date"
                                     value={customStartDate}
                                     onChange={(e) => setCustomStartDate(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                 />
                             </div>
                             <div>
@@ -164,7 +164,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                                     type="date"
                                     value={customEndDate}
                                     onChange={(e) => setCustomEndDate(e.target.value)}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                 />
                             </div>
                         </div>

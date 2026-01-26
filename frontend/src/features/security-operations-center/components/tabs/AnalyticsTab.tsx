@@ -121,7 +121,7 @@ export const AnalyticsTab: React.FC = () => {
                   "font-black uppercase tracking-widest text-[10px] px-4 h-8 transition-all shadow-none",
                   timeRange === range
                     ? "bg-white/10 border-white/20 text-white"
-                    : "border-white/10 text-slate-400 hover:bg-white/5 hover:text-white"
+                    : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
                 )}
                 onClick={() => setTimeRange(range)}
               >
@@ -138,7 +138,7 @@ export const AnalyticsTab: React.FC = () => {
               "font-black uppercase tracking-widest text-[10px] px-4 h-8 transition-all shadow-none",
               refreshInterval 
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                : "border-white/10 text-slate-400 hover:bg-white/5 hover:text-white"
+                : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
             )}
             onClick={() => setRefreshInterval(refreshInterval ? null : 30000)}
           >

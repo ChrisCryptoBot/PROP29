@@ -45,11 +45,11 @@ export const Sidebar: React.FC = () => {
 
     return (
         <div className={cn(
-            "flex flex-col transition-all duration-300 border-r border-white/10 bg-black/40 backdrop-blur-xl",
+            "flex flex-col transition-all duration-300 border-r border-white/5 bg-black/40 backdrop-blur-xl",
             showChannels ? 'w-80' : 'w-16'
         )}>
             {/* Header */}
-            <div className="p-4 border-b border-white/10 bg-white/5">
+            <div className="p-4 border-b border-white/5 bg-white/5">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 group cursor-pointer" onClick={() => setShowChannels(true)}>
                         <div className="p-2 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -77,7 +77,7 @@ export const Sidebar: React.FC = () => {
             {showChannels && (
                 <>
                     {/* User Status Selector */}
-                    <div className="p-4 border-b border-white/10 bg-black/20">
+                    <div className="p-4 border-b border-white/5 bg-black/20">
                         <p className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-3 ml-1">Duty Status</p>
                         <div className="flex flex-wrap gap-1.5 px-1">
                             {(['available', 'busy', 'patrol', 'on-duty', 'off-duty'] as const).map((status) => (
@@ -98,12 +98,12 @@ export const Sidebar: React.FC = () => {
                     </div>
 
                     {/* Search & New Message */}
-                    <div className="p-4 space-y-3 bg-white/5 border-b border-white/10">
+                    <div className="p-4 space-y-3 bg-white/5 border-b border-white/5">
                         <SearchBar
                             placeholder="SEARCH MESSAGES..."
                             value={searchTerm}
                             onChange={setSearchTerm}
-                            className="bg-black/40 border-white/10"
+                            className="bg-black/40 border-white/5"
                         />
                         <Button
                             variant="primary"
@@ -119,7 +119,7 @@ export const Sidebar: React.FC = () => {
                     </div>
 
                     {/* List Categorization (SOC Style) */}
-                    <div className="flex p-2 bg-black/40 border-b border-white/10">
+                    <div className="flex p-2 bg-black/40 border-b border-white/5">
                         {(['all', 'channels', 'personnel'] as const).map((filter) => (
                             <button
                                 key={filter}
@@ -204,7 +204,7 @@ export const Sidebar: React.FC = () => {
                                             }}
                                         >
                                             <div className="relative">
-                                                <div className="w-9 h-9 bg-white/5 border border-white/10 rounded flex items-center justify-center text-white/80 text-xs font-black group-hover:border-blue-500/50 transition-colors">
+                                                <div className="w-9 h-9 bg-white/5 border border-white/5 rounded flex items-center justify-center text-white/80 text-xs font-black group-hover:border-blue-500/50 transition-colors">
                                                     {member.name.split(' ').map(n => n[0]).join('')}
                                                 </div>
                                                 <div

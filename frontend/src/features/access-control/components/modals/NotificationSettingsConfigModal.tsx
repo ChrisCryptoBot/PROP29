@@ -161,7 +161,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                           onConfigChange({ notificationEmail: e.target.value });
                           setIsFormDirty(true);
                         }}
-                        className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                        className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                         placeholder="alerts@station-g.net"
                       />
                     </div>
@@ -180,7 +180,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                           onConfigChange({ notificationSms: e.target.value });
                           setIsFormDirty(true);
                         }}
-                        className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                        className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                         placeholder="+1 (555) 123-4567"
                       />
                     </div>
@@ -306,7 +306,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                             onConfigChange({ quietHoursStart: e.target.value });
                             setIsFormDirty(true);
                           }}
-                          className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                          className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                         />
                       </div>
                       <div className="space-y-2">
@@ -321,7 +321,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                             onConfigChange({ quietHoursEnd: e.target.value });
                             setIsFormDirty(true);
                           }}
-                          className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                          className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                         />
                       </div>
                     </div>

@@ -191,7 +191,7 @@ export const ManagementTab: React.FC<ManagementTabProps> = ({
                 icon="fas fa-clipboard-list"
                 title="No Handovers Found"
                 description="Create your first handover to get started with digital monitoring."
-                className="bg-black/20 border-dashed border-2 border-white/10"
+                className="bg-black/20 border-dashed border-2 border-white/5"
                 action={{
                   label: "CREATE HANDOVER",
                   onClick: onCreateClick,

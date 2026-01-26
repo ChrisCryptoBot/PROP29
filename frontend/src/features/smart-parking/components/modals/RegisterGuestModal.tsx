@@ -74,7 +74,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                         type="text"
                         value={formData.guestName}
                         onChange={(e) => setFormData(prev => ({ ...prev, guestName: e.target.value }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                         placeholder="Guest name"
                     />
                 </div>
@@ -85,7 +85,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                             type="text"
                             value={formData.vehicleMake}
                             onChange={(e) => setFormData(prev => ({ ...prev, vehicleMake: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                             placeholder="e.g., Toyota"
                         />
                     </div>
@@ -95,7 +95,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                             type="text"
                             value={formData.vehicleModel}
                             onChange={(e) => setFormData(prev => ({ ...prev, vehicleModel: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                             placeholder="e.g., Camry"
                         />
                     </div>
@@ -107,7 +107,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                             type="text"
                             value={formData.vehicleColor}
                             onChange={(e) => setFormData(prev => ({ ...prev, vehicleColor: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                             placeholder="e.g., White"
                         />
                     </div>
@@ -117,7 +117,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                             type="text"
                             value={formData.vehiclePlate}
                             onChange={(e) => setFormData(prev => ({ ...prev, vehiclePlate: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                             placeholder="e.g., ABC-123"
                         />
                     </div>
@@ -127,7 +127,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                     <select
                         value={formData.spaceId}
                         onChange={(e) => setFormData(prev => ({ ...prev, spaceId: e.target.value }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                     >
                         <option value="">Select a space</option>
                         {availableSpaces.map((space) => (
@@ -142,7 +142,7 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                     <textarea
                         value={formData.notes}
                         onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                         rows={3}
                         placeholder="Special requirements or notes"
                     />

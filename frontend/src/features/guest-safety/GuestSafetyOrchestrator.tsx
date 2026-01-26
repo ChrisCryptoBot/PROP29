@@ -10,21 +10,25 @@
  * ✅ Gold Standard UI uniformity
  */
 
-import React, { useState } from 'react';
-import { GuestSafetyProvider } from './context/GuestSafetyContext';
+import React, { useState, useEffect } from 'react';
+import { GuestSafetyProvider, useGuestSafetyContext } from './context/GuestSafetyContext';
 import {
   IncidentsTab,
   MassNotificationTab,
   ResponseTeamsTab,
+  EvacuationTab,
   AnalyticsTab,
   SettingsTab,
+  MessagesTab,
 } from './components/tabs';
 import {
   IncidentDetailsModal,
   AssignTeamModal,
   SendMessageModal,
+  CreateIncidentModal,
 } from './components/modals';
 import ModuleShell from '../../components/Layout/ModuleShell';
+import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
 import type { TabId } from './types/guest-safety.types';
 
 interface Tab {
@@ -34,14 +38,55 @@ interface Tab {
 
 const tabs: Tab[] = [
   { id: 'incidents', label: 'Incidents' },
+  { id: 'messages', label: 'Messages' },
   { id: 'mass-notification', label: 'Mass Notification' },
   { id: 'response-teams', label: 'Response Teams' },
   { id: 'analytics', label: 'Analytics' },
   { id: 'settings', label: 'Settings' },
 ];
 
+const GuestSafetyGlobalRefresh: React.FC = () => {
+  const { register, unregister } = useGlobalRefresh();
+  const {
+    refreshIncidents,
+    refreshMessages,
+    refreshTeams,
+    refreshHardwareDevices,
+    refreshAgentMetrics,
+  } = useGuestSafetyContext();
+
+  useEffect(() => {
+    const handler = async () => {
+      await Promise.allSettled([
+        refreshIncidents(),
+        refreshMessages(),
+        refreshTeams(),
+        refreshHardwareDevices(),
+        refreshAgentMetrics(),
+      ]);
+    };
+    register('guest-safety', handler);
+    return () => unregister('guest-safety');
+  }, [register, unregister, refreshIncidents, refreshMessages, refreshTeams, refreshHardwareDevices, refreshAgentMetrics]);
+
+  return null;
+};
+
 const OrchestratorContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('incidents');
+  const { setShowCreateIncidentModal } = useGuestSafetyContext();
+  const { triggerGlobalRefresh } = useGlobalRefresh();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+        triggerGlobalRefresh();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [triggerGlobalRefresh]);
 
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
@@ -51,10 +96,14 @@ const OrchestratorContent: React.FC = () => {
     switch (activeTab) {
       case 'incidents':
         return <IncidentsTab />;
+      case 'messages':
+        return <MessagesTab />;
       case 'mass-notification':
         return <MassNotificationTab />;
       case 'response-teams':
         return <ResponseTeamsTab />;
+      case 'evacuation':
+        return <EvacuationTab />;
       case 'analytics':
         return <AnalyticsTab />;
       case 'settings':
@@ -65,23 +114,39 @@ const OrchestratorContent: React.FC = () => {
   };
 
   return (
-    <ModuleShell
-      icon={<i className="fas fa-shield-heart" />}
-      title="Guest Safety"
-      subtitle="Advanced guest protection and emergency response coordination"
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={handleTabChange}
-    >
+    <>
+      <GuestSafetyGlobalRefresh />
+      <ModuleShell
+        icon={<i className="fas fa-shield-heart" />}
+        title="Guest Safety"
+        subtitle="Advanced guest protection and emergency response coordination"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      >
       <main className="relative max-w-[1800px] mx-auto px-6 py-8" role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
         {renderTab()}
       </main>
 
       {/* Modals */}
+      <CreateIncidentModal />
       <IncidentDetailsModal />
       <AssignTeamModal />
       <SendMessageModal />
+
+      {/* Quick Action FAB - Gold Standard */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <button
+          onClick={() => setShowCreateIncidentModal(true)}
+          className="w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-red-700 hover:scale-110 transition-all group"
+          title="Create Incident"
+          aria-label="Create Incident"
+        >
+          <i className="fas fa-exclamation-triangle text-xl group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
     </ModuleShell>
+    </>
   );
 };
 

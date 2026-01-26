@@ -5,7 +5,8 @@
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useGuestSafetyState, UseGuestSafetyStateReturn } from '../hooks/useGuestSafetyState';
+import type { UseGuestSafetyStateReturn } from '../hooks/useGuestSafetyState';
+import { useGuestSafetyState } from '../hooks/useGuestSafetyState';
 
 const GuestSafetyContext = createContext<UseGuestSafetyStateReturn | undefined>(undefined);
 

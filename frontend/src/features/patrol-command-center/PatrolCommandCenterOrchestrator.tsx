@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo } from 'react';
 import { PatrolContext, usePatrolContext } from './context/PatrolContext';
 import { usePatrolState } from './hooks/usePatrolState';
+import { usePatrolWebSocket } from './hooks/usePatrolWebSocket';
+import { usePatrolTelemetry } from './hooks/usePatrolTelemetry';
 
 // Tabs
 import { DashboardTab } from './components/tabs/DashboardTab';
@@ -11,6 +13,8 @@ import { SettingsTab } from './components/tabs/SettingsTab';
 import { Card, CardContent } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
 import { ErrorBoundary } from '../../components/UI/ErrorBoundary';
+import { EmptyState } from '../../components/UI/EmptyState';
+import { Select } from '../../components/UI/Select';
 import ModuleShell from '../../components/Layout/ModuleShell';
 import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
 
@@ -30,8 +34,77 @@ const PatrolGlobalRefresh: React.FC = () => {
 };
 
 const PatrolCommandCenterLayout: React.FC = () => {
-    const { activeTab, setActiveTab, properties, selectedPropertyId, setSelectedPropertyId, isOffline, settings, checkInQueuePendingCount } = React.useContext(PatrolContext)!;
+    const {
+        activeTab,
+        setActiveTab,
+        properties,
+        selectedPropertyId,
+        setSelectedPropertyId,
+        isOffline,
+        settings,
+        checkInQueuePendingCount,
+        lastSyncTimestamp,
+        setUpcomingPatrols,
+        setOfficers,
+        setAlerts,
+        setEmergencyStatus,
+        refreshPatrolData
+    } = React.useContext(PatrolContext)!;
     const { triggerGlobalRefresh } = useGlobalRefresh();
+    const { trackAction } = usePatrolTelemetry();
+
+    // WebSocket integration for real-time updates
+    usePatrolWebSocket({
+        onPatrolUpdated: (patrol) => {
+            setUpcomingPatrols(prev => prev.map(p => p.id === patrol.id ? patrol : p));
+            trackAction('patrol_updated', 'patrol', { patrolId: patrol.id });
+        },
+        onCheckpointCheckIn: (data) => {
+            setUpcomingPatrols(prev => prev.map(p => {
+                if (p.id === data.patrolId) {
+                    const checkpoints = p.checkpoints?.map(cp =>
+                        cp.id === data.checkpointId ? data.checkpoint : cp
+                    ) || [data.checkpoint];
+                    return { ...p, checkpoints };
+                }
+                return p;
+            }));
+            trackAction('checkpoint_checkin', 'checkpoint', {
+                patrolId: data.patrolId,
+                checkpointId: data.checkpointId
+            });
+        },
+        onOfficerStatusChange: (officer) => {
+            setOfficers(prev => prev.map(o => o.id === officer.id ? officer : o));
+            trackAction('officer_status_changed', 'officer', { officerId: officer.id });
+        },
+        onEmergencyAlert: (alert) => {
+            setAlerts(prev => [alert, ...prev]);
+            trackAction('emergency_alert', 'emergency', { alertId: alert.id });
+        },
+        onLocationUpdate: (data) => {
+            // Update officer location if needed
+            setOfficers(prev => prev.map(o => {
+                if (o.id === data.officerId) {
+                    return { ...o, location: `${data.location.lat}, ${data.location.lng}` };
+                }
+                return o;
+            }));
+            trackAction('location_updated', 'officer', { officerId: data.officerId });
+        },
+        onHeartbeat: (data) => {
+            setOfficers(prev => prev.map(o => {
+                if (o.id === data.officerId) {
+                    return {
+                        ...o,
+                        last_heartbeat: data.last_heartbeat,
+                        connection_status: data.connection_status
+                    };
+                }
+                return o;
+            }));
+        }
+    });
 
     const tabs = useMemo(() => {
         const base = [
@@ -97,26 +170,34 @@ const PatrolCommandCenterLayout: React.FC = () => {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             actions={properties.length > 0 ? (
-                <select
+                <Select
                     value={selectedPropertyId || ''}
-                    onChange={(event) => setSelectedPropertyId(event.target.value || null)}
-                    className="px-3 py-2 border border-white/10 rounded-md text-xs font-black uppercase tracking-widest bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    onChange={(e) => setSelectedPropertyId(e.target.value || null)}
+                    className="w-64"
+                    containerClassName="min-w-[200px]"
                 >
                     {properties.map((property) => (
-                        <option key={property.id} value={property.id} className="bg-slate-900">
+                        <option key={property.id} value={property.id}>
                             {property.name}
                         </option>
                     ))}
-                </select>
+                </Select>
             ) : null}
         >
             {isOffline && (
                 <div className="bg-amber-500/20 border-b border-amber-500/50 px-4 py-2">
-                    <p className="text-amber-400 text-xs font-black uppercase tracking-wider">
-                        {settings.offlineMode
-                            ? 'Offline mode — changes will sync when connection is restored. Deployment is disabled.'
-                            : 'Online only — reconnect to continue. Deployment is disabled.'}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-amber-400 text-xs font-black uppercase tracking-wider">
+                            {settings.offlineMode
+                                ? 'Offline mode — changes will sync when connection is restored. Deployment is disabled.'
+                                : 'Online only — reconnect to continue. Deployment is disabled.'}
+                        </p>
+                        {lastSyncTimestamp && (
+                            <p className="text-[9px] font-mono text-amber-300/70 uppercase tracking-widest ml-4">
+                                Last sync: {lastSyncTimestamp.toLocaleTimeString()}
+                            </p>
+                        )}
+                    </div>
                 </div>
             )}
             <ErrorBoundary>

@@ -4,3 +4,4 @@
 export * from './IncidentDetailsModal';
 export * from './AssignTeamModal';
 export * from './SendMessageModal';
+export * from './CreateIncidentModal';

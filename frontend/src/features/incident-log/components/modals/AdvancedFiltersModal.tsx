@@ -153,7 +153,7 @@ export const AdvancedFiltersModal: React.FC<AdvancedFiltersModalProps> = ({ isOp
                                 <div>
                                     <label className="block text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-2">Severity</label>
                                     <select
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                         value={filters.severity}
                                         onChange={(e) => setFilters(prev => ({ ...prev, severity: e.target.value }))}
                                     >
@@ -167,7 +167,7 @@ export const AdvancedFiltersModal: React.FC<AdvancedFiltersModalProps> = ({ isOp
                                 <div>
                                     <label className="block text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-2">Status</label>
                                     <select
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                         value={filters.status}
                                         onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                                     >
@@ -186,13 +186,13 @@ export const AdvancedFiltersModal: React.FC<AdvancedFiltersModalProps> = ({ isOp
                                         type="date"
                                         value={filters.startDate}
                                         onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                     />
                                     <input
                                         type="date"
                                         value={filters.endDate}
                                         onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                     />
                                 </div>
                             </div>
@@ -207,7 +207,7 @@ export const AdvancedFiltersModal: React.FC<AdvancedFiltersModalProps> = ({ isOp
                                 value={filterName}
                                 onChange={(e) => setFilterName(e.target.value)}
                                 placeholder="Enter filter name..."
-                                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="flex-1 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             />
                             <Button
                                 onClick={handleSaveFilter}

@@ -185,28 +185,28 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
           <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Basic Info</p>
           <div>
             <label htmlFor="edit-user-name" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Full Name <span className="text-red-400">*</span></label>
-            <input type="text" id="edit-user-name" value={formData.name} onChange={(e) => updateFormData({ name: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.name ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-blue-500/20')} placeholder="e.g. John Smith" aria-label="User full name" />
+            <input type="text" id="edit-user-name" value={formData.name} onChange={(e) => updateFormData({ name: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.name ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20')} placeholder="e.g. John Smith" aria-label="User full name" />
             {errors.name && <p className="text-[10px] text-red-400 mt-1 font-black uppercase tracking-tight">{errors.name}</p>}
           </div>
           <div>
             <label htmlFor="edit-user-email" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Email <span className="text-red-400">*</span></label>
-            <input type="email" id="edit-user-email" value={formData.email} onChange={(e) => updateFormData({ email: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.email ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-blue-500/20')} placeholder="user@example.com" aria-label="User email address" />
+            <input type="email" id="edit-user-email" value={formData.email} onChange={(e) => updateFormData({ email: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.email ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20')} placeholder="user@example.com" aria-label="User email address" />
             {errors.email && <p className="text-[10px] text-red-400 mt-1 font-black uppercase tracking-tight">{errors.email}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="edit-user-department" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Department <span className="text-red-400">*</span></label>
-              <input type="text" id="edit-user-department" value={formData.department} onChange={(e) => updateFormData({ department: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.department ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/10 focus:ring-blue-500/20')} placeholder="e.g. Security" aria-label="User department" />
+              <input type="text" id="edit-user-department" value={formData.department} onChange={(e) => updateFormData({ department: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.department ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20')} placeholder="e.g. Security" aria-label="User department" />
               {errors.department && <p className="text-[10px] text-red-400 mt-1 font-black uppercase tracking-tight">{errors.department}</p>}
             </div>
             <div>
               <label htmlFor="edit-user-phone" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Phone</label>
-              <input type="tel" id="edit-user-phone" value={formData.phone || ''} onChange={(e) => updateFormData({ phone: e.target.value })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500" placeholder="+1 555 000 0000" aria-label="User phone number" />
+              <input type="tel" id="edit-user-phone" value={formData.phone || ''} onChange={(e) => updateFormData({ phone: e.target.value })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500" placeholder="+1 555 000 0000" aria-label="User phone number" />
             </div>
           </div>
           <div>
             <label htmlFor="edit-user-employee-id" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Employee ID</label>
-            <input type="text" id="edit-user-employee-id" value={formData.employeeId || ''} onChange={(e) => updateFormData({ employeeId: e.target.value })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500" placeholder="e.g. EMP-001" aria-label="Employee ID" />
+            <input type="text" id="edit-user-employee-id" value={formData.employeeId || ''} onChange={(e) => updateFormData({ employeeId: e.target.value })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500" placeholder="e.g. EMP-001" aria-label="Employee ID" />
           </div>
         </div>
 
@@ -215,19 +215,19 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="edit-user-role" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Role</label>
-              <select id="edit-user-role" value={formData.role} onChange={(e) => updateFormData({ role: e.target.value as UserRole })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
+              <select id="edit-user-role" value={formData.role} onChange={(e) => updateFormData({ role: e.target.value as UserRole })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
                 {AVAILABLE_ROLES.map(role => <option key={role} value={role}>{role}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="edit-user-status" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Status</label>
-              <select id="edit-user-status" value={formData.status} onChange={(e) => updateFormData({ status: e.target.value as UserStatus })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
+              <select id="edit-user-status" value={formData.status} onChange={(e) => updateFormData({ status: e.target.value as UserStatus })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
                 {AVAILABLE_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="edit-user-access-level" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Access Level</label>
-              <select id="edit-user-access-level" value={formData.accessLevel} onChange={(e) => updateFormData({ accessLevel: e.target.value as AccessLevel })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
+              <select id="edit-user-access-level" value={formData.accessLevel} onChange={(e) => updateFormData({ accessLevel: e.target.value as AccessLevel })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
                 {AVAILABLE_ACCESS_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
               </select>
             </div>
@@ -251,11 +251,11 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="edit-schedule-start-time" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Start Time</label>
-                <input type="time" id="edit-schedule-start-time" value={formData.accessSchedule.startTime} onChange={(e) => updateFormData({ accessSchedule: { ...formData.accessSchedule!, startTime: e.target.value } })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono" aria-label="Access schedule start time" />
+                <input type="time" id="edit-schedule-start-time" value={formData.accessSchedule.startTime} onChange={(e) => updateFormData({ accessSchedule: { ...formData.accessSchedule!, startTime: e.target.value } })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono" aria-label="Access schedule start time" />
               </div>
               <div>
                 <label htmlFor="edit-schedule-end-time" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">End Time</label>
-                <input type="time" id="edit-schedule-end-time" value={formData.accessSchedule.endTime} onChange={(e) => updateFormData({ accessSchedule: { ...formData.accessSchedule!, endTime: e.target.value } })} className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono" aria-label="Access schedule end time" />
+                <input type="time" id="edit-schedule-end-time" value={formData.accessSchedule.endTime} onChange={(e) => updateFormData({ accessSchedule: { ...formData.accessSchedule!, endTime: e.target.value } })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono" aria-label="Access schedule end time" />
               </div>
             </div>
           )}
@@ -268,7 +268,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
               <span className="text-xs font-bold text-white uppercase tracking-wider">Auto revoke on checkout</span>
               <p className="text-[10px] text-slate-500 font-medium mt-0.5">Revoke access when guest checks out.</p>
             </div>
-            <input type="checkbox" checked={formData.autoRevokeAtCheckout || false} onChange={(e) => updateFormData({ autoRevokeAtCheckout: e.target.checked })} className="h-4 w-4 rounded border-white/10 bg-white/5 focus:ring-2 focus:ring-blue-500/20" />
+            <input type="checkbox" checked={formData.autoRevokeAtCheckout || false} onChange={(e) => updateFormData({ autoRevokeAtCheckout: e.target.checked })} className="h-4 w-4 rounded border-white/5 bg-white/5 focus:ring-2 focus:ring-blue-500/20" />
           </label>
         </div>
       </div>

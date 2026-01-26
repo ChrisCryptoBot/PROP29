@@ -67,7 +67,7 @@ export const EventsTab: React.FC = React.memo(() => {
             icon="fas fa-calendar-plus"
             title="No Active Event Profiles"
             description="Event monitoring is currently offline. Register a new event to begin site tracking."
-            className="bg-black/20 border-dashed border-2 border-white/10"
+            className="bg-black/20 border-dashed border-2 border-white/5"
             action={{
               label: "REGISTER EVENT",
               onClick: () => setShowEventModal(true),

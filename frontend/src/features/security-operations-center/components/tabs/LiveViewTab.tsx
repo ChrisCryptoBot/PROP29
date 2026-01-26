@@ -177,7 +177,7 @@ export const LiveViewTab: React.FC = () => {
                   "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all shadow-none",
                   filter === option
                     ? "bg-white/10 border-white/20 text-white"
-                    : "border-white/10 text-slate-400 hover:bg-white/5 hover:text-white"
+                    : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
                 )}
                 onClick={() => setFilter(option)}
               >
@@ -256,7 +256,7 @@ export const LiveViewTab: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                       disabled={camera.actionsDisabled || !canManageCameras}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -269,7 +269,7 @@ export const LiveViewTab: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                       disabled={camera.actionsDisabled || !canManageCameras}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -282,7 +282,7 @@ export const LiveViewTab: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                       disabled={camera.actionsDisabled || !canManageCameras}
                       onClick={(e) => {
                         e.stopPropagation();

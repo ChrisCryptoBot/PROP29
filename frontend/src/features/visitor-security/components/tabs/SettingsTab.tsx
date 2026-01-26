@@ -122,7 +122,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     ...localSettings,
                     visitor_retention_days: parseInt(e.target.value) || 365
                   })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
               <div>
@@ -138,7 +138,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     ...localSettings,
                     auto_checkout_hours: parseInt(e.target.value) || 24
                   })}
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
             </div>
@@ -226,7 +226,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     max="24"
                     value={localSettings.mobile_agent_settings.offline_mode_duration_hours}
                     onChange={(e) => updateSetting('mobile_agent_settings', 'offline_mode_duration_hours', parseInt(e.target.value) || 8)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-green-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-green-500/20"
                   />
                 </div>
                 <div>
@@ -236,7 +236,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                   <select
                     value={localSettings.mobile_agent_settings.photo_quality}
                     onChange={(e) => updateSetting('mobile_agent_settings', 'photo_quality', e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-green-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-green-500/20"
                   >
                     <option value="low" className="bg-slate-900">Low (Faster sync)</option>
                     <option value="medium" className="bg-slate-900">Medium (Balanced)</option>
@@ -321,7 +321,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     max="365"
                     value={localSettings.hardware_settings.maintenance_reminder_days}
                     onChange={(e) => updateSetting('hardware_settings', 'maintenance_reminder_days', parseInt(e.target.value) || 30)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-orange-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-orange-500/20"
                   />
                 </div>
               </div>
@@ -362,7 +362,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     max="2000"
                     value={localSettings.mso_settings.cache_size_limit_mb}
                     onChange={(e) => updateSetting('mso_settings', 'cache_size_limit_mb', parseInt(e.target.value) || 500)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
                   />
                 </div>
                 <div>
@@ -375,7 +375,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     max="3600"
                     value={localSettings.mso_settings.sync_interval_seconds}
                     onChange={(e) => updateSetting('mso_settings', 'sync_interval_seconds', parseInt(e.target.value) || 300)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
                   />
                 </div>
               </div>
@@ -400,7 +400,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     max="120"
                     value={localSettings.mso_settings.hardware_timeout_seconds}
                     onChange={(e) => updateSetting('mso_settings', 'hardware_timeout_seconds', parseInt(e.target.value) || 30)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
                   />
                 </div>
                 <div>
@@ -413,7 +413,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     max="10"
                     value={localSettings.mso_settings.network_retry_attempts}
                     onChange={(e) => updateSetting('mso_settings', 'network_retry_attempts', parseInt(e.target.value) || 3)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-purple-500/20"
                   />
                 </div>
               </div>

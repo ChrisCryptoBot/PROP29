@@ -114,7 +114,7 @@ export const EvidenceManagementTab: React.FC = () => {
                     "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all shadow-none",
                     statusFilter === status
                       ? "bg-white/10 border-white/20 text-white"
-                      : "border-white/10 text-slate-400 hover:bg-white/5 hover:text-white"
+                      : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
                   )}
                   onClick={() => setStatusFilter(status)}
                 >
@@ -200,7 +200,7 @@ export const EvidenceManagementTab: React.FC = () => {
                         "px-2.5 py-1 text-[10px] font-black rounded uppercase tracking-widest border",
                         item.status === 'pending' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' :
                           item.status === 'reviewed' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' :
-                            'text-slate-400 bg-white/5 border-white/10'
+                            'text-slate-400 bg-white/5 border-white/5'
                       )}>
                         {item.status}
                       </span>
@@ -233,7 +233,7 @@ export const EvidenceManagementTab: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                       disabled={!canManageEvidence || item.status !== 'pending'}
                       onClick={(event) => {
                         event.stopPropagation();
@@ -246,7 +246,7 @@ export const EvidenceManagementTab: React.FC = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                      className="flex-1 font-black uppercase tracking-widest text-[10px] border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                       disabled={!canManageEvidence || item.status === 'archived'}
                       onClick={(event) => {
                         event.stopPropagation();

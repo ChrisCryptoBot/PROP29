@@ -128,7 +128,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                       onConfigChange({ customBackupSchedule: e.target.value });
                       setIsFormDirty(true);
                     }}
-                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-mono font-bold"
+                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-mono font-bold"
                     placeholder="0 0 * * *"
                   />
                   <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Format: min hour day month weekday</p>
@@ -182,7 +182,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                     onConfigChange({ retentionDays: parseInt(e.target.value) || 30 });
                     setIsFormDirty(true);
                   }}
-                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                 />
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Lifespan of backup files (1-3650 cycles)</p>
               </div>
@@ -321,7 +321,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                       onConfigChange({ restorePointLimit: parseInt(e.target.value) || 10 });
                       setIsFormDirty(true);
                     }}
-                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                    className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                   />
                   <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Maximum versioned snapshots to maintain (1-100)</p>
                 </div>

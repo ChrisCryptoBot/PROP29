@@ -8,6 +8,8 @@ import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dism
 import { StateUpdateService } from '../../../services/StateUpdateService';
 import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import { PatrolEndpoint } from '../../../services/PatrolEndpoint';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
+import { usePatrolTelemetry } from './usePatrolTelemetry';
 import type { PatrolOfficer, UpcomingPatrol, EmergencyStatus } from '../types';
 
 export interface UsePatrolActionsArgs {
@@ -15,6 +17,7 @@ export interface UsePatrolActionsArgs {
     upcomingPatrols: UpcomingPatrol[];
     setOfficers: React.Dispatch<React.SetStateAction<PatrolOfficer[]>>;
     setUpcomingPatrols: React.Dispatch<React.SetStateAction<UpcomingPatrol[]>>;
+    emergencyStatus: EmergencyStatus;
     setEmergencyStatus: React.Dispatch<React.SetStateAction<EmergencyStatus>>;
     refresh: () => Promise<void>;
     selectedPropertyId: string | null;
@@ -25,10 +28,13 @@ export function usePatrolActions({
     upcomingPatrols,
     setOfficers,
     setUpcomingPatrols,
+    emergencyStatus,
     setEmergencyStatus,
     refresh,
     selectedPropertyId
 }: UsePatrolActionsArgs) {
+    const { trackAction, trackPerformance, trackError } = usePatrolTelemetry();
+    
     const handleDeployOfficer = useCallback(
         async (officerId: string, patrolId: string) => {
             if (!officerId || !patrolId) {
@@ -54,30 +60,68 @@ export function usePatrolActions({
                 return;
             }
             const toastId = showLoading('Deploying officer...');
+            const startTime = Date.now();
+            trackAction('deploy_officer_start', 'patrol', { officerId, patrolId });
+            
+            // Optimistic update
+            const previousOfficerState = officer.status;
+            const previousPatrolState = patrol.status;
+            setOfficers((prev) => StateUpdateService.updateItem(prev, officerId, { status: 'on-duty', currentPatrol: patrolId }));
+            setUpcomingPatrols((prev) =>
+                StateUpdateService.updateItem(prev, patrolId, {
+                    status: 'in-progress',
+                    assignedOfficer: officer.name,
+                    version: typeof patrol.version === 'number' ? patrol.version + 1 : undefined
+                })
+            );
+
             try {
                 const payload: { guard_id: string; status: string; version?: number } = {
                     guard_id: officerId,
                     status: 'active'
                 };
                 if (typeof patrol.version === 'number') payload.version = patrol.version;
-                await PatrolEndpoint.updatePatrol(patrolId, payload);
-                setOfficers((prev) => StateUpdateService.updateItem(prev, officerId, { status: 'on-duty', currentPatrol: patrolId }));
-                setUpcomingPatrols((prev) =>
-                    StateUpdateService.updateItem(prev, patrolId, {
-                        status: 'in-progress',
-                        assignedOfficer: officer.name,
-                        version: typeof patrol.version === 'number' ? patrol.version + 1 : undefined
-                    })
+                
+                await retryWithBackoff(
+                    () => PatrolEndpoint.updatePatrol(patrolId, payload),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000,
+                        shouldRetry: (error) => {
+                            const status = (error as { response?: { status?: number } })?.response?.status;
+                            // Don't retry on 409 (conflict) or 4xx errors
+                            if (status && status >= 400 && status < 500) return false;
+                            // Retry on 5xx or network errors
+                            return true;
+                        }
+                    }
                 );
+                
+                const duration = Date.now() - startTime;
+                trackPerformance('deploy_officer', duration, { officerId, patrolId });
+                trackAction('deploy_officer_success', 'patrol', { officerId, patrolId, duration });
                 dismissLoadingAndShowSuccess(toastId, `Officer ${officer.name} deployed successfully!`);
             } catch (err: unknown) {
+                const duration = Date.now() - startTime;
+                trackError(err as Error, { action: 'deploy_officer', officerId, patrolId, duration });
+                // Rollback optimistic update
+                setOfficers((prev) => StateUpdateService.updateItem(prev, officerId, { status: previousOfficerState, currentPatrol: undefined }));
+                setUpcomingPatrols((prev) =>
+                    StateUpdateService.updateItem(prev, patrolId, {
+                        status: previousPatrolState,
+                        assignedOfficer: patrol.assignedOfficer,
+                        version: patrol.version
+                    })
+                );
+
                 const status = (err as { response?: { status?: number } })?.response?.status;
                 if (status === 409) {
                     dismissLoadingAndShowError(toastId, 'Conflict — patrol was updated elsewhere. Refreshing.');
                     await refresh();
                     return;
                 }
-                dismissLoadingAndShowError(toastId, 'Failed to deploy officer');
+                dismissLoadingAndShowError(toastId, 'Failed to deploy officer. Please try again.');
                 ErrorHandlerService.handle(err, 'deployOfficer');
             }
         },
@@ -104,21 +148,65 @@ export function usePatrolActions({
                 return;
             }
             const toastId = showLoading('Completing patrol...');
-            try {
-                await PatrolEndpoint.completePatrol(patrolId);
-                setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: 'completed' }));
-                if (patrol.assignedOfficer) {
-                    const assigned = officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId);
-                    if (assigned) {
-                        setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: 'off-duty', currentPatrol: undefined }));
-                    }
+            const startTime = Date.now();
+            trackAction('complete_patrol_start', 'patrol', { patrolId });
+            
+            // Optimistic update
+            const previousPatrolState = patrol.status;
+            const previousOfficerState = patrol.assignedOfficer ? officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId)?.status : undefined;
+            setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: 'completed' }));
+            if (patrol.assignedOfficer) {
+                const assigned = officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId);
+                if (assigned) {
+                    setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: 'off-duty', currentPatrol: undefined }));
                 }
+            }
+
+            try {
+                const payload: { version?: number } = {};
+                if (typeof patrol.version === 'number') payload.version = patrol.version;
+                
+                await retryWithBackoff(
+                    () => PatrolEndpoint.completePatrol(patrolId, payload),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000,
+                        shouldRetry: (error) => {
+                            const status = (error as { response?: { status?: number } })?.response?.status;
+                            // Don't retry on 409 (conflict) or 4xx errors
+                            if (status && status >= 400 && status < 500) return false;
+                            // Retry on 5xx or network errors
+                            return true;
+                        }
+                    }
+                );
+                const duration = Date.now() - startTime;
+                trackPerformance('complete_patrol', duration, { patrolId });
+                trackAction('complete_patrol_success', 'patrol', { patrolId, duration });
                 dismissLoadingAndShowSuccess(toastId, 'Patrol completed successfully!');
             } catch (e) {
-                dismissLoadingAndShowError(toastId, 'Failed to complete patrol');
+                const duration = Date.now() - startTime;
+                trackError(e as Error, { action: 'complete_patrol', patrolId, duration });
+                // Rollback optimistic update
+                setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: previousPatrolState }));
+                if (patrol.assignedOfficer && previousOfficerState) {
+                    const assigned = officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId);
+                    if (assigned) {
+                        setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: previousOfficerState, currentPatrol: patrolId }));
+                    }
+                }
+                const status = (e as { response?: { status?: number } })?.response?.status;
+                if (status === 409) {
+                    dismissLoadingAndShowError(toastId, 'Conflict — patrol was updated elsewhere. Refreshing.');
+                    await refresh();
+                    return;
+                }
+                dismissLoadingAndShowError(toastId, 'Failed to complete patrol. Please try again.');
+                ErrorHandlerService.handle(e, 'completePatrol');
             }
         },
-        [officers, upcomingPatrols, setOfficers, setUpcomingPatrols]
+        [officers, upcomingPatrols, setOfficers, setUpcomingPatrols, refresh]
     );
 
     const handleReassignOfficer = useCallback(
@@ -150,18 +238,46 @@ export function usePatrolActions({
                 return;
             }
             const toastId = showLoading('Reassigning officer...');
+            
+            // Optimistic update
+            const previousPatrolOfficer = patrol.assignedOfficer;
+            const oldOfficer = officers.find((o) => o && o.name === patrol.assignedOfficer);
+            const previousOldOfficerState = oldOfficer ? oldOfficer.status : undefined;
+            const previousNewOfficerState = newOfficer.status;
+            
+            setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { assignedOfficer: newOfficer.name }));
+            if (oldOfficer) {
+                setOfficers((prev) => StateUpdateService.updateItem(prev, oldOfficer.id, { status: 'off-duty', currentPatrol: undefined }));
+            }
+            setOfficers((prev) => StateUpdateService.updateItem(prev, newOfficerId, { status: 'on-duty', currentPatrol: patrolId }));
+
             try {
                 const payload: { guard_id: string; version?: number } = { guard_id: newOfficerId };
                 if (typeof patrol.version === 'number') payload.version = patrol.version;
-                await PatrolEndpoint.updatePatrol(patrolId, payload);
-                const oldOfficer = officers.find((o) => o && o.name === patrol.assignedOfficer);
-                setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { assignedOfficer: newOfficer.name }));
-                if (oldOfficer) {
-                    setOfficers((prev) => StateUpdateService.updateItem(prev, oldOfficer.id, { status: 'off-duty', currentPatrol: undefined }));
-                }
-                setOfficers((prev) => StateUpdateService.updateItem(prev, newOfficerId, { status: 'on-duty', currentPatrol: patrolId }));
+                
+                await retryWithBackoff(
+                    () => PatrolEndpoint.updatePatrol(patrolId, payload),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000,
+                        shouldRetry: (error) => {
+                            const status = (error as { response?: { status?: number } })?.response?.status;
+                            if (status && status >= 400 && status < 500) return false;
+                            return true;
+                        }
+                    }
+                );
+                
                 dismissLoadingAndShowSuccess(toastId, `Officer ${newOfficer.name} assigned to patrol successfully`);
             } catch (err: unknown) {
+                // Rollback optimistic update
+                setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { assignedOfficer: previousPatrolOfficer }));
+                if (oldOfficer && previousOldOfficerState) {
+                    setOfficers((prev) => StateUpdateService.updateItem(prev, oldOfficer.id, { status: previousOldOfficerState, currentPatrol: patrolId }));
+                }
+                setOfficers((prev) => StateUpdateService.updateItem(prev, newOfficerId, { status: previousNewOfficerState, currentPatrol: undefined }));
+
                 const status = (err as { response?: { status?: number } })?.response?.status;
                 if (status === 409) {
                     dismissLoadingAndShowError(toastId, 'Conflict — patrol was updated elsewhere. Refreshing.');
@@ -169,7 +285,7 @@ export function usePatrolActions({
                     return;
                 }
                 ErrorHandlerService.handle(err, 'reassignOfficer');
-                dismissLoadingAndShowError(toastId, 'Failed to reassign officer');
+                dismissLoadingAndShowError(toastId, 'Failed to reassign officer. Please try again.');
             }
         },
         [officers, upcomingPatrols, setOfficers, setUpcomingPatrols, refresh]
@@ -188,26 +304,55 @@ export function usePatrolActions({
                 return;
             }
             const toastId = showLoading('Cancelling patrol...');
+            
+            // Optimistic update
+            const previousPatrolState = patrol.status;
+            const previousOfficerState = patrol.assignedOfficer ? officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId)?.status : undefined;
+            setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: 'cancelled' }));
+            if (patrol.assignedOfficer) {
+                const assigned = officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId);
+                if (assigned) {
+                    setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: 'off-duty', currentPatrol: undefined }));
+                }
+            }
+
             try {
                 const payload: { status: string; version?: number } = { status: 'interrupted' };
                 if (typeof patrol.version === 'number') payload.version = patrol.version;
-                await PatrolEndpoint.updatePatrol(patrolId, payload);
-                setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: 'cancelled' }));
-                if (patrol.assignedOfficer) {
-                    const assigned = officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId);
-                    if (assigned) {
-                        setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: 'off-duty', currentPatrol: undefined }));
+                
+                await retryWithBackoff(
+                    () => PatrolEndpoint.updatePatrol(patrolId, payload),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000,
+                        shouldRetry: (error) => {
+                            const status = (error as { response?: { status?: number } })?.response?.status;
+                            if (status && status >= 400 && status < 500) return false;
+                            return true;
+                        }
                     }
-                }
+                );
+                
                 dismissLoadingAndShowSuccess(toastId, 'Patrol cancelled successfully');
             } catch (err: unknown) {
+                // Rollback optimistic update
+                setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: previousPatrolState }));
+                if (patrol.assignedOfficer && previousOfficerState) {
+                    const assigned = officers.find((o) => o && o.name === patrol.assignedOfficer && o.currentPatrol === patrolId);
+                    if (assigned) {
+                        setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: previousOfficerState, currentPatrol: patrolId }));
+                    }
+                }
+
                 const status = (err as { response?: { status?: number } })?.response?.status;
                 if (status === 409) {
                     dismissLoadingAndShowError(toastId, 'Conflict — patrol was updated elsewhere. Refreshing.');
                     await refresh();
                     return;
                 }
-                dismissLoadingAndShowError(toastId, 'Failed to cancel patrol');
+                dismissLoadingAndShowError(toastId, 'Failed to cancel patrol. Please try again.');
+                ErrorHandlerService.handle(err, 'cancelPatrol');
             }
         },
         [officers, upcomingPatrols, setOfficers, setUpcomingPatrols, refresh]
@@ -220,24 +365,45 @@ export function usePatrolActions({
             return;
         }
         const toastId = showLoading('Sending emergency alert...');
+        const startTime = Date.now();
+        const previousEmergencyStatus = { ...emergencyStatus };
+        trackAction('emergency_alert_start', 'emergency', { officerCount: onDuty.length });
+        
+        // Optimistic update
+        setEmergencyStatus((prev) => ({
+            ...prev,
+            level: 'critical',
+            message: 'Emergency alert active',
+            lastUpdated: 'Just now',
+            activeAlerts: (prev.activeAlerts || 0) + 1
+        }));
+
         try {
-            await PatrolEndpoint.createEmergencyAlert({
-                property_id: selectedPropertyId || undefined,
-                severity: 'critical',
-                message: 'Emergency alert active'
-            });
-            setEmergencyStatus((prev) => ({
-                ...prev,
-                level: 'critical',
-                message: 'Emergency alert active',
-                lastUpdated: 'Just now',
-                activeAlerts: (prev.activeAlerts || 0) + 1
-            }));
+            await retryWithBackoff(
+                () => PatrolEndpoint.createEmergencyAlert({
+                    property_id: selectedPropertyId || undefined,
+                    severity: 'critical',
+                    message: 'Emergency alert active'
+                }),
+                {
+                    maxRetries: 5, // More retries for critical emergency alerts
+                    baseDelay: 500,
+                    maxDelay: 3000
+                }
+            );
+            const duration = Date.now() - startTime;
+            trackPerformance('emergency_alert', duration, { officerCount: onDuty.length });
+            trackAction('emergency_alert_success', 'emergency', { officerCount: onDuty.length, duration });
             dismissLoadingAndShowSuccess(toastId, `Emergency alert sent to ${onDuty.length} officer(s)!`);
-        } catch {
-            dismissLoadingAndShowError(toastId, 'Failed to send emergency alert');
+        } catch (error) {
+            const duration = Date.now() - startTime;
+            trackError(error as Error, { action: 'emergency_alert', officerCount: onDuty.length, duration });
+            // Rollback optimistic update
+            setEmergencyStatus(previousEmergencyStatus);
+            dismissLoadingAndShowError(toastId, 'Failed to send emergency alert. Please try again or contact support.');
+            ErrorHandlerService.handle(error, 'emergencyAlert');
         }
-    }, [officers, selectedPropertyId, setEmergencyStatus]);
+    }, [officers, selectedPropertyId, setEmergencyStatus, emergencyStatus, trackAction, trackPerformance, trackError]);
 
     return {
         handleDeployOfficer,

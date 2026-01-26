@@ -20,7 +20,7 @@ export const DetailsModal: React.FC = () => {
             case 'MEDIUM': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
             case 'HIGH': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
             case 'CRITICAL': return 'text-red-400 bg-red-500/10 border-red-500/20';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
@@ -29,16 +29,16 @@ export const DetailsModal: React.FC = () => {
             case 'TEMPORARY': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
             case 'PERMANENT': return 'text-red-400 bg-red-500/10 border-red-500/20';
             case 'CONDITIONAL': return 'text-amber-400 bg-amber-500/10 border-amber-500/20';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
     const getStatusBadgeClass = (status: string): string => {
         switch (status) {
             case 'ACTIVE': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
-            case 'EXPIRED': return 'text-slate-400 bg-white/5 border-white/10';
+            case 'EXPIRED': return 'text-slate-400 bg-white/5 border-white/5';
             case 'REMOVED': return 'text-red-400 bg-red-500/10 border-red-500/20';
-            default: return 'text-slate-400 bg-white/5 border-white/10';
+            default: return 'text-slate-400 bg-white/5 border-white/5';
         }
     };
 
@@ -83,7 +83,7 @@ export const DetailsModal: React.FC = () => {
                 return {
                     icon: 'fa-user-shield',
                     label: 'Manager',
-                    color: 'text-slate-400 bg-white/5 border-white/10',
+                    color: 'text-slate-400 bg-white/5 border-white/5',
                     tooltip: 'Manually created by manager'
                 };
         }
@@ -91,8 +91,8 @@ export const DetailsModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-                <CardHeader className="pb-2 border-b border-white/10 mb-6">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
+                <CardHeader className="pb-2 border-b border-white/5 mb-6">
                     <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
                             <i className="fas fa-user-shield text-white text-lg" />
@@ -102,7 +102,7 @@ export const DetailsModal: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
-                        <div className="flex items-center space-x-6 p-5 border border-white/10 rounded-2xl bg-white/5">
+                        <div className="flex items-center space-x-6 p-5 border border-white/5 rounded-2xl bg-white/5">
                             <div className="relative">
                                 <div className="w-20 h-20 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-full flex items-center justify-center shadow-2xl border border-white/5">
                                     <span className="text-white font-bold text-2xl">
@@ -162,7 +162,7 @@ export const DetailsModal: React.FC = () => {
                             </div>
 
                             {selectedIndividual.notes && (
-                                <div className="p-4 border border-white/10 rounded-xl bg-white/5">
+                                <div className="p-4 border border-white/5 rounded-xl bg-white/5">
                                     <h4 className="text-xs font-bold text-slate-400 flex items-center mb-2 uppercase tracking-widest">
                                         <i className="fas fa-sticky-note mr-2 text-blue-500" />
                                         Internal Security Notes
@@ -181,7 +181,7 @@ export const DetailsModal: React.FC = () => {
                                 {detectionAlerts
                                     .filter(alert => alert.individualId === selectedIndividual.id)
                                     .map((alert) => (
-                                        <div key={alert.id} className="p-4 bg-white/5 border border-white/10 rounded-xl shadow-sm hover:border-blue-500/30 transition-all hover:bg-white/[0.07]">
+                                        <div key={alert.id} className="p-4 bg-white/5 border border-white/5 rounded-xl shadow-sm hover:border-blue-500/30 transition-all hover:bg-white/[0.07]">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="font-bold text-white">{alert.location}</span>
                                                 <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest">

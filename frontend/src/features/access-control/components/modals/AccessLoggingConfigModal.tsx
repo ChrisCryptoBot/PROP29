@@ -128,7 +128,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                     onConfigChange({ retentionPeriod: parseInt(e.target.value) || 90 });
                     setIsFormDirty(true);
                   }}
-                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                  className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                 />
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Retention window (1-3650 days)</p>
               </div>
@@ -304,7 +304,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                         onConfigChange({ archiveAfterDays: parseInt(e.target.value) || 30 });
                         setIsFormDirty(true);
                       }}
-                      className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+                      className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
                     />
                   </div>
                 )}

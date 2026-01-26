@@ -138,7 +138,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                     icon="fas fa-tools"
                     title="No Equipment Data"
                     description="No equipment inventory found in the system."
-                    className="bg-black/20 border-dashed border-2 border-white/10"
+                    className="bg-black/20 border-dashed border-2 border-white/5"
                   />
                 </div>
               )}
@@ -169,7 +169,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                 icon="fas fa-check-double"
                 title="All Tasks Completed"
                 description="There are no pending tasks at this time."
-                className="bg-black/20 border-dashed border-2 border-white/10"
+                className="bg-black/20 border-dashed border-2 border-white/5"
               />
             ) : (
               pendingTasks.map((task) => (
@@ -283,7 +283,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                   icon="fas fa-tools"
                   title="No Maintenance Requests"
                   description="All equipment is fully operational."
-                  className="bg-black/20 border-dashed border-2 border-white/10"
+                  className="bg-black/20 border-dashed border-2 border-white/5"
                 />
               </div>
             ) : (

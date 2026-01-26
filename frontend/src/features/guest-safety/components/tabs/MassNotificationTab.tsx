@@ -56,31 +56,80 @@ export const MassNotificationTab: React.FC = () => {
       <EmptyState
         icon="fas fa-lock"
         title="Access Denied"
-        description="Registry offline. Administrative privileges are required to broadcast high-priority mass notifications."
+        description="Administrative privileges are required to send mass notifications."
       />
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card className="glass-card border-glass bg-transparent shadow-console overflow-hidden">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Mass Notification</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            Broadcast messages to guests across multiple channels
+          </p>
+        </div>
+      </div>
+
+      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
           <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10" aria-hidden="true">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
               <i className="fas fa-bullhorn text-white text-lg" />
             </div>
-            Mass Notification Broadcast
+            Mass Notification
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-8 px-8 pb-8">
+          <CardContent className="pt-8 px-8 pb-8">
           <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Quick Templates */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
+                Quick Templates
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    message: 'EMERGENCY EVACUATION: Please proceed to the nearest exit immediately. Do not use elevators. Once safe, please check in using the guest app.',
+                    priority: 'urgent',
+                    channels: ['in_app', 'sms'],
+                  }))}
+                  className="text-[10px] font-black uppercase tracking-widest border-red-500/30 text-red-400 hover:bg-red-500/10"
+                >
+                  <i className="fas fa-exclamation-triangle mr-2" />
+                  Evacuation Alert
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    message: 'EVACUATION COMPLETE: All clear. You may return to your rooms. Thank you for your cooperation.',
+                    priority: 'normal',
+                    channels: ['in_app', 'sms'],
+                  }))}
+                  className="text-[10px] font-black uppercase tracking-widest border-green-500/30 text-green-400 hover:bg-green-500/10"
+                >
+                  <i className="fas fa-check-circle mr-2" />
+                  All Clear
+                </Button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
                 Broadcast Message Content
               </label>
               <textarea
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all min-h-[160px] shadow-inner placeholder:text-white/20"
-                placeholder="Enter mandatory safety directive or announcement..."
+                className="w-full bg-white/5 border border-white/5 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 px-4 py-3 min-h-[160px] shadow-inner placeholder:text-white/20"
+                placeholder="Enter message content..."
                 value={formData.message}
                 onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
                 required
@@ -91,34 +140,34 @@ export const MassNotificationTab: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
-                  Target Recipient Matrix
+                  Recipients
                 </label>
                 <select
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer shadow-inner"
+                  className="w-full bg-white/5 border border-white/5 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 px-4 py-3 appearance-none cursor-pointer shadow-inner"
                   value={formData.recipients}
                   onChange={(e) => setFormData(prev => ({ ...prev, recipients: e.target.value as any }))}
                   disabled={loading.actions}
                 >
-                  <option className="bg-slate-900" value="all">All Registered Guests</option>
-                  <option className="bg-slate-900" value="vip">VIP Protocols Only</option>
-                  <option className="bg-slate-900" value="floor">Sector/Floor Isolation</option>
-                  <option className="bg-slate-900" value="room">Selective Unit Broadcast</option>
+                  <option className="bg-slate-900" value="all">All Guests</option>
+                  <option className="bg-slate-900" value="vip">VIP Only</option>
+                  <option className="bg-slate-900" value="floor">By Floor</option>
+                  <option className="bg-slate-900" value="room">By Room</option>
                 </select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
-                  Transmission Priority
+                  Priority
                 </label>
                 <select
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer shadow-inner"
+                  className="w-full bg-white/5 border border-white/5 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 px-4 py-3 appearance-none cursor-pointer shadow-inner"
                   value={formData.priority}
                   onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
                   disabled={loading.actions}
                 >
-                  <option className="bg-slate-900" value="normal">Standard Routine</option>
-                  <option className="bg-slate-900" value="high">Elevated Priority</option>
-                  <option className="bg-slate-900" value="urgent">Critical/Emergency</option>
+                  <option className="bg-slate-900" value="normal">Normal</option>
+                  <option className="bg-slate-900" value="high">High</option>
+                  <option className="bg-slate-900" value="urgent">Urgent</option>
                 </select>
               </div>
             </div>
@@ -139,7 +188,7 @@ export const MassNotificationTab: React.FC = () => {
                     />
                     <i className="fas fa-check absolute left-1 text-[10px] text-white opacity-0 group-hover:opacity-20 transition-opacity" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-white">In-App Registry</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-white">In-App</span>
                 </label>
                 <label className="flex items-center space-x-3 cursor-pointer group">
                   <div className="relative flex items-center">
@@ -152,7 +201,7 @@ export const MassNotificationTab: React.FC = () => {
                     />
                     <i className="fas fa-check absolute left-1 text-[10px] text-white opacity-0 group-hover:opacity-20 transition-opacity" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-white">SMS Protocol</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-white">SMS</span>
                 </label>
                 <label className="flex items-center space-x-3 cursor-pointer group">
                   <div className="relative flex items-center">
@@ -165,14 +214,14 @@ export const MassNotificationTab: React.FC = () => {
                     />
                     <i className="fas fa-check absolute left-1 text-[10px] text-white opacity-0 group-hover:opacity-20 transition-opacity" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-widest text-white">Email Sync</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-white">Email</span>
                 </label>
               </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full py-6 font-black uppercase tracking-[0.3em] text-[12px] bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 border-none rounded-2xl transition-all active:scale-[0.98]"
+              className="w-full py-6 font-black uppercase tracking-[0.3em] text-[12px] bg-blue-600 hover:bg-blue-700 text-white border-none rounded-2xl transition-all active:scale-[0.98]"
               disabled={!formData.message.trim() || loading.actions}
             >
               {loading.actions ? (

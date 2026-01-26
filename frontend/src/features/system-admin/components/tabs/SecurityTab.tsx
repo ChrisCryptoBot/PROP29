@@ -19,7 +19,7 @@ export const SecurityTab: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <Button
                         variant="glass"
-                        className="border-white/10 hover:bg-white/10 shadow-xl"
+                        className="border-white/5 hover:bg-white/10 shadow-xl"
                         onClick={() => showSuccess('Running security scan')}
                     >
                         <i className="fas fa-shield-alt mr-2 text-blue-400 opacity-70"></i>
@@ -27,7 +27,7 @@ export const SecurityTab: React.FC = () => {
                     </Button>
                     <Button
                         variant="glass"
-                        className="border-white/10 hover:bg-white/10 shadow-xl"
+                        className="border-white/5 hover:bg-white/10 shadow-xl"
                         onClick={() => showSuccess('Generating security report')}
                     >
                         <i className="fas fa-file-contract mr-2 text-emerald-400 opacity-70"></i>
@@ -78,7 +78,7 @@ export const SecurityTab: React.FC = () => {
                         <div className="pt-6 mt-4 border-t border-white/5 flex justify-between items-center group">
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-300 transition-colors">Credential Expiration (Days)</span>
                             <div className="relative">
-                                <select className="pl-4 pr-10 py-2 border border-white/10 bg-white/5 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 hover:bg-white/10 transition-all appearance-none cursor-pointer">
+                                <select className="pl-4 pr-10 py-2 border border-white/5 bg-white/5 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 hover:bg-white/10 transition-all appearance-none cursor-pointer">
                                     <option className="bg-slate-900">30 Cycle</option>
                                     <option className="bg-slate-900">60 Cycle</option>
                                     <option className="bg-slate-900" selected>90 Cycle</option>
@@ -117,7 +117,7 @@ export const SecurityTab: React.FC = () => {
                         <div className="pt-6 mt-4 border-t border-white/5 flex justify-between items-center group">
                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-300 transition-colors">Intrusion Lockout Threshold</span>
                             <div className="relative">
-                                <select className="pl-4 pr-10 py-2 border border-white/10 bg-white/5 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 hover:bg-white/10 transition-all appearance-none cursor-pointer">
+                                <select className="pl-4 pr-10 py-2 border border-white/5 bg-white/5 text-slate-300 text-[10px] font-black uppercase tracking-widest rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 hover:bg-white/10 transition-all appearance-none cursor-pointer">
                                     <option className="bg-slate-900">3 ATTEMPTS</option>
                                     <option className="bg-slate-900" selected>5 ATTEMPTS</option>
                                     <option className="bg-slate-900">10 ATTEMPTS</option>
@@ -152,7 +152,7 @@ export const SecurityTab: React.FC = () => {
                         <Button
                             size="sm"
                             variant="glass"
-                            className="border-white/10 uppercase text-[10px] font-black tracking-widest px-4 shadow-xl"
+                            className="border-white/5 uppercase text-[10px] font-black tracking-widest px-4 shadow-xl"
                             onClick={() => showSuccess('Viewing security logs')}
                         >
                             View All Logs
@@ -226,7 +226,7 @@ const PolicyToggle: React.FC<{ label: string; enabled: boolean }> = ({ label, en
 };
 
 const SecurityEvent: React.FC<{ type: 'warning' | 'info' | 'success'; title: string; message: string; time: string }> = ({ type, title, message, time }) => (
-    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group cursor-pointer">
+    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group cursor-pointer">
         <div className="flex items-center space-x-4">
             <div className={cn(
                 "w-10 h-10 rounded-xl flex items-center justify-center border group-hover:scale-110 transition-transform shadow-inner",

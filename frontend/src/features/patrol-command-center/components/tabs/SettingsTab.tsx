@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { Toggle } from '../../../../components/UI/Toggle';
+import { Select } from '../../../../components/UI/Select';
+import { OfflineQueueManager } from '../OfflineQueueManager';
 import { usePatrolContext } from '../../context/PatrolContext';
-import { showSuccess, showError } from '../../../../utils/toast';
+import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
 import { PatrolEndpoint } from '../../../../services/PatrolEndpoint';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { env } from '../../../../config/env';
 
 export const SettingsTab: React.FC = () => {
@@ -16,8 +20,28 @@ export const SettingsTab: React.FC = () => {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
 
+    // Validate settings before save
+    const validateSettings = (): string | null => {
+        if (settings.maxConcurrentPatrols < 1 || settings.maxConcurrentPatrols > 20) {
+            return 'Max concurrent patrols must be between 1 and 20';
+        }
+        if (settings.emergencyResponseMinutes < 1 || settings.emergencyResponseMinutes > 10) {
+            return 'Emergency response time must be between 1 and 10 minutes';
+        }
+        if (settings.heartbeatOfflineThresholdMinutes && (settings.heartbeatOfflineThresholdMinutes < 1 || settings.heartbeatOfflineThresholdMinutes > 60)) {
+            return 'Heartbeat threshold must be between 1 and 60 minutes';
+        }
+        return null;
+    };
+
     // Save to backend
     const handleSave = async () => {
+        const validationError = validateSettings();
+        if (validationError) {
+            showError(validationError);
+            return;
+        }
+        
         setIsSaving(true);
         try {
             // Transform back to snake_case for backend
@@ -56,11 +80,18 @@ export const SettingsTab: React.FC = () => {
                 heartbeat_offline_threshold_minutes: settings.heartbeatOfflineThresholdMinutes ?? 15
             };
 
-            await PatrolEndpoint.updateSettings(backendPayload);
+            await retryWithBackoff(
+                () => PatrolEndpoint.updateSettings(backendPayload),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 5000
+                }
+            );
             showSuccess('Settings saved successfully');
         } catch (error) {
-            console.error(error);
-            showError('Failed to save settings');
+            ErrorHandlerService.handle(error, 'saveSettings');
+            showError('Failed to save settings. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -92,7 +123,12 @@ export const SettingsTab: React.FC = () => {
                             disabled={isSaving}
                             className="border-white/5 hover:border-blue-500/30 text-white"
                         >
-                            {isSaving ? 'Saving...' : 'Save Changes'}
+                            {isSaving ? (
+                                <>
+                                    <i className="fas fa-spinner fa-spin mr-2" aria-hidden="true" />
+                                    Saving...
+                                </>
+                            ) : 'Save Changes'}
                         </Button>
                     </div>
                 </CardHeader>
@@ -100,97 +136,92 @@ export const SettingsTab: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Default Patrol Duration</label>
-                                <select
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
-                                    value={settings.defaultPatrolDurationMinutes}
-                                    onChange={(event) => updateSetting('defaultPatrolDurationMinutes', Number(event.target.value))}
+                                <Select
+                                    label="Default Patrol Duration"
+                                    value={String(settings.defaultPatrolDurationMinutes)}
+                                    onChange={(e) => updateSetting('defaultPatrolDurationMinutes', Number(e.target.value))}
                                 >
-                                    <option value={30} className="bg-slate-900">30 minutes</option>
-                                    <option value={45} className="bg-slate-900">45 minutes</option>
-                                    <option value={60} className="bg-slate-900">60 minutes</option>
-                                    <option value={90} className="bg-slate-900">90 minutes</option>
-                                    <option value={120} className="bg-slate-900">2 hours</option>
-                                </select>
+                                    <option value="30">30 minutes</option>
+                                    <option value="45">45 minutes</option>
+                                    <option value="60">60 minutes</option>
+                                    <option value="90">90 minutes</option>
+                                    <option value="120">2 hours</option>
+                                </Select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Patrol Frequency</label>
-                                <select
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
+                                <Select
+                                    label="Patrol Frequency"
                                     value={settings.patrolFrequency}
-                                    onChange={(event) => updateSetting('patrolFrequency', event.target.value)}
+                                    onChange={(e) => updateSetting('patrolFrequency', e.target.value)}
                                 >
-                                    <option value="30min" className="bg-slate-900">Every 30 minutes</option>
-                                    <option value="hourly" className="bg-slate-900">Every hour</option>
-                                    <option value="2hours" className="bg-slate-900">Every 2 hours</option>
-                                    <option value="4hours" className="bg-slate-900">Every 4 hours</option>
-                                    <option value="daily" className="bg-slate-900">Daily</option>
-                                    <option value="weekly" className="bg-slate-900">Weekly</option>
-                                    <option value="custom" className="bg-slate-900">Custom Schedule</option>
-                                </select>
+                                    <option value="30min">Every 30 minutes</option>
+                                    <option value="hourly">Every hour</option>
+                                    <option value="2hours">Every 2 hours</option>
+                                    <option value="4hours">Every 4 hours</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="custom">Custom Schedule</option>
+                                </Select>
                             </div>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Shift Handover Time</label>
+                                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Shift Handover Time</label>
                                 <input
                                     type="time"
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                                     value={settings.shiftHandoverTime}
                                     onChange={(event) => updateSetting('shiftHandoverTime', event.target.value)}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Emergency Response Time</label>
-                                <select
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
-                                    value={settings.emergencyResponseMinutes}
-                                    onChange={(event) => updateSetting('emergencyResponseMinutes', Number(event.target.value))}
+                                <Select
+                                    label="Emergency Response Time"
+                                    value={String(settings.emergencyResponseMinutes)}
+                                    onChange={(e) => updateSetting('emergencyResponseMinutes', Number(e.target.value))}
                                 >
-                                    <option value={1} className="bg-slate-900">1 minute</option>
-                                    <option value={2} className="bg-slate-900">2 minutes</option>
-                                    <option value={5} className="bg-slate-900">5 minutes</option>
-                                </select>
+                                    <option value="1">1 minute</option>
+                                    <option value="2">2 minutes</option>
+                                    <option value="5">5 minutes</option>
+                                </Select>
                             </div>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Patrol Buffer Time</label>
-                                <select
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
-                                    value={settings.patrolBufferMinutes}
-                                    onChange={(event) => updateSetting('patrolBufferMinutes', Number(event.target.value))}
+                                <Select
+                                    label="Patrol Buffer Time"
+                                    value={String(settings.patrolBufferMinutes)}
+                                    onChange={(e) => updateSetting('patrolBufferMinutes', Number(e.target.value))}
                                 >
-                                    <option value={0} className="bg-slate-900">No buffer</option>
-                                    <option value={5} className="bg-slate-900">5 minutes</option>
-                                    <option value={10} className="bg-slate-900">10 minutes</option>
-                                </select>
+                                    <option value="0">No buffer</option>
+                                    <option value="5">5 minutes</option>
+                                    <option value="10">10 minutes</option>
+                                </Select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Max Concurrent Patrols</label>
+                                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Max Concurrent Patrols</label>
                                 <input
                                     type="number"
                                     min="1"
                                     max="20"
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                                     value={settings.maxConcurrentPatrols}
                                     onChange={(event) => updateSetting('maxConcurrentPatrols', Number(event.target.value))}
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-wider mb-2">Heartbeat offline threshold (min)</label>
-                                <select
-                                    className="w-full p-2.5 border border-white/10 rounded-lg bg-[color:var(--input-bg)] text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500/50 shadow-inner"
-                                    value={settings.heartbeatOfflineThresholdMinutes ?? 15}
+                                <Select
+                                    label="Heartbeat offline threshold (min)"
+                                    value={String(settings.heartbeatOfflineThresholdMinutes ?? 15)}
                                     onChange={(e) => updateSetting('heartbeatOfflineThresholdMinutes', Number(e.target.value))}
+                                    helperText="Mark officer device offline after no heartbeat (minutes)"
                                 >
-                                    <option value={5} className="bg-slate-900">5</option>
-                                    <option value={10} className="bg-slate-900">10</option>
-                                    <option value={15} className="bg-slate-900">15</option>
-                                    <option value={20} className="bg-slate-900">20</option>
-                                    <option value={30} className="bg-slate-900">30</option>
-                                </select>
-                                <p className="text-[10px] text-slate-500 mt-1">Mark officer device offline after no heartbeat (minutes)</p>
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                    <option value="20">20</option>
+                                    <option value="30">30</option>
+                                </Select>
                             </div>
                         </div>
                     </div>
@@ -282,13 +313,13 @@ export const SettingsTab: React.FC = () => {
                     <div>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">API base</label>
                         <div className="flex gap-2 items-center">
-                            <code className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-xs font-mono text-white break-all">
+                            <code className="flex-1 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-xs font-mono text-white break-all">
                                 {typeof window !== 'undefined' ? `${window.location.origin}${env.API_BASE_URL}` : env.API_BASE_URL}
                             </code>
                             <Button
                                 size="sm"
                                 variant="glass"
-                                className="shrink-0 border-white/10 text-slate-400 hover:text-white"
+                                className="shrink-0 border-white/5 text-slate-400 hover:text-white"
                                 onClick={async () => {
                                     const base = typeof window !== 'undefined' ? `${window.location.origin}${env.API_BASE_URL}` : env.API_BASE_URL;
                                     await navigator.clipboard.writeText(base);
@@ -302,13 +333,13 @@ export const SettingsTab: React.FC = () => {
                     <div>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Checkpoint check-in</label>
                         <div className="flex gap-2 items-center">
-                            <code className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-xs font-mono text-white break-all">
+                            <code className="flex-1 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-xs font-mono text-white break-all">
                                 POST {env.API_BASE_URL}/patrols/&#123;patrol_id&#125;/checkpoints/&#123;checkpoint_id&#125;/check-in
                             </code>
                             <Button
                                 size="sm"
                                 variant="glass"
-                                className="shrink-0 border-white/10 text-slate-400 hover:text-white"
+                                className="shrink-0 border-white/5 text-slate-400 hover:text-white"
                                 onClick={async () => {
                                     const base = typeof window !== 'undefined' ? `${window.location.origin}${env.API_BASE_URL}` : env.API_BASE_URL;
                                     const url = `${base}/patrols/{patrol_id}/checkpoints/{checkpoint_id}/check-in`;
@@ -332,6 +363,9 @@ export const SettingsTab: React.FC = () => {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Offline Queue Management */}
+            <OfflineQueueManager />
         </div>
     );
 };

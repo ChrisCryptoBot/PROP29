@@ -17,7 +17,7 @@ export const SettingsModal: React.FC = () => {
     const renderToggleRow = (label: string, isChecked: boolean = true, isDisabled: boolean = false, description?: string) => (
         <label className={cn(
             "flex items-center justify-between p-3 border rounded-xl transition-all cursor-pointer group",
-            isDisabled ? "bg-black/20 border-white/5 opacity-50 cursor-not-allowed" : "bg-white/5 border-white/10 hover:bg-white/10"
+            isDisabled ? "bg-black/20 border-white/5 opacity-50 cursor-not-allowed" : "bg-white/5 border-white/5 hover:bg-white/10"
         )}>
             <div className="flex-1">
                 <span className="text-sm font-bold text-white/80 group-hover:text-white transition-colors">{label}</span>
@@ -81,9 +81,9 @@ export const SettingsModal: React.FC = () => {
                         <span>DATA MANAGEMENT</span>
                     </h3>
                     <div className="space-y-1.5">
-                        <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                        <div className="p-3 bg-white/5 border border-white/5 rounded-xl">
                             <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 ml-1">DATA PURGE INTERVAL</label>
-                            <select className="w-full bg-black/40 border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none">
+                            <select className="w-full bg-black/40 border-white/5 rounded-lg py-2 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none">
                                 <option value="never">DISABLED (PERMANENT LOG)</option>
                                 <option value="24h">24 HOUR CYCLE</option>
                                 <option value="7d">7 DAY RETENTION</option>
@@ -104,7 +104,7 @@ export const SettingsModal: React.FC = () => {
                     <div className="space-y-1.5">
                         <button
                             onClick={() => showSuccess('Channel creation coming soon...')}
-                            className="w-full p-4 border border-dashed border-white/10 rounded-xl text-white/30 hover:border-blue-500/50 hover:text-blue-500 transition-all text-[10px] font-black uppercase tracking-widest bg-white/[0.02]"
+                            className="w-full p-4 border border-dashed border-white/5 rounded-xl text-white/30 hover:border-blue-500/50 hover:text-blue-500 transition-all text-[10px] font-black uppercase tracking-widest bg-white/[0.02]"
                         >
                             <i className="fas fa-plus mr-2" />
                             Create New Channel
@@ -112,11 +112,11 @@ export const SettingsModal: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-6 border-t border-white/10">
+                <div className="flex justify-end space-x-3 pt-6 border-t border-white/5">
                     <Button
                         variant="outline"
                         onClick={() => setShowSettings(false)}
-                        className="font-black uppercase tracking-widest text-[10px] border-white/10 text-white/40 hover:text-white hover:bg-white/5"
+                        className="font-black uppercase tracking-widest text-[10px] border-white/5 text-white/40 hover:text-white hover:bg-white/5"
                     >
                         CANCEL
                     </Button>

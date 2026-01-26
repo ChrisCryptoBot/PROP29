@@ -21,6 +21,7 @@ import {
   MobileAppConfigTab,
   SettingsTab
 } from './components/tabs';
+import { BannedIndividualsTab } from './components/tabs/BannedIndividualsTab';
 import {
   RegisterVisitorModal,
   CreateEventModal,
@@ -35,6 +36,7 @@ const tabs = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'visitors', label: 'Visitors' },
   { id: 'events', label: 'Events' },
+  { id: 'banned-individuals', label: 'Banned Individuals' },
   { id: 'security-requests', label: 'Security Requests' },
   { id: 'badges-access', label: 'Badges & Access' },
   { id: 'mobile-app', label: 'Mobile App Config' },
@@ -49,6 +51,7 @@ export const VisitorSecurityModuleOrchestrator: React.FC = () => {
       case 'dashboard': return <DashboardTab />;
       case 'visitors': return <VisitorsTab />;
       case 'events': return <EventsTab />;
+      case 'banned-individuals': return <BannedIndividualsTab />;
       case 'security-requests': return <SecurityRequestsTab />;
       case 'badges-access': return <BadgesAccessTab />;
       case 'mobile-app': return <MobileAppConfigTab />;

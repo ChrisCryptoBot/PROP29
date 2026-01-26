@@ -58,7 +58,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
         onSelect ? 'cursor-pointer' : '',
         isOverdue
           ? "bg-red-500/5 border-red-500/30 hover:bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.1)] relative overflow-hidden"
-          : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+          : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20"
       )}
       onClick={handleClick}
     >
@@ -72,7 +72,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
             "border",
             isOverdue
               ? "bg-red-900/50 border-red-500/50 ring-2 ring-red-500/20"
-              : "bg-gradient-to-br from-blue-700 to-indigo-900 border-white/10"
+              : "bg-gradient-to-br from-blue-700 to-indigo-900 border-white/5"
           )}>
             {visitor.first_name[0]}{visitor.last_name[0]}
           </Avatar>

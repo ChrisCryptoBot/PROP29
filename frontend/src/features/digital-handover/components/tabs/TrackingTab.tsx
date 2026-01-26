@@ -58,7 +58,7 @@ export const TrackingTab: React.FC<TrackingTabProps> = ({
                 icon="fas fa-clock"
                 title="No Active Handovers"
                 description="There are currently no handovers in progress."
-                className="bg-black/20 border-dashed border-2 border-white/10"
+                className="bg-black/20 border-dashed border-2 border-white/5"
               />
             ) : (
               inProgressHandovers.map((handover) => {
@@ -129,7 +129,7 @@ export const TrackingTab: React.FC<TrackingTabProps> = ({
                 icon="fas fa-calendar-alt"
                 title="No Shift Data"
                 description="No shifts configured for today."
-                className="bg-black/20 border-dashed border-2 border-white/10"
+                className="bg-black/20 border-dashed border-2 border-white/5"
               />
             ) : (
               timeline.map((shift, index) => (

@@ -75,7 +75,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
           onClick={() => refreshAgentSubmissions()}
           variant="outline"
           disabled={loading.agentSubmissions}
-          className="text-[9px] font-black uppercase tracking-widest border-white/10 text-slate-300 hover:bg-white/5"
+          className="text-[9px] font-black uppercase tracking-widest border-white/5 text-slate-300 hover:bg-white/5"
         >
           <i className={cn("fas fa-sync-alt mr-1", loading.agentSubmissions && "animate-spin")} />
           Refresh Submissions
@@ -182,7 +182,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
             icon="fas fa-shield-alt"
             title="No Pending Requests"
             description="Security protocol is green. No active clearance requests or incident reports detected."
-            className="bg-black/20 border-dashed border-2 border-white/10"
+            className="bg-black/20 border-dashed border-2 border-white/5"
           />
         ) : (
           <div className="space-y-4 mt-4">

@@ -870,6 +870,8 @@ class GuestSafetyIncidentCreate(BaseModel):
     room_number: Optional[str] = None
     contact_info: Optional[str] = None
     assigned_team: Optional[str] = None
+    source: Optional[str] = "MANAGER"  # MANAGER, MOBILE_AGENT, HARDWARE_DEVICE, GUEST_PANIC_BUTTON, AUTO_CREATED
+    source_metadata: Optional[Dict[str, Any]] = None
 
 
 class GuestSafetyIncidentUpdate(BaseModel):
@@ -901,6 +903,8 @@ class GuestSafetyIncidentResponse(BaseModel):
     room_number: Optional[str] = None
     contact_info: Optional[str] = None
     assigned_team: Optional[str] = None
+    source: Optional[str] = "MANAGER"
+    source_metadata: Optional[Dict[str, Any]] = None
 
 
 class GuestSafetyTeamResponse(BaseModel):
@@ -923,6 +927,39 @@ class GuestSafetySettingsResponse(BaseModel):
     autoEscalation: bool
     notificationChannels: Dict[str, bool]
     responseTeamAssignment: str
+
+
+# Guest Message schemas
+class GuestMessageCreate(BaseModel):
+    incident_id: Optional[str] = None
+    guest_id: Optional[str] = None
+    guest_name: Optional[str] = None
+    room_number: Optional[str] = None
+    message_text: str
+    message_type: str = "request"  # request, update, question, emergency
+    source: Optional[str] = "GUEST_APP"
+    source_metadata: Optional[Dict[str, Any]] = None
+
+
+class GuestMessageResponse(BaseModel):
+    id: str
+    incident_id: Optional[str] = None
+    guest_id: Optional[str] = None
+    guest_name: Optional[str] = None
+    room_number: Optional[str] = None
+    message_text: str
+    message_type: str
+    direction: str
+    is_read: bool
+    read_at: Optional[datetime] = None
+    read_by: Optional[str] = None
+    created_at: datetime
+    source: Optional[str] = "GUEST_APP"
+    source_metadata: Optional[Dict[str, Any]] = None
+
+
+class GuestMessageUpdate(BaseModel):
+    is_read: Optional[bool] = None
 
 class EmergencyContactCreate(BaseModel):
     guest_id: UUID

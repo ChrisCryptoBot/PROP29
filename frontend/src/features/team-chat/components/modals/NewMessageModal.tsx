@@ -27,7 +27,7 @@ export const NewMessageModal: React.FC = () => {
             <div className="space-y-6">
                 {/* Selected Recipients Chip Cloud */}
                 {selectedRecipients.length > 0 && (
-                    <div className="p-4 bg-white/5 border border-white/10 rounded-xl shadow-inner">
+                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl shadow-inner">
                         <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">
                             ACTIVE TARGETS ({selectedRecipients.length})
                         </p>
@@ -79,7 +79,7 @@ export const NewMessageModal: React.FC = () => {
                                     "flex items-center space-x-4 p-3 border rounded-xl cursor-pointer transition-all",
                                     selectedRecipients.includes(member.id)
                                         ? 'border-blue-500 bg-blue-600/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                                        : 'border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/10'
+                                        : 'border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/5'
                                 )}
                             >
                                 <div className="relative">
@@ -99,7 +99,7 @@ export const NewMessageModal: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="relative shrink-0">
-                                    <div className="w-10 h-10 bg-white/10 border border-white/10 rounded flex items-center justify-center text-white font-black text-xs uppercase">
+                                    <div className="w-10 h-10 bg-white/10 border border-white/5 rounded flex items-center justify-center text-white font-black text-xs uppercase">
                                         {member.name.split(' ').map(n => n[0]).join('')}
                                     </div>
                                     <div
@@ -127,15 +127,15 @@ export const NewMessageModal: React.FC = () => {
                     <textarea
                         placeholder="ENTER PRELIMINARY DATA..."
                         rows={3}
-                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all resize-none placeholder:text-white/10"
+                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all resize-none placeholder:text-white/10"
                     />
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-6 border-t border-white/10">
+                <div className="flex justify-end space-x-3 pt-6 border-t border-white/5">
                     <Button
                         variant="outline"
                         onClick={() => setShowNewMessage(false)}
-                        className="font-black uppercase tracking-widest text-[10px] border-white/10 text-white/40 hover:text-white hover:bg-white/5"
+                        className="font-black uppercase tracking-widest text-[10px] border-white/5 text-white/40 hover:text-white hover:bg-white/5"
                     >
                         CANCEL
                     </Button>

@@ -111,7 +111,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
         >
             <div className="space-y-6">
                 {/* Header with Status */}
-                <div className="flex items-start justify-between pb-4 border-b border-white/10">
+                <div className="flex items-start justify-between pb-4 border-b border-white/5">
                     <div>
                         <h3 className="text-xl font-bold text-white tracking-tight">
                             {selectedPackage.tracking_number || 'No Tracking Number'}
@@ -134,7 +134,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                             Tracking Number
                         </label>
-                        <p className="text-sm font-mono text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                        <p className="text-sm font-mono text-white bg-white/5 px-3 py-2 rounded-lg border border-white/5">
                             {selectedPackage.tracking_number || 'N/A'}
                         </p>
                     </div>
@@ -183,7 +183,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                             Location
                         </label>
-                        <p className="text-sm font-medium text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                        <p className="text-sm font-medium text-white bg-white/5 px-3 py-2 rounded-lg border border-white/5">
                             {getLocationDisplay(selectedPackage.location)}
                         </p>
                     </div>
@@ -230,7 +230,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                                 Description
                             </label>
-                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-lg border border-white/5">
                                 {selectedPackage.description}
                             </p>
                         </div>
@@ -240,7 +240,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                                 Notes
                             </label>
-                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-lg border border-white/10">
+                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-lg border border-white/5">
                                 {selectedPackage.notes}
                             </p>
                         </div>
@@ -248,7 +248,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10">
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5">
                     {selectedPackage.status === PackageStatus.RECEIVED && (
                         <Button
                             onClick={handleNotify}
@@ -291,7 +291,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                     <Button
                         variant="outline"
                         onClick={onClose}
-                        className="ml-auto border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+                        className="ml-auto border-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
                     >
                         Close
                     </Button>

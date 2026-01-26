@@ -2,7 +2,9 @@
  * Guest Safety Tabs - Barrel Export
  */
 export * from './IncidentsTab';
+export * from './MessagesTab';
 export * from './MassNotificationTab';
 export * from './ResponseTeamsTab';
+export * from './EvacuationTab';
 export * from './AnalyticsTab';
 export * from './SettingsTab';

@@ -2,10 +2,12 @@
 import React, { useState } from 'react';
 import { Button } from '../../../../components/UI/Button';
 import { Modal } from '../../../../components/UI/Modal';
-import { showSuccess, showError } from '../../../../utils/toast';
+import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
 import { PatrolEndpoint } from '../../../../services/PatrolEndpoint';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { PatrolOfficer } from '../../types';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 
 interface CreateOfficerModalProps {
     isOpen: boolean;
@@ -19,6 +21,7 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
     const [badgeNumber, setBadgeNumber] = useState('');
     const [specializations, setSpecializations] = useState<string[]>([]);
     const [specInput, setSpecInput] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     React.useEffect(() => {
         if (editingOfficer) {
@@ -37,25 +40,35 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const newErrors: Record<string, string> = {};
 
-        if (!name) { // Badge number kept optional for edit if we don't display it
-            if (!editingOfficer && !badgeNumber) {
-                showError('Name and Badge Number are required');
-                return;
-            } else if (!name) {
-                showError('Name is required');
-                return;
-            }
+        if (!name.trim()) {
+            newErrors.name = 'Name is required';
+        }
+        if (!editingOfficer && !badgeNumber.trim()) {
+            newErrors.badgeNumber = 'Badge number is required';
         }
 
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) {
+            return;
+        }
+
+        const toastId = showLoading(editingOfficer ? 'Updating officer...' : 'Creating officer...');
         try {
             if (editingOfficer) {
                 // Edit Mode
-                const updatedUser = await PatrolEndpoint.updateOfficer(editingOfficer.id, {
-                    name,
-                    // Only send badge if changed/provided? Backend might not support updating badge number easily if it's unique
-                    specializations
-                });
+                const updatedUser = await retryWithBackoff(
+                    () => PatrolEndpoint.updateOfficer(editingOfficer.id, {
+                        name,
+                        specializations
+                    }),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000
+                    }
+                );
 
                 const updatedOfficer: PatrolOfficer = {
                     ...editingOfficer,
@@ -64,14 +77,21 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
                 };
 
                 setOfficers((prev: PatrolOfficer[]) => prev.map(o => o.id === editingOfficer.id ? updatedOfficer : o));
-                showSuccess(`Officer updated successfully`);
+                dismissLoadingAndShowSuccess(toastId, `Officer updated successfully`);
             } else {
                 // Create Mode
-                const newOfficerUser = await PatrolEndpoint.createOfficer({
-                    name,
-                    badge_number: badgeNumber,
-                    specializations: specializations.length > 0 ? specializations : ['General Security']
-                });
+                const newOfficerUser = await retryWithBackoff(
+                    () => PatrolEndpoint.createOfficer({
+                        name,
+                        badge_number: badgeNumber,
+                        specializations: specializations.length > 0 ? specializations : ['General Security']
+                    }),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 5000
+                    }
+                );
 
                 const newOfficer: PatrolOfficer = {
                     id: newOfficerUser.user_id,
@@ -87,13 +107,26 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
                 };
 
                 setOfficers((prev: PatrolOfficer[]) => [...prev, newOfficer]);
-                showSuccess(`Officer ${name} added successfully`);
+                dismissLoadingAndShowSuccess(toastId, `Officer ${name} added successfully`);
             }
             onClose();
+            setErrors({});
         } catch (error) {
-            console.error('Failed to save officer:', error);
-            showError('Failed to save officer.');
+            ErrorHandlerService.handle(error, editingOfficer ? 'updateOfficer' : 'createOfficer');
+            dismissLoadingAndShowError(toastId, 'Failed to save officer. Please try again.');
         }
+    };
+
+    const handleFieldChange = (field: string, value: string) => {
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+        if (field === 'name') setName(value);
+        if (field === 'badgeNumber') setBadgeNumber(value);
     };
 
     const addSpecialization = () => {
@@ -112,25 +145,41 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                    <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Full Name</label>
+                    <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+                        Full Name <span className="text-red-500">*</span>
+                    </label>
                     <input
                         type="text"
                         value={name}
-                        onChange={e => setName(e.target.value)}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                        onChange={e => handleFieldChange('name', e.target.value)}
+                        className={`w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500 ${
+                            errors.name ? 'border-red-500/50 focus:ring-red-500/30 focus:border-red-500/50' : 'border-white/5 focus:ring-blue-500/20'
+                        }`}
                         placeholder="e.g., Officer John Doe"
                     />
+                    {errors.name && (
+                        <p className="text-[10px] text-red-400 font-black uppercase tracking-tight ml-1 mt-1">{errors.name}</p>
+                    )}
                 </div>
-                <div>
-                    <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Badge Number</label>
-                    <input
-                        type="text"
-                        value={badgeNumber}
-                        onChange={e => setBadgeNumber(e.target.value)}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
-                        placeholder="e.g., SEC-8821"
-                    />
-                </div>
+                {!editingOfficer && (
+                    <div>
+                        <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+                            Badge Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={badgeNumber}
+                            onChange={e => handleFieldChange('badgeNumber', e.target.value)}
+                            className={`w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500 ${
+                                errors.badgeNumber ? 'border-red-500/50 focus:ring-red-500/30 focus:border-red-500/50' : 'border-white/5 focus:ring-blue-500/20'
+                            }`}
+                            placeholder="e.g., SEC-8821"
+                        />
+                        {errors.badgeNumber && (
+                            <p className="text-[10px] text-red-400 font-black uppercase tracking-tight ml-1 mt-1">{errors.badgeNumber}</p>
+                        )}
+                    </div>
+                )}
                 <div>
                     <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Specializations</label>
                     <div className="flex gap-2">
@@ -138,7 +187,7 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
                             type="text"
                             value={specInput}
                             onChange={e => setSpecInput(e.target.value)}
-                            className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                            className="flex-1 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                             placeholder="e.g., K9 Unit"
                         />
                         <Button type="button" onClick={addSpecialization} variant="subtle" className="text-xs font-black uppercase tracking-widest">
@@ -147,7 +196,7 @@ export const CreateOfficerModal: React.FC<CreateOfficerModalProps> = ({ isOpen, 
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
                         {specializations.map(spec => (
-                            <span key={spec} className="px-2 py-1 bg-white/5 text-white/70 text-xs rounded border border-white/10 font-mono">
+                            <span key={spec} className="px-2 py-1 bg-white/5 text-white/70 text-xs rounded border border-white/5 font-mono">
                                 {spec}
                             </span>
                         ))}

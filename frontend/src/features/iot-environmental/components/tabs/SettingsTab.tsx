@@ -15,8 +15,8 @@ const SettingsTab: React.FC = () => {
   const isReadOnly = !canUpdateSettings;
 
   return (
-    <div className="bg-black/20 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
-      <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+    <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
+      <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <h2 className="text-lg font-black text-white uppercase tracking-tighter flex items-center">
           <i className="fas fa-cog mr-3 text-blue-500" aria-hidden="true" />
           ENVIRONMENTAL SETTINGS
@@ -42,7 +42,7 @@ const SettingsTab: React.FC = () => {
                   value={settingsForm.temperatureUnit}
                   onChange={(e) => setSettingsForm({ ...settingsForm, temperatureUnit: e.target.value as any })}
                   disabled={isReadOnly}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="celsius">CELSIUS (°C) - METRIC STANDARD</option>
                   <option value="fahrenheit">FAHRENHEIT (°F) - IMPERIAL STANDARD</option>
@@ -60,7 +60,7 @@ const SettingsTab: React.FC = () => {
                   value={settingsForm.refreshInterval}
                   onChange={(e) => setSettingsForm({ ...settingsForm, refreshInterval: e.target.value })}
                   disabled={isReadOnly}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="15">HIGH FREQUENCY (15 SECONDS)</option>
                   <option value="30">STANDARD FREQUENCY (30 SECONDS)</option>
@@ -80,7 +80,7 @@ const SettingsTab: React.FC = () => {
                   value={settingsForm.dataRetention}
                   onChange={(e) => setSettingsForm({ ...settingsForm, dataRetention: e.target.value })}
                   disabled={isReadOnly}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="30">SHORT-TERM ARCHIVE (30 DAYS)</option>
                   <option value="60">60 DAYS</option>
@@ -114,14 +114,14 @@ const SettingsTab: React.FC = () => {
               <label
                 key={setting.id}
                 className={cn(
-                  "flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl transition-all cursor-pointer hover:bg-white/10 group relative overflow-hidden",
+                  "flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-xl transition-all cursor-pointer hover:bg-white/10 group relative overflow-hidden",
                   isReadOnly && "opacity-50 cursor-not-allowed pointer-events-none"
                 )}
               >
                 <div className="flex items-center space-x-3 relative z-10">
                   <div className={cn(
                     "w-8 h-8 rounded-lg flex items-center justify-center text-xs border transition-colors",
-                    setting.state ? "bg-blue-500/10 text-blue-500 border-blue-500/20" : "bg-white/5 text-white/20 border-white/10"
+                    setting.state ? "bg-blue-500/10 text-blue-500 border-blue-500/20" : "bg-white/5 text-white/20 border-white/5"
                   )}>
                     <i className={cn("fas", setting.icon)} />
                   </div>
@@ -137,7 +137,7 @@ const SettingsTab: React.FC = () => {
                   />
                   <div className={cn(
                     "w-10 h-5 rounded-full border transition-all relative",
-                    setting.state ? "bg-blue-600 border-blue-400" : "bg-white/5 border-white/10"
+                    setting.state ? "bg-blue-600 border-blue-400" : "bg-white/5 border-white/5"
                   )}>
                     <div className={cn(
                       "absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all shadow-lg",
@@ -151,7 +151,7 @@ const SettingsTab: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-6 border-t border-white/10">
+        <div className="flex items-center justify-between pt-6 border-t border-white/5">
           <Button
             variant="ghost"
             onClick={handleResetSettings}

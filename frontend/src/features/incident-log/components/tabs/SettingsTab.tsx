@@ -317,7 +317,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.autoAssign}
                                         onChange={(e) => setSettings({ ...settings, autoAssign: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -326,7 +326,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.autoEscalate}
                                         onChange={(e) => setSettings({ ...settings, autoEscalate: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -335,7 +335,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emailNotifications}
                                         onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -349,7 +349,7 @@ export const SettingsTab: React.FC = () => {
                                     <select
                                         value={settings.retentionPeriod}
                                         onChange={(e) => setSettings({ ...settings, retentionPeriod: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                     >
                                         <option className="bg-slate-900">1 year</option>
                                         <option className="bg-slate-900">2 years</option>
@@ -362,7 +362,7 @@ export const SettingsTab: React.FC = () => {
                                     <select
                                         value={settings.archiveFrequency}
                                         onChange={(e) => setSettings({ ...settings, archiveFrequency: e.target.value })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                     >
                                         <option className="bg-slate-900">Monthly</option>
                                         <option className="bg-slate-900">Quarterly</option>
@@ -396,7 +396,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emailNewIncidents}
                                         onChange={(e) => setSettings({ ...settings, emailNewIncidents: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -405,7 +405,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emailStatusChanges}
                                         onChange={(e) => setSettings({ ...settings, emailStatusChanges: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -414,7 +414,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emailEscalations}
                                         onChange={(e) => setSettings({ ...settings, emailEscalations: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -429,7 +429,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.smsCritical}
                                         onChange={(e) => setSettings({ ...settings, smsCritical: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -438,7 +438,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.smsEmergency}
                                         onChange={(e) => setSettings({ ...settings, smsEmergency: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -469,7 +469,7 @@ export const SettingsTab: React.FC = () => {
                                         value={settings.apiEndpoint}
                                         onChange={(e) => setSettings({ ...settings, apiEndpoint: e.target.value })}
                                         placeholder="https://api.example.com/incidents"
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                     />
                                 </div>
                                 <div>
@@ -479,7 +479,7 @@ export const SettingsTab: React.FC = () => {
                                         value={settings.apiKey}
                                         onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
                                         placeholder="Enter API key"
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                     />
                                 </div>
                             </div>
@@ -494,7 +494,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.slackIntegration}
                                         onChange={(e) => setSettings({ ...settings, slackIntegration: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -503,7 +503,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.teamsIntegration}
                                         onChange={(e) => setSettings({ ...settings, teamsIntegration: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
@@ -512,7 +512,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.webhookNotifications}
                                         onChange={(e) => setSettings({ ...settings, webhookNotifications: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -556,7 +556,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.agentAutoApprovalEnabled}
                                         onChange={(e) => setSettings({ ...settings, agentAutoApprovalEnabled: e.target.checked })}
-                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-green-500/20"
+                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-green-500/20"
                                     />
                                 </div>
                                 <div>
@@ -580,7 +580,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.bulkApprovalEnabled}
                                         onChange={(e) => setSettings({ ...settings, bulkApprovalEnabled: e.target.checked })}
-                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-green-500/20"
+                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-green-500/20"
                                     />
                                 </div>
                             </div>
@@ -595,7 +595,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.agentPerformanceAlerts}
                                         onChange={(e) => setSettings({ ...settings, agentPerformanceAlerts: e.target.checked })}
-                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-green-500/20"
+                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-green-500/20"
                                     />
                                 </div>
                                 <div>
@@ -614,7 +614,7 @@ export const SettingsTab: React.FC = () => {
                                     <select
                                         value={settings.performanceMetricsRetentionDays}
                                         onChange={(e) => setSettings({ ...settings, performanceMetricsRetentionDays: parseInt(e.target.value) })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-green-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-green-500/20 focus:bg-white/10"
                                     >
                                         <option value={30} className="bg-slate-900">30 days</option>
                                         <option value={60} className="bg-slate-900">60 days</option>
@@ -651,7 +651,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.autoCreateIncidentsFromEvents}
                                         onChange={(e) => setSettings({ ...settings, autoCreateIncidentsFromEvents: e.target.checked })}
-                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-orange-500/20"
+                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-orange-500/20"
                                     />
                                 </div>
                                 <div>
@@ -659,7 +659,7 @@ export const SettingsTab: React.FC = () => {
                                     <select
                                         value={settings.hardwareIncidentDefaultSeverity}
                                         onChange={(e) => setSettings({ ...settings, hardwareIncidentDefaultSeverity: e.target.value as IncidentSeverity })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-orange-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-orange-500/20 focus:bg-white/10"
                                     >
                                         <option value="low" className="bg-slate-900">Low</option>
                                         <option value="medium" className="bg-slate-900">Medium</option>
@@ -673,7 +673,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.autoAssignHardwareIncidents}
                                         onChange={(e) => setSettings({ ...settings, autoAssignHardwareIncidents: e.target.checked })}
-                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-orange-500/20"
+                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-orange-500/20"
                                     />
                                 </div>
                             </div>
@@ -688,7 +688,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.deviceOfflineAlertEnabled}
                                         onChange={(e) => setSettings({ ...settings, deviceOfflineAlertEnabled: e.target.checked })}
-                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-orange-500/20"
+                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-orange-500/20"
                                     />
                                 </div>
                                 <div>
@@ -699,7 +699,7 @@ export const SettingsTab: React.FC = () => {
                                         max="120"
                                         value={settings.deviceOfflineThresholdMinutes}
                                         onChange={(e) => setSettings({ ...settings, deviceOfflineThresholdMinutes: parseInt(e.target.value) || 15 })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-orange-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-orange-500/20 focus:bg-white/10"
                                     />
                                 </div>
                                 <div>
@@ -741,7 +741,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emergencyAutoConvertToIncident}
                                         onChange={(e) => setSettings({ ...settings, emergencyAutoConvertToIncident: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                                 <div>
@@ -749,7 +749,7 @@ export const SettingsTab: React.FC = () => {
                                     <select
                                         value={settings.emergencyDefaultSeverity}
                                         onChange={(e) => setSettings({ ...settings, emergencyDefaultSeverity: e.target.value as IncidentSeverity })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-red-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-red-500/20 focus:bg-white/10"
                                     >
                                         <option value="medium" className="bg-slate-900">Medium</option>
                                         <option value="high" className="bg-slate-900">High</option>
@@ -762,7 +762,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emergencyPreserveOriginalAlert}
                                         onChange={(e) => setSettings({ ...settings, emergencyPreserveOriginalAlert: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                             </div>
@@ -777,7 +777,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emergencyRequireManagerApproval}
                                         onChange={(e) => setSettings({ ...settings, emergencyRequireManagerApproval: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                                 <div>
@@ -785,7 +785,7 @@ export const SettingsTab: React.FC = () => {
                                     <select
                                         value={settings.emergencyNotificationWorkflow}
                                         onChange={(e) => setSettings({ ...settings, emergencyNotificationWorkflow: e.target.value as 'immediate' | 'delayed' | 'manual' })}
-                                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-red-500/20 focus:bg-white/10"
+                                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-red-500/20 focus:bg-white/10"
                                     >
                                         <option value="immediate" className="bg-slate-900">Immediate</option>
                                         <option value="delayed" className="bg-slate-900">Delayed (5 min)</option>
@@ -798,7 +798,7 @@ export const SettingsTab: React.FC = () => {
                                         type="checkbox"
                                         checked={settings.emergencyAutoAssignConverted}
                                         onChange={(e) => setSettings({ ...settings, emergencyAutoAssignConverted: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/10 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                             </div>

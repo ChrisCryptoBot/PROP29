@@ -5,7 +5,9 @@ import { Badge } from '../../../../components/UI/Badge';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { RouteOptimizationPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
-import { showSuccess, showError } from '../../../../utils/toast';
+import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { PatrolEndpoint } from '../../../../services/PatrolEndpoint';
 import { PatrolRoute, Checkpoint } from '../../types';
 
@@ -18,6 +20,7 @@ export const RoutesCheckpointsTab: React.FC = () => {
     const {
         routes,
         upcomingPatrols,
+        officers,
         setRoutes,
         refreshPatrolData,
         handleDeleteRoute,
@@ -61,6 +64,10 @@ export const RoutesCheckpointsTab: React.FC = () => {
                             return;
                         }
                         const route = routes[0];
+                        if (!route) {
+                            showError('Route not found');
+                            return;
+                        }
                         const activeOnRoute = (upcomingPatrols || []).filter(
                             (p) => p?.status === 'in-progress' && (p.routeId === route?.id || p.location === route?.name)
                         );
@@ -68,20 +75,35 @@ export const RoutesCheckpointsTab: React.FC = () => {
                             showError('Cannot reorder checkpoints while an active patrol uses this route. Complete or cancel the patrol first.');
                             return;
                         }
+                        const toastId = showLoading('Applying route optimization...');
                         try {
                             const reordered = optimizedSequence
                                 .map((id: string) => route.checkpoints.find(cp => cp.id === id))
                                 .filter(Boolean);
-                            const response = await PatrolEndpoint.updateRoute(route.id, {
-                                checkpoints: reordered
-                            });
+                            
+                            if (reordered.length !== route.checkpoints.length) {
+                                dismissLoadingAndShowError(toastId, 'Optimization sequence missing checkpoints');
+                                return;
+                            }
+                            
+                            const response = await retryWithBackoff(
+                                () => PatrolEndpoint.updateRoute(route.id, {
+                                    checkpoints: reordered
+                                }),
+                                {
+                                    maxRetries: 3,
+                                    baseDelay: 1000,
+                                    maxDelay: 5000
+                                }
+                            );
                             setRoutes(prev => prev.map(r => r.id === route.id ? {
                                 ...r,
                                 checkpoints: response.checkpoints || reordered
                             } : r));
-                            showSuccess('Route optimization applied');
+                            dismissLoadingAndShowSuccess(toastId, 'Route optimization applied');
                         } catch (error) {
-                            showError('Failed to apply optimization');
+                            dismissLoadingAndShowError(toastId, 'Failed to apply optimization. Please try again.');
+                            ErrorHandlerService.handle(error, 'applyRouteOptimization');
                         }
                     }}
                 />
@@ -127,7 +149,7 @@ export const RoutesCheckpointsTab: React.FC = () => {
                             routes.map(route => {
                                 if (!route) return null;
                                 return (
-                                    <div key={route.id} className="p-4 border border-white/10 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                                    <div key={route.id} className="p-4 border border-white/5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                                         <div className="flex items-center justify-between mb-3">
                                             <div>
                                                 <div className="flex items-center gap-3">
@@ -147,31 +169,51 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                             <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Performance:</span> <span className="font-mono text-green-300">{route.performanceScore ?? 0}%</span></div>
                                         </div>
                                         <div className="flex space-x-2 justify-end">
-                                            <Button size="sm" variant="glass" onClick={() => setViewingRoute(route)} className="border-white/10 text-slate-300"><i className="fas fa-eye mr-1"></i> View</Button>
-                                            <Button size="sm" variant="glass" onClick={() => { setEditingRoute(route); setShowCreateRoute(true); }} className="border-white/10 text-slate-300"><i className="fas fa-edit mr-1"></i> Edit</Button>
+                                            <Button size="sm" variant="glass" onClick={() => setViewingRoute(route)} className="border-white/5 text-slate-300"><i className="fas fa-eye mr-1"></i> View</Button>
+                                            <Button size="sm" variant="glass" onClick={() => { setEditingRoute(route); setShowCreateRoute(true); }} className="border-white/5 text-slate-300"><i className="fas fa-edit mr-1"></i> Edit</Button>
                                             <Button size="sm" variant="glass" onClick={() => handleDeleteRoute(route.id)} className="border-red-500/20 text-red-400 hover:border-red-500/40"><i className="fas fa-trash mr-1"></i> Delete</Button>
                                             <Button
                                                 size="sm"
                                                 variant="glass"
                                                 onClick={async () => {
-                                                    if (!route.checkpoints?.length) { showError('Route has no checkpoints'); return; }
+                                                    if (!route.checkpoints?.length) {
+                                                        showError('Route has no checkpoints');
+                                                        return;
+                                                    }
+                                                    
+                                                    // Check for available officers
+                                                    const availableOfficers = officers.filter(o => o.status !== 'on-duty');
+                                                    if (availableOfficers.length === 0) {
+                                                        showError('No available officers. All officers are currently on duty.');
+                                                        return;
+                                                    }
+                                                    
+                                                    const toastId = showLoading('Starting patrol...');
                                                     try {
-                                                        await PatrolEndpoint.createPatrol({
-                                                            property_id: selectedPropertyId || undefined,
-                                                            patrol_type: 'scheduled',
-                                                            route: {
-                                                                name: route.name,
-                                                                description: route.description,
-                                                                estimated_duration: route.estimatedDuration,
-                                                                priority: 'medium',
-                                                                route_id: route.id
-                                                            },
-                                                            checkpoints: route.checkpoints || []
-                                                        });
+                                                        await retryWithBackoff(
+                                                            () => PatrolEndpoint.createPatrol({
+                                                                property_id: selectedPropertyId || undefined,
+                                                                patrol_type: 'scheduled',
+                                                                route: {
+                                                                    name: route.name,
+                                                                    description: route.description,
+                                                                    estimated_duration: route.estimatedDuration,
+                                                                    priority: 'medium',
+                                                                    route_id: route.id
+                                                                },
+                                                                checkpoints: route.checkpoints || []
+                                                            }),
+                                                            {
+                                                                maxRetries: 3,
+                                                                baseDelay: 1000,
+                                                                maxDelay: 5000
+                                                            }
+                                                        );
                                                         await refreshPatrolData();
-                                                        showSuccess(`Patrol started for "${route.name}"`);
+                                                        dismissLoadingAndShowSuccess(toastId, `Patrol started for "${route.name}"`);
                                                     } catch (error) {
-                                                        showError('Failed to start patrol');
+                                                        dismissLoadingAndShowError(toastId, 'Failed to start patrol. Please try again.');
+                                                        ErrorHandlerService.handle(error, 'startPatrolFromRoute');
                                                     }
                                                 }}
                                                 disabled={!route.checkpoints?.length}
@@ -224,7 +266,7 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                         className={`flex items-center justify-between p-4 rounded-lg transition-colors border-l-4 ${
                                             checkpoint.isCritical
                                                 ? 'border-l-red-500 bg-red-500/5 border border-red-500/20 hover:bg-red-500/10'
-                                                : 'border-l-transparent border border-white/10 bg-white/5 hover:bg-white/10'
+                                                : 'border-l-transparent border border-white/5 bg-white/5 hover:bg-white/10'
                                         }`}
                                     >
                                         <div className="flex-1">
@@ -240,8 +282,8 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <Button size="sm" variant="glass" onClick={() => setViewingCheckpoint(checkpoint)} className="border-white/10 text-slate-300"><i className="fas fa-map-marker-alt mr-1"></i> View</Button>
-                                            <Button size="sm" variant="glass" onClick={() => { setEditingCheckpoint(checkpoint); setShowAddCheckpoint(true); }} className="border-white/10 text-slate-300"><i className="fas fa-edit mr-1"></i> Edit</Button>
+                                            <Button size="sm" variant="glass" onClick={() => setViewingCheckpoint(checkpoint)} className="border-white/5 text-slate-300"><i className="fas fa-map-marker-alt mr-1"></i> View</Button>
+                                            <Button size="sm" variant="glass" onClick={() => { setEditingCheckpoint(checkpoint); setShowAddCheckpoint(true); }} className="border-white/5 text-slate-300"><i className="fas fa-edit mr-1"></i> Edit</Button>
                                             <Button size="sm" variant="glass" onClick={() => handleDeleteCheckpoint(checkpoint.id, checkpoint.routeId)} className="border-red-500/20 text-red-400 hover:border-red-500/40"><i className="fas fa-trash mr-1"></i> Delete</Button>
                                         </div>
                                     </div>

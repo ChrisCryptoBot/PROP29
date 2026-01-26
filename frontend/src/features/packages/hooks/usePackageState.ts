@@ -19,7 +19,8 @@ import type {
     PackageCreate,
     PackageUpdate,
     PackageFilters,
-    PackageStatus
+    PackageStatus,
+    PackageSettings
 } from '../types/package.types';
 import { PackageStatus as StatusEnum } from '../types/package.types';
 import packageService from '../services/PackageService';
@@ -28,11 +29,13 @@ export interface UsePackageStateReturn {
     // Data
     packages: Package[];
     selectedPackage: Package | null;
+    settings: PackageSettings | null;
 
     // Loading states
     loading: {
         packages: boolean;
         package: boolean;
+        settings: boolean;
     };
 
     // Actions - CRUD Operations
@@ -53,6 +56,10 @@ export interface UsePackageStateReturn {
     // Actions - Bulk Operations
     bulkDelete: (packageIds: string[]) => Promise<boolean>;
     bulkStatusChange: (packageIds: string[], status: PackageStatus) => Promise<boolean>;
+
+    // Actions - Settings
+    refreshSettings: () => Promise<void>;
+    updateSettings: (settings: Partial<PackageSettings>) => Promise<boolean>;
 }
 
 export function usePackageState(): UsePackageStateReturn {
@@ -61,11 +68,13 @@ export function usePackageState(): UsePackageStateReturn {
     // State
     const [packages, setPackages] = useState<Package[]>([]);
     const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+    const [settings, setSettings] = useState<PackageSettings | null>(null);
 
     // Loading states
     const [loading, setLoading] = useState({
         packages: false,
         package: false,
+        settings: false,
     });
 
     // Fetch Packages
@@ -324,14 +333,60 @@ export function usePackageState(): UsePackageStateReturn {
         }
     }, [refreshPackages]);
 
+    // Refresh Settings
+    const refreshSettings = useCallback(async (): Promise<void> => {
+        setLoading(prev => ({ ...prev, settings: true }));
+        try {
+            const response = await packageService.getSettings(currentUser?.roles?.[0] || undefined);
+            if (response.data) {
+                setSettings(response.data);
+            }
+        } catch (error) {
+            logger.error('Failed to fetch package settings', error instanceof Error ? error : new Error(String(error)), {
+                module: 'Package',
+                action: 'refreshSettings'
+            });
+            showError('Failed to load package settings');
+        } finally {
+            setLoading(prev => ({ ...prev, settings: false }));
+        }
+    }, [currentUser?.roles]);
+
+    // Update Settings
+    const updateSettings = useCallback(async (settingsUpdate: Partial<PackageSettings>): Promise<boolean> => {
+        const toastId = showLoading('Saving package settings...');
+        setLoading(prev => ({ ...prev, settings: true }));
+        try {
+            const response = await packageService.updateSettings(settingsUpdate, currentUser?.roles?.[0] || undefined);
+            if (response.data) {
+                setSettings(response.data);
+                dismissLoadingAndShowSuccess(toastId, 'Package settings saved successfully');
+                return true;
+            }
+            dismissLoadingAndShowError(toastId, 'Failed to save package settings');
+            return false;
+        } catch (error) {
+            logger.error('Failed to update package settings', error instanceof Error ? error : new Error(String(error)), {
+                module: 'Package',
+                action: 'updateSettings'
+            });
+            dismissLoadingAndShowError(toastId, 'Failed to save package settings');
+            return false;
+        } finally {
+            setLoading(prev => ({ ...prev, settings: false }));
+        }
+    }, [currentUser?.roles]);
+
     // Initial load
     useEffect(() => {
         refreshPackages();
-    }, [refreshPackages]);
+        refreshSettings();
+    }, [refreshPackages, refreshSettings]);
 
     return {
         packages,
         selectedPackage,
+        settings,
         loading,
         refreshPackages,
         getPackage,
@@ -344,5 +399,7 @@ export function usePackageState(): UsePackageStateReturn {
         setSelectedPackage,
         bulkDelete,
         bulkStatusChange,
+        refreshSettings,
+        updateSettings,
     };
 }

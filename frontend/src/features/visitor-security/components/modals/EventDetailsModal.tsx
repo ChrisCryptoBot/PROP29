@@ -16,10 +16,10 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = React.memo(({
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="glass-card bg-slate-900/90 border border-white/10 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <div className="glass-card bg-slate-900/90 border border-white/5 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between p-6 border-b border-white/5">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-purple-700 to-indigo-900 rounded-xl flex items-center justify-center shadow-lg border-2 border-white/10">
+                        <div className="w-16 h-16 bg-gradient-to-br from-purple-700 to-indigo-900 rounded-xl flex items-center justify-center shadow-lg border-2 border-white/5">
                             <i className="fas fa-calendar-alt text-2xl text-white" />
                         </div>
                         <div>
@@ -139,7 +139,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = React.memo(({
                     </div>
                 </div>
 
-                <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end items-center rounded-b-lg">
+                <div className="p-6 border-t border-white/5 bg-white/5 flex justify-end items-center rounded-b-lg">
                     <Button
                         variant="outline"
                         onClick={onClose}

@@ -32,7 +32,7 @@ export const SettingsTab: React.FC = () => {
                     <div className="space-y-8">
                         {/* General Settings */}
                         <section>
-                            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-main)] mb-4 pb-2 border-b border-white/10">General Policies</h4>
+                            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-main)] mb-4 pb-2 border-b border-white/5">General Policies</h4>
                             <div className="space-y-4">
                                 <SettingToggle 
                                     label="Auto-share Permanent Bans with Network" 
@@ -60,22 +60,22 @@ export const SettingsTab: React.FC = () => {
 
                         {/* Retention Settings */}
                         <section>
-                            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-main)] mb-4 pb-2 border-b border-white/10">Data Retention & Governance</h4>
+                            <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-main)] mb-4 pb-2 border-b border-white/5">Data Retention & Governance</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="p-4 rounded-xl border border-white/5 bg-white/5">
                                     <label className="block text-sm font-bold text-[color:var(--text-sub)] mb-2">Audit Logs Retention</label>
-                                    <select className="w-full px-3 py-2 border border-white/10 bg-white/5 text-[color:var(--text-main)] rounded-lg disabled:opacity-50" disabled={!isAdmin}>
+                                    <select className="w-full px-3 py-2 border border-white/5 bg-white/5 text-[color:var(--text-main)] rounded-lg disabled:opacity-50" disabled={!isAdmin} defaultValue="180 Days">
                                         <option>90 Days</option>
-                                        <option selected>180 Days</option>
+                                        <option>180 Days</option>
                                         <option>1 Year</option>
                                         <option>Indefinite</option>
                                     </select>
                                 </div>
                                 <div className="p-4 rounded-xl border border-white/5 bg-white/5">
                                     <label className="block text-sm font-bold text-[color:var(--text-sub)] mb-2">Biometric Data Purge</label>
-                                    <select className="w-full px-3 py-2 border border-white/10 bg-white/5 text-[color:var(--text-main)] rounded-lg disabled:opacity-50" disabled={!isAdmin}>
+                                    <select className="w-full px-3 py-2 border border-white/5 bg-white/5 text-[color:var(--text-main)] rounded-lg disabled:opacity-50" disabled={!isAdmin} defaultValue="30 Days Post-Expiry">
                                         <option>Upon Expiry</option>
-                                        <option selected>30 Days Post-Expiry</option>
+                                        <option>30 Days Post-Expiry</option>
                                         <option>90 Days Post-Expiry</option>
                                     </select>
                                 </div>

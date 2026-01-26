@@ -111,7 +111,7 @@ export const RecordingsTab: React.FC = () => {
           <div className="flex items-center gap-4 mb-8">
             <div className="relative flex-1 group">
               <SearchBar
-                className="w-full bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-blue-500/50 transition-all rounded-xl pl-10"
+                className="w-full bg-white/5 border-white/5 text-white placeholder:text-white/20 focus:border-blue-500/50 transition-all rounded-xl pl-10"
                 placeholder="Search recordings by camera or date..."
                 value={search}
                 onChange={setSearch}
@@ -119,7 +119,7 @@ export const RecordingsTab: React.FC = () => {
             </div>
             <Button
               variant="outline"
-              className="font-black uppercase tracking-widest text-[10px] border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white h-10 px-6"
+              className="font-black uppercase tracking-widest text-[10px] border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white h-10 px-6"
               onClick={() => setSearch('')}
             >
               Clear
@@ -159,7 +159,7 @@ export const RecordingsTab: React.FC = () => {
                     size="sm"
                     variant="outline"
                     onClick={() => setSelectedRecordings(new Set())}
-                    className="font-black uppercase tracking-widest text-[10px] border-white/10 text-white/60 hover:bg-white/5"
+                    className="font-black uppercase tracking-widest text-[10px] border-white/5 text-white/60 hover:bg-white/5"
                   >
                     <i className="fas fa-times mr-2" />
                     Clear Selection

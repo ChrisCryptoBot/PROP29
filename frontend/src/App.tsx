@@ -22,13 +22,11 @@ import { NotificationsProvider } from './contexts/NotificationsContext';
 
 // Import new module pages
 import IncidentLogModule from './features/incident-log/IncidentLogModule';
-import LostAndFound from './pages/modules/LostAndFound';
-import Packages from './pages/modules/Packages';
+import PropertyItems from './pages/modules/PropertyItems';
 import AccessControlModule from './pages/modules/AccessControlModule';
 import Visitors from './pages/modules/Visitors';
 import Patrols from './pages/modules/Patrols/index';
 // import Admin from './pages/modules/Admin'; // Deleted old module
-import BannedIndividuals from './pages/modules/BannedIndividuals';
 import SmartLockers from './pages/modules/SmartLockers/index';
 import SmartParking from './pages/modules/SmartParking';
 // Digital Handover - Using new modular architecture
@@ -36,13 +34,11 @@ import DigitalHandoverModule from './features/digital-handover';
 // Old monolithic file (can be removed after validation):
 // import DigitalHandover from './pages/modules/DigitalHandover';
 import GuestSafety from './features/guest-safety';
-import IoTEnvironmental from './pages/modules/IoTEnvironmental';
+import IoTMonitoring from './pages/modules/IoTMonitoring';
 
 // Import additional pages for dashboard navigation
 import SecurityOperationsCenter from './pages/modules/SecurityOperationsCenter';
-import EvacuationModule from './pages/modules/EvacuationModule';
 import SystemAdministration from './pages/modules/SystemAdministration';
-import SoundMonitoring from './pages/modules/SoundMonitoring';
 import TeamChat from './pages/modules/TeamChat';
 
 // Fixed Protected Route Component
@@ -143,17 +139,10 @@ const MainAppContent: React.FC = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/modules/lost-and-found" element={
+      <Route path="/modules/property-items" element={
         <ProtectedRoute>
           <Layout>
-            <LostAndFound key="lost-and-found" />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/packages" element={
-        <ProtectedRoute>
-          <Layout>
-            <Packages />
+            <PropertyItems />
           </Layout>
         </ProtectedRoute>
       } />
@@ -182,13 +171,6 @@ const MainAppContent: React.FC = () => {
         <ProtectedRoute>
           <Layout>
             <SystemAdministration />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/banned-individuals" element={
-        <ProtectedRoute>
-          <Layout>
-            <BannedIndividuals />
           </Layout>
         </ProtectedRoute>
       } />
@@ -227,10 +209,10 @@ const MainAppContent: React.FC = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/modules/iot-environmental" element={
+      <Route path="/modules/iot-monitoring" element={
         <ProtectedRoute>
           <Layout>
-            <IoTEnvironmental />
+            <IoTMonitoring />
           </Layout>
         </ProtectedRoute>
       } />
@@ -263,25 +245,10 @@ const MainAppContent: React.FC = () => {
           <TeamChat />
         </Layout>
       } />
-      <Route path="/modules/sound-monitoring" element={
-        <ProtectedRoute>
-          <Layout>
-            <SoundMonitoring />
-          </Layout>
-        </ProtectedRoute>
-      } />
       <Route path="/modules/profile-settings" element={
         <ProtectedRoute>
           <Layout>
             <ProfileSettings />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/evacuation" element={<Navigate to="/modules/evacuation" replace />} />
-      <Route path="/modules/evacuation" element={
-        <ProtectedRoute>
-          <Layout>
-            <EvacuationModule />
           </Layout>
         </ProtectedRoute>
       } />

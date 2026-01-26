@@ -22,56 +22,85 @@ export const AnalyticsTab: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
-            <Card className="glass-card border-white/10 shadow-lg">
-                <CardHeader className="border-b border-white/10 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white font-bold uppercase tracking-tight">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
-                            <i className="fas fa-chart-bar text-white" />
+            {/* Gold Standard Page Header */}
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Analytics & Reports</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Package delivery performance metrics and insights
+                    </p>
+                </div>
+            </div>
+
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <CardHeader className="border-b border-white/5 pb-4">
+                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
+                            <i className="fas fa-chart-bar text-white text-lg" />
                         </div>
                         Analytics & Reports
                     </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Package delivery performance metrics and insights
+                    </p>
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="space-y-6">
                         {/* Key Performance Metrics */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <Card className="glass-card border-white/10 shadow-lg group">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <i className="fas fa-percentage text-slate-400 text-xl group-hover:scale-110 transition-transform" />
+                            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                                <CardContent className="pt-6 px-6 pb-6 relative">
+                                    <div className="flex items-center justify-between mb-4 mt-2">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                            <i className="fas fa-percentage text-white text-lg"></i>
+                                        </div>
                                     </div>
-                                    <h3 className="text-3xl font-black text-white mb-1">94%</h3>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">On-Time Delivery Rate</p>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">On-Time Delivery Rate</p>
+                                        <h3 className="text-3xl font-black text-white">94%</h3>
+                                    </div>
                                 </CardContent>
                             </Card>
 
-                            <Card className="glass-card border-white/10 shadow-lg group">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <i className="fas fa-clock text-slate-400 text-xl group-hover:scale-110 transition-transform" />
+                            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                                <CardContent className="pt-6 px-6 pb-6 relative">
+                                    <div className="flex items-center justify-between mb-4 mt-2">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                            <i className="fas fa-clock text-white text-lg"></i>
+                                        </div>
                                     </div>
-                                    <h3 className="text-3xl font-black text-white mb-1">1.8h</h3>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Avg Handling Time</p>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Handling Time</p>
+                                        <h3 className="text-3xl font-black text-white">1.8h</h3>
+                                    </div>
                                 </CardContent>
                             </Card>
 
-                            <Card className="glass-card border-white/10 shadow-lg group">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <i className="fas fa-star text-amber-400 text-xl group-hover:scale-110 transition-transform" />
+                            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                                <CardContent className="pt-6 px-6 pb-6 relative">
+                                    <div className="flex items-center justify-between mb-4 mt-2">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                            <i className="fas fa-star text-white text-lg"></i>
+                                        </div>
                                     </div>
-                                    <h3 className="text-3xl font-black text-white mb-1">4.8</h3>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Guest Satisfaction</p>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Guest Satisfaction</p>
+                                        <h3 className="text-3xl font-black text-white">4.8</h3>
+                                    </div>
                                 </CardContent>
                             </Card>
 
-                            <Card className="glass-card border-white/10 shadow-lg group">
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <i className="fas fa-box text-blue-400 text-xl group-hover:scale-110 transition-transform" />
+                            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                                <CardContent className="pt-6 px-6 pb-6 relative">
+                                    <div className="flex items-center justify-between mb-4 mt-2">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                            <i className="fas fa-box text-white text-lg"></i>
+                                        </div>
                                     </div>
-                                    <h3 className="text-3xl font-black text-white mb-1">{metrics.total}</h3>
-                                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total This Month</p>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total This Month</p>
+                                        <h3 className="text-3xl font-black text-white">{metrics.total}</h3>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
@@ -80,7 +109,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                             icon="fas fa-chart-line"
                             title="Analytics Unavailable"
                             description="Analytics charts will be implemented here."
-                            className="bg-black/20 border-dashed border-2 border-white/10"
+                            className="bg-black/20 border-dashed border-2 border-white/5"
                         />
                     </div>
                 </CardContent>

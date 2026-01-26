@@ -34,8 +34,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-white/10 pb-4">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl text-white">
                         <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
                             <i className="fas fa-file-export text-white text-lg" />
@@ -61,7 +61,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                             <select
                                 value={format}
                                 onChange={(e) => setFormat(e.target.value as 'pdf' | 'csv')}
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
                             >
                                 <option value="pdf">PDF</option>
                                 <option value="csv">CSV</option>
@@ -75,7 +75,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value as LostFoundStatus | 'all')}
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
                             >
                                 <option value="all">All Statuses</option>
                                 <option value={LostFoundStatus.FOUND}>Found</option>
@@ -94,7 +94,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -105,25 +105,25 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
+                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 pt-4 border-t border-white/10">
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-white/5">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onClose}
-                            className="border-white/10 text-slate-300 hover:bg-white/5 disabled:opacity-50"
+                            className="border-white/5 text-slate-300 hover:bg-white/5 disabled:opacity-50"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleExport}
                             variant="primary"
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold disabled:opacity-50"
                             disabled={loading.items}
                         >
                             {loading.items ? (

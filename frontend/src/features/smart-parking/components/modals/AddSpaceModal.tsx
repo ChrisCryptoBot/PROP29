@@ -47,7 +47,7 @@ export const AddSpaceModal: React.FC<AddSpaceModalProps> = ({ isOpen, onClose, o
                         type="text"
                         value={formData.number}
                         onChange={(e) => setFormData(prev => ({ ...prev, number: e.target.value }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                         placeholder="e.g., P001"
                     />
                 </div>
@@ -56,7 +56,7 @@ export const AddSpaceModal: React.FC<AddSpaceModalProps> = ({ isOpen, onClose, o
                     <select
                         value={formData.type}
                         onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as ParkingSpace['type'] }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                     >
                         <option value="regular">Standard</option>
                         <option value="accessible">Accessible</option>
@@ -71,7 +71,7 @@ export const AddSpaceModal: React.FC<AddSpaceModalProps> = ({ isOpen, onClose, o
                         type="text"
                         value={formData.zone}
                         onChange={(e) => setFormData(prev => ({ ...prev, zone: e.target.value }))}
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                         placeholder="e.g., A, B, C"
                     />
                 </div>

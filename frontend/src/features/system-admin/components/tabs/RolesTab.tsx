@@ -87,7 +87,7 @@ export const RolesTab: React.FC = () => {
             )}
 
             {/* Permission Matrix */}
-            <div className="glass-card border-white/10 shadow-xl p-6">
+            <div className="glass-card border-white/5 shadow-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                     <h4 className="text-lg font-bold text-white uppercase tracking-wider">Permissions Matrix</h4>
                     <Button
@@ -121,7 +121,7 @@ export const RolesTab: React.FC = () => {
                                             className={cn(
                                                 "font-bold uppercase text-[10px] tracking-widest px-2.5 py-1",
                                                 module === 'System' || module === 'Security'
-                                                    ? 'text-slate-400 bg-white/5 border border-white/10'
+                                                    ? 'text-slate-400 bg-white/5 border border-white/5'
                                                     : 'text-blue-300 bg-blue-500/20 border border-blue-500/30'
                                             )}
                                         >
@@ -182,13 +182,13 @@ const RoleCard: React.FC<{
         switch (variant) {
             case 'destructive': return 'bg-red-500/20 text-red-300 border-red-500/30';
             case 'success': return 'bg-green-500/20 text-green-300 border-green-500/30';
-            case 'secondary': return 'bg-white/5 text-slate-400 border-white/10';
-            default: return 'bg-white/5 text-slate-400 border-white/10';
+            case 'secondary': return 'bg-white/5 text-slate-400 border-white/5';
+            default: return 'bg-white/5 text-slate-400 border-white/5';
         }
     };
 
     return (
-        <Card className="glass-card border-white/10 shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group">
+        <Card className="glass-card border-white/5 shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group">
             <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-5">
                     <div className="w-14 h-14 bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-2xl flex items-center justify-center border border-blue-500/30 shadow-lg group-hover:scale-110 transition-transform">

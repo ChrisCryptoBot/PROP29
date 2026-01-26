@@ -28,7 +28,7 @@ const SensorsTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* SOC-style Filtering Row */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-black/40 p-2 rounded-xl border border-white/10 backdrop-blur-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-black/40 p-2 rounded-xl border border-white/5 backdrop-blur-md">
         <div className="flex items-center space-x-2">
           {['all', 'normal', 'warning', 'critical'].map((filter) => (
             <Button
@@ -40,7 +40,7 @@ const SensorsTab: React.FC = () => {
                 "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all",
                 statusFilter === filter
                   ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 border-none"
-                  : "border-white/10 text-white/40 hover:bg-white/5 hover:text-white"
+                  : "border-white/5 text-white/40 hover:bg-white/5 hover:text-white"
               )}
             >
               {filter}
@@ -53,7 +53,7 @@ const SensorsTab: React.FC = () => {
             <select
               value={selectedSensor}
               onChange={(e) => setSelectedSensor(e.target.value)}
-              className="appearance-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 pr-10 text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-2 focus:ring-blue-500/50 outline-none hover:bg-white/10 transition-all cursor-pointer"
+              className="appearance-none bg-white/5 border border-white/5 rounded-lg px-4 py-2 pr-10 text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-2 focus:ring-blue-500/50 outline-none hover:bg-white/10 transition-all cursor-pointer"
             >
               <option value="" className="bg-slate-900">ALL SENSORS</option>
               {uniqueSensors.map(sensorId => (
@@ -67,7 +67,7 @@ const SensorsTab: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-white/5 border border-white/10 rounded-lg px-4 py-2 pr-10 text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-2 focus:ring-blue-500/50 outline-none hover:bg-white/10 transition-all cursor-pointer"
+              className="appearance-none bg-white/5 border border-white/5 rounded-lg px-4 py-2 pr-10 text-[10px] font-black uppercase tracking-widest text-white/60 focus:ring-2 focus:ring-blue-500/50 outline-none hover:bg-white/10 transition-all cursor-pointer"
             >
               <option value="timestamp" className="bg-slate-900">SORT: LATEST</option>
               <option value="id" className="bg-slate-900">SORT: ID</option>
@@ -95,7 +95,7 @@ const SensorsTab: React.FC = () => {
           <Card
             key={sensor.id}
             className={cn(
-              'group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border-white/10 bg-black/20 backdrop-blur-xl',
+              'group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border-white/5 bg-black/20 backdrop-blur-xl',
               sensor.status === 'critical' && 'border-red-500/50 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.1)]',
               sensor.status === 'warning' && 'border-yellow-500/50 bg-yellow-500/5 shadow-[0_0_20px_rgba(234,179,8,0.1)]'
             )}
@@ -113,7 +113,7 @@ const SensorsTab: React.FC = () => {
                   <div className={cn(
                     "w-12 h-12 rounded flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6",
                     sensor.status === 'critical' ? 'bg-red-500 text-white' :
-                      sensor.status === 'warning' ? 'bg-yellow-500 text-white' : 'bg-white/5 border border-white/10 text-blue-500'
+                      sensor.status === 'warning' ? 'bg-yellow-500 text-white' : 'bg-white/5 border border-white/5 text-blue-500'
                   )}>
                     {renderSensorIcon(sensor.sensor_type, 20)}
                   </div>

@@ -28,7 +28,7 @@ export const AddPropertyModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-lg w-full animate-in fade-in zoom-in duration-300">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-lg w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl font-bold text-white">
                         <div className="w-10 h-10 bg-green-600/20 rounded-xl flex items-center justify-center mr-3 border border-green-500/30">
@@ -45,7 +45,7 @@ export const AddPropertyModal: React.FC = () => {
                                 type="text"
                                 value={propertyData.title}
                                 onChange={(e) => setPropertyData({ ...propertyData, title: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
                                 placeholder="e.g. Skyline Apartments"
                             />
                         </div>
@@ -55,7 +55,7 @@ export const AddPropertyModal: React.FC = () => {
                             <textarea
                                 value={propertyData.description}
                                 onChange={(e) => setPropertyData({ ...propertyData, description: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner h-20 resize-none"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner h-20 resize-none"
                                 placeholder="Provide context about this property..."
                             />
                         </div>
@@ -67,7 +67,7 @@ export const AddPropertyModal: React.FC = () => {
                                     type="number"
                                     value={propertyData.rooms}
                                     onChange={(e) => setPropertyData({ ...propertyData, rooms: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 shadow-inner"
+                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 shadow-inner"
                                 />
                             </div>
                             <div className="space-y-4">
@@ -75,7 +75,7 @@ export const AddPropertyModal: React.FC = () => {
                                 <select
                                     value={propertyData.status}
                                     onChange={(e) => setPropertyData({ ...propertyData, status: e.target.value as any })}
-                                    className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
+                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
                                 >
                                     <option value="Operational" className="bg-slate-900">Operational</option>
                                     <option value="Maintenance" className="bg-slate-900">Maintenance</option>

@@ -61,7 +61,7 @@ const getStatusBadgeClass = (status: string): string => {
     case 'overdue':
       return 'text-red-400 bg-red-500/10 border-red-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px] animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]';
     default:
-      return 'text-white/40 bg-white/5 border-white/10 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
+      return 'text-white/40 bg-white/5 border-white/5 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
   }
 };
 
@@ -74,9 +74,9 @@ const getPriorityBadgeClass = (priority: string): string => {
     case 'medium':
       return 'text-blue-400 bg-blue-500/10 border-blue-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
     case 'low':
-      return 'text-white/40 bg-white/5 border-white/10 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
+      return 'text-white/40 bg-white/5 border-white/5 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
     default:
-      return 'text-white/40 bg-white/5 border-white/10 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
+      return 'text-white/40 bg-white/5 border-white/5 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
   }
 };
 

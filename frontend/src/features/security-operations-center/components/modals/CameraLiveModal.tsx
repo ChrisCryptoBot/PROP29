@@ -242,8 +242,8 @@ export const CameraLiveModal: React.FC<CameraLiveModalProps> = ({ isOpen, onClos
       <div
         ref={panelRef}
         className={cn(
-          'absolute bg-slate-900/90 rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col',
-          'border-white/10'
+          'absolute bg-slate-900/90 rounded-2xl border border-white/5 shadow-2xl overflow-hidden flex flex-col',
+          'border-white/5'
         )}
         style={panelStyle}
         onClick={(e) => e.stopPropagation()}

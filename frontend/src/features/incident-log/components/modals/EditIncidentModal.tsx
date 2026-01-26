@@ -140,7 +140,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                                 id="edit-title"
                                 value={formData.title || ''}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             />
                         </div>
 
@@ -150,7 +150,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                                 id="edit-type"
                                 value={formData.incident_type as string || ''}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             >
                                 <option value={IncidentType.THEFT} className="bg-slate-900">Theft</option>
                                 <option value={IncidentType.DISTURBANCE} className="bg-slate-900">Security Disturbance</option>
@@ -171,7 +171,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                                 id="edit-severity"
                                 value={formData.severity || ''}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             >
                                 <option value="LOW" className="bg-slate-900">Low</option>
                                 <option value="MEDIUM" className="bg-slate-900">Medium</option>
@@ -186,7 +186,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                                 id="edit-status"
                                 value={formData.status || ''}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             >
                                 <option value={IncidentStatus.OPEN} className="bg-slate-900">Active / Open</option>
                                 <option value={IncidentStatus.INVESTIGATING} className="bg-slate-900">Investigating</option>
@@ -202,7 +202,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                             id="edit-description"
                             value={formData.description || ''}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             rows={4}
                         />
                     </div>
@@ -216,7 +216,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                                 value={formData.assigned_to || ''}
                                 onChange={handleChange}
                                 placeholder="Enter user ID"
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             />
                         </div>
 
@@ -227,7 +227,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                                 id="edit-location"
                                 value={typeof formData.location === 'object' ? (formData.location as any).area : formData.location || ''}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             />
                         </div>
                     </div>

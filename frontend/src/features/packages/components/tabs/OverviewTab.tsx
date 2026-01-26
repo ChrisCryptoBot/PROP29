@@ -4,13 +4,14 @@
  * Displays package list with filtering
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { usePackageContext } from '../../context/PackageContext';
 import { cn } from '../../../../utils/cn';
 import { PackageStatus } from '../../types/package.types';
 import { EmptyState } from '../../../../components/UI/EmptyState';
+import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
 
 export const OverviewTab: React.FC = React.memo(() => {
     const {
@@ -19,7 +20,8 @@ export const OverviewTab: React.FC = React.memo(() => {
         setSelectedPackage,
         notifyGuest,
         deliverPackage,
-        pickupPackage
+        pickupPackage,
+        refreshPackages
     } = usePackageContext();
 
     const [filter, setFilter] = useState<'all' | PackageStatus>('all');
@@ -75,74 +77,98 @@ export const OverviewTab: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
-            {/* Key Metrics */}
+            {/* Gold Standard Page Header */}
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Packages</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Package delivery and tracking management
+                    </p>
+                </div>
+            </div>
+            {/* Key Metrics - Gold Standard Pattern */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg mt-2 ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-box text-white text-xl" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="absolute top-4 right-4">
+                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">TOTAL</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-box text-white text-lg"></i>
                             </div>
                         </div>
                         <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Packages</p>
                             <h3 className="text-3xl font-black text-white">{metrics.total}</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Packages</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg mt-2 ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-inbox text-white text-xl" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="absolute top-4 right-4">
+                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">RECEIVED</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-inbox text-white text-lg"></i>
                             </div>
                         </div>
                         <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Received Packages</p>
                             <h3 className="text-3xl font-black text-white">{metrics.received}</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Received Packages</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center shadow-lg mt-2 ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-bell text-white text-xl" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="absolute top-4 right-4">
+                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded uppercase">NOTIFIED</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-bell text-white text-lg"></i>
                             </div>
                         </div>
                         <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Notified Guests</p>
                             <h3 className="text-3xl font-black text-white">{metrics.notified}</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Notified Guests</p>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-card border-white/10 shadow-lg group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-lg mt-2 ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-check-circle text-white text-xl" />
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                    <CardContent className="pt-6 px-6 pb-6 relative">
+                        <div className="absolute top-4 right-4">
+                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">DELIVERED</span>
+                        </div>
+                        <div className="flex items-center justify-between mb-4 mt-2">
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <i className="fas fa-check-circle text-white text-lg"></i>
                             </div>
                         </div>
                         <div className="space-y-1">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Delivered Today</p>
                             <h3 className="text-3xl font-black text-white">{metrics.delivered}</h3>
-                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Delivered Today</p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Package Management */}
-            <Card className="glass-card border-white/10 shadow-lg mb-8">
-                <CardHeader className="bg-white/5 border-b border-white/5 py-4">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl mb-8">
+                <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10" aria-hidden="true">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
                             <i className="fas fa-box-open text-white text-lg" />
                         </div>
                         Package Management
                     </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Filter and manage package deliveries
+                    </p>
                 </CardHeader>
                 <CardContent className="pt-6 px-6 pb-6">
                     <div className="flex flex-wrap gap-2 mb-8">
@@ -155,8 +181,8 @@ export const OverviewTab: React.FC = React.memo(() => {
                                 className={cn(
                                     "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all",
                                     filter === filterType
-                                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 border-none"
-                                        : "border-white/10 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
+                                        ? "bg-blue-600 hover:bg-blue-700 text-white border-none"
+                                        : "border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
                                 )}
                             >
                                 {filterType === 'all' ? 'All' : filterType.replace('_', ' ')}
@@ -164,16 +190,16 @@ export const OverviewTab: React.FC = React.memo(() => {
                         ))}
                     </div>
                     {loading.packages && packages.length === 0 ? (
-                        <div className="text-center py-20">
-                            <i className="fas fa-spinner fa-spin text-3xl text-blue-500 mb-4" />
-                            <p className="text-slate-400">Loading packages...</p>
+                        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading packages" />
+                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Packages...</p>
                         </div>
                     ) : filteredPackages.length === 0 ? (
                         <EmptyState
                             icon="fas fa-box-open"
                             title="No Packages Found"
                             description="There are no packages matching your current filter criteria."
-                            className="bg-black/20 border-dashed border-2 border-white/10"
+                            className="bg-black/20 border-dashed border-2 border-white/5"
                             action={{
                                 label: "REFRESH LIST",
                                 onClick: () => console.log('Refresh package list'), // Placeholder logic
@@ -185,14 +211,14 @@ export const OverviewTab: React.FC = React.memo(() => {
                             {filteredPackages.map(pkg => (
                                 <Card
                                     key={pkg.package_id}
-                                    className="bg-white/5 border-white/10 shadow-lg hover:bg-white/10 transition-all duration-300 cursor-pointer group"
+                                    className="bg-white/5 border-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer group"
                                     onClick={() => handleViewDetails(pkg)}
                                 >
                                     <CardContent className="pt-6 px-6 pb-6">
                                         {/* Header with Status */}
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0 ring-1 ring-white/10 group-hover:scale-110 transition-transform">
+                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 flex-shrink-0 group-hover:scale-110 transition-transform">
                                                     <i className="fas fa-box text-white text-lg" />
                                                 </div>
                                                 <div>
@@ -234,7 +260,8 @@ export const OverviewTab: React.FC = React.memo(() => {
                                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                             {pkg.status === PackageStatus.RECEIVED && (
                                                 <Button
-                                                    variant="primary" className="flex-1 text-xs"
+                                                    variant="outline"
+                                                    className="flex-1 text-[10px] font-black uppercase tracking-widest h-9 px-4 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                                                     onClick={() => notifyGuest(pkg.package_id)}
                                                     disabled={loading.packages}
                                                 >
@@ -244,7 +271,8 @@ export const OverviewTab: React.FC = React.memo(() => {
                                             )}
                                             {pkg.status === PackageStatus.NOTIFIED && (
                                                 <Button
-                                                    variant="primary" className="flex-1 text-xs bg-green-600 hover:bg-green-700 border-green-500"
+                                                    variant="outline"
+                                                    className="flex-1 text-[10px] font-black uppercase tracking-widest h-9 px-4 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                                                     onClick={() => deliverPackage(pkg.package_id)}
                                                     disabled={loading.packages}
                                                 >
@@ -254,7 +282,7 @@ export const OverviewTab: React.FC = React.memo(() => {
                                             )}
                                             <Button
                                                 variant="outline"
-                                                className="flex-1 text-xs border-white/10 text-slate-300 hover:bg-white/5 hover:text-white"
+                                                className="flex-1 text-[10px] font-black uppercase tracking-widest h-9 px-4 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                                                 onClick={() => handleViewDetails(pkg)}
                                             >
                                                 <i className="fas fa-eye mr-2" />

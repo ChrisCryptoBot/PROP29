@@ -13,7 +13,7 @@ export type { GuestSafetyIncident, GuestSafetyAlert };
 /**
  * Tab ID type
  */
-export type TabId = 'incidents' | 'mass-notification' | 'response-teams' | 'analytics' | 'settings';
+export type TabId = 'incidents' | 'messages' | 'mass-notification' | 'response-teams' | 'evacuation' | 'analytics' | 'settings';
 
 /**
  * Incident priority levels
@@ -23,7 +23,7 @@ export type IncidentPriority = 'critical' | 'high' | 'medium' | 'low';
 /**
  * Incident types
  */
-export type IncidentType = 'medical' | 'security' | 'maintenance' | 'service' | 'noise' | 'other';
+export type IncidentType = 'medical' | 'security' | 'maintenance' | 'service' | 'noise' | 'evacuation' | 'other';
 
 /**
  * Incident status
@@ -39,6 +39,21 @@ export type TeamStatus = 'available' | 'responding' | 'offline';
  * Guest type
  */
 export type GuestType = 'VIP' | 'Family' | 'Business' | 'Regular';
+
+/**
+ * Incident source - tracks where the incident originated
+ */
+export type IncidentSource = 'MANAGER' | 'MOBILE_AGENT' | 'HARDWARE_DEVICE' | 'AUTO_CREATED' | 'GUEST_PANIC_BUTTON';
+
+/**
+ * Hardware device types
+ */
+export type HardwareDeviceType = 'panic_button' | 'sensor' | 'camera' | 'access_control' | 'alarm' | 'environmental' | 'other';
+
+/**
+ * Hardware device status type
+ */
+export type HardwareDeviceStatusType = 'online' | 'offline' | 'degraded' | 'maintenance' | 'error';
 
 /**
  * Response Team entity
@@ -68,6 +83,14 @@ export interface GuestIncident extends Omit<GuestSafetyIncident, 'status'> {
   icon: string;
   iconColor: string;
   reportedTime: string; // Relative time string (e.g., "2 min ago")
+  source?: IncidentSource;
+  sourceMetadata?: {
+    agentName?: string;
+    agentTrustScore?: number;
+    deviceName?: string;
+    deviceId?: string;
+    [key: string]: any;
+  };
 }
 
 /**
@@ -119,7 +142,43 @@ export interface GuestSafetyFilters {
   status?: IncidentStatus;
   priority?: IncidentPriority;
   type?: IncidentType;
+  source?: IncidentSource;
   searchQuery?: string;
+}
+
+/**
+ * Hardware Device Status
+ * For monitoring hardware device health and connectivity
+ */
+export interface HardwareDeviceStatus {
+  deviceId: string;
+  deviceName: string;
+  deviceType: HardwareDeviceType;
+  status: HardwareDeviceStatusType;
+  lastSeen: string; // ISO datetime
+  signalStrength?: number; // 0-100
+  batteryLevel?: number; // 0-100
+  firmwareVersion?: string;
+  lastMaintenance?: string; // ISO datetime
+  location?: string;
+  lastKnownGoodState?: Date; // For offline state display
+}
+
+/**
+ * Mobile Agent Performance Metrics
+ * For trust score calculation and auto-approval
+ */
+export interface AgentPerformanceMetrics {
+  agentId: string;
+  agentName?: string;
+  submissionsCount: number;
+  approvalCount: number;
+  rejectionCount: number;
+  approvalRate: number; // 0-100
+  averageResponseTime: number; // minutes
+  trustScore: number; // 0-100
+  lastSubmission?: string; // ISO datetime
+  flaggedSubmissions?: number;
 }
 
 /**
@@ -146,4 +205,78 @@ export interface UpdateIncidentRequest {
   status?: 'reported' | 'investigating' | 'responding' | 'resolved';
   assignedTeam?: string;
   resolved_at?: string;
+}
+
+/**
+ * Guest Message Types
+ */
+export type GuestMessageType = 'request' | 'update' | 'question' | 'emergency';
+export type GuestMessageDirection = 'guest_to_staff' | 'staff_to_guest';
+export type GuestMessageSource = 'GUEST_APP' | 'MANAGER' | 'MOBILE_AGENT' | 'SYSTEM';
+
+/**
+ * Guest Message entity
+ */
+export interface GuestMessage {
+  id: string;
+  incident_id?: string | null;
+  guest_id?: string | null;
+  guest_name?: string | null;
+  room_number?: string | null;
+  message_text: string;
+  message_type: GuestMessageType;
+  direction: GuestMessageDirection;
+  is_read: boolean;
+  read_at?: string | null;
+  read_by?: string | null;
+  created_at: string;
+  source?: GuestMessageSource;
+  source_metadata?: Record<string, any> | null;
+}
+
+/**
+ * Guest Message Filters
+ */
+export interface GuestMessageFilters {
+  incident_id?: string;
+  unread_only?: boolean;
+  message_type?: GuestMessageType;
+  direction?: GuestMessageDirection;
+  guest_id?: string;
+  limit?: number;
+}
+
+/**
+ * Evacuation Status
+ */
+export type EvacuationStatus = 'not_started' | 'in_progress' | 'completed';
+
+/**
+ * Guest Evacuation Status
+ */
+export type GuestEvacuationStatus = 'unaccounted' | 'safe' | 'in_progress';
+
+/**
+ * Evacuation Headcount
+ */
+export interface EvacuationHeadcount {
+  totalGuests: number;
+  safe: number;
+  unaccounted: number;
+  inProgress: number;
+  lastUpdated: string; // ISO datetime
+}
+
+/**
+ * Evacuation Check-In (from guest app)
+ */
+export interface EvacuationCheckIn {
+  id: string;
+  guestId: string;
+  guestName: string;
+  roomNumber: string;
+  status: GuestEvacuationStatus;
+  checkedInAt: string; // ISO datetime
+  location?: string;
+  notes?: string;
 }

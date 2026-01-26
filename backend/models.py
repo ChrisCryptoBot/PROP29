@@ -583,6 +583,8 @@ class GuestSafetyIncident(Base):
     room_number = Column(String(50), nullable=True)
     contact_info = Column(String(255), nullable=True)
     assigned_team = Column(String(255), nullable=True)
+    source = Column(String(50), default="MANAGER")  # MANAGER, MOBILE_AGENT, HARDWARE_DEVICE, GUEST_PANIC_BUTTON, AUTO_CREATED
+    source_metadata = Column(JSON, nullable=True)  # Additional source-specific data
     
     # Relationships
     property = relationship("Property")
@@ -617,6 +619,31 @@ class GuestSafetySettings(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     property = relationship("Property")
+
+
+class GuestMessage(Base):
+    __tablename__ = "guest_messages"
+    
+    message_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    incident_id = Column(String(36), ForeignKey("guest_safety_incidents.incident_id", ondelete="CASCADE"), nullable=True)
+    guest_id = Column(String(255), nullable=True)  # Guest identifier from guest app
+    guest_name = Column(String(255), nullable=True)
+    room_number = Column(String(50), nullable=True)
+    message_text = Column(Text, nullable=False)
+    message_type = Column(String(50), default="request")  # request, update, question, emergency
+    direction = Column(String(20), default="guest_to_staff")  # guest_to_staff, staff_to_guest
+    is_read = Column(Boolean, default=False)
+    read_at = Column(DateTime(timezone=True), nullable=True)
+    read_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    source = Column(String(50), default="GUEST_APP")  # GUEST_APP, MANAGER, MOBILE_AGENT
+    source_metadata = Column(JSON, nullable=True)
+    
+    # Relationships
+    property = relationship("Property")
+    incident = relationship("GuestSafetyIncident", foreign_keys=[incident_id])
+    reader = relationship("User", foreign_keys=[read_by])
 
 class IoTEnvironmentalData(Base):
     __tablename__ = "iot_environmental_data"

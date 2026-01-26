@@ -56,7 +56,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.guestHourly}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, guestHourly: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
                                     />
                                 </div>
                             </div>
@@ -69,7 +69,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.guestDaily}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, guestDaily: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
                                     />
                                 </div>
                             </div>
@@ -82,7 +82,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.valetFee}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, valetFee: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
                                     />
                                 </div>
                             </div>
@@ -95,7 +95,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.evChargingFee}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, evChargingFee: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
                                     />
                                 </div>
                             </div>
@@ -119,7 +119,7 @@ const SettingsTabContent: React.FC = () => {
                                     type="number"
                                     value={settings.policies.maxStayHours}
                                     onChange={(e) => handleSettingsChange('policies', { ...settings.policies, maxStayHours: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                                 />
                             </div>
                             <div>
@@ -128,7 +128,7 @@ const SettingsTabContent: React.FC = () => {
                                     type="number"
                                     value={settings.policies.gracePeriodMinutes}
                                     onChange={(e) => handleSettingsChange('policies', { ...settings.policies, gracePeriodMinutes: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
                                 />
                             </div>
                         </div>

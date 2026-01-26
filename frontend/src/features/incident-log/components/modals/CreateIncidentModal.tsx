@@ -168,7 +168,7 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
                                 id="incident-title"
                                 value={formData.title}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                 placeholder="Enter incident title"
                             />
                         </div>
@@ -179,7 +179,7 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
                                 id="incident-type"
                                 value={formData.incident_type}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             >
                                 <option value={IncidentType.THEFT} className="bg-slate-900">Theft</option>
                                 <option value={IncidentType.DISTURBANCE} className="bg-slate-900">Security Disturbance</option>
@@ -200,7 +200,7 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
                                 id="incident-severity"
                                 value={formData.severity}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             >
                                 <option value="LOW" className="bg-slate-900">Low</option>
                                 <option value="MEDIUM" className="bg-slate-900">Medium</option>
@@ -216,7 +216,7 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
                                 id="incident-location"
                                 value={formData.location?.area}
                                 onChange={handleChange}
-                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                                 placeholder="Enter location (e.g., Lobby, Room 302)"
                             />
                         </div>
@@ -228,7 +228,7 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
                             id="incident-description"
                             value={formData.description}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
                             rows={4}
                             placeholder="Enter incident description"
                         />

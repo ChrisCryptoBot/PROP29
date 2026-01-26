@@ -66,7 +66,7 @@ export const DetectionsTab: React.FC = () => {
                             ) : (
                             detectionAlerts.map((alert) => (
                                 <div key={alert.id} className="p-4 border border-white/5 bg-white/5 rounded-lg hover:shadow-md transition-shadow group">
-                                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5 group-hover:border-white/10 transition-colors">
+                                    <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5 group-hover:border-white/5 transition-colors">
                                         <h3 className="text-xl font-black uppercase tracking-tighter text-[color:var(--text-main)] group-hover:text-red-400 transition-colors">{alert.individualName}</h3>
                                         <Badge variant={getDetectionStatusBadgeVariant(alert.status)} size="sm">
                                             {alert.status}

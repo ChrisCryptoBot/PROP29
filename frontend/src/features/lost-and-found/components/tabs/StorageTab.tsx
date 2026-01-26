@@ -3,7 +3,7 @@
  * Displays storage locations, capacity, and item organization
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { Progress } from '../../../../components/UI/Progress';
@@ -11,13 +11,58 @@ import { useLostFoundContext } from '../../context/LostFoundContext';
 import { cn } from '../../../../utils/cn';
 import { showSuccess } from '../../../../utils/toast';
 import { LostFoundStatus } from '../../types/lost-and-found.types';
+import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
+import { EmptyState } from '../../../../components/UI/EmptyState';
 
 export const StorageTab: React.FC = React.memo(() => {
     const {
         items,
+        loading,
         setSelectedItem,
-        setShowDetailsModal
+        setShowDetailsModal,
+        refreshItems
     } = useLostFoundContext();
+    
+    const { lastRefreshedAt } = useGlobalRefresh();
+    const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
+    const [refreshError, setRefreshError] = useState<string | null>(null);
+    const isStale = !lastRefreshAt || Date.now() - lastRefreshAt.getTime() > 30000;
+
+    const handleManualRefresh = useCallback(async () => {
+        try {
+            await refreshItems();
+            setLastRefreshAt(new Date());
+            setRefreshError(null);
+        } catch (error) {
+            setRefreshError('Refresh failed. Showing last known state.');
+        }
+    }, [refreshItems]);
+
+    useEffect(() => {
+        const refresh = () => {
+            refreshItems()
+                .then(() => {
+                    setLastRefreshAt(new Date());
+                    setRefreshError(null);
+                })
+                .catch(() => {
+                    setRefreshError('Auto-refresh failed. Showing last known state.');
+                });
+        };
+        refresh();
+        const intervalId = window.setInterval(refresh, 30000);
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [refreshItems]);
+
+    function formatRefreshedAgo(d: Date | null): string {
+        if (!d) return '';
+        const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+        if (sec < 60) return 'Just now';
+        if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
+        return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
 
     const storageLocations = useMemo(() => {
         // Extract unique storage locations from items
@@ -77,6 +122,37 @@ export const StorageTab: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
+            {/* Gold Standard Page Header */}
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Storage Management</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Storage locations, capacity, and item organization
+                    </p>
+                </div>
+                <div className="flex items-center gap-4">
+                    {lastRefreshAt && (
+                        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
+                            Data as of {lastRefreshAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Refreshed {formatRefreshedAgo(lastRefreshAt)}
+                        </p>
+                    )}
+                    {isStale && (
+                        <span className="px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            STALE
+                        </span>
+                    )}
+                    {!isStale && lastRefreshAt && (
+                        <span className="px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            LIVE
+                        </span>
+                    )}
+                    <Button onClick={handleManualRefresh} variant="outline" disabled={loading.items} className="text-[10px] font-black uppercase tracking-widest h-10 px-6">
+                        <i className={`fas fa-sync-alt mr-2 ${loading.items ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </Button>
+                </div>
+            </div>
+
             {/* Storage Location Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {displayLocations.slice(0, 4).map((location) => {
@@ -91,13 +167,13 @@ export const StorageTab: React.FC = React.memo(() => {
                     }).length;
 
                     return (
-                        <Card key={location} className="glass-card border-white/10 shadow-lg hover:bg-white/5 transition-colors group">
+                        <Card key={location} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:bg-slate-900/70 transition-colors group">
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg flex items-center justify-center ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                                        <i className="fas fa-warehouse text-slate-300" />
+                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                        <i className="fas fa-warehouse text-white text-lg" />
                                     </div>
-                                    <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded text-slate-300 bg-white/5 border border-white/10">
+                                    <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded text-slate-300 bg-white/5 border border-white/5">
                                         {getLocationDisplayName(location)}
                                     </span>
                                 </div>
@@ -118,8 +194,8 @@ export const StorageTab: React.FC = React.memo(() => {
             </div>
 
             {/* Storage Location Details */}
-            <Card className="glass-card border-white/10 shadow-lg">
-                <CardHeader className="border-b border-white/10 pb-4">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="text-white">Storage Location Details</CardTitle>
                     <p className="text-sm text-slate-400 mt-1">Manage items by storage location</p>
                 </CardHeader>
@@ -129,11 +205,11 @@ export const StorageTab: React.FC = React.memo(() => {
                             const locationItems = getItemsForLocation(location);
 
                             return (
-                                <div key={location} className="border border-white/10 rounded-lg p-4 bg-white/5">
+                                <div key={location} className="border border-white/5 rounded-lg p-4 bg-white/5">
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg flex items-center justify-center ring-1 ring-white/10">
-                                                <i className="fas fa-warehouse text-slate-300" />
+                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
+                                                <i className="fas fa-warehouse text-white text-lg" />
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-white">{getLocationDisplayName(location)}</h3>
@@ -144,7 +220,7 @@ export const StorageTab: React.FC = React.memo(() => {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => showSuccess(`Viewing ${getLocationDisplayName(location)}`)}
-                                            className="border-white/10 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
+                                            className="border-white/5 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
                                         >
                                             <i className="fas fa-eye mr-2" />
                                             View All
@@ -162,8 +238,8 @@ export const StorageTab: React.FC = React.memo(() => {
                                                         className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition-colors cursor-pointer bg-slate-900/40 border border-white/5"
                                                         onClick={() => handleViewDetails(item)}
                                                     >
-                                                        <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/10">
-                                                            <i className={cn("text-sm text-slate-400", getCategoryIcon(category))} />
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0">
+                                                            <i className={cn("text-white text-sm", getCategoryIcon(category))} />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-sm font-medium text-white truncate">{itemName}</p>
@@ -183,12 +259,11 @@ export const StorageTab: React.FC = React.memo(() => {
                                             })}
                                         </div>
                                     ) : (
-                                        <div className="py-8 flex flex-col items-center justify-center text-center border-2 border-dashed border-white/5 rounded-lg bg-white/5">
-                                            <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center mb-2">
-                                                <i className="fas fa-box-open text-white/20" />
-                                            </div>
-                                            <p className="text-sm font-medium text-slate-400">No items in this location</p>
-                                        </div>
+                                        <EmptyState
+                                            icon="fas fa-box-open"
+                                            title="No items in this location"
+                                            description="Items stored in this location will appear here"
+                                        />
                                     )}
 
                                     {locationItems.length > 6 && (
@@ -204,9 +279,12 @@ export const StorageTab: React.FC = React.memo(() => {
             </Card>
 
             {/* Capacity Alerts */}
-            <Card className="glass-card border-white/10 shadow-lg">
-                <CardHeader className="border-b border-white/10 pb-4">
-                    <CardTitle className="text-white">Capacity Alerts</CardTitle>
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <CardHeader className="border-b border-white/5 pb-4">
+                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Capacity Alerts</CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Storage locations approaching capacity limits
+                    </p>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <div className="space-y-3">

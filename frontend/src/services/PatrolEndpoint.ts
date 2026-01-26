@@ -48,6 +48,7 @@ export interface CheckpointCheckInPayload {
     notes?: string;
     completed_at?: string;
     completed_by?: string;
+    version?: number;
 }
 
 export interface EmergencyAlertPayload {
@@ -125,9 +126,11 @@ export class PatrolEndpoint {
 
     /**
      * Complete a patrol
+     * @param patrolId - The patrol ID to complete
+     * @param payload - Optional payload with version for optimistic locking
      */
-    static async completePatrol(patrolId: string): Promise<any> {
-        const response = await axios.post(`${API_BASE_URL}/patrols/${patrolId}/complete`, {}, {
+    static async completePatrol(patrolId: string, payload?: { version?: number }): Promise<any> {
+        const response = await axios.post(`${API_BASE_URL}/patrols/${patrolId}/complete`, payload || {}, {
             headers: getAuthHeaders()
         });
         return response.data;

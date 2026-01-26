@@ -45,7 +45,7 @@ export const SettingsTab: React.FC = () => {
   if (loading.settings) {
     return (
       <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/10 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-600 rounded-full animate-spin" />
       </div>
     );
   }
@@ -74,7 +74,7 @@ export const SettingsTab: React.FC = () => {
             <section>
               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-main)] mb-6">Alert Thresholds</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-6 bg-white/5 border border-white/10 rounded-2xl group hover:bg-white/[0.08] transition-all">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/[0.08] transition-all">
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
                     Battery Alert Threshold (%)
                   </label>
@@ -94,7 +94,7 @@ export const SettingsTab: React.FC = () => {
                     Alert when battery level drops below this threshold
                   </p>
                 </div>
-                <div className="p-6 bg-white/5 border border-white/10 rounded-2xl group hover:bg-white/[0.08] transition-all">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/[0.08] transition-all">
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
                     Signal Strength Alert Threshold (%)
                   </label>
@@ -117,11 +117,11 @@ export const SettingsTab: React.FC = () => {
               </div>
             </section>
 
-            <div className="pt-6 border-t border-white/10 flex justify-end space-x-3">
+            <div className="pt-6 border-t border-white/5 flex justify-end space-x-3">
               {isDirty && (
                 <Button
                   variant="outline"
-                  className="font-black uppercase tracking-widest border-white/10 hover:bg-white/10 text-blue-300"
+                  className="font-black uppercase tracking-widest border-white/5 hover:bg-white/10 text-blue-300"
                   onClick={handleReset}
                   disabled={!canManageSettings}
                 >

@@ -88,8 +88,8 @@ export const CreateIndividualModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/10 flex flex-row items-center justify-between pb-4 mb-2">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
+                <CardHeader className="border-b border-white/5 flex flex-row items-center justify-between pb-4 mb-2">
                     <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
                         <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
                             <i className="fas fa-user-plus text-white text-lg" />
@@ -108,7 +108,7 @@ export const CreateIndividualModal: React.FC = () => {
                                     type="text"
                                     id="firstName"
                                     name="firstName"
-                                    className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.firstName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/10 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
+                                    className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.firstName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
                                     placeholder="e.g. John"
                                 />
                                 {errors.firstName && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.firstName}</p>}
@@ -121,7 +121,7 @@ export const CreateIndividualModal: React.FC = () => {
                                     type="text"
                                     id="lastName"
                                     name="lastName"
-                                    className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.lastName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/10 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
+                                    className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.lastName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
                                     placeholder="e.g. Doe"
                                 />
                                 {errors.lastName && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.lastName}</p>}
@@ -136,7 +136,7 @@ export const CreateIndividualModal: React.FC = () => {
                                 id="reason"
                                 name="reason"
                                 rows={3}
-                                className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.reason ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/10 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
+                                className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.reason ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
                                 placeholder="Describe the incident that led to this ban..."
                             />
                             {errors.reason && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.reason}</p>}
@@ -150,7 +150,7 @@ export const CreateIndividualModal: React.FC = () => {
                                 <select
                                     id="banType"
                                     name="banType"
-                                    className="w-full px-4 py-3 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
+                                    className="w-full px-4 py-3 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
                                 >
                                     <option value="TEMPORARY" className="bg-slate-900">Temporary</option>
                                     <option value="PERMANENT" className="bg-slate-900">Permanent</option>
@@ -164,7 +164,7 @@ export const CreateIndividualModal: React.FC = () => {
                                 <select
                                     id="riskLevel"
                                     name="riskLevel"
-                                    className="w-full px-4 py-3 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
+                                    className="w-full px-4 py-3 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
                                 >
                                     <option value="LOW" className="bg-slate-900">Low</option>
                                     <option value="MEDIUM" className="bg-slate-900">Medium</option>
@@ -182,7 +182,7 @@ export const CreateIndividualModal: React.FC = () => {
                                 type="date"
                                 id="banStartDate"
                                 name="banStartDate"
-                                className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.banStartDate ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/10 focus:ring-blue-500/50 bg-white/5 text-white'}`}
+                                className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.banStartDate ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white'}`}
                             />
                             {errors.banStartDate && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.banStartDate}</p>}
                         </div>
@@ -192,7 +192,7 @@ export const CreateIndividualModal: React.FC = () => {
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
                                 Biometric Photo <span className="text-blue-400">(Optional)</span>
                             </label>
-                            <div className="relative group border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
+                            <div className="relative group border-2 border-dashed border-white/5 rounded-2xl p-6 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
                                 <input
                                     ref={fileInputRef}
                                     type="file"

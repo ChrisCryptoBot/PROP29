@@ -16,7 +16,7 @@ export const AddIntegrationModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/10 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
+            <Card className="glass-card border-white/5 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
                 <CardHeader className="border-b border-white/5 pb-4">
                     <CardTitle className="flex items-center text-xl font-bold text-white">
                         <div className="w-10 h-10 bg-indigo-600/20 rounded-xl flex items-center justify-center mr-3 border border-indigo-500/30">
@@ -33,7 +33,7 @@ export const AddIntegrationModal: React.FC = () => {
                                 type="text"
                                 value={newIntegration.name}
                                 onChange={(e) => setNewIntegration({ ...newIntegration, name: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
                                 placeholder="e.g. Master CCTV Node"
                             />
                         </div>
@@ -44,7 +44,7 @@ export const AddIntegrationModal: React.FC = () => {
                                 type="text"
                                 value={newIntegration.type}
                                 onChange={(e) => setNewIntegration({ ...newIntegration, type: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
                                 placeholder="e.g. WebSocket, REST API"
                             />
                         </div>
@@ -55,7 +55,7 @@ export const AddIntegrationModal: React.FC = () => {
                                 type="text"
                                 value={newIntegration.endpoint}
                                 onChange={(e) => setNewIntegration({ ...newIntegration, endpoint: e.target.value })}
-                                className="w-full px-5 py-3 border border-white/10 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner font-mono text-sm"
+                                className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner font-mono text-sm"
                                 placeholder="wss://internal.security.node:8443"
                             />
                         </div>

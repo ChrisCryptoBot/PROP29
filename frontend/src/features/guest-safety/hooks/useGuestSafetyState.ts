@@ -6,8 +6,9 @@
  * Following Gold Standard: Zero business logic in components, 100% in hooks
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
+import { useWebSocket } from '../../../components/UI/WebSocketProvider';
 import { logger } from '../../../services/logger';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showError } from '../../../utils/toast';
 import * as guestSafetyService from '../services/guestSafetyService';
@@ -18,6 +19,10 @@ import type {
   GuestSafetySettings,
   MassNotificationData,
   GuestSafetyFilters,
+  GuestMessage,
+  GuestMessageFilters,
+  EvacuationHeadcount,
+  EvacuationCheckIn,
 } from '../types/guest-safety.types';
 import type { GuestSafetyIncident } from '../../../services/ApiService';
 import { DEFAULT_SETTINGS } from '../utils/constants';
@@ -87,6 +92,8 @@ const mapIncident = (incident: GuestSafetyIncident): GuestIncident => {
     icon: type === 'medical' ? 'fas fa-heartbeat' : type === 'security' ? 'fas fa-shield-alt' : type === 'maintenance' ? 'fas fa-tools' : type === 'service' ? 'fas fa-concierge-bell' : 'fas fa-exclamation-triangle',
     iconColor: priority === 'critical' ? '#ef4444' : priority === 'high' ? '#f59e0b' : priority === 'medium' ? '#10b981' : '#6b7280',
     assignedTeam: incident.assigned_team,
+    source: (incident as any).source || 'MANAGER',
+    sourceMetadata: (incident as any).sourceMetadata || {},
   };
 };
 
@@ -104,6 +111,7 @@ export interface UseGuestSafetyStateReturn {
     metrics: boolean;
     settings: boolean;
     actions: boolean;
+    messages: boolean;
   };
   
   // RBAC flags (exposed for UI conditional rendering)
@@ -119,9 +127,21 @@ export interface UseGuestSafetyStateReturn {
   setShowAssignTeamModal: (show: boolean) => void;
   showSendMessageModal: boolean;
   setShowSendMessageModal: (show: boolean) => void;
+  showCreateIncidentModal: boolean;
+  setShowCreateIncidentModal: (show: boolean) => void;
+  
+  // Hardware & Mobile Agent Integration
+  hardwareDevices: any[];
+  hardwareStatus: any;
+  agentMetrics: any;
+  
+  // Guest Messages
+  messages: GuestMessage[];
+  unreadMessageCount: number;
   
   // Actions - Incidents
   refreshIncidents: (filters?: GuestSafetyFilters) => Promise<void>;
+  createIncident: (data: import('../types/guest-safety.types').CreateIncidentRequest) => Promise<void>;
   assignTeam: (incidentId: string, teamId: string) => Promise<void>;
   resolveIncident: (incidentId: string) => Promise<void>;
   sendMessage: (incidentId: string, message: string) => Promise<void>;
@@ -133,10 +153,28 @@ export interface UseGuestSafetyStateReturn {
   refreshSettings: () => Promise<void>;
   updateSettings: (settings: Partial<GuestSafetySettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
+  
+  // Actions - Teams
+  refreshTeams: () => Promise<void>;
+  
+  // Actions - Hardware & Mobile Agent
+  refreshHardwareDevices: () => Promise<void>;
+  refreshAgentMetrics: () => Promise<void>;
+  
+  // Actions - Guest Messages
+  refreshMessages: (filters?: GuestMessageFilters) => Promise<void>;
+  markMessageRead: (messageId: string) => Promise<void>;
+  
+  // Actions - Evacuation
+  refreshEvacuationHeadcount: () => Promise<void>;
+  refreshEvacuationCheckIns: () => Promise<void>;
+  evacuationHeadcount: EvacuationHeadcount | null;
+  evacuationCheckIns: EvacuationCheckIn[];
 }
 
 export function useGuestSafetyState(): UseGuestSafetyStateReturn {
   const { user } = useAuth();
+  const { isConnected, subscribe } = useWebSocket();
   
   // ============================================
   // RBAC HELPER FUNCTIONS
@@ -175,6 +213,16 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
   
   const [incidents, setIncidents] = useState<GuestIncident[]>([]);
   const [teams, setTeams] = useState<ResponseTeam[]>([]);
+  const [hardwareDevices, setHardwareDevices] = useState<any[]>([]);
+  const [hardwareStatus, setHardwareStatus] = useState<{ devices: any[]; lastKnownGoodState: Date | null }>({
+    devices: [],
+    lastKnownGoodState: null
+  });
+  const [agentMetrics, setAgentMetrics] = useState<any[]>([]);
+  const [messages, setMessages] = useState<GuestMessage[]>([]);
+  const [evacuationHeadcount, setEvacuationHeadcount] = useState<EvacuationHeadcount | null>(null);
+  const [evacuationCheckIns, setEvacuationCheckIns] = useState<EvacuationCheckIn[]>([]);
+  const initialLoadRef = useRef(false);
   const metrics = useMemo<SafetyMetrics>(() => ({
     ...defaultMetrics,
     critical: incidents.filter(i => i.priority === 'critical').length,
@@ -191,12 +239,14 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     metrics: false,
     settings: false,
     actions: false,
+    messages: false,
   });
   
   // Modal states (Modal State Convergence)
   const [selectedIncident, setSelectedIncident] = useState<GuestIncident | null>(null);
   const [showAssignTeamModal, setShowAssignTeamModal] = useState(false);
   const [showSendMessageModal, setShowSendMessageModal] = useState(false);
+  const [showCreateIncidentModal, setShowCreateIncidentModal] = useState(false);
   
   // ============================================
   // REFRESH ACTIONS
@@ -263,12 +313,206 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     }
   }, []);
   
+  /**
+   * Refresh hardware devices
+   */
+  const refreshHardwareDevices = useCallback(async () => {
+    try {
+      const devices = await guestSafetyService.getHardwareDevices();
+      setHardwareDevices(devices);
+      
+      // Update hardware status using functional update to avoid dependency
+      const onlineDevices = devices.filter((d: any) => d.status === 'online');
+      setHardwareStatus(prev => ({
+        devices: devices,
+        lastKnownGoodState: onlineDevices.length > 0 ? new Date() : prev.lastKnownGoodState
+      }));
+      
+      logger.info('Hardware devices refreshed', { module: 'GuestSafety', count: devices.length });
+    } catch (error) {
+      logger.error('Failed to refresh hardware devices', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'refreshHardwareDevices'
+      });
+    }
+  }, []); // Remove dependency to prevent infinite loop
+  
+  /**
+   * Refresh mobile agent metrics
+   */
+  const refreshAgentMetrics = useCallback(async () => {
+    try {
+      const metrics = await guestSafetyService.getMobileAgentMetrics();
+      setAgentMetrics([metrics]); // Store as array for consistency
+      logger.info('Mobile agent metrics refreshed', { module: 'GuestSafety' });
+    } catch (error) {
+      logger.error('Failed to refresh agent metrics', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'refreshAgentMetrics'
+      });
+    }
+  }, []);
+  
+  /**
+   * Refresh guest messages
+   */
+  const refreshMessages = useCallback(async (filters?: GuestMessageFilters) => {
+    setLoading(prev => ({ ...prev, messages: true }));
+    try {
+      const data = await guestSafetyService.getGuestMessages(filters);
+      setMessages(data);
+      logger.info('Guest messages refreshed', { module: 'GuestSafety', count: data.length });
+    } catch (error) {
+      logger.error('Failed to refresh messages', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'refreshMessages'
+      });
+      showError('Failed to load messages. Please try again.');
+    } finally {
+      setLoading(prev => ({ ...prev, messages: false }));
+    }
+  }, []);
+  
+  /**
+   * Mark message as read
+   */
+  const markMessageReadAction = useCallback(async (messageId: string) => {
+    try {
+      const updated = await guestSafetyService.markMessageRead(messageId);
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId ? updated : msg
+      ));
+      logger.info('Message marked as read', { module: 'GuestSafety', messageId });
+    } catch (error) {
+      logger.error('Failed to mark message as read', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'markMessageRead',
+        messageId
+      });
+      throw error;
+    }
+  }, []);
+  
+  /**
+   * Calculate unread message count
+   */
+  const unreadMessageCount = useMemo(() => {
+    return messages.filter(msg => !msg.is_read).length;
+  }, [messages]);
+
+  /**
+   * Refresh evacuation headcount
+   */
+  const refreshEvacuationHeadcount = useCallback(async () => {
+    try {
+      const data = await guestSafetyService.getEvacuationHeadcount();
+      setEvacuationHeadcount(data);
+      logger.info('Evacuation headcount refreshed', { module: 'GuestSafety' });
+    } catch (error) {
+      logger.error('Failed to refresh evacuation headcount', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'refreshEvacuationHeadcount'
+      });
+    }
+  }, []);
+
+  /**
+   * Refresh evacuation check-ins
+   */
+  const refreshEvacuationCheckIns = useCallback(async () => {
+    try {
+      const data = await guestSafetyService.getEvacuationCheckIns();
+      setEvacuationCheckIns(data);
+      logger.info('Evacuation check-ins refreshed', { module: 'GuestSafety', count: data.length });
+    } catch (error) {
+      logger.error('Failed to refresh evacuation check-ins', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'refreshEvacuationCheckIns'
+      });
+    }
+  }, []);
+  
   // ============================================
   // INCIDENT ACTIONS
   // ============================================
   
   /**
-   * Assign team to incident (with RBAC check)
+   * Check for duplicate incidents (same location, similar time, similar description)
+   */
+  const checkForDuplicates = useCallback((newIncident: GuestIncident): GuestIncident | null => {
+    const timeWindow = 5 * 60 * 1000; // 5 minutes
+    const now = Date.now();
+    const newTime = new Date(newIncident.reported_at).getTime();
+    
+    return incidents.find(incident => {
+      // Check if within time window
+      const incidentTime = new Date(incident.reported_at).getTime();
+      const timeDiff = Math.abs(newTime - incidentTime);
+      if (timeDiff > timeWindow) return false;
+      
+      // Check if same location
+      const sameLocation = incident.location?.toLowerCase() === newIncident.location?.toLowerCase() ||
+                          incident.guestRoom === newIncident.guestRoom;
+      if (!sameLocation) return false;
+      
+      // Check if similar description (basic similarity check)
+      const desc1 = (incident.description || '').toLowerCase();
+      const desc2 = (newIncident.description || '').toLowerCase();
+      const similarity = desc1.length > 0 && desc2.length > 0 && 
+                        (desc1.includes(desc2.substring(0, 20)) || desc2.includes(desc1.substring(0, 20)));
+      
+      return similarity;
+    }) || null;
+  }, [incidents]);
+  
+  /**
+   * Create new incident (with RBAC check and duplicate detection)
+   */
+  const createIncident = useCallback(async (data: import('../types/guest-safety.types').CreateIncidentRequest) => {
+    // RBAC CHECK (all authenticated users can create incidents)
+    if (!user) {
+      showError('You must be authenticated to create incidents');
+      throw new Error('Unauthorized');
+    }
+    
+    const toastId = showLoading('Creating incident...');
+    setLoading(prev => ({ ...prev, actions: true }));
+    try {
+      const newIncident = await guestSafetyService.createIncident(data);
+      const mapped = mapIncident(newIncident);
+      
+      // Check for duplicates
+      const duplicate = checkForDuplicates(mapped);
+      if (duplicate) {
+        logger.warn('Potential duplicate incident detected', {
+          module: 'GuestSafety',
+          newIncidentId: mapped.id,
+          duplicateId: duplicate.id
+        });
+        // Still add the incident but log the warning
+        // In production, you might want to show a confirmation dialog
+      }
+      
+      // Add to state optimistically
+      setIncidents(prev => [mapped, ...prev]);
+      
+      dismissLoadingAndShowSuccess(toastId, 'Incident created successfully');
+      setShowCreateIncidentModal(false);
+      logger.info('Incident created', { module: 'GuestSafety', incidentId: newIncident.id });
+    } catch (error) {
+      dismissLoadingAndShowError(toastId, 'Failed to create incident. Please check your connection and try again.');
+      logger.error('Failed to create incident', error instanceof Error ? error : new Error(String(error)), {
+        module: 'GuestSafety',
+        action: 'createIncident'
+      });
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, actions: false }));
+    }
+  }, [user, checkForDuplicates]);
+  
+  /**
+   * Assign team to incident (with RBAC check and conflict resolution)
    */
   const assignTeam = useCallback(async (incidentId: string, teamId: string) => {
     // RBAC CHECK
@@ -277,12 +521,22 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       throw new Error('Unauthorized');
     }
     
+    // Check current state to prevent conflicts
+    const currentIncident = incidents.find(i => i.id === incidentId);
+    if (!currentIncident) {
+      showError('Incident not found');
+      throw new Error('Incident not found');
+    }
+    
+    if (currentIncident.status !== 'reported') {
+      showError('This incident has already been assigned or resolved');
+      throw new Error('Invalid state');
+    }
+    
     const toastId = showLoading('Assigning team...');
     setLoading(prev => ({ ...prev, actions: true }));
     try {
-      await guestSafetyService.updateIncident(incidentId, { assignedTeam: teamId, status: 'responding' });
-      
-      // Update state optimistically
+      // Optimistic update
       const team = teams.find(t => t.id === teamId);
       setIncidents(prev => prev.map(incident => 
         incident.id === incidentId 
@@ -290,11 +544,20 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
           : incident
       ));
       
+      await guestSafetyService.updateIncident(incidentId, { assignedTeam: teamId, status: 'responding' });
+      
       dismissLoadingAndShowSuccess(toastId, 'Team assigned successfully');
       setShowAssignTeamModal(false);
       logger.info('Team assigned to incident', { module: 'GuestSafety', incidentId, teamId });
     } catch (error) {
-      dismissLoadingAndShowError(toastId, 'Failed to assign team');
+      // Revert optimistic update on error
+      setIncidents(prev => prev.map(incident => 
+        incident.id === incidentId 
+          ? { ...incident, status: 'reported' as const, assignedTeam: undefined }
+          : incident
+      ));
+      
+      dismissLoadingAndShowError(toastId, 'Failed to assign team. The incident may have been updated by another user.');
       logger.error('Failed to assign team', error instanceof Error ? error : new Error(String(error)), {
         module: 'GuestSafety',
         action: 'assignTeam',
@@ -305,7 +568,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     } finally {
       setLoading(prev => ({ ...prev, actions: false }));
     }
-  }, [canAssignTeam, teams]);
+  }, [canAssignTeam, teams, incidents]);
   
   /**
    * Resolve incident (with RBAC check)
@@ -471,14 +734,192 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
   }, [canManageSettings]);
   
   // ============================================
+  // AUTO-ESCALATION LOGIC
+  // ============================================
+  
+  /**
+   * Check and escalate incidents that exceed threshold
+   */
+  const checkAutoEscalation = useCallback(() => {
+    if (!settings.autoEscalation) return;
+    
+    const thresholdMinutes = settings.alertThreshold;
+    const now = Date.now();
+    
+    incidents.forEach(incident => {
+      if (incident.status !== 'reported') return; // Only escalate reported incidents
+      
+      const reportedTime = new Date(incident.reported_at || incident.reportedTime).getTime();
+      const ageMinutes = (now - reportedTime) / 60000;
+      
+      if (ageMinutes >= thresholdMinutes) {
+        // Check if already escalated
+        const isEscalated = incident.priority === 'critical' && 
+          (incident as any).escalated === true;
+        
+        if (!isEscalated) {
+          logger.warn('Incident exceeds escalation threshold', {
+            module: 'GuestSafety',
+            incidentId: incident.id,
+            ageMinutes,
+            thresholdMinutes
+          });
+          
+          // Update incident priority to critical
+          guestSafetyService.updateIncident(incident.id, {
+            severity: 'critical',
+            status: 'reported', // Keep as reported but escalate
+          }).then(updated => {
+            const mapped = mapIncident(updated);
+            setIncidents(prev => prev.map(i => 
+              i.id === mapped.id ? { ...mapped, escalated: true } : i
+            ));
+            logger.info('Incident auto-escalated', { module: 'GuestSafety', incidentId: incident.id });
+          }).catch(err => {
+            logger.error('Failed to escalate incident', err);
+          });
+        }
+      }
+    });
+  }, [incidents, settings.autoEscalation, settings.alertThreshold]);
+  
+  // Run escalation check every minute
+  useEffect(() => {
+    if (!settings.autoEscalation) return;
+    
+    const interval = setInterval(() => {
+      checkAutoEscalation();
+    }, 60000); // Check every minute
+    
+    // Run immediately on mount/update
+    checkAutoEscalation();
+    
+    return () => clearInterval(interval);
+  }, [checkAutoEscalation, settings.autoEscalation]);
+  
+  // ============================================
   // INITIAL DATA LOAD
   // ============================================
   
+  // Initial data load - only run once on mount
   useEffect(() => {
+    if (initialLoadRef.current) return;
+    initialLoadRef.current = true;
+    
     refreshIncidents();
     refreshTeams();
     refreshSettings();
-  }, [refreshIncidents, refreshTeams, refreshSettings]);
+    refreshHardwareDevices();
+    refreshAgentMetrics();
+    refreshMessages();
+  }, [refreshIncidents, refreshTeams, refreshSettings, refreshHardwareDevices, refreshAgentMetrics, refreshMessages]);
+  
+  // ============================================
+  // WEBSOCKET INTEGRATION FOR REAL-TIME UPDATES
+  // ============================================
+  
+  useEffect(() => {
+    if (!isConnected) return;
+    
+    // Subscribe to new incident events
+    const unsubscribeIncident = subscribe('guest_safety_incident', (data: any) => {
+      if (data && data.incident) {
+        const newIncident = mapIncident(data.incident);
+        setIncidents(prev => {
+          // Avoid duplicates
+          if (prev.find(i => i.id === newIncident.id)) {
+            return prev;
+          }
+          return [newIncident, ...prev];
+        });
+        logger.info('New incident received via WebSocket', { module: 'GuestSafety', incidentId: newIncident.id });
+      }
+    });
+    
+    // Subscribe to incident updates (with conflict resolution)
+    const unsubscribeUpdate = subscribe('guest_safety_incident_update', (data: any) => {
+      if (data && data.incident) {
+        const updatedIncident = mapIncident(data.incident);
+        setIncidents(prev => {
+          const existing = prev.find(i => i.id === updatedIncident.id);
+          // Only update if the server version is newer or if we don't have local changes
+          if (existing) {
+            const serverTime = new Date(updatedIncident.reported_at).getTime();
+            const localTime = new Date(existing.reported_at).getTime();
+            // Accept server update if it's newer (within reason - 1 second buffer for clock skew)
+            if (serverTime >= localTime - 1000) {
+              return prev.map(i => 
+                i.id === updatedIncident.id ? updatedIncident : i
+              );
+            } else {
+              logger.warn('Ignoring stale server update', {
+                module: 'GuestSafety',
+                incidentId: updatedIncident.id,
+                serverTime,
+                localTime
+              });
+              return prev;
+            }
+          }
+          return prev.map(i => 
+            i.id === updatedIncident.id ? updatedIncident : i
+          );
+        });
+        logger.info('Incident updated via WebSocket', { module: 'GuestSafety', incidentId: updatedIncident.id });
+      }
+    });
+    
+    // Subscribe to hardware device status updates
+    const unsubscribeHardware = subscribe('hardware_device_status', (data: any) => {
+      if (data && data.devices) {
+        // Use the refresh function directly without dependency
+        guestSafetyService.getHardwareDevices().then(devices => {
+          setHardwareDevices(devices);
+          const onlineDevices = devices.filter((d: any) => d.status === 'online');
+          setHardwareStatus(prev => ({
+            devices: devices,
+            lastKnownGoodState: onlineDevices.length > 0 ? new Date() : prev.lastKnownGoodState
+          }));
+        }).catch(err => {
+          logger.error('Failed to refresh hardware devices via WebSocket', err);
+        });
+      }
+    });
+    
+    // Subscribe to mobile agent updates
+    const unsubscribeAgent = subscribe('mobile_agent_update', (data: any) => {
+      if (data && data.metrics) {
+        // Use the service directly without dependency
+        guestSafetyService.getMobileAgentMetrics().then(metrics => {
+          setAgentMetrics([metrics]);
+        }).catch(err => {
+          logger.error('Failed to refresh agent metrics via WebSocket', err);
+        });
+      }
+    });
+    
+    // Subscribe to guest message updates
+    const unsubscribeMessages = subscribe('guest_message', (data: any) => {
+      if (data && data.message) {
+        setMessages(prev => {
+          // Avoid duplicates
+          if (prev.find(m => m.id === data.message.id)) {
+            return prev.map(m => m.id === data.message.id ? data.message : m);
+          }
+          return [data.message, ...prev];
+        });
+        logger.info('New guest message received via WebSocket', { module: 'GuestSafety', messageId: data.message.id });
+      }
+    });
+    
+    return () => {
+      unsubscribeIncident();
+      unsubscribeUpdate();
+      unsubscribeHardware();
+      unsubscribeAgent();
+      unsubscribeMessages();
+    };
+  }, [isConnected, subscribe]); // Only depend on connection state and subscribe function
   
   // ============================================
   // RETURN
@@ -490,6 +931,13 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     teams,
     metrics,
     settings,
+    hardwareDevices,
+    hardwareStatus,
+    agentMetrics,
+    
+    // Guest Messages
+    messages,
+    unreadMessageCount,
     
     // Loading states
     loading,
@@ -507,9 +955,12 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     setShowAssignTeamModal,
     showSendMessageModal,
     setShowSendMessageModal,
+    showCreateIncidentModal,
+    setShowCreateIncidentModal,
     
     // Actions
     refreshIncidents,
+    createIncident,
     assignTeam,
     resolveIncident,
     sendMessage,
@@ -517,5 +968,14 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     refreshSettings,
     updateSettings,
     resetSettings,
+    refreshTeams,
+    refreshHardwareDevices,
+    refreshAgentMetrics,
+    refreshMessages,
+    markMessageRead: markMessageReadAction,
+    refreshEvacuationHeadcount,
+    refreshEvacuationCheckIns,
+    evacuationHeadcount,
+    evacuationCheckIns,
   };
 }

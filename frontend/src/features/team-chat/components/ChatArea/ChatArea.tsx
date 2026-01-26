@@ -65,10 +65,10 @@ export const ChatArea: React.FC = () => {
     return (
         <div className="flex-1 flex flex-col h-full bg-black/20">
             {/* Chat Header */}
-            <div className="bg-white/5 border-b border-white/10 p-4 shrink-0">
+            <div className="bg-white/5 border-b border-white/5 p-4 shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 group">
-                        <div className="p-2 bg-white/5 rounded-lg border border-white/10 group-hover:scale-110 transition-transform duration-300">
+                        <div className="p-2 bg-white/5 rounded-lg border border-white/5 group-hover:scale-110 transition-transform duration-300">
                             {getChannelIcon(currentChannel?.type || 'default')}
                         </div>
                         <div>
@@ -113,13 +113,13 @@ export const ChatArea: React.FC = () => {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {filteredMessages.length === 0 && searchTerm.trim() !== '' ? (
-                    <div className="text-center py-20 bg-black/20 rounded-2xl border border-dashed border-white/10 mx-4">
+                    <div className="text-center py-20 bg-black/20 rounded-2xl border border-dashed border-white/5 mx-4">
                         <i className="fas fa-search text-white/10 text-5xl mx-auto mb-4" />
                         <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">No Matching Data</h3>
                         <p className="text-sm text-white/40 max-w-xs mx-auto">Database query for "{searchTerm}" returned zero results in the current sector.</p>
                     </div>
                 ) : currentChannelMessages.length === 0 ? (
-                    <div className="text-center py-20 bg-black/20 rounded-2xl border border-dashed border-white/10 mx-4">
+                    <div className="text-center py-20 bg-black/20 rounded-2xl border border-dashed border-white/5 mx-4">
                         <i className="fas fa-comments text-white/10 text-5xl mx-auto mb-4" />
                         <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">No Active Records</h3>
                         <p className="text-sm text-white/40 max-w-xs mx-auto">Communication channel started. Awaiting first message from field personnel.</p>
@@ -134,7 +134,7 @@ export const ChatArea: React.FC = () => {
                             )}
                         >
                             {/* Avatar */}
-                            <div className="shrink-0 w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-[10px] font-black text-white/60 overflow-hidden uppercase">
+                            <div className="shrink-0 w-8 h-8 rounded border border-white/5 bg-white/5 flex items-center justify-center text-[10px] font-black text-white/60 overflow-hidden uppercase">
                                 {msg.sender === 'current-user' ? 'CU' :
                                     msg.sender === 'system' ? 'SYS' :
                                         teamMembers.find(m => m.id === msg.sender)?.name.split(' ').map(n => n[0]).join('') || '?'}
@@ -149,7 +149,7 @@ export const ChatArea: React.FC = () => {
                                     "p-3 rounded-xl text-sm shadow-lg backdrop-blur-md transition-all border-l-4",
                                     msg.sender === 'current-user'
                                         ? "bg-blue-600/20 text-white border-l-blue-600 border-t border-r border-b border-blue-500/30 rounded-tr-none"
-                                        : "bg-white/5 text-white/90 border-l-white/20 border-t border-r border-b border-white/10 rounded-tl-none",
+                                        : "bg-white/5 text-white/90 border-l-white/20 border-t border-r border-b border-white/5 rounded-tl-none",
                                     msg.type === 'system' && "bg-transparent border-none text-white/40 italic text-xs py-1 px-0"
                                 )}>
                                     {msg.sender !== 'current-user' && msg.type !== 'system' && (
@@ -168,7 +168,7 @@ export const ChatArea: React.FC = () => {
                                     {msg.location && (
                                         <div className={cn(
                                             "mt-2 p-2 rounded border flex items-center space-x-2 text-[10px] font-bold uppercase tracking-wider",
-                                            msg.sender === 'current-user' ? "bg-blue-600/30 border-blue-500/50" : "bg-black/20 border-white/10"
+                                            msg.sender === 'current-user' ? "bg-blue-600/30 border-blue-500/50" : "bg-black/20 border-white/5"
                                         )}>
                                             <i className="fas fa-map-marker-alt text-red-500" />
                                             <span>VECTOR: {msg.location.area}</span>
@@ -178,7 +178,7 @@ export const ChatArea: React.FC = () => {
                                     {msg.file && (
                                         <div className={cn(
                                             "mt-2 p-2 rounded border flex items-center justify-between space-x-3 text-[10px] font-bold uppercase tracking-wider",
-                                            msg.sender === 'current-user' ? "bg-blue-600/30 border-blue-500/50" : "bg-black/20 border-white/10"
+                                            msg.sender === 'current-user' ? "bg-blue-600/30 border-blue-500/50" : "bg-black/20 border-white/5"
                                         )}>
                                             <div className="flex items-center space-x-2 min-w-0">
                                                 <i className="fas fa-file-alt text-blue-500" />
@@ -197,7 +197,7 @@ export const ChatArea: React.FC = () => {
                                     {msg.reactions && msg.reactions.length > 0 && (
                                         <div className="flex items-center gap-1">
                                             {msg.reactions.map((r, i) => (
-                                                <span key={i} className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-white/60">
+                                                <span key={i} className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/5 text-white/60">
                                                     {r.emoji} {r.count}
                                                 </span>
                                             ))}
@@ -212,7 +212,7 @@ export const ChatArea: React.FC = () => {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-black/40 border-t border-white/10 shrink-0">
+            <div className="p-4 bg-black/40 border-t border-white/5 shrink-0">
                 {/* Quick Actions */}
                 <div className="flex items-center space-x-2 mb-4 overflow-x-auto no-scrollbar pb-1">
                     {quickActions.map(action => (
@@ -223,7 +223,7 @@ export const ChatArea: React.FC = () => {
                                 "flex items-center space-x-2 px-4 py-2 rounded transition-all shadow-lg font-black uppercase tracking-widest text-[9px] border",
                                 action.id === 'emergency'
                                     ? "bg-red-600/20 hover:bg-red-600 text-red-100 border-red-500/50 shadow-red-500/10"
-                                    : "bg-white/5 hover:bg-white/10 text-white/60 border-white/10"
+                                    : "bg-white/5 hover:bg-white/10 text-white/60 border-white/5"
                             )}
                         >
                             <i className={cn(action.iconClass, "text-xs")} />
@@ -240,7 +240,7 @@ export const ChatArea: React.FC = () => {
                         onChange={handleFileSelect}
                         className="hidden"
                     />
-                    <div className="flex-1 flex items-center bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 shadow-inner focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/50 transition-all">
+                    <div className="flex-1 flex items-center bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 shadow-inner focus-within:ring-2 focus-within:ring-blue-500/30 focus-within:border-blue-500/50 transition-all">
                         <Button variant="ghost" size="sm" onClick={handleFileUpload} className="text-white/40 hover:text-blue-500">
                             <i className="fas fa-paperclip" />
                         </Button>

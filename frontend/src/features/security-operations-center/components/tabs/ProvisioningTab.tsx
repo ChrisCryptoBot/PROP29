@@ -84,7 +84,7 @@ export const ProvisioningTab: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Camera Name</label>
                 <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   placeholder="e.g. North Lobby Entrance"
@@ -94,7 +94,7 @@ export const ProvisioningTab: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Location</label>
                 <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
                   value={formData.location}
                   onChange={(e) => handleChange('location', e.target.value)}
                   placeholder="e.g. MAIN ENTRANCE LOBBY"
@@ -104,7 +104,7 @@ export const ProvisioningTab: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">IP Address</label>
                 <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
                   value={formData.ipAddress}
                   onChange={(e) => handleChange('ipAddress', e.target.value)}
                   placeholder="192.168.1.100"
@@ -114,7 +114,7 @@ export const ProvisioningTab: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Stream URL</label>
                 <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
                   value={formData.streamUrl}
                   onChange={(e) => handleChange('streamUrl', e.target.value)}
                   placeholder="rtsp://camera/stream or https://...m3u8"
@@ -124,7 +124,7 @@ export const ProvisioningTab: React.FC = () => {
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Username</label>
                 <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
                   value={formData.username}
                   onChange={(e) => handleChange('username', e.target.value)}
                 />
@@ -133,7 +133,7 @@ export const ProvisioningTab: React.FC = () => {
                 <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Password</label>
                 <input
                   type="password"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
                 />
@@ -166,7 +166,7 @@ export const ProvisioningTab: React.FC = () => {
         <CardContent className="p-6">
           <div className="space-y-4">
             {cameras.map((camera) => (
-              <div key={camera.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl group hover:bg-white/[0.08] transition-all">
+              <div key={camera.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/[0.08] transition-all">
                 <div className="space-y-1">
                   <div className="font-black text-white uppercase tracking-tighter text-base group-hover:text-blue-400 transition-colors">{camera.name}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-white/50">{camera.location} · <span className="text-white/30 italic">{camera.ipAddress}</span></div>

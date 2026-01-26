@@ -5,6 +5,9 @@ import { Badge } from '../../../../components/UI/Badge';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { Avatar } from '../../../../components/UI/Avatar';
 import { SearchBar } from '../../../../components/UI/SearchBar';
+import { Select } from '../../../../components/UI/Select';
+import { Modal } from '../../../../components/UI/Modal';
+import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 import { TemplateSuggestionsPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
@@ -63,6 +66,19 @@ export const PatrolManagementTab: React.FC = () => {
         retryCheckInQueue
     } = usePatrolContext();
 
+    // Helper: Calculate checkpoint progress
+    const getPatrolCheckpointProgress = (patrol: UpcomingPatrol) => {
+        const route = routes.find(r => r && (r.id === patrol.routeId || r.name === patrol.location));
+        const checkpoints = patrol.checkpoints?.length ? patrol.checkpoints : (route?.checkpoints || []);
+        if (!checkpoints || checkpoints.length === 0) {
+            return { completed: 0, total: 0, percentage: 0 };
+        }
+        const total = checkpoints.length;
+        const completed = checkpoints.filter(cp => cp?.status === 'completed').length;
+        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        return { completed, total, percentage };
+    };
+
 
     // Local UI State (persisted)
     const [patrolSearchQuery, setPatrolSearchQuery] = useState(() => loadFilters().search);
@@ -88,6 +104,10 @@ export const PatrolManagementTab: React.FC = () => {
     const [showCheckpointCheckIn, setShowCheckpointCheckIn] = useState(false);
     const [checkingInPatrolId, setCheckingInPatrolId] = useState<string | null>(null);
     const [checkingInCheckpointId, setCheckingInCheckpointId] = useState<string | null>(null);
+    const [showAbortConfirm, setShowAbortConfirm] = useState(false);
+    const [showFinalizeConfirm, setShowFinalizeConfirm] = useState(false);
+    const [confirmingPatrolId, setConfirmingPatrolId] = useState<string | null>(null);
+    const [confirmProgress, setConfirmProgress] = useState<{ completed: number; total: number; percentage: number } | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -113,19 +133,6 @@ export const PatrolManagementTab: React.FC = () => {
             isMounted = false;
         };
     }, [selectedPropertyId]);
-
-    // Helper: Calculate checkpoint progress
-    const getPatrolCheckpointProgress = (patrol: UpcomingPatrol) => {
-        const route = routes.find(r => r && (r.id === patrol.routeId || r.name === patrol.location));
-        const checkpoints = patrol.checkpoints?.length ? patrol.checkpoints : (route?.checkpoints || []);
-        if (!checkpoints || checkpoints.length === 0) {
-            return { completed: 0, total: 0, percentage: 0 };
-        }
-        const total = checkpoints.length;
-        const completed = checkpoints.filter(cp => cp?.status === 'completed').length;
-        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-        return { completed, total, percentage };
-    };
 
     // Filter Active Patrols
     const activeFilteredPatrols = useMemo(() => {
@@ -191,6 +198,11 @@ export const PatrolManagementTab: React.FC = () => {
                     onCreateTemplate={(suggestion) => {
                         if (!suggestion || !suggestion.name?.trim()) {
                             showError('Invalid suggestion');
+                            return;
+                        }
+                        // Validate suggestion has required fields
+                        if (!suggestion.routeId && !suggestion.route) {
+                            showError('Template suggestion missing route information');
                             return;
                         }
                         setEditingTemplate(suggestion as any);
@@ -348,6 +360,11 @@ export const PatrolManagementTab: React.FC = () => {
                     <div className="space-y-4">
                         {activeFilteredPatrols.length > 0 ? (
                             activeFilteredPatrols.map(patrol => {
+                                // Validate patrol has required data
+                                if (!patrol.id || !patrol.name) {
+                                    return null;
+                                }
+                                
                                 const progress = getPatrolCheckpointProgress(patrol);
                                 const route = routes.find(r => r && (r.id === patrol.routeId || r.name === patrol.location));
                                 const checkpoints = patrol.checkpoints?.length ? patrol.checkpoints : (route?.checkpoints || []);
@@ -382,21 +399,37 @@ export const PatrolManagementTab: React.FC = () => {
                                                     size="sm"
                                                     variant="glass"
                                                     onClick={() => { setReassigningPatrolId(patrol.id); setShowReassignModal(true); }}
-                                                    className="h-8 border-white/10 text-slate-400 text-[10px] font-black uppercase tracking-widest px-3"
+                                                    className="h-8 border-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest px-3"
                                                 >
                                                     Modify
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="glass"
-                                                    onClick={() => handleCancelPatrol(patrol.id)}
-                                                    className="h-8 border-white/10 text-red-500/60 hover:text-red-400 text-[10px] font-black uppercase tracking-widest px-3"
+                                                    onClick={() => {
+                                                        if (progress.total > 0 && progress.percentage < 100) {
+                                                            setConfirmProgress(progress);
+                                                            setConfirmingPatrolId(patrol.id);
+                                                            setShowAbortConfirm(true);
+                                                        } else {
+                                                            handleCancelPatrol(patrol.id);
+                                                        }
+                                                    }}
+                                                    className="h-8 border-white/5 text-red-500/60 hover:text-red-400 text-[10px] font-black uppercase tracking-widest px-3"
                                                 >
                                                     Abort
                                                 </Button>
                                                 <Button
                                                     size="sm"
-                                                    onClick={() => handleCompletePatrol(patrol.id)}
+                                                    onClick={() => {
+                                                        if (progress.total > 0 && progress.percentage < 100) {
+                                                            setConfirmProgress(progress);
+                                                            setConfirmingPatrolId(patrol.id);
+                                                            setShowFinalizeConfirm(true);
+                                                        } else {
+                                                            handleCompletePatrol(patrol.id);
+                                                        }
+                                                    }}
                                                     variant="glass"
                                                     className="h-8 border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-4"
                                                 >
@@ -519,36 +552,42 @@ export const PatrolManagementTab: React.FC = () => {
                 </CardHeader>
                 <CardContent className="px-6 py-6">
                     {isAuditLoading ? (
-                        <p className="text-xs text-slate-500 uppercase tracking-widest">Loading audit log...</p>
+                        <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                            <LoadingSpinner variant="spinner" size="medium" message="Loading audit log..." />
+                        </div>
                     ) : auditLogs.length > 0 ? (
                         <>
                             <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">Sort</label>
-                                <select
+                                <Select
+                                    label="Sort"
                                     value={auditSort}
                                     onChange={(e) => setAuditSort(e.target.value as 'newest' | 'oldest')}
-                                    className="px-3 py-1.5 border border-white/10 rounded-md text-xs font-mono bg-white/5 text-white focus:ring-2 focus:ring-blue-500/20"
-                                    aria-label="Audit log sort order"
+                                    className="w-40"
+                                    containerClassName=""
                                 >
-                                    <option value="newest" className="bg-slate-900">Newest first</option>
-                                    <option value="oldest" className="bg-slate-900">Oldest first</option>
-                                </select>
-                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-2">From</label>
-                                <input
-                                    type="date"
-                                    value={auditDateFrom}
-                                    onChange={(e) => setAuditDateFrom(e.target.value)}
-                                    className="px-3 py-1.5 border border-white/10 rounded-md text-xs font-mono bg-white/5 text-white focus:ring-2 focus:ring-blue-500/20"
-                                    aria-label="Audit log date from"
-                                />
-                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500">To</label>
-                                <input
-                                    type="date"
-                                    value={auditDateTo}
-                                    onChange={(e) => setAuditDateTo(e.target.value)}
-                                    className="px-3 py-1.5 border border-white/10 rounded-md text-xs font-mono bg-white/5 text-white focus:ring-2 focus:ring-blue-500/20"
-                                    aria-label="Audit log date to"
-                                />
+                                    <option value="newest">Newest first</option>
+                                    <option value="oldest">Oldest first</option>
+                                </Select>
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">From</label>
+                                    <input
+                                        type="date"
+                                        value={auditDateFrom}
+                                        onChange={(e) => setAuditDateFrom(e.target.value)}
+                                        className="px-3 py-1.5 border border-white/5 rounded-md text-xs font-mono bg-white/5 text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        aria-label="Audit log date from"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">To</label>
+                                    <input
+                                        type="date"
+                                        value={auditDateTo}
+                                        onChange={(e) => setAuditDateTo(e.target.value)}
+                                        className="px-3 py-1.5 border border-white/5 rounded-md text-xs font-mono bg-white/5 text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10"
+                                        aria-label="Audit log date to"
+                                    />
+                                </div>
                             </div>
                             <div className="space-y-3">
                             {filteredAuditLogs.length === 0 ? (
@@ -613,6 +652,97 @@ export const PatrolManagementTab: React.FC = () => {
                     checkpointId={checkingInCheckpointId}
                 />
             )}
+
+            {/* Abort Confirmation Modal */}
+            <Modal
+                isOpen={showAbortConfirm}
+                onClose={() => { setShowAbortConfirm(false); setConfirmingPatrolId(null); setConfirmProgress(null); }}
+                title="Confirm Abort Patrol"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {confirmProgress && confirmProgress.percentage < 100 && (
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-xs font-bold text-amber-400">
+                                Patrol is only {confirmProgress.percentage}% complete ({confirmProgress.completed}/{confirmProgress.total} checkpoints)
+                            </p>
+                        </div>
+                    )}
+                    <p className="text-sm text-white">
+                        Are you sure you want to abort this patrol? This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                            variant="subtle"
+                            onClick={() => { setShowAbortConfirm(false); setConfirmingPatrolId(null); setConfirmProgress(null); }}
+                            className="text-[10px] font-black uppercase tracking-widest"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                if (confirmingPatrolId) {
+                                    handleCancelPatrol(confirmingPatrolId);
+                                    setShowAbortConfirm(false);
+                                    setConfirmingPatrolId(null);
+                                    setConfirmProgress(null);
+                                }
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest"
+                        >
+                            Abort Patrol
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Finalize Confirmation Modal */}
+            <Modal
+                isOpen={showFinalizeConfirm}
+                onClose={() => { setShowFinalizeConfirm(false); setConfirmingPatrolId(null); setConfirmProgress(null); }}
+                title="Confirm Finalize Patrol"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    {confirmProgress && confirmProgress.percentage < 100 && (
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-xs font-bold text-amber-400">
+                                Patrol is only {confirmProgress.percentage}% complete ({confirmProgress.completed}/{confirmProgress.total} checkpoints)
+                            </p>
+                            <p className="text-[10px] text-amber-300/70 mt-1">
+                                You can still finalize, but incomplete checkpoints will be marked as skipped.
+                            </p>
+                        </div>
+                    )}
+                    <p className="text-sm text-white">
+                        Are you sure you want to finalize this patrol?
+                    </p>
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                            variant="subtle"
+                            onClick={() => { setShowFinalizeConfirm(false); setConfirmingPatrolId(null); setConfirmProgress(null); }}
+                            className="text-[10px] font-black uppercase tracking-widest"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                if (confirmingPatrolId) {
+                                    handleCompletePatrol(confirmingPatrolId);
+                                    setShowFinalizeConfirm(false);
+                                    setConfirmingPatrolId(null);
+                                    setConfirmProgress(null);
+                                }
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest"
+                        >
+                            Finalize Patrol
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
