@@ -49,7 +49,6 @@ export interface LostFoundItem {
   lost_date?: string;
   status: LostFoundStatus;
   photo_url?: string;
-  ai_matched_guest_id?: string;
   claimed_by_guest_id?: string;
   claimed_at?: string;
   found_by?: string;
@@ -61,7 +60,6 @@ export interface LostFoundItem {
   category?: string; // Derived from item_type
   storageLocation?: string; // Computed
   qrCode?: string; // Generated
-  aiMatchConfidence?: number; // From AI matching
   expirationDate?: string; // Computed from retention period
   notificationsSent?: number; // Tracked separately
   lastNotificationDate?: string; // Tracked separately
@@ -74,7 +72,6 @@ export interface LostFoundItem {
   // Relationship data (populated)
   property_name?: string;
   finder_name?: string;
-  ai_matched_guest_name?: string;
   claimed_by_guest_name?: string;
 }
 
@@ -106,7 +103,6 @@ export interface LostFoundItemUpdate {
   notes?: string;
   value_estimate?: number;
   claimed_by_guest_id?: string;
-  ai_matched_guest_id?: string;
   
   // Additional frontend fields
   category?: string;
@@ -133,13 +129,6 @@ export interface LostFoundClaim {
   claimer_email?: string;
 }
 
-export interface LostFoundMatch {
-  item_id: string;
-  confidence: number;
-  matched_guest_id?: string;
-  matched_guest_name?: string;
-  reason: string;
-}
 
 export interface LostFoundMetrics {
   total: number;
@@ -166,7 +155,6 @@ export interface LostFoundSettings {
   qrCodePrefix: string;
   autoArchiveAfterDays: number;
   autoNotificationEnabled: boolean;
-  aiMatchingEnabled: boolean;
   requirePhotoDocumentation: boolean;
   chainOfCustodyTracking: boolean;
   highValueThreshold: number;

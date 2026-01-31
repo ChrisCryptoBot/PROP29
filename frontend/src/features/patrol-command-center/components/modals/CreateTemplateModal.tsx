@@ -6,7 +6,6 @@ import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dism
 import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
 import { PatrolTemplate } from '../../types';
 import { PatrolEndpoint } from '../../../../services/PatrolEndpoint';
-import { patrolAI } from '../../../../services/PatrolAIService';
 import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 
 interface CreateTemplateModalProps {
@@ -32,8 +31,6 @@ const DEFAULT_FORM: Omit<PatrolTemplate, 'id'> = {
 export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen, onClose, initialData }) => {
     const { routes, upcomingPatrols, setTemplates, selectedPropertyId } = usePatrolContext();
     const [form, setForm] = useState(DEFAULT_FORM);
-    const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
-    const [isLoadingAI, setIsLoadingAI] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
@@ -137,19 +134,6 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen
         }
     };
 
-    const loadAiSuggestions = async () => {
-        setIsLoadingAI(true);
-        try {
-            // Mock AI service call
-            const suggestions = await patrolAI.suggestTemplates(upcomingPatrols as any[], []);
-            setAiSuggestions(suggestions);
-            if (suggestions.length === 0) showSuccess('No AI suggestions available');
-        } catch (err) {
-            showError('Failed to load AI suggestions');
-        } finally {
-            setIsLoadingAI(false);
-        }
-    };
 
     return (
         <Modal
@@ -158,65 +142,6 @@ export const CreateTemplateModal: React.FC<CreateTemplateModalProps> = ({ isOpen
             title={initialData ? 'Edit Patrol Template' : 'Create Patrol Template'}
             className="max-w-3xl"
         >
-            {/* AI Suggestions Section (Only for Create) */}
-            {!initialData && (
-                <div className="mb-6 p-4 bg-white/5 border border-white/5 rounded-lg">
-                    <div className="flex justify-between items-center mb-3">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            AI Suggestions
-                        </h4>
-                        <Button
-                            size="sm"
-                            variant="subtle"
-                            onClick={loadAiSuggestions}
-                            disabled={isLoadingAI}
-                            className="text-[10px] font-black uppercase tracking-widest"
-                        >
-                            {isLoadingAI ? 'Analyzing...' : 'Auto-Generate'}
-                        </Button>
-                    </div>
-                    <div className="space-y-3">
-                        {aiSuggestions.map((suggestion, idx) => (
-                            <div key={idx} className="p-3 bg-white/5 rounded-lg border border-white/5 flex justify-between items-center hover:bg-white/10 transition-all group">
-                                <div>
-                                    <p className="font-black text-white text-xs uppercase tracking-widest">{suggestion.name}</p>
-                                    <div className="flex gap-3 mt-2">
-                                        <span className="text-[9px] font-bold uppercase tracking-widest bg-white/5 text-white/70 px-2 py-0.5 rounded border border-white/5">
-                                            {suggestion.confidence}% Reliability
-                                        </span>
-                                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                                            {suggestion.priority} priority
-                                        </span>
-                                    </div>
-                                </div>
-                                <Button
-                                    size="sm"
-                                    onClick={() => {
-                                        const matchingRoute = routes.find(r => r.name.includes(suggestion.suggestedRoute?.split(' ')[0] || ''));
-                                        if (matchingRoute) {
-                                            setForm(prev => ({
-                                                ...prev,
-                                                name: suggestion.name,
-                                                description: suggestion.description,
-                                                routeId: matchingRoute.id,
-                                                schedule: { ...prev.schedule, startTime: suggestion.suggestedTime?.split(' - ')[0] || '08:00', endTime: suggestion.suggestedTime?.split(' - ')[1] || '16:00' },
-                                                priority: suggestion.priority
-                                            }));
-                                            showSuccess('Suggestion applied');
-                                        } else {
-                                            showError('No matching route found for suggestion');
-                                        }
-                                    }}
-                                    variant="primary"
-                                    className="text-[10px] font-black uppercase tracking-widest px-4 h-9"
-                                >
-                                    Apply
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             <div className="space-y-4">
                 <div>

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { Toggle } from '../../../../components/UI/Toggle';
+import { Select } from '../../../../components/UI/Select';
 
 export interface AccessLoggingConfig {
   enabled: boolean;
@@ -31,8 +33,6 @@ interface AccessLoggingConfigModalProps {
   setIsFormDirty: (dirty: boolean) => void;
 }
 
-import { Select } from '../../../../components/UI/Select';
-
 export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> = ({
   isOpen,
   onClose,
@@ -42,10 +42,19 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
   isFormDirty,
   setIsFormDirty
 }) => {
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const handleClose = () => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Cancel anyway?')) {
+    if (isFormDirty) {
+      setShowDiscardModal(true);
       return;
     }
+    onClose();
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    setIsFormDirty(false);
     onClose();
   };
 
@@ -55,6 +64,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -314,6 +324,12 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
         </div>
       </div>
     </Modal>
+      <ConfirmDiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleConfirmDiscard}
+      />
+    </>
   );
 };
 

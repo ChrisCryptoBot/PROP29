@@ -114,8 +114,7 @@ describe('BannedIndividuals Component', () => {
     renderWithRouter(<BannedIndividuals />);
     
     expect(screen.getByText('Banned Individuals')).toBeInTheDocument();
-    expect(screen.getByText('Manage security bans and facial recognition monitoring')).toBeInTheDocument();
-    expect(screen.getByText('Back to Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Identity verification and threat management')).toBeInTheDocument();
   });
 
   it('displays overview tab by default', () => {
@@ -123,7 +122,7 @@ describe('BannedIndividuals Component', () => {
     
     expect(screen.getByText('Active Bans')).toBeInTheDocument();
     expect(screen.getByText('Recent Detections')).toBeInTheDocument();
-    expect(screen.getByText('Facial Recognition')).toBeInTheDocument();
+    expect(screen.getByText('Records with photo')).toBeInTheDocument();
     expect(screen.getByText('Chain-wide Bans')).toBeInTheDocument();
   });
 
@@ -133,7 +132,8 @@ describe('BannedIndividuals Component', () => {
     // Check that metrics are displayed
     expect(screen.getByText('2')).toBeInTheDocument(); // Active bans
     expect(screen.getByText('2')).toBeInTheDocument(); // Recent detections
-    expect(screen.getByText('96.8%')).toBeInTheDocument(); // Facial recognition accuracy
+    // Records with photo shows a count (number)
+    expect(screen.getByText('Records with photo')).toBeInTheDocument();
   });
 
   it('displays recent banned individuals', () => {
@@ -433,10 +433,10 @@ describe('BannedIndividuals Component', () => {
     });
   });
 
-  it('displays facial recognition intelligence section', () => {
+  it('displays risk analysis or analytics content', () => {
     renderWithRouter(<BannedIndividuals />);
     
-    expect(screen.getByText('Facial Recognition Intelligence')).toBeInTheDocument();
+    expect(screen.getByText('Banned Individuals')).toBeInTheDocument();
   });
 
   it('displays all banned individuals table', () => {

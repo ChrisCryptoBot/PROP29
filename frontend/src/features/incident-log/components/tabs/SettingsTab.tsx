@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { showLoading, dismissLoadingAndShowError, dismissLoadingAndShowSuccess } from '../../../../utils/toast';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { incidentService } from '../../services/IncidentService';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import type { 
@@ -12,17 +13,15 @@ import type {
     EmergencyAlertSettings
 } from '../../types/incident-log.types';
 import { IncidentSeverity } from '../../types/incident-log.types';
-import AutoApprovalSettingsModal from '../modals/AutoApprovalSettingsModal';
 
 export const SettingsTab: React.FC = () => {
-    const propertyId = useMemo(() => localStorage.getItem('propertyId') || '', []);
+    const { propertyId } = useIncidentLogContext();
     const { 
         enhancedSettings, 
         loading, 
         refreshEnhancedSettings, 
         updateEnhancedSettings, 
         modals,
-        setShowAutoApprovalSettingsModal 
     } = useIncidentLogContext();
     
     const [settings, setSettings] = useState({
@@ -171,7 +170,7 @@ export const SettingsTab: React.FC = () => {
                     return updated;
                 });
             } catch (error) {
-                console.error('Failed to load incident settings:', error);
+                ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'loadIncidentSettings');
             }
         };
 
@@ -282,25 +281,26 @@ export const SettingsTab: React.FC = () => {
                 throw new Error('Enhanced settings update failed');
             }
         } catch (error) {
-            console.error('Settings save error:', error);
+            ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'saveIncidentSettings');
             dismissLoadingAndShowError(toastId, 'Failed to save settings. Please try again.');
         }
     };
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Incident Log</p>
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Incident Settings</h2>
-                    <p className="text-[11px] text-[color:var(--text-sub)]">Configure retention, notifications, and integrations.</p>
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Settings</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Configure retention, notifications, and integrations
+                    </p>
                 </div>
             </div>
             {/* System Settings */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-cogs text-white" />
                         </div>
                         <span className="uppercase tracking-tight">System Settings</span>
@@ -376,10 +376,10 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Notification Settings */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-bell text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Notification Settings</span>
@@ -448,10 +448,10 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Integration Settings */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-plug text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Integration Settings</span>
@@ -522,57 +522,27 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Mobile Agent Integration Settings - PRODUCTION READINESS */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between text-xl text-white">
                         <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                 <i className="fas fa-mobile-alt text-white" />
                             </div>
                             <div>
                                 <span className="uppercase tracking-tight">Mobile Agent Integration</span>
-                                <p className="text-[9px] text-[color:var(--text-sub)] mt-1">Configure auto-approval rules and agent performance settings</p>
+                                <p className="text-[9px] text-[color:var(--text-sub)] mt-1">Configure agent performance settings</p>
                             </div>
                         </div>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setShowAutoApprovalSettingsModal(true)}
-                            className="border-green-500/30 text-green-300 hover:bg-green-500/10 text-[9px] font-black uppercase tracking-widest"
-                        >
-                            <i className="fas fa-cogs mr-2" />
-                            Advanced Rules
-                        </Button>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Auto-Approval Settings</h3>
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Agent Performance Settings</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Enable auto-approval</span>
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.agentAutoApprovalEnabled}
-                                        onChange={(e) => setSettings({ ...settings, agentAutoApprovalEnabled: e.target.checked })}
-                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-green-500/20"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-2">Trust Score Threshold ({settings.agentAutoApprovalThreshold}%)</label>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max="100"
-                                        value={settings.agentAutoApprovalThreshold}
-                                        onChange={(e) => setSettings({ ...settings, agentAutoApprovalThreshold: parseInt(e.target.value) })}
-                                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider-green"
-                                    />
-                                    <div className="flex justify-between text-[8px] text-[color:var(--text-sub)] mt-1">
-                                        <span>Low (0)</span>
-                                        <span>High (100)</span>
-                                    </div>
+                                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                    <p className="text-[9px] text-[color:var(--text-sub)]">Trust scores are displayed for agent performance monitoring. Auto-approval based on trust scores has been removed for security reasons.</p>
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Enable bulk approval</span>
@@ -630,10 +600,10 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Hardware Device Integration Settings - PRODUCTION READINESS */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-microchip text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Hardware Device Integration</span>
@@ -720,10 +690,10 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Emergency Alert Conversion Settings - PRODUCTION READINESS */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-exclamation-triangle text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Emergency Alert Conversion</span>
@@ -854,11 +824,6 @@ export const SettingsTab: React.FC = () => {
                 }
             `}</style>
 
-            {/* Auto-Approval Settings Modal */}
-            <AutoApprovalSettingsModal
-                isOpen={modals.showAutoApprovalSettingsModal}
-                onClose={() => setShowAutoApprovalSettingsModal(false)}
-            />
         </div>
     );
 };

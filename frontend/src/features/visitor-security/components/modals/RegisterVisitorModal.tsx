@@ -121,24 +121,50 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
       onClose={handleClose}
       title="New Ingress Registration"
       size="lg"
+      footer={
+        <>
+          <Button
+            onClick={handleClose}
+            variant="subtle"
+            className="text-xs font-black uppercase tracking-widest"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading.visitors || !formData.first_name || !formData.last_name || !formData.phone || !formData.purpose || !formData.host_name || !formData.location}
+            variant="primary"
+            className="text-xs font-black uppercase tracking-widest"
+          >
+            {loading.visitors ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2" />
+                Issuing...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-user-plus mr-2" />
+                Register
+              </>
+            )}
+          </Button>
+        </>
+      }
     >
       <div className="space-y-6">
         {/* Personal Information */}
-        <div className="p-4 bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/20 rounded-xl">
-          <h3 className="text-sm font-bold text-blue-400 mb-4 flex items-center">
-            <i className="fas fa-user-circle mr-2" />
-            Visitor Details
-          </h3>
+        <div className="space-y-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Visitor Details</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[color:var(--text-sub)] mb-1 uppercase tracking-wider">
+              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                 First Name <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
                 value={formData.first_name || ''}
                 onChange={(e) => handleChange('first_name', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="John"
               />
             </div>
@@ -150,7 +176,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.last_name || ''}
                 onChange={(e) => handleChange('last_name', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Smith"
               />
             </div>
@@ -160,7 +186,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="email"
                 value={formData.email || ''}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="john.smith@email.com"
               />
             </div>
@@ -172,7 +198,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="tel"
                 value={formData.phone || ''}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="+1-555-0123"
               />
             </div>
@@ -182,7 +208,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.company || ''}
                 onChange={(e) => handleChange('company', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Tech Corp"
               />
             </div>
@@ -193,7 +219,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
               <select
                 value={formData.visit_type || VisitTypeEnum.DAY_VISITOR}
                 onChange={(e) => handleChange('visit_type', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
               >
                 <option value={VisitTypeEnum.DAY_VISITOR}>Day Visitor</option>
                 <option value={VisitTypeEnum.GUEST_VISITOR}>Guest Visitor</option>
@@ -206,11 +232,8 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
         </div>
 
         {/* Visit Information */}
-        <div className="p-4 bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/20 rounded-xl">
-          <h3 className="text-sm font-bold text-blue-400 mb-4 flex items-center">
-            <i className="fas fa-info-circle mr-2" />
-            Ingress Details
-          </h3>
+        <div className="space-y-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Ingress Details</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-[color:var(--text-sub)] mb-1 uppercase tracking-wider">
@@ -220,7 +243,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.purpose || ''}
                 onChange={(e) => handleChange('purpose', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Business Meeting"
               />
             </div>
@@ -232,7 +255,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.location || ''}
                 onChange={(e) => handleChange('location', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Conference Room A"
               />
             </div>
@@ -244,7 +267,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="number"
                 value={formData.expected_duration || 60}
                 onChange={(e) => handleChange('expected_duration', parseInt(e.target.value) || 60)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
                 min="1"
               />
             </div>
@@ -266,7 +289,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.host_name || ''}
                 onChange={(e) => handleChange('host_name', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Sarah Johnson"
               />
             </div>
@@ -276,7 +299,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="tel"
                 value={formData.host_phone || ''}
                 onChange={(e) => handleChange('host_phone', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="+1-555-0456"
               />
             </div>
@@ -286,7 +309,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="email"
                 value={formData.host_email || ''}
                 onChange={(e) => handleChange('host_email', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="sarah.j@email.com"
               />
             </div>
@@ -296,7 +319,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.host_room || ''}
                 onChange={(e) => handleChange('host_room', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="302"
               />
             </div>
@@ -304,11 +327,8 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
         </div>
 
         {/* Additional Information */}
-        <div className="p-4 bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/20 rounded-xl">
-          <h3 className="text-sm font-bold text-blue-400 mb-4 flex items-center">
-            <i className="fas fa-plus-square mr-2" />
-            Additional Information
-          </h3>
+        <div className="space-y-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Additional Information</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-[color:var(--text-sub)] mb-1 uppercase tracking-wider">Vehicle Number</label>
@@ -316,7 +336,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.vehicle_number || ''}
                 onChange={(e) => handleChange('vehicle_number', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="ABC-1234"
               />
             </div>
@@ -326,7 +346,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
                 type="text"
                 value={formData.event_id || ''}
                 onChange={(e) => handleChange('event_id', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="wedding_001"
               />
             </div>
@@ -335,7 +355,7 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
               <textarea
                 value={formData.notes || ''}
                 onChange={(e) => handleChange('notes', e.target.value)}
-                className="w-full px-3 py-2 bg-[color:var(--console-dark)] border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-[color:var(--border-subtle)] rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 rows={3}
                 placeholder="Additional notes about the visitor..."
               />
@@ -343,33 +363,6 @@ export const RegisterVisitorModal: React.FC<RegisterVisitorModalProps> = React.m
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-[color:var(--border-subtle)]/20">
-          <Button
-            onClick={handleClose}
-            variant="outline"
-            className="border-[color:var(--border-subtle)] text-[color:var(--text-sub)] hover:text-[color:var(--text-main)]"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading.visitors || !formData.first_name || !formData.last_name || !formData.phone || !formData.purpose || !formData.host_name || !formData.location}
-            variant="primary"
-          >
-            {loading.visitors ? (
-              <>
-                <i className="fas fa-spinner fa-spin mr-2" />
-                Issuing...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-user-plus mr-2" />
-                Issue Credentials
-              </>
-            )}
-          </Button>
-        </div>
       </div>
     </Modal>
   );

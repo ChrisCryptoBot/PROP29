@@ -450,6 +450,41 @@ async def create_security_request(
         raise HTTPException(status_code=500, detail="Failed to create security request. Please try again.")
 
 
+class SecurityRequestAssign(BaseModel):
+    """Body for assigning a security request to an officer"""
+    assigned_to: str  # user_id of the assignee
+    status: str = "in_progress"  # optional: in_progress | completed | cancelled
+
+
+@router.patch("/security-requests/{request_id}", response_model=SecurityRequestResponse)
+async def assign_security_request(
+    request_id: str,
+    body: SecurityRequestAssign,
+    current_user: User = Depends(get_current_user)
+):
+    """Assign a security request to an officer - Enforces property-level access control"""
+    try:
+        user_property_ids = get_user_property_ids(current_user)
+        if not user_property_ids:
+            raise HTTPException(status_code=403, detail="No property access")
+
+        # Find the request in a visitor's security_requests (same ref as in security_requests_storage)
+        for visitor in visitors_storage:
+            if visitor.get("property_id") not in user_property_ids:
+                continue
+            for req in visitor.get("security_requests") or []:
+                if req.get("id") == request_id:
+                    req["assigned_to"] = body.assigned_to
+                    req["status"] = body.status
+                    return req
+        raise HTTPException(status_code=404, detail="Security request not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to assign security request: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to assign security request.")
+
+
 @router.get("/security-requests", response_model=List[SecurityRequestResponse])
 async def get_security_requests(
     property_id: Optional[str] = Query(None, description="Filter by property ID"),
@@ -465,21 +500,19 @@ async def get_security_requests(
         if not user_property_ids:
             return []
         
-        # Filter by visitors in user's accessible properties
+        # Collect requests from visitors in user's accessible properties
         filtered = []
-        for request in security_requests_storage:
-            visitor = next((v for v in visitors_storage if v["id"] == request.get("visitor_id")), None)
-            if visitor and visitor.get("property_id") in user_property_ids:
-                if property_id:
-                    if visitor.get("property_id") != property_id:
-                        continue
-                filtered.append(request)
-        
-        # Additional filters
-        if status:
-            filtered = [r for r in filtered if r.get("status") == status]
-        if priority:
-            filtered = [r for r in filtered if r.get("priority") == priority]
+        for visitor in visitors_storage:
+            if visitor.get("property_id") not in user_property_ids:
+                continue
+            if property_id and visitor.get("property_id") != property_id:
+                continue
+            for req in visitor.get("security_requests") or []:
+                if status and req.get("status") != status:
+                    continue
+                if priority and req.get("priority") != priority:
+                    continue
+                filtered.append(req)
         
         return filtered
     except Exception as e:

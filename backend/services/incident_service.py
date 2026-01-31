@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Incident, User, Property, UserRole, UserActivity
 from schemas import (
-    IncidentCreate, IncidentUpdate, IncidentResponse, 
+    IncidentCreate, IncidentUpdate, IncidentResponse,
     EmergencyAlertCreate, EmergencyAlertResponse,
     IncidentSettings, IncidentSettingsResponse,
     PatternRecognitionRequest, PatternRecognitionResponse, Pattern,
-    ReportExportRequest, UserActivityResponse
+    ReportExportRequest, UserActivityResponse,
+    BulkOperationResult, BulkOperationError,
+    BulkApproveRequest, BulkRejectRequest, BulkDeleteRequest, BulkStatusRequest
 )
 from datetime import datetime, timedelta
 import logging
@@ -407,6 +409,284 @@ class IncidentService:
             return {"message": "Incident deleted successfully"}
         finally:
             db.close()
+
+    @staticmethod
+    async def _get_user_property_ids(db: Session, user_id: str) -> List[str]:
+        user_roles = db.query(UserRole).filter(
+            UserRole.user_id == user_id,
+            UserRole.is_active == True
+        ).all()
+        return [role.property_id for role in user_roles]
+
+    @staticmethod
+    async def bulk_approve_incidents(
+        request: BulkApproveRequest,
+        user_id: str,
+        request_info: Optional[Dict[str, Any]] = None
+    ) -> BulkOperationResult:
+        """Bulk approve: set status to open for pending_review incidents."""
+        db = SessionLocal()
+        start = datetime.utcnow()
+        errors: List[BulkOperationError] = []
+        successful = 0
+        try:
+            user_property_ids = await IncidentService._get_user_property_ids(db, user_id)
+            if not user_property_ids:
+                return BulkOperationResult(
+                    operation_type="approve",
+                    total=len(request.incident_ids),
+                    successful=0,
+                    failed=len(request.incident_ids),
+                    skipped=0,
+                    errors=[BulkOperationError(incident_id=str(iid), error_code="ACCESS_DENIED", error_message="No property access") for iid in request.incident_ids],
+                    execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+                    executed_by=user_id,
+                    executed_at=datetime.utcnow()
+                )
+            for iid in request.incident_ids:
+                sid = str(iid)
+                try:
+                    incident = db.query(Incident).filter(Incident.incident_id == sid).first()
+                    if not incident:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="NOT_FOUND", error_message="Incident not found"))
+                        continue
+                    if incident.property_id not in user_property_ids:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="ACCESS_DENIED", error_message="Access denied"))
+                        continue
+                    incident.status = "open"
+                    incident.updated_at = datetime.utcnow()
+                    if request_info:
+                        db.add(UserActivity(
+                            user_id=user_id,
+                            property_id=incident.property_id,
+                            action_type="incident_review_approved",
+                            resource_type="incident",
+                            resource_id=sid,
+                            activity_metadata={"reason": request.reason or "Bulk approval"},
+                            ip_address=request_info.get("ip_address", "0.0.0.0"),
+                            user_agent=request_info.get("user_agent", "unknown"),
+                            session_id=request_info.get("session_id")
+                        ))
+                    successful += 1
+                except Exception as e:
+                    errors.append(BulkOperationError(incident_id=sid, error_code="ERROR", error_message=str(e)))
+            db.commit()
+        except Exception as e:
+            logger.error(f"Bulk approve failed: {e}", exc_info=True)
+            raise
+        finally:
+            db.close()
+        return BulkOperationResult(
+            operation_type="approve",
+            total=len(request.incident_ids),
+            successful=successful,
+            failed=len(errors),
+            skipped=0,
+            errors=errors,
+            execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+            executed_by=user_id,
+            executed_at=datetime.utcnow()
+        )
+
+    @staticmethod
+    async def bulk_reject_incidents(
+        request: BulkRejectRequest,
+        user_id: str,
+        request_info: Optional[Dict[str, Any]] = None
+    ) -> BulkOperationResult:
+        """Bulk reject: set status to closed and store rejection_reason in source_metadata."""
+        db = SessionLocal()
+        start = datetime.utcnow()
+        errors: List[BulkOperationError] = []
+        successful = 0
+        try:
+            user_property_ids = await IncidentService._get_user_property_ids(db, user_id)
+            if not user_property_ids:
+                return BulkOperationResult(
+                    operation_type="reject",
+                    total=len(request.incident_ids),
+                    successful=0,
+                    failed=len(request.incident_ids),
+                    skipped=0,
+                    errors=[BulkOperationError(incident_id=str(iid), error_code="ACCESS_DENIED", error_message="No property access") for iid in request.incident_ids],
+                    execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+                    executed_by=user_id,
+                    executed_at=datetime.utcnow()
+                )
+            for iid in request.incident_ids:
+                sid = str(iid)
+                try:
+                    incident = db.query(Incident).filter(Incident.incident_id == sid).first()
+                    if not incident:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="NOT_FOUND", error_message="Incident not found"))
+                        continue
+                    if incident.property_id not in user_property_ids:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="ACCESS_DENIED", error_message="Access denied"))
+                        continue
+                    incident.status = "closed"
+                    incident.updated_at = datetime.utcnow()
+                    meta = dict(incident.source_metadata) if incident.source_metadata else {}
+                    meta["rejection_reason"] = request.reason
+                    incident.source_metadata = meta
+                    if request_info:
+                        db.add(UserActivity(
+                            user_id=user_id,
+                            property_id=incident.property_id,
+                            action_type="incident_review_rejected",
+                            resource_type="incident",
+                            resource_id=sid,
+                            activity_metadata={"rejection_reason": request.reason},
+                            ip_address=request_info.get("ip_address", "0.0.0.0"),
+                            user_agent=request_info.get("user_agent", "unknown"),
+                            session_id=request_info.get("session_id")
+                        ))
+                    successful += 1
+                except Exception as e:
+                    errors.append(BulkOperationError(incident_id=sid, error_code="ERROR", error_message=str(e)))
+            db.commit()
+        except Exception as e:
+            logger.error(f"Bulk reject failed: {e}", exc_info=True)
+            raise
+        finally:
+            db.close()
+        return BulkOperationResult(
+            operation_type="reject",
+            total=len(request.incident_ids),
+            successful=successful,
+            failed=len(errors),
+            skipped=0,
+            errors=errors,
+            execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+            executed_by=user_id,
+            executed_at=datetime.utcnow()
+        )
+
+    @staticmethod
+    async def bulk_delete_incidents(request: BulkDeleteRequest, user_id: str) -> BulkOperationResult:
+        """Bulk delete incidents (admin/property access)."""
+        db = SessionLocal()
+        start = datetime.utcnow()
+        errors: List[BulkOperationError] = []
+        successful = 0
+        try:
+            user_property_ids = await IncidentService._get_user_property_ids(db, user_id)
+            if not user_property_ids:
+                return BulkOperationResult(
+                    operation_type="bulk_delete",
+                    total=len(request.incident_ids),
+                    successful=0,
+                    failed=len(request.incident_ids),
+                    skipped=0,
+                    errors=[BulkOperationError(incident_id=str(iid), error_code="ACCESS_DENIED", error_message="No property access") for iid in request.incident_ids],
+                    execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+                    executed_by=user_id,
+                    executed_at=datetime.utcnow()
+                )
+            for iid in request.incident_ids:
+                sid = str(iid)
+                try:
+                    incident = db.query(Incident).filter(Incident.incident_id == sid).first()
+                    if not incident:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="NOT_FOUND", error_message="Incident not found"))
+                        continue
+                    if incident.property_id not in user_property_ids:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="ACCESS_DENIED", error_message="Access denied"))
+                        continue
+                    db.delete(incident)
+                    successful += 1
+                except Exception as e:
+                    errors.append(BulkOperationError(incident_id=sid, error_code="ERROR", error_message=str(e)))
+            db.commit()
+        except Exception as e:
+            logger.error(f"Bulk delete failed: {e}", exc_info=True)
+            raise
+        finally:
+            db.close()
+        return BulkOperationResult(
+            operation_type="bulk_delete",
+            total=len(request.incident_ids),
+            successful=successful,
+            failed=len(errors),
+            skipped=0,
+            errors=errors,
+            execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+            executed_by=user_id,
+            executed_at=datetime.utcnow()
+        )
+
+    @staticmethod
+    async def bulk_status_change(
+        request: BulkStatusRequest,
+        user_id: str,
+        request_info: Optional[Dict[str, Any]] = None
+    ) -> BulkOperationResult:
+        """Bulk status change."""
+        db = SessionLocal()
+        start = datetime.utcnow()
+        errors: List[BulkOperationError] = []
+        successful = 0
+        try:
+            user_property_ids = await IncidentService._get_user_property_ids(db, user_id)
+            if not user_property_ids:
+                return BulkOperationResult(
+                    operation_type="status_change",
+                    total=len(request.incident_ids),
+                    successful=0,
+                    failed=len(request.incident_ids),
+                    skipped=0,
+                    errors=[BulkOperationError(incident_id=str(iid), error_code="ACCESS_DENIED", error_message="No property access") for iid in request.incident_ids],
+                    execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+                    executed_by=user_id,
+                    executed_at=datetime.utcnow()
+                )
+            for iid in request.incident_ids:
+                sid = str(iid)
+                try:
+                    incident = db.query(Incident).filter(Incident.incident_id == sid).first()
+                    if not incident:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="NOT_FOUND", error_message="Incident not found"))
+                        continue
+                    if incident.property_id not in user_property_ids:
+                        errors.append(BulkOperationError(incident_id=sid, error_code="ACCESS_DENIED", error_message="Access denied"))
+                        continue
+                    incident.status = request.status
+                    incident.updated_at = datetime.utcnow()
+                    if request.status == "resolved" and not incident.resolved_at:
+                        incident.resolved_at = datetime.utcnow()
+                    successful += 1
+                except Exception as e:
+                    errors.append(BulkOperationError(incident_id=sid, error_code="ERROR", error_message=str(e)))
+            db.commit()
+        except Exception as e:
+            logger.error(f"Bulk status change failed: {e}", exc_info=True)
+            raise
+        finally:
+            db.close()
+        return BulkOperationResult(
+            operation_type="status_change",
+            total=len(request.incident_ids),
+            successful=successful,
+            failed=len(errors),
+            skipped=0,
+            errors=errors,
+            execution_time_ms=int((datetime.utcnow() - start).total_seconds() * 1000),
+            executed_by=user_id,
+            executed_at=datetime.utcnow()
+        )
+
+    @staticmethod
+    async def convert_emergency_alert_to_incident(
+        alert_id: str,
+        user_id: str,
+        overrides: Optional[Dict[str, Any]] = None
+    ) -> IncidentResponse:
+        """Convert emergency alert (stored as incident) to a full incident with optional overrides."""
+        incident = await IncidentService.get_incident(alert_id, user_id)
+        if overrides:
+            update_data = IncidentUpdate(**{k: v for k, v in overrides.items() if k in IncidentUpdate.__annotations__})
+            request_info = {"ip_address": "0.0.0.0", "user_agent": "convert", "session_id": None}
+            incident = await IncidentService.update_incident(alert_id, update_data, user_id, request_info)
+        return incident
     
     @staticmethod
     async def create_emergency_alert(alert: EmergencyAlertCreate, user_id: str) -> EmergencyAlertResponse:

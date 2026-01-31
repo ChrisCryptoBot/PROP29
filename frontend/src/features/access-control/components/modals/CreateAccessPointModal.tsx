@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
+import { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';
 
 export interface AccessPointFormData {
   name: string;
@@ -35,14 +37,24 @@ export const CreateAccessPointModal: React.FC<CreateAccessPointModalProps> = ({
   setIsFormDirty,
   isEditMode = false
 }) => {
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const handleClose = () => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+    if (isFormDirty) {
+      setShowDiscardModal(true);
       return;
     }
     onClose();
   };
 
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    setIsFormDirty(false);
+    onClose();
+  };
+
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -87,7 +99,7 @@ export const CreateAccessPointModal: React.FC<CreateAccessPointModalProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="ap-type" className={LABEL_CLASS}>Type</label>
-            <select
+            <Select
               id="ap-type"
               value={formData.type}
               onChange={(e) => { onFormChange({ type: e.target.value as AccessPointFormData['type'] }); setIsFormDirty(true); }}
@@ -98,11 +110,11 @@ export const CreateAccessPointModal: React.FC<CreateAccessPointModalProps> = ({
               <option value="gate" className="bg-slate-900">Gate</option>
               <option value="elevator" className="bg-slate-900">Elevator</option>
               <option value="turnstile" className="bg-slate-900">Turnstile</option>
-            </select>
+            </Select>
           </div>
           <div>
             <label htmlFor="ap-method" className={LABEL_CLASS}>Access Method</label>
-            <select
+            <Select
               id="ap-method"
               value={formData.accessMethod}
               onChange={(e) => { onFormChange({ accessMethod: e.target.value as AccessPointFormData['accessMethod'] }); setIsFormDirty(true); }}
@@ -113,12 +125,12 @@ export const CreateAccessPointModal: React.FC<CreateAccessPointModalProps> = ({
               <option value="biometric" className="bg-slate-900">Biometric</option>
               <option value="pin" className="bg-slate-900">PIN Code</option>
               <option value="mobile" className="bg-slate-900">Mobile Pass</option>
-            </select>
+            </Select>
           </div>
         </div>
         <div>
           <label htmlFor="ap-status" className={LABEL_CLASS}>Status</label>
-          <select
+          <Select
             id="ap-status"
             value={formData.status}
             onChange={(e) => { onFormChange({ status: e.target.value as AccessPointFormData['status'] }); setIsFormDirty(true); }}
@@ -129,7 +141,7 @@ export const CreateAccessPointModal: React.FC<CreateAccessPointModalProps> = ({
             <option value="maintenance" className="bg-slate-900">Maintenance</option>
             <option value="disabled" className="bg-slate-900">Disabled</option>
             <option value="inactive" className="bg-slate-900">Inactive</option>
-          </select>
+          </Select>
         </div>
         <div>
           <label htmlFor="ap-description" className={LABEL_CLASS}>Notes</label>
@@ -145,5 +157,11 @@ export const CreateAccessPointModal: React.FC<CreateAccessPointModalProps> = ({
         </div>
       </div>
     </Modal>
+      <ConfirmDiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleConfirmDiscard}
+      />
+    </>
   );
 };

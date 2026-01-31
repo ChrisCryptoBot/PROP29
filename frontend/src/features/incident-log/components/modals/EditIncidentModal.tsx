@@ -12,9 +12,10 @@ interface EditIncidentModalProps {
     isOpen: boolean;
     onClose: () => void;
     incident: Incident | null;
+    onConflict?: (conflict: { localIncident: Incident; serverIncident: Incident; localChanges: Partial<Incident> }) => void;
 }
 
-export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, onClose, incident }) => {
+export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, onClose, incident, onConflict }) => {
     const {
         updateIncident,
         loading
@@ -36,6 +37,8 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
                 location: incident.location,
                 assigned_to: incident.assigned_to
             });
+            // Store original updated_at for conflict detection
+            setOriginalUpdatedAt(incident.updated_at);
         }
     }, [incident]);
 
@@ -92,7 +95,7 @@ export const EditIncidentModal: React.FC<EditIncidentModalProps> = ({ isOpen, on
             // Include original updated_at for conflict detection
             ...(originalUpdatedAt ? { updated_at: originalUpdatedAt } : {})
         };
-        const success = await updateIncident(id, updates);
+        const success = await updateIncident(id, updates, undefined, onConflict);
         if (success) {
             onClose();
         }

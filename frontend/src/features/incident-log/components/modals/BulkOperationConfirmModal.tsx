@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { BulkOperationResult, IncidentStatus, AgentTrustLevel } from '../../types/incident-log.types';
 import { cn } from '../../../../utils/cn';
@@ -177,7 +178,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
 
             setShowResults(true);
         } catch (error) {
-            console.error('Bulk operation failed:', error);
+            ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), `bulkOperationConfirm-${operation?.type || 'unknown'}`);
             setOperationProgress(prev => prev ? {
                 ...prev,
                 processed: operation.incidentIds.length,
@@ -315,7 +316,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                 {/* Operation Analysis */}
                 {!showResults && operationAnalysis && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <Card className="glass-card border border-white/5">
+                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="text-sm text-white">Source Breakdown</CardTitle>
                             </CardHeader>
@@ -342,7 +343,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                             </CardContent>
                         </Card>
 
-                        <Card className="glass-card border border-white/5">
+                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="text-sm text-white">Agent Trust Levels</CardTitle>
                             </CardHeader>
@@ -400,7 +401,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
 
                 {/* Operation Progress */}
                 {isProcessing && operationProgress && (
-                    <Card className="glass-card border border-white/5">
+                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="text-white flex items-center">
                                 <i className="fas fa-spinner fa-spin mr-2 text-blue-400" />
@@ -498,7 +499,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
 
                         {/* Error Details */}
                         {results.errors && results.errors.length > 0 && (
-                            <Card className="glass-card border border-red-500/30">
+                            <Card className="glass-card border border-red-500/30 bg-slate-900/50 backdrop-blur-xl">
                                 <CardHeader>
                                     <CardTitle className="text-red-300 flex items-center">
                                         <i className="fas fa-exclamation-triangle mr-2" />

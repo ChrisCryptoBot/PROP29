@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { useSecurityOperationsContext } from '../../context/SecurityOperationsContext';
+import { useSecurityOperationsTelemetry } from '../../hooks/useSecurityOperationsTelemetry';
 import { cn } from '../../../../utils/cn';
 
 interface ChartDataPoint {
@@ -17,7 +18,8 @@ interface HeatMapData {
 }
 
 export const AnalyticsTab: React.FC = () => {
-  const { analytics, cameras, loading } = useSecurityOperationsContext();
+  const { analytics, cameras, loading, refreshAnalytics } = useSecurityOperationsContext();
+  const { trackAction } = useSecurityOperationsTelemetry();
   const [timeRange, setTimeRange] = useState<'1h' | '6h' | '24h' | '7d'>('24h');
   const [refreshInterval, setRefreshInterval] = useState<number | null>(30000); // 30 seconds
 
@@ -84,17 +86,18 @@ export const AnalyticsTab: React.FC = () => {
     if (!refreshInterval) return;
     
     const interval = setInterval(() => {
-      // In a real app, this would trigger data refresh
-      console.log('Refreshing analytics data...');
+      trackAction('auto_refresh', 'analytics', { timeRange });
+      refreshAnalytics();
     }, refreshInterval);
     
     return () => clearInterval(interval);
-  }, [refreshInterval]);
+  }, [refreshInterval, timeRange, refreshAnalytics, trackAction]);
 
   if (loading.analytics) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading analytics" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Analytics...</p>
       </div>
     );
   }
@@ -104,8 +107,8 @@ export const AnalyticsTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Analytics</h2>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-1 italic opacity-70 text-slate-400">
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Analytics</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Real-time security metrics and trends
           </p>
         </div>
@@ -140,7 +143,11 @@ export const AnalyticsTab: React.FC = () => {
                 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                 : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
             )}
-            onClick={() => setRefreshInterval(refreshInterval ? null : 30000)}
+            onClick={() => {
+              const newInterval = refreshInterval ? null : 30000;
+              setRefreshInterval(newInterval);
+              trackAction('auto_refresh_toggle', 'analytics', { enabled: newInterval !== null });
+            }}
           >
             <i className="fas fa-sync-alt mr-2" />
             Auto Refresh

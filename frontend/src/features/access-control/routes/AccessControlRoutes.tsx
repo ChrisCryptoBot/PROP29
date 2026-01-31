@@ -9,11 +9,10 @@
 import React from 'react';
 import { ErrorBoundary } from '../../../components/UI/ErrorBoundary';
 import {
-  DashboardTab,
+  OverviewTab,
   AccessPointsTab,
   UsersTab,
   EventsTab,
-  AIAnalyticsTab,
   ReportsTab,
   ConfigurationTab,
   LockdownFacilityTab,
@@ -31,15 +30,13 @@ export interface AccessControlTabContentProps {
 export const AccessControlTabContent: React.FC<AccessControlTabContentProps> = ({ activeTab }) => {
   switch (activeTab) {
     case 'dashboard':
-      return <DashboardTab />;
+      return <OverviewTab />;
     case 'access-points':
       return <AccessPointsTab />;
     case 'users':
       return <UsersTab />;
     case 'events':
       return <EventsTab />;
-    case 'ai-analytics':
-      return <AIAnalyticsTab />;
     case 'reports':
       return <ReportsTab />;
     case 'configuration':
@@ -47,21 +44,10 @@ export const AccessControlTabContent: React.FC<AccessControlTabContentProps> = (
     case 'lockdown-facility':
       return <LockdownFacilityTab />;
     default:
-      return <DashboardTab />;
+      return <OverviewTab />;
   }
 };
 
-/**
- * Legacy export for compatibility
- * @deprecated Use AccessControlTabContent instead
- */
-export const AccessControlRoutes: React.FC<AccessControlTabContentProps> = (props) => {
-  return (
-    <ErrorBoundary moduleName="Access Control Routes">
-      <AccessControlTabContent {...props} />
-    </ErrorBoundary>
-  );
-};
-
-export default AccessControlRoutes;
+// AccessControlTabContent is the primary export
+// Default export removed - use named export instead
 

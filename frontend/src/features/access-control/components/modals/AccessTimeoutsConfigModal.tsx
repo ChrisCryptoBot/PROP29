@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { Toggle } from '../../../../components/UI/Toggle';
+import { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';
 
 export interface AccessTimeoutsConfig {
   enabled: boolean;
@@ -35,10 +36,19 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
   isFormDirty,
   setIsFormDirty
 }) => {
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const handleClose = () => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Cancel anyway?')) {
+    if (isFormDirty) {
+      setShowDiscardModal(true);
       return;
     }
+    onClose();
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    setIsFormDirty(false);
     onClose();
   };
 
@@ -48,6 +58,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -249,6 +260,12 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
         </div>
       </div>
     </Modal>
+      <ConfirmDiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleConfirmDiscard}
+      />
+    </>
   );
 };
 

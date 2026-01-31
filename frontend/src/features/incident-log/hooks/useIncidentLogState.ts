@@ -6,10 +6,16 @@
  * Following Gold Standard: Zero business logic in components, 100% in hooks
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { logger } from '../../../services/logger';
 import { useAuth } from '../../../contexts/AuthContext';
 import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
+import { useIncidentLogHeartbeat } from './useIncidentLogHeartbeat';
+import { useIncidentLogQueue } from './useIncidentLogQueue';
+import { useIncidentLogRequestDeduplication } from './useIncidentLogRequestDeduplication';
+import { useIncidentLogOperationLock } from './useIncidentLogOperationLock';
+import { useIncidentLogStateReconciliation } from './useIncidentLogStateReconciliation';
 import {
     showLoading,
     dismissLoadingAndShowSuccess,
@@ -21,7 +27,6 @@ import type {
     Incident,
     IncidentCreate,
     IncidentUpdate,
-    AIClassificationResponse,
     EmergencyAlertResponse,
     IncidentFilters,
     EscalationRule,
@@ -42,10 +47,16 @@ export interface UseIncidentLogStateReturn {
     // Data - Core
     incidents: Incident[];
     selectedIncident: Incident | null;
-    aiSuggestion: AIClassificationResponse | null;
     escalationRules: EscalationRule[];
     activityByIncident: Record<string, UserActivity[]>;
     lastSynced: Date | null;
+    
+    // Offline Queue Status
+    queuePendingCount: number;
+    queueFailedCount: number;
+    
+    // Property Context
+    propertyId: string | undefined;
 
     // Data - Production Readiness Enhancements
     agentPerformanceMetrics: AgentPerformanceMetrics[];
@@ -79,8 +90,10 @@ export interface UseIncidentLogStateReturn {
         showEmergencyAlertModal: boolean;
         // New production-ready modals
         showAgentPerformanceModal: boolean;
-        showBulkOperationModal: boolean;
         showAutoApprovalSettingsModal: boolean;
+        showBulkOperationModal: boolean;
+        showDeleteConfirmModal: boolean;
+        deleteIncidentId: string | null;
         selectedAgentId: string | null;
         bulkOperation: {
             type: 'approve' | 'reject' | 'delete' | 'status_change' | null;
@@ -95,9 +108,16 @@ export interface UseIncidentLogStateReturn {
     // Actions - CRUD Operations
     refreshIncidents: (filters?: IncidentFilters) => Promise<void>;
     getIncident: (incidentId: string) => Promise<Incident | null>;
-    createIncident: (incident: IncidentCreate, useAI?: boolean) => Promise<Incident | null>;
-    updateIncident: (incidentId: string, updates: IncidentUpdate) => Promise<Incident | null>;
-    deleteIncident: (incidentId: string) => Promise<boolean>;
+    createIncident: (incident: IncidentCreate) => Promise<Incident | null>;
+    updateIncident: (
+        incidentId: string, 
+        updates: IncidentUpdate,
+        conflictResolution?: 'overwrite' | 'merge' | 'cancel',
+        onConflict?: (conflict: { localIncident: Incident; serverIncident: Incident; localChanges: Partial<Incident> }) => void
+    ) => Promise<Incident | null>;
+    deleteIncident: (incidentId: string) => void;
+    confirmDeleteIncident: () => Promise<boolean>;
+    cancelDeleteIncident: () => void;
 
     // Actions - Incident Management
     assignIncident: (incidentId: string, assigneeId: string) => Promise<boolean>;
@@ -105,7 +125,6 @@ export interface UseIncidentLogStateReturn {
     escalateIncident: (incidentId: string, reason: string) => Promise<boolean>;
 
     // Actions - AI & Analysis
-    getAIClassification: (title: string, description: string, location?: any) => Promise<AIClassificationResponse | null>;
     getIncidentActivity: (incidentId: string) => Promise<UserActivity[]>;
     getPatternRecognition: (request: PatternRecognitionRequest) => Promise<PatternRecognitionResponse | null>;
 
@@ -117,7 +136,8 @@ export interface UseIncidentLogStateReturn {
     setSelectedIncident: (incident: Incident | null) => void;
 
     // Actions - Bulk Operations (Enhanced)
-    bulkDelete: (incidentIds: string[]) => Promise<boolean>;
+    bulkDelete: (incidentIds: string[]) => void;
+    confirmBulkDelete: (incidentIds: string[], reason?: string) => Promise<BulkOperationResult | null>;
     bulkStatusChange: (incidentIds: string[], status: IncidentStatus) => Promise<boolean>;
     bulkApprove: (incidentIds: string[], reason?: string) => Promise<BulkOperationResult | null>;
     bulkReject: (incidentIds: string[], reason: string) => Promise<BulkOperationResult | null>;
@@ -147,6 +167,7 @@ export interface UseIncidentLogStateReturn {
     
     // New modal controls for production-ready features
     setShowAgentPerformanceModal: (show: boolean, agentId?: string) => void;
+    setShowAutoApprovalSettingsModal: (show: boolean) => void;
     setShowBulkOperationModal: (show: boolean, operation?: {
         type: 'approve' | 'reject' | 'delete' | 'status_change';
         incidentIds: string[];
@@ -155,16 +176,29 @@ export interface UseIncidentLogStateReturn {
         title: string;
         description: string;
     }) => void;
-    setShowAutoApprovalSettingsModal: (show: boolean) => void;
+    setShowDeleteConfirmModal: (show: boolean, incidentId?: string) => void;
+    operationLock: ReturnType<typeof useIncidentLogOperationLock>;
 }
 
 export function useIncidentLogState(): UseIncidentLogStateReturn {
     const { user: currentUser } = useAuth();
 
+    // Offline queue integration
+    const { enqueue, pendingCount, failedCount } = useIncidentLogQueue({
+        onSynced: () => {
+            setLastSynced(new Date()); // Update lastSynced after queue flush
+        }
+    });
+
+    // Request deduplication to prevent duplicate refreshIncidents calls
+    const requestDedup = useIncidentLogRequestDeduplication();
+
+    // Operation lock to prevent WebSocket race conditions
+    const operationLock = useIncidentLogOperationLock();
+
     // State - Core
     const [incidents, setIncidents] = useState<Incident[]>([]);
     const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
-    const [aiSuggestion, setAiSuggestion] = useState<AIClassificationResponse | null>(null);
     const [escalationRules, setEscalationRules] = useState<EscalationRule[]>([]);
     const [activityByIncident, setActivityByIncident] = useState<Record<string, UserActivity[]>>({});
     const [lastSynced, setLastSynced] = useState<Date | null>(null);
@@ -201,8 +235,10 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         showEmergencyAlertModal: false,
         // New production-ready modals
         showAgentPerformanceModal: false,
-        showBulkOperationModal: false,
         showAutoApprovalSettingsModal: false,
+        showBulkOperationModal: false,
+        showDeleteConfirmModal: false,
+        deleteIncidentId: null as string | null,
         selectedAgentId: null as string | null,
         bulkOperation: null as {
             type: 'approve' | 'reject' | 'delete' | 'status_change' | null;
@@ -214,26 +250,59 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         } | null
     });
 
+    // State reconciliation
+    useIncidentLogStateReconciliation({
+        incidents,
+        setIncidents
+    });
+
+    // Property context for incident scoping. Use user.property_id when available; fallback to first role for compatibility.
+    const propertyId = useMemo(() => {
+        return (currentUser as { property_id?: string })?.property_id ?? currentUser?.roles?.[0] ?? undefined;
+    }, [currentUser]);
+
     // Fetch Incidents
     const refreshIncidents = useCallback(async (filters?: IncidentFilters) => {
+        // Request deduplication: prevent duplicate calls within 1 second
+        const requestKey = `refreshIncidents-${JSON.stringify(filters || {})}`;
+        if (requestDedup.isDuplicate(requestKey)) {
+            logger.debug('Skipping duplicate refreshIncidents request', { module: 'IncidentLog', filters });
+            return;
+        }
+        requestDedup.recordRequest(requestKey, filters);
+
         setLoading(prev => ({ ...prev, incidents: true }));
         try {
+            // Derive property_id from currentUser if not provided in filters
+            const effectivePropertyId = filters?.property_id || propertyId;
+            
             const response = await incidentService.getIncidents({
                 ...filters,
-                property_id: filters?.property_id
+                property_id: effectivePropertyId
             });
 
             if (response.data) {
                 setIncidents(response.data);
+                setLastSynced(new Date()); // Update lastSynced on successful refresh
                 logger.info('Incidents refreshed', { module: 'IncidentLog', count: response.data.length });
+                try {
+                    localStorage.setItem('incident-log-cache', JSON.stringify({
+                        incidents: response.data,
+                        last_sync: new Date().toISOString()
+                    }));
+                } catch (e) {
+                    // Best-effort; ignore localStorage errors (e.g. private mode)
+                }
             }
         } catch (error) {
             logger.error('Failed to fetch incidents', error instanceof Error ? error : new Error(String(error)));
             showError('Failed to load incidents. Please try again.');
         } finally {
+            // Clear request deduplication in finally to ensure it's always cleared
+            requestDedup.clearRequest(requestKey);
             setLoading(prev => ({ ...prev, incidents: false }));
         }
-    }, [currentUser]);
+    }, [propertyId, requestDedup]);
 
     // Get Single Incident
     const getIncident = useCallback(async (incidentId: string): Promise<Incident | null> => {
@@ -253,96 +322,417 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
     }, []);
 
     // Create Incident
-    const createIncident = useCallback(async (incident: IncidentCreate, useAI: boolean = false): Promise<Incident | null> => {
-        const toastId = showLoading('Creating incident...');
-        try {
-            const response = await incidentService.createIncident(incident, useAI);
-            if (response.data) {
-                // Refresh incidents to get latest state from server
-                await refreshIncidents();
-                dismissLoadingAndShowSuccess(toastId, 'Incident created successfully');
-                return response.data;
-            }
-            throw new Error('No data returned from server');
-        } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Failed to create incident');
-            ErrorHandlerService.logError(error, 'createIncident');
+    const createIncident = useCallback(async (incident: IncidentCreate): Promise<Incident | null> => {
+        // Acquire operation lock
+        const tempId = `create-${Date.now()}`;
+        if (!operationLock.acquireLock('create_incident', tempId)) {
+            logger.warn('Create operation already in progress', { module: 'IncidentLog' });
             return null;
         }
-    }, [refreshIncidents]);
+
+        try {
+            // Check if offline - enqueue if so
+            if (!navigator.onLine) {
+                enqueue({
+                    type: 'create_incident',
+                    payload: incident as unknown as Record<string, unknown>,
+                    queuedAt: new Date().toISOString()
+                });
+                showSuccess('Incident queued for sync when connection is restored');
+                // Optimistically add to local state
+                const optimisticIncident: Incident = {
+                    ...incident as any,
+                    incident_id: `temp-${Date.now()}`,
+                    status: IncidentStatus.PENDING_REVIEW,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                setIncidents(prev => [...prev, optimisticIncident]);
+                operationLock.releaseLock('create_incident', tempId);
+                return optimisticIncident;
+            }
+
+            const toastId = showLoading('Creating incident...');
+            try {
+                const response = await retryWithBackoff(
+                    () => incidentService.createIncident(incident),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 10000,
+                        shouldRetry: (error) => {
+                            // Don't retry on 4xx errors
+                            if (error && typeof error === 'object' && 'response' in error) {
+                                const axiosError = error as { response?: { status?: number } };
+                                return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                            }
+                            return true; // Retry network errors
+                        }
+                    }
+                );
+                if (response.data) {
+                    // Refresh incidents to get latest state from server
+                    await refreshIncidents();
+                    
+                    // Notify other tabs
+                    try {
+                        localStorage.setItem('incident-log:incident-created', JSON.stringify({
+                            incidentId: response.data.incident_id,
+                            timestamp: Date.now()
+                        }));
+                        // Remove after a short delay to allow other tabs to process
+                        setTimeout(() => localStorage.removeItem('incident-log:incident-created'), 100);
+                    } catch (e) {
+                        // Ignore localStorage errors (e.g., in private mode)
+                    }
+                    
+                    dismissLoadingAndShowSuccess(toastId, 'Incident created successfully');
+                    operationLock.releaseLock('create_incident', tempId);
+                    return response.data;
+                }
+                throw new Error('No data returned from server');
+            } catch (error) {
+            // If network error and not a 4xx, enqueue for retry
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                    enqueue({
+                        type: 'create_incident',
+                        payload: incident as unknown as Record<string, unknown>,
+                        queuedAt: new Date().toISOString()
+                    });
+                    showSuccess('Incident queued for sync when connection is restored');
+                    operationLock.releaseLock('create_incident', tempId);
+                    return null;
+                }
+            }
+            dismissLoadingAndShowError(toastId, 'Failed to create incident');
+            ErrorHandlerService.logError(error, 'createIncident');
+            operationLock.releaseLock('create_incident', tempId);
+            return null;
+            }
+        } catch (error) {
+            // Outer catch for any unexpected errors
+            ErrorHandlerService.logError(error, 'createIncident');
+            operationLock.releaseLock('create_incident', tempId);
+            return null;
+        } finally {
+            operationLock.releaseLock('create_incident', tempId);
+        }
+    }, [refreshIncidents, enqueue, operationLock]);
 
     // Update Incident with conflict detection
-    const updateIncident = useCallback(async (incidentId: string, updates: IncidentUpdate): Promise<Incident | null> => {
-        const toastId = showLoading('Updating incident...');
+    const updateIncident = useCallback(async (
+        incidentId: string, 
+        updates: IncidentUpdate,
+        conflictResolution?: 'overwrite' | 'merge' | 'cancel',
+        onConflict?: (conflict: { localIncident: Incident; serverIncident: Incident; localChanges: Partial<Incident> }) => void
+    ): Promise<Incident | null> => {
+        // Acquire operation lock
+        if (!operationLock.acquireLock('update_incident', incidentId)) {
+            logger.warn('Update operation already in progress', { module: 'IncidentLog', incidentId });
+            return null;
+        }
+
         try {
-            // Check for conflicts: if incident was updated elsewhere, show warning
-            const currentIncident = incidents.find(i => i.incident_id === incidentId);
-            if (currentIncident && updates.updated_at && currentIncident.updated_at !== updates.updated_at) {
-                const currentUpdateTime = new Date(currentIncident.updated_at).getTime();
-                const incomingUpdateTime = new Date(updates.updated_at as string).getTime();
-                if (incomingUpdateTime < currentUpdateTime) {
-                    // Conflict detected - incident was updated after this edit started
-                    const shouldContinue = window.confirm(
-                        'This incident was updated by another user. Your changes may overwrite their updates. Continue?'
-                    );
-                    if (!shouldContinue) {
-                        dismissLoadingAndShowError(toastId, 'Update cancelled due to conflict.');
-                        await refreshIncidents(); // Refresh to show latest state
+            // Check if offline - enqueue if so (skip conflict resolution when offline)
+            if (!navigator.onLine && !conflictResolution) {
+                enqueue({
+                    type: 'update_incident',
+                    payload: { incidentId, updates },
+                    queuedAt: new Date().toISOString()
+                });
+                showSuccess('Update queued for sync when connection is restored');
+                // Optimistically update local state
+                setIncidents(prev => prev.map(i => 
+                    i.incident_id === incidentId ? { ...i, ...updates } : i
+                ));
+                if (selectedIncident?.incident_id === incidentId) {
+                    setSelectedIncident(prev => prev ? { ...prev, ...updates } : null);
+                }
+                operationLock.releaseLock('update_incident', incidentId);
+                return incidents.find(i => i.incident_id === incidentId) || null;
+            }
+
+            const toastId = showLoading('Updating incident...');
+            try {
+                // Get current incident from state
+                const currentIncident = incidents.find(i => i.incident_id === incidentId);
+                if (!currentIncident) {
+                    dismissLoadingAndShowError(toastId, 'Incident not found');
+                    operationLock.releaseLock('update_incident', incidentId);
+                    return null;
+                }
+
+                // Check for local conflicts: if incident was updated elsewhere
+                if (!conflictResolution && updates.updated_at && currentIncident.updated_at !== updates.updated_at) {
+                    const currentUpdateTime = new Date(currentIncident.updated_at).getTime();
+                    const incomingUpdateTime = new Date(updates.updated_at as string).getTime();
+                    if (incomingUpdateTime < currentUpdateTime) {
+                        // Conflict detected - need to fetch latest from server
+                        dismissLoadingAndShowError(toastId, '');
+                        const latestIncident = await getIncident(incidentId);
+                        if (latestIncident && onConflict) {
+                            onConflict({
+                                localIncident: currentIncident,
+                                serverIncident: latestIncident,
+                                localChanges: updates
+                            });
+                        }
+                        operationLock.releaseLock('update_incident', incidentId);
                         return null;
                     }
                 }
+
+                // Handle conflict resolution
+                let finalUpdates = updates;
+                if (conflictResolution === 'cancel') {
+                    dismissLoadingAndShowError(toastId, 'Update cancelled');
+                    await refreshIncidents();
+                    operationLock.releaseLock('update_incident', incidentId);
+                    return null;
+                } else if (conflictResolution === 'merge') {
+                    // Merge: combine local changes with server version
+                    const latestIncident = await getIncident(incidentId);
+                    if (latestIncident) {
+                        finalUpdates = {
+                            ...latestIncident,
+                            ...updates,
+                            // Preserve server's updated_at to avoid another conflict
+                            updated_at: latestIncident.updated_at
+                        } as IncidentUpdate;
+                    }
+                } else if (conflictResolution === 'overwrite') {
+                    // Overwrite: use local changes, but update updated_at to current time
+                    finalUpdates = {
+                        ...updates,
+                        updated_at: new Date().toISOString()
+                    };
+                }
+
+                const response = await retryWithBackoff(
+                    () => incidentService.updateIncident(incidentId, finalUpdates),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 10000,
+                        shouldRetry: (error) => {
+                            // Don't retry on 4xx errors (including 409 conflicts)
+                            if (error && typeof error === 'object' && 'response' in error) {
+                                const axiosError = error as { response?: { status?: number } };
+                                return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                            }
+                            return true; // Retry network errors
+                        }
+                    }
+                );
+                
+                if (response.data) {
+                    // Refresh incidents to get latest state from server
+                    await refreshIncidents();
+                    // Update selected incident if it's the one being updated
+                    if (selectedIncident?.incident_id === incidentId) {
+                        const updatedIncident = incidents.find(i => i.incident_id === incidentId) || response.data;
+                        setSelectedIncident(updatedIncident);
+                    }
+                    
+                    // Notify other tabs
+                    try {
+                        localStorage.setItem('incident-log:incident-updated', JSON.stringify({
+                            incidentId,
+                            timestamp: Date.now()
+                        }));
+                        setTimeout(() => localStorage.removeItem('incident-log:incident-updated'), 100);
+                    } catch (e) {
+                        // Ignore localStorage errors
+                    }
+                    
+                    dismissLoadingAndShowSuccess(toastId, 'Incident updated successfully');
+                    operationLock.releaseLock('update_incident', incidentId);
+                    return response.data;
+                }
+                throw new Error('No data returned from server');
+            } catch (error: any) {
+                // Handle specific error types
+                if (error?.response?.status === 409) {
+                    // Server returned 409 - fetch latest and trigger conflict resolution
+                    dismissLoadingAndShowError(toastId, '');
+                    const latestIncident = await getIncident(incidentId);
+                    const currentIncidentForConflict = incidents.find(i => i.incident_id === incidentId);
+                    if (latestIncident && currentIncidentForConflict && onConflict) {
+                        onConflict({
+                            localIncident: currentIncidentForConflict,
+                            serverIncident: latestIncident,
+                            localChanges: updates
+                        });
+                    }
+                    operationLock.releaseLock('update_incident', incidentId);
+                    return null;
+                } else if (error?.response?.status === 429) {
+                    dismissLoadingAndShowError(toastId, 'Rate limit exceeded. Please wait a moment and try again.');
+                    operationLock.releaseLock('update_incident', incidentId);
+                    return null;
+                } else {
+                    // If network error and not a 4xx, enqueue for retry (unless conflict resolution)
+                    if (!conflictResolution && error && typeof error === 'object' && 'response' in error) {
+                        const axiosError = error as { response?: { status?: number } };
+                        if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                            enqueue({
+                                type: 'update_incident',
+                                payload: { incidentId, updates },
+                                queuedAt: new Date().toISOString()
+                            });
+                            showSuccess('Update queued for sync when connection is restored');
+                            operationLock.releaseLock('update_incident', incidentId);
+                            return null;
+                        }
+                    }
+                    dismissLoadingAndShowError(toastId, 'Failed to update incident');
+                    ErrorHandlerService.logError(error, 'updateIncident');
+                    operationLock.releaseLock('update_incident', incidentId);
+                    return null;
+                }
+            }
+        } catch (error: any) {
+            // Outer catch for any unexpected errors
+            ErrorHandlerService.logError(error, 'updateIncident');
+            operationLock.releaseLock('update_incident', incidentId);
+            return null;
+        } finally {
+            operationLock.releaseLock('update_incident', incidentId);
+        }
+    }, [selectedIncident, refreshIncidents, incidents, getIncident, enqueue, operationLock]);
+
+    // Delete Incident - Opens confirmation modal
+    const deleteIncident = useCallback((incidentId: string): void => {
+        setModals(prev => ({
+            ...prev,
+            showDeleteConfirmModal: true,
+            deleteIncidentId: incidentId
+        }));
+    }, []);
+
+    // Confirm Delete Incident - Actually performs the delete
+    const confirmDeleteIncident = useCallback(async (): Promise<boolean> => {
+        const incidentId = modals.deleteIncidentId;
+        if (!incidentId) return false;
+
+        // Acquire operation lock
+        if (!operationLock.acquireLock('delete_incident', incidentId)) {
+            logger.warn('Delete operation already in progress', { module: 'IncidentLog', incidentId });
+            return false;
+        }
+
+        try {
+            // Check if offline - enqueue if so
+            if (!navigator.onLine) {
+                enqueue({
+                    type: 'delete_incident',
+                    payload: { incidentId },
+                    queuedAt: new Date().toISOString()
+                });
+                showSuccess('Delete queued for sync when connection is restored');
+                // Optimistically remove from local state
+                setIncidents(prev => prev.filter(i => i.incident_id !== incidentId));
+                if (selectedIncident?.incident_id === incidentId) {
+                    setSelectedIncident(null);
+                }
+                setModals(prev => ({
+                    ...prev,
+                    showDeleteConfirmModal: false,
+                    deleteIncidentId: null
+                }));
+                operationLock.releaseLock('delete_incident', incidentId);
+                return true;
             }
 
-            const response = await incidentService.updateIncident(incidentId, updates);
-            if (response.data) {
+            const toastId = showLoading('Deleting incident...');
+            try {
+                await retryWithBackoff(
+                    () => incidentService.deleteIncident(incidentId),
+                    {
+                        maxRetries: 3,
+                        baseDelay: 1000,
+                        maxDelay: 10000,
+                        shouldRetry: (error) => {
+                            // Don't retry on 4xx errors
+                            if (error && typeof error === 'object' && 'response' in error) {
+                                const axiosError = error as { response?: { status?: number } };
+                                return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                            }
+                            return true; // Retry network errors
+                        }
+                    }
+                );
                 // Refresh incidents to get latest state from server
                 await refreshIncidents();
-                // Update selected incident if it's the one being updated
                 if (selectedIncident?.incident_id === incidentId) {
-                    const updatedIncident = incidents.find(i => i.incident_id === incidentId) || response.data;
-                    setSelectedIncident(updatedIncident);
+                    setSelectedIncident(null);
                 }
-                dismissLoadingAndShowSuccess(toastId, 'Incident updated successfully');
-                return response.data;
+                dismissLoadingAndShowSuccess(toastId, 'Incident deleted successfully');
+                setModals(prev => ({
+                    ...prev,
+                    showDeleteConfirmModal: false,
+                    deleteIncidentId: null
+                }));
+                operationLock.releaseLock('delete_incident', incidentId);
+                return true;
+            } catch (error) {
+                // If network error and not a 4xx, enqueue for retry
+                if (error && typeof error === 'object' && 'response' in error) {
+                    const axiosError = error as { response?: { status?: number } };
+                    if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                        enqueue({
+                            type: 'delete_incident',
+                            payload: { incidentId },
+                            queuedAt: new Date().toISOString()
+                        });
+                        showSuccess('Delete queued for sync when connection is restored');
+                        // Optimistically remove from local state
+                        setIncidents(prev => prev.filter(i => i.incident_id !== incidentId));
+                        if (selectedIncident?.incident_id === incidentId) {
+                            setSelectedIncident(null);
+                        }
+                        setModals(prev => ({
+                            ...prev,
+                            showDeleteConfirmModal: false,
+                            deleteIncidentId: null
+                        }));
+                        operationLock.releaseLock('delete_incident', incidentId);
+                        return true;
+                    }
+                }
+                dismissLoadingAndShowError(toastId, 'Failed to delete incident');
+                ErrorHandlerService.logError(error, 'deleteIncident');
+                operationLock.releaseLock('delete_incident', incidentId);
+                setModals(prev => ({
+                    ...prev,
+                    showDeleteConfirmModal: false,
+                    deleteIncidentId: null
+                }));
+                return false;
             }
-            throw new Error('No data returned from server');
-        } catch (error: any) {
-            // Handle specific error types
-            if (error?.response?.status === 409) {
-                dismissLoadingAndShowError(toastId, 'Conflict: Incident was modified by another user. Please refresh and try again.');
-                await refreshIncidents();
-            } else if (error?.response?.status === 429) {
-                dismissLoadingAndShowError(toastId, 'Rate limit exceeded. Please wait a moment and try again.');
-            } else {
-                dismissLoadingAndShowError(toastId, 'Failed to update incident');
-            }
-            ErrorHandlerService.logError(error, 'updateIncident');
-            return null;
-        }
-    }, [selectedIncident, refreshIncidents, incidents]);
-
-    // Delete Incident
-    const deleteIncident = useCallback(async (incidentId: string): Promise<boolean> => {
-        if (!window.confirm('Are you sure you want to delete this incident? This action cannot be undone.')) {
-            return false;
-        }
-
-        const toastId = showLoading('Deleting incident...');
-        try {
-            await incidentService.deleteIncident(incidentId);
-            // Refresh incidents to get latest state from server
-            await refreshIncidents();
-            if (selectedIncident?.incident_id === incidentId) {
-                setSelectedIncident(null);
-            }
-            dismissLoadingAndShowSuccess(toastId, 'Incident deleted successfully');
-            return true;
         } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Failed to delete incident');
-            ErrorHandlerService.logError(error, 'deleteIncident');
+            // Fallback error handling for outer try
+            ErrorHandlerService.logError(error, 'confirmDeleteIncident');
+            operationLock.releaseLock('delete_incident', incidentId);
+            setModals(prev => ({
+                ...prev,
+                showDeleteConfirmModal: false,
+                deleteIncidentId: null
+            }));
             return false;
         }
-    }, [selectedIncident, refreshIncidents]);
+    }, [modals.deleteIncidentId, selectedIncident, refreshIncidents, enqueue, operationLock]);
+
+    // Cancel Delete - Closes modal without deleting
+    const cancelDeleteIncident = useCallback(() => {
+        setModals(prev => ({
+            ...prev,
+            showDeleteConfirmModal: false,
+            deleteIncidentId: null
+        }));
+    }, []);
 
     // Assign Incident
     const assignIncident = useCallback(async (incidentId: string, assigneeId: string): Promise<boolean> => {
@@ -381,23 +771,6 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         return !!result;
     }, [updateIncident, incidents]);
 
-    // AI Classification
-    const getAIClassification = useCallback(async (title: string, description: string, location?: any): Promise<AIClassificationResponse | null> => {
-        setLoading(prev => ({ ...prev, ai: true }));
-        try {
-            const response = await incidentService.getAIClassification({ title, description, location });
-            if (response.data) {
-                setAiSuggestion(response.data);
-                return response.data;
-            }
-            return null;
-        } catch (error) {
-            logger.error('AI Classification failed', error instanceof Error ? error : new Error(String(error)));
-            return null;
-        } finally {
-            setLoading(prev => ({ ...prev, ai: false }));
-        }
-    }, []);
 
     const getPatternRecognition = useCallback(async (request: PatternRecognitionRequest): Promise<PatternRecognitionResponse | null> => {
         setLoading(prev => ({ ...prev, related: true }));
@@ -430,67 +803,352 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
 
     // Emergency Alert
     const createEmergencyAlert = useCallback(async (alert: any): Promise<EmergencyAlertResponse | null> => {
+        // Check if offline - enqueue if so
+        if (!navigator.onLine) {
+            enqueue({
+                type: 'create_emergency_alert',
+                payload: { alert },
+                queuedAt: new Date().toISOString()
+            });
+            showSuccess('Emergency alert queued for sync when connection is restored');
+            return null;
+        }
+
         const toastId = showLoading('Sending emergency alert...');
         try {
-            const response = await incidentService.createEmergencyAlert(alert);
+            const response = await retryWithBackoff(
+                () => incidentService.createEmergencyAlert(alert),
+                {
+                    maxRetries: 5, // More retries for critical emergency alerts
+                    baseDelay: 1000,
+                    maxDelay: 10000,
+                    shouldRetry: (error) => {
+                        // Don't retry on 4xx errors
+                        if (error && typeof error === 'object' && 'response' in error) {
+                            const axiosError = error as { response?: { status?: number } };
+                            return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                        }
+                        return true; // Retry network errors
+                    }
+                }
+            );
             if (response.data) {
                 dismissLoadingAndShowSuccess(toastId, 'Emergency alert broadcasted!');
                 return response.data;
             }
             throw new Error('Failed to send alert');
         } catch (error) {
+            // If network error and not a 4xx, enqueue for retry
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                    enqueue({
+                        type: 'create_emergency_alert',
+                        payload: { alert },
+                        queuedAt: new Date().toISOString()
+                    });
+                    showSuccess('Emergency alert queued for sync when connection is restored');
+                    return null;
+                }
+            }
             dismissLoadingAndShowError(toastId, 'Failed to send alert');
+            ErrorHandlerService.logError(error, 'createEmergencyAlert');
             return null;
         }
+    }, [enqueue]);
+
+    // Bulk Operations with Transaction Safety
+    const bulkDelete = useCallback((incidentIds: string[]): void => {
+        setModals(prev => ({
+            ...prev,
+            showBulkOperationModal: true,
+            bulkOperation: {
+                type: 'delete',
+                incidentIds,
+                title: `Delete ${incidentIds.length} Incidents`,
+                description: `Are you sure you want to permanently delete ${incidentIds.length} incident(s)? This action cannot be undone.`
+            }
+        }));
     }, []);
 
-    // Bulk Operations
-    const bulkDelete = useCallback(async (incidentIds: string[]): Promise<boolean> => {
-        if (!window.confirm(`Are you sure you want to delete ${incidentIds.length} incidents?`)) {
-            return false;
+    // Confirm Bulk Delete - Actually performs the bulk delete
+    const confirmBulkDelete = useCallback(async (incidentIds: string[], reason?: string): Promise<BulkOperationResult | null> => {
+        // Check if offline - enqueue if so
+        if (!navigator.onLine) {
+            enqueue({
+                type: 'bulk_delete',
+                payload: { incidentIds, propertyId },
+                queuedAt: new Date().toISOString()
+            });
+            showSuccess(`Bulk delete queued for sync when connection is restored`);
+            // Optimistically remove from local state
+            setIncidents(prev => prev.filter(i => !incidentIds.includes(i.incident_id)));
+            setModals(prev => ({
+                ...prev,
+                showBulkOperationModal: false,
+                bulkOperation: null
+            }));
+            return {
+                operation_type: 'bulk_delete',
+                total: incidentIds.length,
+                successful: incidentIds.length,
+                failed: 0,
+                skipped: 0,
+                errors: [],
+                execution_time_ms: 0,
+                executed_by: 'current_user',
+                executed_at: new Date().toISOString()
+            };
         }
+
+        setLoading(prev => ({ ...prev, bulkOperation: true }));
         const toastId = showLoading(`Deleting ${incidentIds.length} incidents...`);
+        
+        // Track operation state for recovery
+        const operationState = {
+            incidentIds,
+            successful: [] as string[],
+            failed: [] as { incidentId: string; error: string }[],
+            startTime: Date.now()
+        };
+        
         try {
-            // Typically bulk delete would be a single API call, but if not available:
-            await Promise.all(incidentIds.map(id => incidentService.deleteIncident(id)));
+            // Use Promise.allSettled for transaction safety - don't fail all if one fails
+            const results = await Promise.allSettled(
+                incidentIds.map(id => 
+                    retryWithBackoff(
+                        () => incidentService.deleteIncident(id),
+                        {
+                            maxRetries: 3,
+                            baseDelay: 1000,
+                            maxDelay: 10000,
+                            shouldRetry: (error) => {
+                                if (error && typeof error === 'object' && 'response' in error) {
+                                    const axiosError = error as { response?: { status?: number } };
+                                    return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                                }
+                                return true;
+                            }
+                        }
+                    )
+                )
+            );
+            
+            // Track results
+            results.forEach((result, index) => {
+                const incidentId = incidentIds[index];
+                if (result.status === 'fulfilled') {
+                    operationState.successful.push(incidentId);
+                } else {
+                    operationState.failed.push({
+                        incidentId,
+                        error: result.reason?.message || 'Unknown error'
+                    });
+                }
+            });
+            
             // Refresh incidents to get latest state from server
             await refreshIncidents();
-            dismissLoadingAndShowSuccess(toastId, 'Incidents deleted successfully');
-            return true;
+            
+            const result: BulkOperationResult = {
+                operation_type: 'bulk_delete',
+                total: incidentIds.length,
+                successful: operationState.successful.length,
+                failed: operationState.failed.length,
+                skipped: 0,
+                errors: operationState.failed.map(f => ({
+                    incident_id: f.incidentId,
+                    error_code: 'DELETE_FAILED',
+                    error_message: f.error
+                })),
+                execution_time_ms: Date.now() - operationState.startTime,
+                executed_by: 'current_user',
+                executed_at: new Date().toISOString()
+            };
+
+            if (operationState.failed.length === 0) {
+                dismissLoadingAndShowSuccess(toastId, `Successfully deleted all ${incidentIds.length} incidents`);
+                logger.info('Bulk delete completed', {
+                    module: 'IncidentLog',
+                    operation: 'bulkDelete',
+                    total: incidentIds.length,
+                    successful: operationState.successful.length,
+                    duration: Date.now() - operationState.startTime
+                });
+            } else {
+                showError(`${operationState.successful.length} deleted, ${operationState.failed.length} failed. Check logs for details.`);
+                logger.warn('Bulk delete partially failed', {
+                    module: 'IncidentLog',
+                    operation: 'bulkDelete',
+                    total: incidentIds.length,
+                    successful: operationState.successful.length,
+                    failed: operationState.failed.length,
+                    errors: operationState.failed
+                });
+            }
+            return result;
         } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Some incidents could not be deleted');
-            // Still refresh to show current state
+            // If network error and not a 4xx, enqueue for retry
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                    enqueue({
+                        type: 'bulk_delete',
+                        payload: { incidentIds, propertyId },
+                        queuedAt: new Date().toISOString()
+                    });
+                    showSuccess('Bulk delete queued for sync when connection is restored');
+                    await refreshIncidents();
+                    return {
+                        operation_type: 'bulk_delete',
+                        total: incidentIds.length,
+                        successful: incidentIds.length,
+                        failed: 0,
+                        skipped: 0,
+                        errors: [],
+                        execution_time_ms: 0,
+                        executed_by: 'current_user',
+                        executed_at: new Date().toISOString()
+                    };
+                }
+            }
+            dismissLoadingAndShowError(toastId, 'Bulk delete operation failed');
+            ErrorHandlerService.logError(error, 'bulkDelete');
             await refreshIncidents();
-            return false;
+            return {
+                operation_type: 'bulk_delete',
+                total: incidentIds.length,
+                successful: 0,
+                failed: incidentIds.length,
+                skipped: 0,
+                errors: [{ incident_id: 'unknown', error_code: 'OPERATION_FAILED', error_message: String(error) }],
+                execution_time_ms: 0,
+                executed_by: 'current_user',
+                executed_at: new Date().toISOString()
+            };
+        } finally {
+            setLoading(prev => ({ ...prev, bulkOperation: false }));
         }
-    }, [refreshIncidents]);
+    }, [refreshIncidents, enqueue, propertyId]);
 
     const bulkStatusChange = useCallback(async (incidentIds: string[], status: IncidentStatus): Promise<boolean> => {
+        // Check if offline - enqueue if so
+        if (!navigator.onLine) {
+            enqueue({
+                type: 'bulk_status_change',
+                payload: { incidentIds, status, propertyId },
+                queuedAt: new Date().toISOString()
+            });
+            showSuccess(`Bulk status change queued for sync when connection is restored`);
+            // Optimistically update local state
+            setIncidents(prev => prev.map(i => 
+                incidentIds.includes(i.incident_id) ? { ...i, status } : i
+            ));
+            return true;
+        }
+
+        setLoading(prev => ({ ...prev, bulkOperation: true }));
         const toastId = showLoading(`Updating ${incidentIds.length} incidents...`);
+        
+        // Track operation state for recovery
+        const operationState = {
+            incidentIds,
+            status,
+            successful: [] as string[],
+            failed: [] as { incidentId: string; error: string }[],
+            startTime: Date.now()
+        };
+        
         try {
-            const results = await Promise.allSettled(incidentIds.map(id => incidentService.updateIncident(id, { status })));
-            const successes = results.filter(r => r.status === 'fulfilled').length;
-            const failures = results.filter(r => r.status === 'rejected').length;
+            // Use Promise.allSettled with retry logic for transaction safety
+            const results = await Promise.allSettled(
+                incidentIds.map(id => 
+                    retryWithBackoff(
+                        () => incidentService.updateIncident(id, { status }),
+                        {
+                            maxRetries: 3,
+                            baseDelay: 1000,
+                            maxDelay: 10000,
+                            shouldRetry: (error) => {
+                                if (error && typeof error === 'object' && 'response' in error) {
+                                    const axiosError = error as { response?: { status?: number } };
+                                    // Don't retry on 4xx errors (including 409 conflicts)
+                                    return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                                }
+                                return true;
+                            }
+                        }
+                    )
+                )
+            );
+            
+            // Track results
+            results.forEach((result, index) => {
+                const incidentId = incidentIds[index];
+                if (result.status === 'fulfilled') {
+                    operationState.successful.push(incidentId);
+                } else {
+                    operationState.failed.push({
+                        incidentId,
+                        error: result.reason?.message || 'Unknown error'
+                    });
+                }
+            });
+            
             // Refresh incidents to get latest state from server
             await refreshIncidents();
-            if (failures === 0) {
-                dismissLoadingAndShowSuccess(toastId, `All ${incidentIds.length} incidents updated successfully`);
+            
+            if (operationState.failed.length === 0) {
+                dismissLoadingAndShowSuccess(toastId, `Successfully updated all ${incidentIds.length} incidents`);
+                logger.info('Bulk status change completed', {
+                    module: 'IncidentLog',
+                    operation: 'bulkStatusChange',
+                    status,
+                    total: incidentIds.length,
+                    successful: operationState.successful.length,
+                    duration: Date.now() - operationState.startTime
+                });
                 return true;
             } else {
-                dismissLoadingAndShowError(toastId, `${successes} updated, ${failures} failed. Please refresh and try again.`);
+                showError(`${operationState.successful.length} updated, ${operationState.failed.length} failed. Check logs for details.`);
+                logger.warn('Bulk status change partially failed', {
+                    module: 'IncidentLog',
+                    operation: 'bulkStatusChange',
+                    status,
+                    total: incidentIds.length,
+                    successful: operationState.successful.length,
+                    failed: operationState.failed.length,
+                    errors: operationState.failed
+                });
                 return false;
             }
         } catch (error: any) {
+            // If network error and not a 4xx, enqueue for retry
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                    enqueue({
+                        type: 'bulk_status_change',
+                        payload: { incidentIds, status, propertyId },
+                        queuedAt: new Date().toISOString()
+                    });
+                    showSuccess('Bulk status change queued for sync when connection is restored');
+                    await refreshIncidents();
+                    return true;
+                }
+            }
             if (error?.response?.status === 429) {
                 dismissLoadingAndShowError(toastId, 'Rate limit exceeded. Please wait and try again.');
             } else {
-                dismissLoadingAndShowError(toastId, 'Some incidents could not be updated');
+                dismissLoadingAndShowError(toastId, 'Bulk status change operation failed');
             }
-            // Still refresh to show current state
+            ErrorHandlerService.logError(error, 'bulkStatusChange');
             await refreshIncidents();
             return false;
+        } finally {
+            setLoading(prev => ({ ...prev, bulkOperation: false }));
         }
-    }, [refreshIncidents]);
+    }, [refreshIncidents, enqueue, propertyId]);
 
     // =======================================================
     // PRODUCTION READINESS ENHANCEMENTS
@@ -535,79 +1193,280 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         }
     }, []);
 
-    // Enhanced Bulk Operations
+    // Enhanced Bulk Operations with Transaction Safety
     const bulkApprove = useCallback(async (
         incidentIds: string[], 
         reason?: string
     ): Promise<BulkOperationResult | null> => {
+        // Prevent concurrent bulk operations
+        if (loading.bulkOperation) {
+            showError('A bulk operation is already in progress. Please wait.');
+            return null;
+        }
+
+        // Check if offline - enqueue if so
+        if (!navigator.onLine) {
+            enqueue({
+                type: 'bulk_approve',
+                payload: { incidentIds, reason, propertyId },
+                queuedAt: new Date().toISOString()
+            });
+            showSuccess(`Bulk approve queued for sync when connection is restored`);
+            return {
+                successful: incidentIds.length,
+                failed: 0,
+                total: incidentIds.length,
+                operation_type: 'approve' as const,
+                skipped: 0,
+                errors: [],
+                execution_time_ms: 0,
+                executed_by: '',
+                executed_at: new Date().toISOString()
+            };
+        }
+        
         setLoading(prev => ({ ...prev, bulkOperation: true }));
         const toastId = showLoading(`Approving ${incidentIds.length} incidents...`);
         
+        // Track operation state for recovery
+        const operationState = {
+            incidentIds,
+            operation: 'approve' as const,
+            startTime: Date.now()
+        };
+        
         try {
-            const propertyId = localStorage.getItem('propertyId') || undefined;
-            const response = await incidentService.bulkApproveIncidents(incidentIds, reason, propertyId);
+            const response = await retryWithBackoff(
+                () => incidentService.bulkApproveIncidents(incidentIds, reason, propertyId),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 10000,
+                    shouldRetry: (error) => {
+                        // Don't retry on 4xx errors
+                        if (error && typeof error === 'object' && 'response' in error) {
+                            const axiosError = error as { response?: { status?: number } };
+                            return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                        }
+                        return true; // Retry network errors
+                    }
+                }
+            );
             
             if (response.data) {
                 setBulkOperationResult(response.data);
                 await refreshIncidents(); // Refresh to get latest state
                 
                 const { successful, failed, total } = response.data;
+                
+                // Log operation completion
+                logger.info('Bulk approve completed', {
+                    module: 'IncidentLog',
+                    operation: 'bulkApprove',
+                    total,
+                    successful,
+                    failed,
+                    duration: Date.now() - operationState.startTime
+                });
+                
+                // Notify other tabs
+                try {
+                    localStorage.setItem('incident-log:bulk-operation', JSON.stringify({
+                        operation: 'approve',
+                        total,
+                        successful,
+                        failed,
+                        timestamp: Date.now()
+                    }));
+                    setTimeout(() => localStorage.removeItem('incident-log:bulk-operation'), 100);
+                } catch (e) {
+                    // Ignore localStorage errors
+                }
+                
                 if (failed === 0) {
                     dismissLoadingAndShowSuccess(toastId, `Successfully approved all ${total} incidents`);
                 } else {
                     showError(`${successful} approved, ${failed} failed. Check operation details.`);
+                    logger.warn('Bulk approve partially failed', {
+                        module: 'IncidentLog',
+                        operation: 'bulkApprove',
+                        total,
+                        successful,
+                        failed,
+                        errors: response.data.errors
+                    });
                 }
                 return response.data;
             }
             throw new Error('No response data');
         } catch (error) {
+            // If network error and not a 4xx, enqueue for retry
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                    enqueue({
+                        type: 'bulk_approve',
+                        payload: { incidentIds, reason, propertyId },
+                        queuedAt: new Date().toISOString()
+                    });
+                    showSuccess('Bulk approve queued for sync when connection is restored');
+                    return {
+                successful: incidentIds.length,
+                failed: 0,
+                total: incidentIds.length,
+                operation_type: 'approve' as const,
+                skipped: 0,
+                errors: [],
+                execution_time_ms: 0,
+                executed_by: '',
+                executed_at: new Date().toISOString()
+            };
+                }
+            }
             dismissLoadingAndShowError(toastId, 'Bulk approval failed');
             ErrorHandlerService.logError(error, 'bulkApprove');
             return null;
         } finally {
             setLoading(prev => ({ ...prev, bulkOperation: false }));
         }
-    }, [refreshIncidents]);
+    }, [refreshIncidents, loading.bulkOperation, enqueue, propertyId]);
 
     const bulkReject = useCallback(async (
         incidentIds: string[], 
         reason: string
     ): Promise<BulkOperationResult | null> => {
+        // Prevent concurrent bulk operations
+        if (loading.bulkOperation) {
+            showError('A bulk operation is already in progress. Please wait.');
+            return null;
+        }
+        
         setLoading(prev => ({ ...prev, bulkOperation: true }));
         const toastId = showLoading(`Rejecting ${incidentIds.length} incidents...`);
         
+        // Track operation state for recovery
+        const operationState = {
+            incidentIds,
+            operation: 'reject' as const,
+            startTime: Date.now()
+        };
+        
         try {
-            const propertyId = localStorage.getItem('propertyId') || undefined;
-            const response = await incidentService.bulkRejectIncidents(incidentIds, reason, propertyId);
+            const response = await retryWithBackoff(
+                () => incidentService.bulkRejectIncidents(incidentIds, reason, propertyId),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 10000,
+                    shouldRetry: (error) => {
+                        // Don't retry on 4xx errors
+                        if (error && typeof error === 'object' && 'response' in error) {
+                            const axiosError = error as { response?: { status?: number } };
+                            return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                        }
+                        return true; // Retry network errors
+                    }
+                }
+            );
             
             if (response.data) {
                 setBulkOperationResult(response.data);
                 await refreshIncidents(); // Refresh to get latest state
                 
                 const { successful, failed, total } = response.data;
+                
+                // Log operation completion
+                logger.info('Bulk reject completed', {
+                    module: 'IncidentLog',
+                    operation: 'bulkReject',
+                    total,
+                    successful,
+                    failed,
+                    duration: Date.now() - operationState.startTime
+                });
+                
+                // Notify other tabs
+                try {
+                    localStorage.setItem('incident-log:bulk-operation', JSON.stringify({
+                        operation: 'reject',
+                        total,
+                        successful,
+                        failed,
+                        timestamp: Date.now()
+                    }));
+                    setTimeout(() => localStorage.removeItem('incident-log:bulk-operation'), 100);
+                } catch (e) {
+                    // Ignore localStorage errors
+                }
+                
                 if (failed === 0) {
                     dismissLoadingAndShowSuccess(toastId, `Successfully rejected all ${total} incidents`);
                 } else {
                     showError(`${successful} rejected, ${failed} failed. Check operation details.`);
+                    logger.warn('Bulk reject partially failed', {
+                        module: 'IncidentLog',
+                        operation: 'bulkReject',
+                        total,
+                        successful,
+                        failed,
+                        errors: response.data.errors
+                    });
                 }
                 return response.data;
             }
             throw new Error('No response data');
         } catch (error) {
+            // If network error and not a 4xx, enqueue for retry
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (!axiosError.response?.status || axiosError.response.status >= 500) {
+                    enqueue({
+                        type: 'bulk_reject',
+                        payload: { incidentIds, reason, propertyId },
+                        queuedAt: new Date().toISOString()
+                    });
+                    showSuccess('Bulk reject queued for sync when connection is restored');
+                    return {
+                successful: incidentIds.length,
+                failed: 0,
+                total: incidentIds.length,
+                operation_type: 'reject' as const,
+                skipped: 0,
+                errors: [],
+                execution_time_ms: 0,
+                executed_by: '',
+                executed_at: new Date().toISOString()
+            };
+                }
+            }
             dismissLoadingAndShowError(toastId, 'Bulk rejection failed');
             ErrorHandlerService.logError(error, 'bulkReject');
             return null;
         } finally {
             setLoading(prev => ({ ...prev, bulkOperation: false }));
         }
-    }, [refreshIncidents]);
+    }, [refreshIncidents, loading.bulkOperation, enqueue, propertyId]);
 
     // Hardware Device Integration Methods
     const refreshHardwareDevices = useCallback(async (): Promise<void> => {
         setLoading(prev => ({ ...prev, hardwareDevices: true }));
         try {
-            const propertyId = localStorage.getItem('propertyId') || undefined;
-            const response = await incidentService.getAllDeviceHealth(propertyId);
+            const response = await retryWithBackoff(
+                () => incidentService.getAllDeviceHealth(propertyId),
+                {
+                    maxRetries: 3,
+                    baseDelay: 1000,
+                    maxDelay: 10000,
+                    shouldRetry: (error) => {
+                        // Don't retry on 4xx errors
+                        if (error && typeof error === 'object' && 'response' in error) {
+                            const axiosError = error as { response?: { status?: number } };
+                            return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                        }
+                        return true; // Retry network errors
+                    }
+                }
+            );
             if (response.data) {
                 setHardwareDevices(response.data);
                 logger.info('Hardware devices status refreshed', { module: 'IncidentLog', count: response.data.length });
@@ -618,7 +1477,7 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         } finally {
             setLoading(prev => ({ ...prev, hardwareDevices: false }));
         }
-    }, []);
+    }, [propertyId]);
 
     const getHardwareDeviceStatus = useCallback(async (deviceId: string): Promise<DeviceHealthStatus | null> => {
         try {
@@ -679,7 +1538,6 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
     const refreshEnhancedSettings = useCallback(async (): Promise<void> => {
         setLoading(prev => ({ ...prev, settings: true }));
         try {
-            const propertyId = localStorage.getItem('propertyId') || undefined;
             const response = await incidentService.getEnhancedSettings(propertyId);
             if (response.data) {
                 setEnhancedSettings(response.data);
@@ -726,12 +1584,11 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         } finally {
             setLoading(prev => ({ ...prev, settings: false }));
         }
-    }, []);
+    }, [propertyId]);
 
     const updateEnhancedSettings = useCallback(async (settings: EnhancedIncidentSettings): Promise<boolean> => {
         const toastId = showLoading('Saving enhanced settings...');
         try {
-            const propertyId = localStorage.getItem('propertyId') || undefined;
             const response = await incidentService.updateEnhancedSettings(settings, propertyId);
             if (response.data) {
                 setEnhancedSettings(response.data);
@@ -775,6 +1632,14 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         setModals(prev => ({ ...prev, showEmergencyAlertModal: show }));
     }, []);
 
+    const setShowDeleteConfirmModal = useCallback((show: boolean, incidentId?: string) => {
+        setModals(prev => ({ 
+            ...prev, 
+            showDeleteConfirmModal: show,
+            deleteIncidentId: show ? (incidentId || null) : null
+        }));
+    }, []);
+
     // New production-ready modal controls
     const setShowAgentPerformanceModal = useCallback((show: boolean, agentId?: string) => {
         setModals(prev => ({ 
@@ -803,9 +1668,22 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         setModals(prev => ({ ...prev, showAutoApprovalSettingsModal: show }));
     }, []);
 
+    // Hardware heartbeat tracking - automatic offline detection
+    useIncidentLogHeartbeat({
+        hardwareDevices,
+        setHardwareDevices,
+        heartbeatOfflineThresholdMinutes: enhancedSettings?.hardware_settings?.device_offline_threshold_minutes || 15
+    });
+
     // Initial load - Enhanced for Production Readiness
+    // Only depend on currentUser and propertyId to prevent infinite loops
+    // The refresh functions are stable (useCallback with proper deps), but we don't want to re-run when they change
+    // Use ref to prevent duplicate calls from React StrictMode double-rendering in development
+    const hasLoadedRef = useRef<string | null>(null);
     useEffect(() => {
-        if (currentUser) {
+        const loadKey = `${currentUser?.user_id || ''}-${propertyId || ''}`;
+        if (currentUser && propertyId && hasLoadedRef.current !== loadKey) {
+            hasLoadedRef.current = loadKey;
             // Load core data
             refreshIncidents();
             
@@ -814,16 +1692,23 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
             refreshHardwareDevices();
             refreshEnhancedSettings();
         }
-    }, [currentUser, refreshIncidents, refreshAgentPerformance, refreshHardwareDevices, refreshEnhancedSettings]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentUser, propertyId]);
 
     return {
         // Data - Core
         incidents,
         selectedIncident,
-        aiSuggestion,
         escalationRules,
         activityByIncident,
         lastSynced,
+        
+        // Offline Queue Status
+        queuePendingCount: pendingCount,
+        queueFailedCount: failedCount,
+        
+        // Property Context
+        propertyId,
 
         // Data - Production Readiness Enhancements
         agentPerformanceMetrics,
@@ -843,6 +1728,8 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         createIncident,
         updateIncident,
         deleteIncident,
+        confirmDeleteIncident,
+        cancelDeleteIncident,
 
         // Actions - Incident Management
         assignIncident,
@@ -850,7 +1737,6 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         escalateIncident,
 
         // Actions - AI & Analysis
-        getAIClassification,
         getIncidentActivity,
         getPatternRecognition,
 
@@ -863,6 +1749,7 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
 
         // Actions - Bulk Operations (Enhanced)
         bulkDelete,
+        confirmBulkDelete,
         bulkStatusChange,
         bulkApprove,
         bulkReject,
@@ -892,7 +1779,9 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
         
         // New modal controls for production-ready features
         setShowAgentPerformanceModal,
-        setShowBulkOperationModal,
         setShowAutoApprovalSettingsModal,
+        setShowBulkOperationModal,
+        setShowDeleteConfirmModal,
+        operationLock
     };
 }

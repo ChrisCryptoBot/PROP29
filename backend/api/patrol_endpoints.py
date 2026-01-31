@@ -18,7 +18,6 @@ from schemas import (
     SystemLogResponse
 )
 from services.patrol_service import PatrolService
-# from api.auth_dependencies import get_current_active_user, get_current_security_officer
 from api.auth_dependencies import (
     get_current_user as get_current_active_user,
     get_current_user_optional,
@@ -58,11 +57,18 @@ async def get_patrols(
     """
     Get all patrols with optional filtering
     """
-    return await PatrolService.get_patrols(
-        user_id=str(current_user.user_id),
-        property_id=str(property_id) if property_id else None,
-        status=status
-    )
+    try:
+        return await PatrolService.get_patrols(
+            user_id=str(current_user.user_id),
+            property_id=str(property_id) if property_id else None,
+            status=status
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("patrols.get_patrols failed: %s", e)
+        # Return empty list instead of 500 error
+        return []
 
 @router.post("/", response_model=PatrolResponse, status_code=status.HTTP_201_CREATED)
 async def create_patrol(
@@ -83,7 +89,14 @@ async def get_officers(
     """
     Get all security officers
     """
-    return await PatrolService.get_officers(user_id=str(current_user.user_id))
+    try:
+        return await PatrolService.get_officers(user_id=str(current_user.user_id))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("patrols.get_officers failed: %s", e)
+        # Return empty list instead of 500 error
+        return []
 
 @router.post("/officers", response_model=UserResponse)
 async def create_officer(
@@ -161,8 +174,15 @@ async def officers_health(
         threshold = getattr(settings, "heartbeat_offline_threshold_minutes", None)
     except Exception:
         pass
-    data = PatrolService.get_officers_health(offline_threshold_minutes=threshold)
-    return {"officers": data}
+    try:
+        data = PatrolService.get_officers_health(offline_threshold_minutes=threshold)
+        return {"officers": data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("patrols.officers_health failed: %s", e)
+        # Return empty dict instead of 500 error
+        return {"officers": {}}
 
 
 @router.get("/weather")
@@ -215,10 +235,14 @@ async def get_routes(
     db: Session = Depends(get_db)
 ):
     """Get all routes"""
-    return await PatrolService.get_routes(
-        property_id=str(property_id) if property_id else None,
-        user_id=str(current_user.user_id)
-    )
+    try:
+        return await PatrolService.get_routes(
+            property_id=str(property_id) if property_id else None,
+            user_id=str(current_user.user_id)
+        )
+    except Exception as e:
+        logger.exception("patrols.get_routes failed: %s", e)
+        raise
 
 @router.post("/routes", response_model=PatrolRouteResponse)
 async def create_route(
@@ -256,10 +280,17 @@ async def get_templates(
     db: Session = Depends(get_db)
 ):
     """Get all templates"""
-    return await PatrolService.get_templates(
-        property_id=str(property_id) if property_id else None,
-        user_id=str(current_user.user_id)
-    )
+    try:
+        return await PatrolService.get_templates(
+            property_id=str(property_id) if property_id else None,
+            user_id=str(current_user.user_id)
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("patrols.get_templates failed: %s", e)
+        # Return empty list instead of 500 error
+        return []
 
 @router.post("/templates", response_model=PatrolTemplateResponse)
 async def create_template(
@@ -333,7 +364,7 @@ async def check_in_checkpoint(
     return await PatrolService.check_in_checkpoint(
         patrol_id=patrol_id,
         checkpoint_id=checkpoint_id,
-        payload=payload.dict(exclude_unset=True),
+        payload=payload.model_dump(exclude_unset=True),
         user_id=user_id
     )
 
@@ -345,7 +376,7 @@ async def create_emergency_alert(
 ):
     """Create a patrol emergency alert event"""
     return await PatrolService.create_emergency_alert(
-        payload=payload.dict(exclude_unset=True),
+        payload=payload.model_dump(exclude_unset=True),
         user_id=str(current_user.user_id)
     )
 

@@ -1,5 +1,5 @@
 import ApiService from './ApiService';
-import { BannedIndividual, FacialRecognitionStats, DetectionAlert } from '../features/banned-individuals/types/banned-individuals.types';
+import { BannedIndividual, DetectionAlert } from '../features/banned-individuals/types/banned-individuals.types';
 
 export interface DetectionStatistics {
     total_banned_individuals: number;
@@ -101,38 +101,33 @@ class BannedIndividualsService {
         return response.success && response.data ? response.data : null;
     }
 
-    async getFacialRecognitionStatus(): Promise<FacialRecognitionStats | null> {
-        const response = await ApiService.get<any>(`${this.endpoint}/facial-recognition-status`);
-        if (response.success && response.data) {
-            return {
-                accuracy: response.data.accuracy,
-                trainingStatus: response.data.training_status as any,
-                totalFaces: response.data.total_faces,
-                activeModels: 3,
-                lastTraining: response.data.last_training
-            };
-        }
-        return null;
-    }
-
     async getDetectionAlerts(propertyId?: string, limit: number = 100): Promise<DetectionAlert[]> {
         const params: any = { limit };
         if (propertyId) params.property_id = propertyId;
 
         const response = await ApiService.get<any[]>(`${this.endpoint}/detections`, { params });
         if (response.success && response.data) {
-            return response.data.map((item: any) => ({
+            return response.data.map((item: any) => {
+                const loc = item.location;
+                let locationStr: string;
+                if (loc == null) locationStr = 'Unknown';
+                else if (typeof loc === 'string') locationStr = loc;
+                else if (typeof loc === 'object' && 'lat' in loc && 'lng' in loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+                    locationStr = `${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}`;
+                } else locationStr = 'Unknown';
+                return {
                 id: item.detection_id || item.id,
                 individualId: item.banned_id || item.individual_id,
                 individualName: item.individual_name || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
-                location: item.location || 'Unknown',
+                location: locationStr,
                 timestamp: item.timestamp || item.detected_at || new Date().toISOString(),
                 confidence: item.confidence || 0,
                 status: item.status || 'ACTIVE',
                 responseTime: item.response_time || 0,
                 actionTaken: item.action_taken || 'Detection logged',
                 notes: item.notes
-            }));
+                };
+            });
         }
         return [];
     }
@@ -155,12 +150,12 @@ class BannedIndividualsService {
         return response.success && response.data ? response.data.video_url : null;
     }
 
-    async uploadPhoto(individualId: string, file: File): Promise<{ photoUrl: string; trainingTriggered: boolean } | null> {
+    async uploadPhoto(individualId: string, file: File): Promise<{ photoUrl: string } | null> {
         const formData = new FormData();
         formData.append('photo', file);
         formData.append('individual_id', individualId);
 
-        const response = await ApiService.post<{ photo_url: string; training_triggered: boolean }>(
+        const response = await ApiService.post<{ photo_url: string }>(
             `${this.endpoint}/${individualId}/photo`,
             formData,
             {
@@ -171,10 +166,7 @@ class BannedIndividualsService {
         );
 
         if (response.success && response.data) {
-            return {
-                photoUrl: response.data.photo_url,
-                trainingTriggered: response.data.training_triggered
-            };
+            return { photoUrl: response.data.photo_url };
         }
         return null;
     }
@@ -227,25 +219,6 @@ class BannedIndividualsService {
 
         const response = await ApiService.put(`${this.endpoint}/settings`, data);
         return !!response.success;
-    }
-
-    async updateFacialRecognitionConfig(config: { confidenceThreshold: number; retentionDays: number }): Promise<boolean> {
-        const response = await ApiService.put(`${this.endpoint}/facial-recognition/config`, {
-            confidence_threshold: config.confidenceThreshold,
-            retention_days: config.retentionDays
-        });
-        return !!response.success;
-    }
-
-    async triggerFacialRecognitionTraining(): Promise<{ trainingId: string; status: string } | null> {
-        const response = await ApiService.post<{ training_id: string; status: string }>(`${this.endpoint}/facial-recognition/train`, {});
-        if (response.success && response.data) {
-            return {
-                trainingId: response.data.training_id,
-                status: response.data.status
-            };
-        }
-        return null;
     }
 
     async getAnalytics(params: { startDate?: string; endDate?: string; propertyId?: string }): Promise<any> {

@@ -23,8 +23,10 @@ import { Modal } from '../../../../components/UI/Modal';
 import { useAccessControlContext } from '../../context/AccessControlContext';
 import { UsersFilter } from '../filters/UsersFilter';
 import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import type { AccessControlUser } from '../../../../shared/types/access-control.types';
-import { CreateUserModal, EditUserModal } from '../modals';
+import { CreateUserModal, EditUserModal, ConfirmDeleteModal } from '../modals';
 import { cn } from '../../../../utils/cn';
 
 /**
@@ -76,6 +78,9 @@ const UsersTabComponent: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<AccessControlUser | null>(null);
   const [isCreateFormDirty, setIsCreateFormDirty] = useState(false);
   const [isEditFormDirty, setIsEditFormDirty] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<AccessControlUser | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const refresh = () => {
@@ -122,6 +127,20 @@ const UsersTabComponent: React.FC = () => {
 
     return filtered;
   }, [users, searchQuery, roleFilter, statusFilter]);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(start, start + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, statusFilter]);
 
   // Handle create user
   const handleCreateUser = useCallback(async (userData: Partial<AccessControlUser>) => {
@@ -185,37 +204,46 @@ const UsersTabComponent: React.FC = () => {
     }
   }, [recordAuditEntry, updateUser]);
 
-  // Handle delete user
-  const handleDeleteUser = useCallback(async (userId: string) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      const user = users.find(candidate => candidate.id === userId);
-      try {
-        await deleteUser(userId);
-        setSelectedUsers(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(userId);
-          return newSet;
-        });
-        showSuccess('User deleted.');
-        if (user) {
-          recordAuditEntry({
-            action: 'Delete user',
-            status: 'success',
-            target: user.name
-          });
-        }
-      } catch (error) {
-        showError('Delete failed.');
-        if (user) {
-          recordAuditEntry({
-            action: 'Delete user',
-            status: 'failure',
-            target: user.name
-          });
-        }
-      }
+  // Handle delete user - open confirmation modal
+  const handleDeleteUser = useCallback((userId: string) => {
+    const user = users.find(candidate => candidate.id === userId);
+    if (user) {
+      setUserToDelete(user);
+      setShowDeleteModal(true);
     }
-  }, [deleteUser, recordAuditEntry, users]);
+  }, [users]);
+
+  // Confirm delete user
+  const handleConfirmDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteUser(userToDelete.id);
+      setSelectedUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userToDelete.id);
+        return newSet;
+      });
+      showSuccess('User deleted.');
+      recordAuditEntry({
+        action: 'Delete user',
+        status: 'success',
+        target: userToDelete.name
+      });
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+    } catch (error) {
+      showError('Delete failed.');
+      recordAuditEntry({
+        action: 'Delete user',
+        status: 'failure',
+        target: userToDelete.name
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteUser, recordAuditEntry, userToDelete]);
 
   // Clear all filters
   const handleClearAllFilters = useCallback(() => {
@@ -245,12 +273,27 @@ const UsersTabComponent: React.FC = () => {
       showError('Reason is required for this bulk action.');
       return;
     }
+    // Prevent concurrent bulk operations
+    if (bulkLoading) {
+      showError('A bulk operation is already in progress.');
+      return;
+    }
     const selected = users.filter(user => selectedUsers.has(user.id));
     const toastId = showLoading(`Updating ${selected.length} user(s)...`);
     setBulkLoading(true);
     try {
+      // Use retry logic for each update
       const results = await Promise.allSettled(
-        selected.map(user => updateUser(user.id, { status }))
+        selected.map(user => 
+          retryWithBackoff(
+            () => updateUser(user.id, { status }),
+            {
+              maxRetries: 3,
+              baseDelay: 1000,
+              maxDelay: 10000,
+            }
+          )
+        )
       );
       const failures = results
         .map((result, index) => (result.status === 'rejected' ? selected[index].name : null))
@@ -278,10 +321,11 @@ const UsersTabComponent: React.FC = () => {
       }
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Bulk update failed.');
+      ErrorHandlerService.logError(error, 'handleBulkStatusUpdate');
     } finally {
       setBulkLoading(false);
     }
-  }, [bulkReason, closeBulkModal, recordAuditEntry, selectedUsers, updateUser, users]);
+  }, [bulkReason, closeBulkModal, recordAuditEntry, selectedUsers, updateUser, users, bulkLoading]);
 
   // Loading state
   if (loading.users && users.length === 0) {
@@ -373,10 +417,10 @@ const UsersTabComponent: React.FC = () => {
 
 
       {/* Visitor Management Card */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden mb-8">
+      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden mb-8">
         <CardHeader className="border-b border-white/5 px-6 py-4">
           <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
               <i className="fas fa-id-card-clip text-white text-base" />
             </div>
             Visitor Management
@@ -435,11 +479,11 @@ const UsersTabComponent: React.FC = () => {
       </div>
 
       {/* Users Registry */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
           <CardTitle className="flex items-center justify-between text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
                 <i className="fas fa-fingerprint text-white text-base" />
               </div>
               Users
@@ -526,12 +570,12 @@ const UsersTabComponent: React.FC = () => {
             />
           ) : (
             <div className="space-y-3" role="list" aria-label="Users list">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <div
                   key={user.id}
                   className={cn(
                     "flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border rounded-2xl transition-all group hover:bg-blue-500/5",
-                    selectedUsers.has(user.id) ? 'border-blue-500/50 bg-blue-500/5 shadow-2xl' : 'border-white/5'
+                    selectedUsers.has(user.id) ? 'border-blue-500/50 bg-blue-500/5 ' : 'border-white/5'
                   )}
                   role="listitem"
                 >
@@ -551,7 +595,7 @@ const UsersTabComponent: React.FC = () => {
                       className="w-4 h-4 text-blue-600 border-white/5 rounded bg-[color:var(--console-dark)] cursor-pointer"
                       aria-label={`Select ${user.name}`}
                     />
-                    <Avatar className="w-14 h-14 bg-gradient-to-br from-blue-600/80 to-slate-900 text-white rounded-xl shadow-2xl border border-white/5 group-hover:scale-105 transition-transform font-black text-xl" aria-label={`${user.name} avatar`}>
+                    <Avatar className="w-14 h-14 bg-gradient-to-br from-blue-600/80 to-slate-900 text-white rounded-xl  border border-white/5 group-hover:scale-105 transition-transform font-black text-xl" aria-label={`${user.name} avatar`}>
                       {user.avatar}
                     </Avatar>
                     <div>
@@ -703,6 +747,19 @@ const UsersTabComponent: React.FC = () => {
           setIsFormDirty={setIsEditFormDirty}
         />
       )}
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setUserToDelete(null);
+        }}
+        onConfirm={handleConfirmDeleteUser}
+        title="Delete User"
+        message="Are you sure you want to delete this user?"
+        itemName={userToDelete?.name}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

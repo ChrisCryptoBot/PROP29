@@ -7,6 +7,7 @@
 import { useEffect, useCallback } from 'react';
 import { showError, showWarning } from '../../../utils/toast';
 import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
+import { StateUpdateService } from '../../../services/StateUpdateService';
 import type { PatrolProperty, PatrolOfficer, UpcomingPatrol } from '../types';
 
 export interface UseEdgeCaseHandlingOptions {
@@ -96,21 +97,20 @@ export function useEdgeCaseHandling(options: UseEdgeCaseHandlingOptions) {
                     p.assignedOfficer === officer.name && p.id === officer.currentPatrol
                 );
 
-                if (!hasActivePatrol && officer.currentPatrol) {
-                    // Officer marked on-duty but patrol is not active - reconcile
-                    const patrol = upcomingPatrols.find(p => p.id === officer.currentPatrol);
-                    if (patrol && patrol.status !== 'in-progress') {
-                        setOfficers(prev => prev.map(o =>
-                            o.id === officer.id
-                                ? { ...o, status: 'off-duty', currentPatrol: undefined }
-                                : o
-                        ));
-                        ErrorHandlerService.handle(
-                            new Error(`Reconciled officer ${officer.name} status: patrol ${patrol.id} is not in-progress`),
-                            'reconcileOfficerState'
-                        );
+                    if (!hasActivePatrol && officer.currentPatrol) {
+                        // Officer marked on-duty but patrol is not active - reconcile
+                        const patrol = upcomingPatrols.find(p => p.id === officer.currentPatrol);
+                        if (patrol && patrol.status !== 'in-progress') {
+                            setOfficers(prev => StateUpdateService.updateItem(prev, officer.id, {
+                                status: 'off-duty',
+                                currentPatrol: undefined
+                            }));
+                            ErrorHandlerService.handle(
+                                new Error(`Reconciled officer ${officer.name} status: patrol ${patrol.id} is not in-progress`),
+                                'reconcileOfficerState'
+                            );
+                        }
                     }
-                }
             });
 
             // Find active patrols without assigned officers or with officers marked off-duty
@@ -119,11 +119,10 @@ export function useEdgeCaseHandling(options: UseEdgeCaseHandlingOptions) {
                     const assignedOfficer = officers.find(o => o.name === patrol.assignedOfficer);
                     if (assignedOfficer && assignedOfficer.status !== 'on-duty') {
                         // Patrol is active but officer is not on-duty - reconcile
-                        setOfficers(prev => prev.map(o =>
-                            o.id === assignedOfficer.id
-                                ? { ...o, status: 'on-duty', currentPatrol: patrol.id }
-                                : o
-                        ));
+                        setOfficers(prev => StateUpdateService.updateItem(prev, assignedOfficer.id, {
+                            status: 'on-duty',
+                            currentPatrol: patrol.id
+                        }));
                         ErrorHandlerService.handle(
                             new Error(`Reconciled patrol ${patrol.id}: officer ${assignedOfficer.name} should be on-duty`),
                             'reconcilePatrolState'

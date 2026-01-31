@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '../../../../components/UI/Button';
 import { Modal } from '../../../../components/UI/Modal';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { Checkpoint } from '../../types';
 
 interface ViewCheckpointModalProps {
@@ -31,7 +32,7 @@ export const ViewCheckpointModal: React.FC<ViewCheckpointModalProps> = ({ isOpen
                 </div>
                 <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Location</p>
-                    <p className="text-slate-300 text-sm">{checkpoint.location}</p>
+                    <p className="text-slate-300 text-sm">{formatLocationDisplay(checkpoint.location) || '—'}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>

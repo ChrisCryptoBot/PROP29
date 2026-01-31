@@ -575,6 +575,46 @@ class ReportExportRequest(BaseModel):
     end_date: Optional[datetime] = None
     filters: Optional[Dict[str, Any]] = None
 
+# Bulk operation schemas
+class BulkApproveRequest(BaseModel):
+    incident_ids: List[UUID]
+    reason: Optional[str] = "Bulk approval"
+    property_id: Optional[UUID] = None
+
+class BulkRejectRequest(BaseModel):
+    incident_ids: List[UUID]
+    reason: str
+    property_id: Optional[UUID] = None
+
+class BulkDeleteRequest(BaseModel):
+    incident_ids: List[UUID]
+    property_id: Optional[UUID] = None
+
+class BulkStatusRequest(BaseModel):
+    incident_ids: List[UUID]
+    status: str
+    reason: Optional[str] = None
+    property_id: Optional[UUID] = None
+
+class BulkOperationError(BaseModel):
+    incident_id: str
+    error_code: str
+    error_message: str
+
+class BulkOperationResult(BaseModel):
+    operation_type: str  # "approve", "reject", "bulk_delete", "status_change"
+    total: int
+    successful: int
+    failed: int
+    skipped: int
+    errors: List[BulkOperationError]
+    execution_time_ms: int
+    executed_by: str
+    executed_at: datetime
+
+    class Config:
+        json_encoders = {datetime: lambda v: v.isoformat() if hasattr(v, 'isoformat') else str(v)}
+
 # Access Control schemas
 class AccessControlEventCreate(BaseModel):
     property_id: str
@@ -1233,6 +1273,12 @@ class EquipmentResponse(EquipmentBase):
     class Config:
         from_attributes = True
 
+class EquipmentUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    status: Optional[str] = None
+    location: Optional[str] = None
+
 # Maintenance Request Schemas
 class MaintenanceRequestBase(BaseModel):
     title: str
@@ -1256,6 +1302,15 @@ class MaintenanceRequestResponse(MaintenanceRequestBase):
 
     class Config:
         from_attributes = True
+
+class MaintenanceRequestUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    priority: Optional[str] = None
+    status: Optional[str] = None
+    location: Optional[str] = None
+    equipment_id: Optional[str] = None
+    assigned_to: Optional[str] = None
 
 
 # Smart Locker schemas
@@ -1613,6 +1668,9 @@ class CameraResponse(BaseModel):
     is_recording: bool
     motion_detection_enabled: bool
     last_known_image_url: Optional[str] = None
+    last_heartbeat: Optional[datetime] = None
+    last_status_change: Optional[datetime] = None
+    version: Optional[int] = 1
     created_at: datetime
     updated_at: datetime
 

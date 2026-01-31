@@ -47,11 +47,9 @@ const EnvironmentalContent: React.FC<{ activeTab: TabId }> = ({ activeTab }) => 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <i className="fas fa-sync-alt text-blue-600 text-4xl animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading environmental data...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading environmental data">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading environmental data...</p>
       </div>
     );
   }
@@ -206,34 +204,41 @@ const OrchestratorContent: React.FC = () => {
         </>
       }
     >
-      <div className="p-6">
-        {/* Combined Metrics */}
+      {/* Content-first: no extra wrapper; ModuleShell main already has px-6 py-8. Use space-y for rhythm. */}
+      <div className="space-y-8">
+        {/* Combined Metrics (overview only) */}
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="group" aria-label="IoT metrics">
             {[
-              { label: 'Total Sensors', value: combinedMetrics.totalSensors, icon: 'fa-server', color: 'blue' },
-              { label: 'Active Sensors', value: combinedMetrics.activeSensors, icon: 'fa-wifi', color: 'green' },
-              { label: 'Total Alerts', value: combinedMetrics.totalAlerts, icon: 'fa-bell', color: 'blue' },
-              { label: 'Critical Alerts', value: combinedMetrics.criticalAlerts, icon: 'fa-exclamation-triangle', color: 'red' },
+              { label: 'Total Sensors', value: combinedMetrics.totalSensors, icon: 'fa-server', color: 'blue' as const },
+              { label: 'Active Sensors', value: combinedMetrics.activeSensors, icon: 'fa-wifi', color: 'green' as const },
+              { label: 'Total Alerts', value: combinedMetrics.totalAlerts, icon: 'fa-bell', color: 'blue' as const },
+              { label: 'Critical Alerts', value: combinedMetrics.criticalAlerts, icon: 'fa-exclamation-triangle', color: 'red' as const },
             ].map((metric, i) => (
               <div
                 key={i}
                 className="group bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl rounded-xl p-6 relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 bg-gradient-to-br from-${metric.color}-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center`}>
-                    <i className={`fas ${metric.icon} text-${metric.color}-400 text-xl`} />
+                  <div className={metric.color === 'red'
+                    ? 'w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center'
+                    : metric.color === 'green'
+                    ? 'w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center'
+                    : 'w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center'
+                  }>
+                    <i className={`fas ${metric.icon} text-xl ${metric.color === 'red' ? 'text-red-400' : metric.color === 'green' ? 'text-emerald-400' : 'text-blue-400'}`} />
                   </div>
-                  <span className={`px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest ${
-                    metric.color === 'red' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                    metric.color === 'green' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                    'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                  }`}>
+                  <span className={metric.color === 'red'
+                    ? 'px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-red-500/10 text-red-400 border border-red-500/20'
+                    : metric.color === 'green'
+                    ? 'px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : 'px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                  }>
                     {metric.color === 'red' ? 'CRITICAL' : metric.color === 'green' ? 'ONLINE' : 'SYSTEM'}
                   </span>
                 </div>
                 <h3 className="text-3xl font-black text-white tracking-tighter mb-1">{metric.value}</h3>
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">{metric.label}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">{metric.label}</p>
               </div>
             ))}
           </div>

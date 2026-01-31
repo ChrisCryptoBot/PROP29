@@ -5,14 +5,13 @@
  */
 
 import apiService from '../../../services/ApiService';
+import { logger } from '../../../services/logger';
 import { env } from '../../../config/env';
 import type { ApiResponse } from '../../../services/ApiService';
 import type {
   Incident,
   IncidentCreate,
   IncidentUpdate,
-  AIClassificationRequest,
-  AIClassificationResponse,
   EmergencyAlertCreate,
   EmergencyAlertResponse,
   IncidentFilters,
@@ -57,15 +56,12 @@ class IncidentService {
 
   /**
    * Create a new incident
-   * POST /api/incidents?use_ai=true (optional)
+   * POST /api/incidents
    */
   async createIncident(
-    incident: IncidentCreate,
-    useAI: boolean = false
+    incident: IncidentCreate
   ): Promise<ApiResponse<Incident>> {
-    // For query params, we need to append them to the URL
-    const url = useAI ? '/incidents?use_ai=true' : '/incidents';
-    return apiService.post<Incident>(url, incident);
+    return apiService.post<Incident>('/incidents', incident);
   }
 
   /**
@@ -87,15 +83,6 @@ class IncidentService {
     return apiService.delete<void>(`/incidents/${incidentId}`);
   }
 
-  /**
-   * Get AI classification suggestion
-   * POST /api/incidents/ai-classify
-   */
-  async getAIClassification(
-    request: AIClassificationRequest
-  ): Promise<ApiResponse<AIClassificationResponse>> {
-    return apiService.post<AIClassificationResponse>('/incidents/ai-classify', request);
-  }
 
   /**
    * Create emergency alert
@@ -338,7 +325,11 @@ class IncidentService {
       return await apiService.get<DeviceHealthStatus>(`/incidents/hardware/${deviceId}/status`);
     } catch (error) {
       // Return null if device not found or service unavailable
-      console.warn(`Hardware device status unavailable for ${deviceId}:`, error);
+      logger.warn('Hardware device status unavailable', error instanceof Error ? error : new Error(String(error)), {
+        module: 'IncidentService',
+        action: 'getHardwareDeviceStatus',
+        deviceId
+      });
       return { data: null, error: 'Device not found', success: false };
     }
   }

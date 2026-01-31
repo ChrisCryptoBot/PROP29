@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog, protocol } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, protocol, screen } = require('electron');
 const path = require('path');
 const url = require('url');
 
@@ -193,6 +193,31 @@ ipcMain.handle('start-backend', async () => {
   // This would typically start the Python backend process
   // For now, we'll just return a status
   return { status: 'started' };
+});
+
+// Multi-monitor support - get displays
+ipcMain.handle('get-displays', async () => {
+  try {
+    const displays = screen.getAllDisplays();
+    return displays.map((display, index) => ({
+      id: display.id.toString(),
+      bounds: display.bounds,
+      workArea: display.workArea,
+      scaleFactor: display.scaleFactor,
+      primary: index === 0 || display.bounds.x === 0 && display.bounds.y === 0
+    }));
+  } catch (error) {
+    console.error('Failed to get displays:', error);
+    // Fallback to primary display
+    const primaryDisplay = screen.getPrimaryDisplay();
+    return [{
+      id: 'primary',
+      bounds: primaryDisplay.bounds,
+      workArea: primaryDisplay.workArea,
+      scaleFactor: primaryDisplay.scaleFactor,
+      primary: true
+    }];
+  }
 });
 
 // Optional: Custom protocol for local files (advanced asset loading)

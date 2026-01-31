@@ -20,7 +20,6 @@ import type {
     LostFoundItemUpdate,
     LostFoundItemFilters,
     LostFoundClaim,
-    LostFoundMatch,
     LostFoundMetrics,
     LostFoundSettings,
     LostFoundStatus
@@ -34,7 +33,6 @@ export interface UseLostFoundStateReturn {
     selectedItem: LostFoundItem | null;
     metrics: LostFoundMetrics | null;
     settings: LostFoundSettings | null;
-    matches: LostFoundMatch[];
 
     // Loading states
     loading: {
@@ -42,7 +40,6 @@ export interface UseLostFoundStateReturn {
         item: boolean;
         metrics: boolean;
         settings: boolean;
-        matches: boolean;
     };
 
     // Actions - CRUD Operations
@@ -56,7 +53,6 @@ export interface UseLostFoundStateReturn {
     claimItem: (itemId: string, claim: LostFoundClaim) => Promise<boolean>;
     notifyGuest: (itemId: string, guestId?: string) => Promise<boolean>;
     archiveItem: (itemId: string) => Promise<boolean>;
-    matchItems: (itemType: string, description: string) => Promise<LostFoundMatch[]>;
 
     // Actions - Analytics & Settings
     refreshMetrics: (propertyId?: string, dateFrom?: string, dateTo?: string) => Promise<void>;
@@ -82,7 +78,6 @@ export function useLostFoundState(): UseLostFoundStateReturn {
     const [selectedItem, setSelectedItem] = useState<LostFoundItem | null>(null);
     const [metrics, setMetrics] = useState<LostFoundMetrics | null>(null);
     const [settings, setSettings] = useState<LostFoundSettings | null>(null);
-    const [matches, setMatches] = useState<LostFoundMatch[]>([]);
 
     // Loading states
     const [loading, setLoading] = useState({
@@ -90,7 +85,6 @@ export function useLostFoundState(): UseLostFoundStateReturn {
         item: false,
         metrics: false,
         settings: false,
-        matches: false,
     });
 
     // Fetch Items
@@ -277,27 +271,6 @@ export function useLostFoundState(): UseLostFoundStateReturn {
         return !!result;
     }, [updateItem]);
 
-    // Match Items
-    const matchItems = useCallback(async (itemType: string, description: string): Promise<LostFoundMatch[]> => {
-        setLoading(prev => ({ ...prev, matches: true }));
-        try {
-            const response = await lostFoundService.matchItems(itemType, description);
-            if (response.data) {
-                setMatches(response.data);
-                return response.data;
-            }
-            return [];
-        } catch (error) {
-            logger.error('Failed to match items', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'matchItems'
-            });
-            showError('Failed to match items');
-            return [];
-        } finally {
-            setLoading(prev => ({ ...prev, matches: false }));
-        }
-    }, []);
 
     // Refresh Metrics
     const refreshMetrics = useCallback(async (propertyId?: string, dateFrom?: string, dateTo?: string) => {
@@ -448,7 +421,6 @@ export function useLostFoundState(): UseLostFoundStateReturn {
         selectedItem,
         metrics,
         settings,
-        matches,
 
         // Loading states
         loading,
@@ -462,7 +434,6 @@ export function useLostFoundState(): UseLostFoundStateReturn {
         claimItem,
         notifyGuest,
         archiveItem,
-        matchItems,
         refreshMetrics,
         refreshSettings,
         updateSettings,

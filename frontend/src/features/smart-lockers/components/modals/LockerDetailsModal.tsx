@@ -10,6 +10,7 @@ import { useSmartLockersContext } from '../../context/SmartLockersContext';
 import type { SmartLocker } from '../../types/locker.types';
 import { getStatusBadgeClass, getSizeBadgeClass } from '../../utils/badgeHelpers';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { showError } from '../../../../utils/toast';
 
 export const LockerDetailsModal: React.FC = () => {
@@ -97,7 +98,7 @@ export const LockerDetailsModal: React.FC = () => {
               <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 block">Location</label>
               <div className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center group-hover:bg-white/[0.08] transition-all shadow-inner">
                 <i className="fas fa-map-marker-alt text-blue-400 mr-3 opacity-70" />
-                <p className="text-sm font-medium text-white">{locker.location}</p>
+                <p className="text-sm font-medium text-white">{formatLocationDisplay(locker.location) || '—'}</p>
               </div>
             </div>
             <div className="group">

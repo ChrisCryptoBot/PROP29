@@ -2,6 +2,7 @@ import React from 'react';
 import { useTeamChatContext } from '../../context/TeamChatContext';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 
 export const ChatArea: React.FC = () => {
     const {
@@ -171,7 +172,7 @@ export const ChatArea: React.FC = () => {
                                             msg.sender === 'current-user' ? "bg-blue-600/30 border-blue-500/50" : "bg-black/20 border-white/5"
                                         )}>
                                             <i className="fas fa-map-marker-alt text-red-500" />
-                                            <span>VECTOR: {msg.location.area}</span>
+                                            <span>VECTOR: {formatLocationDisplay(msg.location) || '—'}</span>
                                         </div>
                                     )}
 

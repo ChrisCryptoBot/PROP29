@@ -42,11 +42,11 @@ export const SettingsTab: React.FC = () => {
                                     onChange={(value) => setSettings(prev => ({ ...prev, autoSharePermanentBans: value }))}
                                 />
                                 <SettingToggle 
-                                    label="Facial Recognition Alerts" 
-                                    description="Enable real-time push notifications for security staff" 
-                                    enabled={settings.facialRecognitionAlerts} 
+                                    label="Detection alerts" 
+                                    description="Notify when a detection (manual confirmation) is recorded" 
+                                    enabled={settings.detectionAlerts} 
                                     disabled={!isAdmin}
-                                    onChange={(value) => setSettings(prev => ({ ...prev, facialRecognitionAlerts: value }))}
+                                    onChange={(value) => setSettings(prev => ({ ...prev, detectionAlerts: value }))}
                                 />
                                 <SettingToggle 
                                     label="Strict ID Verification" 
@@ -72,11 +72,16 @@ export const SettingsTab: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="p-4 rounded-xl border border-white/5 bg-white/5">
-                                    <label className="block text-sm font-bold text-[color:var(--text-sub)] mb-2">Biometric Data Purge</label>
-                                    <select className="w-full px-3 py-2 border border-white/5 bg-white/5 text-[color:var(--text-main)] rounded-lg disabled:opacity-50" disabled={!isAdmin} defaultValue="30 Days Post-Expiry">
-                                        <option>Upon Expiry</option>
-                                        <option>30 Days Post-Expiry</option>
-                                        <option>90 Days Post-Expiry</option>
+                                    <label className="block text-sm font-bold text-[color:var(--text-sub)] mb-2">Reference photo retention</label>
+                                    <select
+                                        className="w-full px-3 py-2 border border-white/5 bg-white/5 text-[color:var(--text-main)] rounded-lg disabled:opacity-50"
+                                        disabled={!isAdmin}
+                                        value={settings.referencePhotoRetentionDays}
+                                        onChange={(e) => setSettings(prev => ({ ...prev, referencePhotoRetentionDays: e.target.value }))}
+                                    >
+                                        <option value="0">Upon Expiry</option>
+                                        <option value="30">30 Days Post-Expiry</option>
+                                        <option value="90">90 Days Post-Expiry</option>
                                     </select>
                                 </div>
                             </div>

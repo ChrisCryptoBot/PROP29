@@ -1,6 +1,6 @@
 // Security Operations Center - Types
 
-export type TabId = 'live' | 'recordings' | 'evidence' | 'analytics' | 'settings' | 'provisioning';
+export type TabId = 'live' | 'recordings' | 'evidence' | 'analytics' | 'settings' | 'provisioning' | 'audit-trail';
 
 export interface CameraEntry {
   id: string;
@@ -19,6 +19,17 @@ export interface CameraEntry {
   storage?: string;
   hardwareStatus?: Record<string, unknown>;
   lastKnownImageUrl?: string;
+  lastHeartbeat?: string; // ISO timestamp from backend
+  lastStatusChange?: string; // ISO timestamp from backend
+  version?: number; // Optimistic locking version
+  lastUpdated?: string; // ISO timestamp for reconciliation
+  lastKnownState?: {
+    timestamp: string;
+    status: 'online' | 'offline' | 'maintenance';
+    imageUrl?: string;
+    isRecording?: boolean;
+    motionDetectionEnabled?: boolean;
+  };
 }
 
 export interface CameraMetrics {

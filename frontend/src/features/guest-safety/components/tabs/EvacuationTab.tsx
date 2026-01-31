@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../../../components
 import { Button } from '../../../../components/UI/Button';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useGuestSafetyContext } from '../../context/GuestSafetyContext';
 import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
@@ -329,7 +330,7 @@ const EvacuationTab: React.FC = () => {
                         <p className="text-sm font-black text-white uppercase tracking-tight">{checkIn.guestName}</p>
                         <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Room {checkIn.roomNumber}</p>
                         {checkIn.location && (
-                          <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">Location: {checkIn.location}</p>
+                          <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">Location: {formatLocationDisplay(checkIn.location) || '—'}</p>
                         )}
                       </div>
                     </div>

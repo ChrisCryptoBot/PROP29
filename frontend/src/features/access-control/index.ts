@@ -10,6 +10,5 @@ export type { AccessControlContextValue, EmergencyController } from './context/A
 // Export all tab components
 export * from './components/tabs';
 
-// Export hook for external use if needed
-export { useAccessControlState } from './hooks/useAccessControlState';
-export type { UseAccessControlStateReturn } from './hooks/useAccessControlState';
+// Export hooks for external use if needed
+export * from './hooks';

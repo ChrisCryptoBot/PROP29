@@ -9,6 +9,7 @@ import { Button } from '../../../../components/UI/Button';
 import { useSoundMonitoringContext } from '../../context/SoundMonitoringContext';
 import { getSeverityBadgeClass, getStatusBadgeClass } from '../../utils/badgeHelpers';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 
 export const SoundAlertsTab: React.FC = () => {
@@ -59,7 +60,7 @@ export const SoundAlertsTab: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-black text-white uppercase tracking-tighter group-hover:text-blue-400 transition-colors">{alert.type}</h3>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-[color:var(--text-sub)]">{alert.location}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-[color:var(--text-sub)]">{formatLocationDisplay(alert.location as string | { lat?: number; lng?: number } | null) || '—'}</p>
                       <div className="flex items-center gap-4 mt-2">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center">
                           <i className="fas fa-id-badge mr-1.5 opacity-40" />

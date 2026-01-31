@@ -4,9 +4,11 @@
  * Contains ALL business logic following Gold Standard pattern
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, type Dispatch, type SetStateAction } from 'react';
 import { logger } from '../../../services/logger';
 import { useAuth } from '../../../contexts/AuthContext';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
 import {
   showLoading,
   dismissLoadingAndShowSuccess,
@@ -38,6 +40,13 @@ import type {
 } from '../types/visitor-security.types';
 import { VisitorStatus as StatusEnum } from '../types/visitor-security.types';
 import visitorService from '../services/VisitorService';
+import { useVisitorQueue } from './useVisitorQueue';
+
+export interface VisitorConflictInfo {
+  localVisitor: Visitor;
+  serverVisitor: Visitor;
+  localChanges: Partial<Visitor>;
+}
 
 export interface UseVisitorStateReturn {
   // Data - Core
@@ -50,8 +59,10 @@ export interface UseVisitorStateReturn {
 
   // Data - Mobile Agent & Hardware Integration
   mobileAgentDevices: MobileAgentDevice[];
+  setMobileAgentDevices: Dispatch<SetStateAction<MobileAgentDevice[]>>;
   mobileAgentSubmissions: MobileAgentSubmission[];
   hardwareDevices: HardwareDevice[];
+  setHardwareDevices: Dispatch<SetStateAction<HardwareDevice[]>>;
   systemConnectivity: SystemConnectivity | null;
   enhancedSettings: EnhancedVisitorSettings | null;
   bulkOperations: BulkVisitorOperation[];
@@ -97,7 +108,12 @@ export interface UseVisitorStateReturn {
   refreshVisitors: (filters?: VisitorFilters) => Promise<void>;
   getVisitor: (visitorId: string) => Promise<Visitor | null>;
   createVisitor: (visitor: VisitorCreate) => Promise<Visitor | null>;
-  updateVisitor: (visitorId: string, updates: VisitorUpdate) => Promise<Visitor | null>;
+  updateVisitor: (
+    visitorId: string, 
+    updates: VisitorUpdate,
+    conflictResolution?: 'overwrite' | 'merge' | 'cancel',
+    onConflict?: (conflict: { localVisitor: Visitor; serverVisitor: Visitor; localChanges: Partial<Visitor> }) => void
+  ) => Promise<Visitor | null>;
   deleteVisitor: (visitorId: string) => Promise<boolean>;
 
     // Actions - Visitor Management
@@ -115,6 +131,7 @@ export interface UseVisitorStateReturn {
   // Actions - Security Requests
   refreshSecurityRequests: (filters?: SecurityRequestFilters) => Promise<void>;
   createSecurityRequest: (request: SecurityRequestCreate) => Promise<SecurityRequest | null>;
+  assignSecurityRequest: (requestId: string, assignedTo: string, status?: 'in_progress' | 'completed' | 'cancelled') => Promise<SecurityRequest | null>;
 
   // Actions - Selection
   setSelectedVisitor: (visitor: Visitor | null) => void;
@@ -148,15 +165,28 @@ export interface UseVisitorStateReturn {
   getCachedDataSummary: () => { visitors_count: number; events_count: number; last_sync: string | null; offline_mode: boolean };
   enableOfflineMode: () => void;
   syncOfflineData: () => Promise<boolean>;
+
+  // Observability
+  lastSynced: string | null;
+
+  // Conflict resolution
+  conflictInfo: VisitorConflictInfo | null;
+  setConflictInfo: (info: VisitorConflictInfo | null) => void;
+  handleConflictResolution: (action: 'overwrite' | 'merge' | 'cancel') => Promise<void>;
+
+  // Offline queue
+  queuePendingCount: number;
+  queueFailedCount: number;
+  retryQueue: () => void;
 }
 
 export function useVisitorState(): UseVisitorStateReturn {
   const { user: currentUser } = useAuth();
 
-  // Get property_id from user (temporary: using roles[0] as placeholder)
-  // TODO: Replace with actual property_id from user object when available
+  // Property ID for scoping: prefer backend-provided property_id/assigned_property_ids when available
   const propertyId = useMemo(() => {
-    return currentUser?.roles?.[0] || 'default-property-id';
+    const user = currentUser as { property_id?: string; assigned_property_ids?: string[] } | undefined;
+    return user?.property_id ?? user?.assigned_property_ids?.[0] ?? currentUser?.roles?.[0] ?? 'default-property-id';
   }, [currentUser]);
 
   // State - Core
@@ -173,6 +203,7 @@ export function useVisitorState(): UseVisitorStateReturn {
   const [systemConnectivity, setSystemConnectivity] = useState<SystemConnectivity | null>(null);
   const [enhancedSettings, setEnhancedSettings] = useState<EnhancedVisitorSettings | null>(null);
   const [bulkOperations, setBulkOperations] = useState<BulkVisitorOperation[]>([]);
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   // Loading states
   const [loading, setLoading] = useState({
@@ -200,6 +231,22 @@ export function useVisitorState(): UseVisitorStateReturn {
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [showVisitorDetailsModal, setShowVisitorDetailsModal] = useState(false);
   const [showEventDetailsModal, setShowEventDetailsModal] = useState(false);
+  const [conflictInfo, setConflictInfo] = useState<VisitorConflictInfo | null>(null);
+
+  const refreshAfterSyncRef = useRef<{ refreshVisitors: () => void; refreshEvents: () => void; refreshSecurityRequests: () => void }>({
+    refreshVisitors: () => {},
+    refreshEvents: () => {},
+    refreshSecurityRequests: () => {}
+  });
+
+  // Offline queue (onSynced uses ref so refresh functions are available when flush runs)
+  const operationQueue = useVisitorQueue({
+    onSynced: () => {
+      refreshAfterSyncRef.current.refreshVisitors?.();
+      refreshAfterSyncRef.current.refreshEvents?.();
+      refreshAfterSyncRef.current.refreshSecurityRequests?.();
+    }
+  });
 
   // Computed: Filtered visitors
   const filteredVisitors = useMemo(() => {
@@ -226,19 +273,31 @@ export function useVisitorState(): UseVisitorStateReturn {
   const refreshVisitors = useCallback(async (filters?: VisitorFilters) => {
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
-      const response = await visitorService.getVisitors({
-        ...filters,
-        property_id: filters?.property_id || propertyId
-      });
+      const response = await retryWithBackoff(
+        () => visitorService.getVisitors({
+          ...filters,
+          property_id: filters?.property_id || propertyId
+        }),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
 
       if (response.data) {
         setVisitors(response.data);
+        setLastSynced(new Date().toISOString());
       }
     } catch (error) {
-      logger.error('Failed to fetch visitors', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'refreshVisitors'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshVisitors');
       showError('Failed to load visitors');
     } finally {
       setLoading(prev => ({ ...prev, visitors: false }));
@@ -256,10 +315,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       }
       return null;
     } catch (error) {
-      logger.error('Failed to fetch visitor', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'getVisitor'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'getVisitor');
       showError('Failed to load visitor');
       return null;
     } finally {
@@ -274,15 +330,21 @@ export function useVisitorState(): UseVisitorStateReturn {
       const result = await visitorService.checkBannedIndividual(name);
       return result;
     } catch (error) {
-      logger.error('Failed to check banned individual', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'checkBannedIndividual'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'checkBannedIndividual');
       return { is_banned: false, matches: [] };
     }
   }, []);
 
   const createVisitor = useCallback(async (visitor: VisitorCreate): Promise<Visitor | null> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({
+        type: 'create_visitor',
+        payload: { ...visitor, property_id: visitor.property_id || propertyId }
+      });
+      showSuccess('Queued for sync when online');
+      return null;
+    }
+
     // Check banned individuals before creating
     const fullName = `${visitor.first_name} ${visitor.last_name}`.trim();
     const bannedCheck = await checkBannedIndividual(fullName);
@@ -290,6 +352,7 @@ export function useVisitorState(): UseVisitorStateReturn {
     if (bannedCheck.is_banned && bannedCheck.matches.length > 0) {
       // Show warning but allow override for admins
       const isAdmin = currentUser?.roles?.some((role: string) => role.toUpperCase() === 'ADMIN');
+      // TODO: Replace with proper modal (Phase 2.6)
       const shouldProceed = isAdmin 
         ? window.confirm(
             `⚠️ WARNING: Visitor "${fullName}" matches ${bannedCheck.matches.length} banned individual(s).\n\n` +
@@ -307,13 +370,38 @@ export function useVisitorState(): UseVisitorStateReturn {
     const toastId = showLoading('Issuing ingress credentials...');
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
-      const response = await visitorService.createVisitor({
-        ...visitor,
-        property_id: visitor.property_id || propertyId
-      });
+      const response = await retryWithBackoff(
+        () => visitorService.createVisitor({
+          ...visitor,
+          property_id: visitor.property_id || propertyId
+        }),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (response.data) {
         const newVisitor = response.data;
         setVisitors(prev => [newVisitor, ...prev]);
+        setLastSynced(new Date().toISOString());
+        
+        // Notify other tabs
+        try {
+          const key = 'visitor-security:visitor-created';
+          localStorage.setItem(key, JSON.stringify(newVisitor.id));
+          setTimeout(() => localStorage.removeItem(key), 100);
+        } catch {
+          // Ignore localStorage errors (e.g., private browsing)
+        }
+        
         dismissLoadingAndShowSuccess(toastId, bannedCheck.is_banned 
           ? 'Ingress registration complete (Banned match overridden by admin)'
           : 'Ingress registration complete'
@@ -323,26 +411,127 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to process ingress registration');
       return null;
     } catch (error) {
-      logger.error('Failed to create visitor', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'createVisitor'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'createVisitor');
       dismissLoadingAndShowError(toastId, 'Failed to process ingress registration');
       return null;
     } finally {
       setLoading(prev => ({ ...prev, visitors: false }));
     }
-  }, [propertyId, checkBannedIndividual, currentUser]);
+  }, [propertyId, checkBannedIndividual, currentUser, operationQueue]);
 
   // Update Visitor
-  const updateVisitor = useCallback(async (visitorId: string, updates: VisitorUpdate): Promise<Visitor | null> => {
+  const updateVisitor = useCallback(async (
+    visitorId: string, 
+    updates: VisitorUpdate,
+    conflictResolution?: 'overwrite' | 'merge' | 'cancel',
+    onConflict?: (conflict: { localVisitor: Visitor; serverVisitor: Visitor; localChanges: Partial<Visitor> }) => void
+  ): Promise<Visitor | null> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({
+        type: 'update_visitor',
+        payload: { visitorId, updates }
+      });
+      showSuccess('Queued for sync when online');
+      return null;
+    }
+
     const toastId = showLoading('Updating record...');
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
-      const response = await visitorService.updateVisitor(visitorId, updates);
+      // Get current visitor for conflict detection
+      const currentVisitor = visitors.find(v => v.id === visitorId);
+      if (!currentVisitor) {
+        dismissLoadingAndShowError(toastId, 'Visitor not found');
+        return null;
+      }
+
+      // Conflict detection: check if updated_at is older than current
+      if (updates.updated_at && currentVisitor.updated_at) {
+        const localUpdatedAt = new Date(updates.updated_at).getTime();
+        const currentUpdatedAt = new Date(currentVisitor.updated_at).getTime();
+        
+        if (localUpdatedAt < currentUpdatedAt && onConflict) {
+          // Fetch latest from server
+          const latestResponse = await visitorService.getVisitor(visitorId);
+          if (latestResponse.data) {
+            const serverVisitor = latestResponse.data;
+            onConflict({
+              localVisitor: currentVisitor,
+              serverVisitor,
+              localChanges: updates
+            });
+            dismissLoadingAndShowError(toastId, 'Update cancelled due to conflict');
+            return null;
+          }
+        }
+      }
+
+      // Handle conflict resolution
+      let finalUpdates = updates;
+      if (conflictResolution === 'cancel') {
+        dismissLoadingAndShowError(toastId, 'Update cancelled');
+        await refreshVisitors();
+        return null;
+      } else if (conflictResolution === 'merge') {
+        // Merge: combine local changes with server version
+        const latestResponse = await visitorService.getVisitor(visitorId);
+        if (latestResponse.data) {
+          const latestVisitor = latestResponse.data;
+          finalUpdates = {
+            ...latestVisitor,
+            ...updates,
+            // Preserve server's updated_at to avoid another conflict
+            updated_at: latestVisitor.updated_at
+          } as VisitorUpdate;
+        }
+      } else if (conflictResolution === 'overwrite') {
+        // Overwrite: use local changes, but update updated_at to current time
+        finalUpdates = {
+          ...updates,
+          updated_at: new Date().toISOString()
+        };
+      }
+
+      // Handle 409 Conflict response
+      const response = await retryWithBackoff(
+        () => visitorService.updateVisitor(visitorId, finalUpdates),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              const status = axiosError.response?.status;
+              // Don't retry on 409 conflicts - set conflict state for modal
+              if (status === 409) {
+                visitorService.getVisitor(visitorId).then(latestResponse => {
+                  if (latestResponse.data) {
+                    setConflictInfo({
+                      localVisitor: currentVisitor,
+                      serverVisitor: latestResponse.data,
+                      localChanges: updates
+                    });
+                    onConflict?.({
+                      localVisitor: currentVisitor,
+                      serverVisitor: latestResponse.data,
+                      localChanges: updates
+                    });
+                  }
+                });
+                return false;
+              }
+              return status ? status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
+
       if (response.data) {
         const updatedVisitor = response.data;
         setVisitors(prev => prev.map(v => v.id === visitorId ? updatedVisitor : v));
+        setLastSynced(new Date().toISOString());
         if (selectedVisitor?.id === visitorId) {
           setSelectedVisitor(updatedVisitor);
         }
@@ -352,38 +541,74 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to update record');
       return null;
     } catch (error) {
-      logger.error('Failed to update visitor', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'updateVisitor'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'updateVisitor');
       dismissLoadingAndShowError(toastId, 'Failed to update record');
       return null;
     } finally {
       setLoading(prev => ({ ...prev, visitors: false }));
     }
-  }, [selectedVisitor]);
+  }, [selectedVisitor, visitors, refreshVisitors, operationQueue]);
+
+  // Handle conflict resolution from modal
+  const handleConflictResolution = useCallback(async (action: 'overwrite' | 'merge' | 'cancel') => {
+    if (!conflictInfo) return;
+    if (action === 'cancel') {
+      setConflictInfo(null);
+      return;
+    }
+    const result = await updateVisitor(conflictInfo.localVisitor.id, conflictInfo.localChanges, action);
+    if (result) setConflictInfo(null);
+  }, [conflictInfo, updateVisitor]);
 
   // Delete Visitor
   const deleteVisitor = useCallback(async (visitorId: string): Promise<boolean> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({ type: 'delete_visitor', payload: { visitorId } });
+      showSuccess('Queued for sync when online');
+      return false;
+    }
+
     const toastId = showLoading('Purging record...');
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
-      const response = await visitorService.deleteVisitor(visitorId);
+      const response = await retryWithBackoff(
+        () => visitorService.deleteVisitor(visitorId),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (!response.error) {
         setVisitors(prev => prev.filter(v => v.id !== visitorId));
+        setLastSynced(new Date().toISOString());
         if (selectedVisitor?.id === visitorId) {
           setSelectedVisitor(null);
         }
+        
+        // Notify other tabs
+        try {
+          const key = 'visitor-security:visitor-deleted';
+          localStorage.setItem(key, JSON.stringify(visitorId));
+          setTimeout(() => localStorage.removeItem(key), 100);
+        } catch {
+          // Ignore localStorage errors
+        }
+        
         dismissLoadingAndShowSuccess(toastId, 'Record purged successfully');
         return true;
       }
       dismissLoadingAndShowError(toastId, 'Failed to purge record');
       return false;
     } catch (error) {
-      logger.error('Failed to delete visitor', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'deleteVisitor'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'deleteVisitor');
       dismissLoadingAndShowError(toastId, 'Failed to purge record');
       return false;
     } finally {
@@ -393,6 +618,12 @@ export function useVisitorState(): UseVisitorStateReturn {
 
   // Check In Visitor
   const checkInVisitor = useCallback(async (visitorId: string): Promise<boolean> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({ type: 'check_in_visitor', payload: { visitorId } });
+      showSuccess('Queued for sync when online');
+      return false;
+    }
+
     const toastId = showLoading('Authorizing site ingress...');
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
@@ -409,10 +640,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Ingress authorization failed');
       return false;
     } catch (error) {
-      logger.error('Failed to check in visitor', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'checkInVisitor'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'checkInVisitor');
       dismissLoadingAndShowError(toastId, 'Ingress authorization failed');
       return false;
     } finally {
@@ -422,13 +650,34 @@ export function useVisitorState(): UseVisitorStateReturn {
 
   // Check Out Visitor
   const checkOutVisitor = useCallback(async (visitorId: string): Promise<boolean> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({ type: 'check_out_visitor', payload: { visitorId } });
+      showSuccess('Queued for sync when online');
+      return false;
+    }
+
     const toastId = showLoading('Authorizing site egress...');
     setLoading(prev => ({ ...prev, visitors: true }));
     try {
-      const response = await visitorService.checkOutVisitor(visitorId);
+      const response = await retryWithBackoff(
+        () => visitorService.checkOutVisitor(visitorId),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (response.data) {
         const updatedVisitor = response.data;
         setVisitors(prev => prev.map(v => v.id === visitorId ? updatedVisitor : v));
+        setLastSynced(new Date().toISOString());
         if (selectedVisitor?.id === visitorId) {
           setSelectedVisitor(updatedVisitor);
         }
@@ -438,10 +687,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Egress authorization failed');
       return false;
     } catch (error) {
-      logger.error('Failed to check out visitor', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'checkOutVisitor'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'checkOutVisitor');
       dismissLoadingAndShowError(toastId, 'Egress authorization failed');
       return false;
     } finally {
@@ -458,10 +704,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       }
       return null;
     } catch (error) {
-      logger.error('Failed to get QR code', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'getVisitorQRCode'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'getVisitorQRCode');
       showError('Failed to get QR code');
       return null;
     }
@@ -471,19 +714,31 @@ export function useVisitorState(): UseVisitorStateReturn {
   const refreshEvents = useCallback(async (filters?: EventFilters) => {
     setLoading(prev => ({ ...prev, events: true }));
     try {
-      const response = await visitorService.getEvents({
-        ...filters,
-        property_id: filters?.property_id || propertyId
-      });
+      const response = await retryWithBackoff(
+        () => visitorService.getEvents({
+          ...filters,
+          property_id: filters?.property_id || propertyId
+        }),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
 
       if (response.data) {
         setEvents(response.data);
+        setLastSynced(new Date().toISOString());
       }
     } catch (error) {
-      logger.error('Failed to fetch events', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'refreshEvents'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshEvents');
       showError('Failed to load events');
     } finally {
       setLoading(prev => ({ ...prev, events: false }));
@@ -502,10 +757,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       }
       return null;
     } catch (error) {
-      logger.error('Failed to fetch event', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'getEvent'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'getEvent');
       showError('Failed to load event');
       return null;
     } finally {
@@ -518,23 +770,35 @@ export function useVisitorState(): UseVisitorStateReturn {
     const toastId = showLoading('Registering event profile...');
     setLoading(prev => ({ ...prev, events: true }));
     try {
-      const response = await visitorService.createEvent({
-        ...event,
-        property_id: event.property_id || propertyId
-      });
+      const response = await retryWithBackoff(
+        () => visitorService.createEvent({
+          ...event,
+          property_id: event.property_id || propertyId
+        }),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (response.data) {
         const newEvent = response.data;
         setEvents(prev => [newEvent, ...prev]);
+        setLastSynced(new Date().toISOString());
         dismissLoadingAndShowSuccess(toastId, 'Event profile registered');
         return newEvent;
       }
       dismissLoadingAndShowError(toastId, 'Failed to register event profile');
       return null;
     } catch (error) {
-      logger.error('Failed to create event', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'createEvent'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'createEvent');
       dismissLoadingAndShowError(toastId, 'Failed to register event profile');
       return null;
     } finally {
@@ -544,25 +808,53 @@ export function useVisitorState(): UseVisitorStateReturn {
 
   // Delete Event
   const deleteEvent = useCallback(async (eventId: string): Promise<boolean> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({ type: 'delete_event', payload: { eventId } });
+      showSuccess('Queued for sync when online');
+      return false;
+    }
+
     const toastId = showLoading('Purging event profile...');
     setLoading(prev => ({ ...prev, events: true }));
     try {
-      const response = await visitorService.deleteEvent(eventId);
+      const response = await retryWithBackoff(
+        () => visitorService.deleteEvent(eventId),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (!response.error) {
         setEvents(prev => prev.filter(e => e.id !== eventId));
+        setLastSynced(new Date().toISOString());
         if (selectedEvent?.id === eventId) {
           setSelectedEvent(null);
         }
+        
+        // Notify other tabs
+        try {
+          const key = 'visitor-security:event-deleted';
+          localStorage.setItem(key, JSON.stringify(eventId));
+          setTimeout(() => localStorage.removeItem(key), 100);
+        } catch {
+          // Ignore localStorage errors
+        }
+        
         dismissLoadingAndShowSuccess(toastId, 'Event profile purged');
         return true;
       }
       dismissLoadingAndShowError(toastId, 'Failed to purge event profile');
       return false;
     } catch (error) {
-      logger.error('Failed to delete event', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'deleteEvent'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'deleteEvent');
       dismissLoadingAndShowError(toastId, 'Failed to purge event profile');
       return false;
     } finally {
@@ -583,85 +875,283 @@ export function useVisitorState(): UseVisitorStateReturn {
         setSecurityRequests(response.data);
       }
     } catch (error) {
-      logger.error('Failed to fetch security requests', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'refreshSecurityRequests'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshSecurityRequests');
       showError('Failed to load security requests');
     } finally {
       setLoading(prev => ({ ...prev, securityRequests: false }));
     }
   }, [propertyId]);
 
+  useEffect(() => {
+    refreshAfterSyncRef.current = {
+      refreshVisitors,
+      refreshEvents,
+      refreshSecurityRequests
+    };
+  }, [refreshVisitors, refreshEvents, refreshSecurityRequests]);
+
   // Create Security Request
   const createSecurityRequest = useCallback(async (request: SecurityRequestCreate): Promise<SecurityRequest | null> => {
+    if (!navigator.onLine) {
+      operationQueue.enqueue({ type: 'create_security_request', payload: request as unknown as Record<string, unknown> });
+      showSuccess('Queued for sync when online');
+      return null;
+    }
+
     const toastId = showLoading('Submitting clearance request...');
     try {
-      const response = await visitorService.createSecurityRequest(request);
+      const response = await retryWithBackoff(
+        () => visitorService.createSecurityRequest(request),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (response.data) {
         const newRequest = response.data;
         setSecurityRequests(prev => [newRequest, ...prev]);
+        setLastSynced(new Date().toISOString());
         dismissLoadingAndShowSuccess(toastId, 'Clearance request submitted');
         return newRequest;
       }
       dismissLoadingAndShowError(toastId, 'Clearance request failed');
       return null;
     } catch (error) {
-      logger.error('Failed to create security request', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'createSecurityRequest'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'createSecurityRequest');
       dismissLoadingAndShowError(toastId, 'Clearance request failed');
+      return null;
+    }
+  }, []);
+
+  // Assign Security Request
+  const assignSecurityRequest = useCallback(async (
+    requestId: string,
+    assignedTo: string,
+    status: 'in_progress' | 'completed' | 'cancelled' = 'in_progress'
+  ): Promise<SecurityRequest | null> => {
+    if (!navigator.onLine) {
+      showError('Assign when online to sync.');
+      return null;
+    }
+    try {
+      const response = await visitorService.assignSecurityRequest(requestId, assignedTo, status);
+      if (response.data) {
+        const updated = response.data;
+        setSecurityRequests(prev => prev.map(r => r.id === requestId ? { ...r, ...updated } : r));
+        setVisitors(prev => prev.map(v => ({
+          ...v,
+          security_requests: v.security_requests?.map(r => r.id === requestId ? { ...r, ...updated } : r) ?? []
+        })));
+        setLastSynced(new Date().toISOString());
+        showSuccess('Request assigned');
+        return updated;
+      }
+      return null;
+    } catch (error) {
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'assignSecurityRequest');
+      showError('Failed to assign request');
       return null;
     }
   }, []);
 
   // Bulk Delete Visitors
   const bulkDeleteVisitors = useCallback(async (visitorIds: string[]): Promise<boolean> => {
+    if (loading.bulkOperation) {
+      showError('Another bulk operation is in progress');
+      return false;
+    }
+
     const toastId = showLoading('Purging records...');
-    setLoading(prev => ({ ...prev, visitors: true }));
+    setLoading(prev => ({ ...prev, visitors: true, bulkOperation: true }));
+    const startTime = Date.now();
+    
     try {
-      await Promise.all(visitorIds.map(id => visitorService.deleteVisitor(id)));
-      setVisitors(prev => prev.filter(v => !visitorIds.includes(v.id)));
-      if (selectedVisitor && visitorIds.includes(selectedVisitor.id)) {
+      const operationState = {
+        successful: [] as string[],
+        failed: [] as Array<{ id: string; error: string }>
+      };
+
+      const results = await Promise.allSettled(
+        visitorIds.map(id =>
+          retryWithBackoff(
+            () => visitorService.deleteVisitor(id),
+            {
+              maxRetries: 2,
+              baseDelay: 500,
+              maxDelay: 5000,
+              shouldRetry: (error) => {
+                if (error && typeof error === 'object' && 'response' in error) {
+                  const axiosError = error as { response?: { status?: number } };
+                  return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                }
+                return true;
+              }
+            }
+          )
+        )
+      );
+
+      results.forEach((result, index) => {
+        const id = visitorIds[index];
+        if (result.status === 'fulfilled' && !result.value.error) {
+          operationState.successful.push(id);
+        } else {
+          const errorMsg = result.status === 'rejected' 
+            ? (result.reason instanceof Error ? result.reason.message : String(result.reason))
+            : 'Unknown error';
+          operationState.failed.push({ id, error: errorMsg });
+        }
+      });
+
+      setVisitors(prev => prev.filter(v => !operationState.successful.includes(v.id)));
+      setLastSynced(new Date().toISOString());
+      
+      if (selectedVisitor && operationState.successful.includes(selectedVisitor.id)) {
         setSelectedVisitor(null);
       }
-      dismissLoadingAndShowSuccess(toastId, 'Records purged successfully');
-      return true;
+
+      const duration = Date.now() - startTime;
+      if (operationState.failed.length === 0) {
+        dismissLoadingAndShowSuccess(toastId, `Successfully purged ${operationState.successful.length} record(s)`);
+        logger.info('Bulk delete completed', {
+          module: 'VisitorSecurity',
+          action: 'bulkDeleteVisitors',
+          successful: operationState.successful.length,
+          duration
+        });
+      } else {
+        dismissLoadingAndShowError(toastId, `${operationState.successful.length} succeeded, ${operationState.failed.length} failed`);
+        logger.warn('Bulk delete partial failure', {
+          module: 'VisitorSecurity',
+          action: 'bulkDeleteVisitors',
+          successful: operationState.successful.length,
+          failed: operationState.failed.length,
+          duration
+        });
+      }
+
+      // Notify other tabs
+      try {
+        const key = 'visitor-security:bulk-operation';
+        localStorage.setItem(key, JSON.stringify({ type: 'bulk_delete', count: operationState.successful.length }));
+        setTimeout(() => localStorage.removeItem(key), 100);
+      } catch {
+        // Ignore localStorage errors
+      }
+
+      return operationState.failed.length === 0;
     } catch (error) {
-      logger.error('Failed to delete visitors', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'bulkDeleteVisitors'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'bulkDeleteVisitors');
       dismissLoadingAndShowError(toastId, 'Failed to purge records');
       return false;
     } finally {
-      setLoading(prev => ({ ...prev, visitors: false }));
+      setLoading(prev => ({ ...prev, visitors: false, bulkOperation: false }));
     }
-  }, [selectedVisitor]);
+  }, [selectedVisitor, loading.bulkOperation]);
 
   // Bulk Status Change
   const bulkStatusChange = useCallback(async (visitorIds: string[], status: VisitorStatus | string): Promise<boolean> => {
+    if (loading.bulkOperation) {
+      showError('Another bulk operation is in progress');
+      return false;
+    }
+
     const toastId = showLoading('Updating record state...');
-    setLoading(prev => ({ ...prev, visitors: true }));
+    setLoading(prev => ({ ...prev, visitors: true, bulkOperation: true }));
+    const startTime = Date.now();
+    
     try {
-      await Promise.all(visitorIds.map(id => visitorService.updateVisitor(id, { status })));
-      setVisitors(prev => prev.map(v =>
-        visitorIds.includes(v.id) ? { ...v, status } : v
-      ));
-      dismissLoadingAndShowSuccess(toastId, 'Record state updated');
-      return true;
-    } catch (error) {
-      logger.error('Failed to update visitor status', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'bulkStatusChange'
+      const operationState = {
+        successful: [] as string[],
+        failed: [] as Array<{ id: string; error: string }>
+      };
+
+      const results = await Promise.allSettled(
+        visitorIds.map(id =>
+          retryWithBackoff(
+            () => visitorService.updateVisitor(id, { status } as VisitorUpdate),
+            {
+              maxRetries: 2,
+              baseDelay: 500,
+              maxDelay: 5000,
+              shouldRetry: (error) => {
+                if (error && typeof error === 'object' && 'response' in error) {
+                  const axiosError = error as { response?: { status?: number } };
+                  return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+                }
+                return true;
+              }
+            }
+          )
+        )
+      );
+
+      results.forEach((result, index) => {
+        const id = visitorIds[index];
+        if (result.status === 'fulfilled' && result.value.data) {
+          operationState.successful.push(id);
+        } else {
+          const errorMsg = result.status === 'rejected' 
+            ? (result.reason instanceof Error ? result.reason.message : String(result.reason))
+            : 'Unknown error';
+          operationState.failed.push({ id, error: errorMsg });
+        }
       });
+
+      // Update successful items in state
+      setVisitors(prev => prev.map(v =>
+        operationState.successful.includes(v.id) ? { ...v, status } : v
+      ));
+      setLastSynced(new Date().toISOString());
+
+      const duration = Date.now() - startTime;
+      if (operationState.failed.length === 0) {
+        dismissLoadingAndShowSuccess(toastId, `Successfully updated ${operationState.successful.length} record(s)`);
+        logger.info('Bulk status change completed', {
+          module: 'VisitorSecurity',
+          action: 'bulkStatusChange',
+          successful: operationState.successful.length,
+          status,
+          duration
+        });
+      } else {
+        dismissLoadingAndShowError(toastId, `${operationState.successful.length} succeeded, ${operationState.failed.length} failed`);
+        logger.warn('Bulk status change partial failure', {
+          module: 'VisitorSecurity',
+          action: 'bulkStatusChange',
+          successful: operationState.successful.length,
+          failed: operationState.failed.length,
+          status,
+          duration
+        });
+      }
+
+      // Notify other tabs
+      try {
+        const key = 'visitor-security:bulk-operation';
+        localStorage.setItem(key, JSON.stringify({ type: 'bulk_status_change', count: operationState.successful.length, status }));
+        setTimeout(() => localStorage.removeItem(key), 100);
+      } catch {
+        // Ignore localStorage errors
+      }
+
+      return operationState.failed.length === 0;
+    } catch (error) {
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'bulkStatusChange');
       dismissLoadingAndShowError(toastId, 'Failed to update record state');
       return false;
     } finally {
-      setLoading(prev => ({ ...prev, visitors: false }));
+      setLoading(prev => ({ ...prev, visitors: false, bulkOperation: false }));
     }
-  }, []);
+  }, [loading.bulkOperation]);
 
   // =======================================================
   // MOBILE AGENT & HARDWARE INTEGRATION - MSO PRODUCTION READINESS
@@ -681,10 +1171,7 @@ export function useVisitorState(): UseVisitorStateReturn {
         });
       }
     } catch (error) {
-      logger.error('Failed to fetch mobile agents', error instanceof Error ? error : new Error(String(error)), {
-        module: 'VisitorSecurity',
-        action: 'refreshMobileAgents'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshMobileAgents');
       // Don't show error for background refresh
     } finally {
       setLoading(prev => ({ ...prev, mobileAgents: false }));
@@ -709,7 +1196,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to register mobile agent');
       return null;
     } catch (error) {
-      logger.error('Failed to register mobile agent', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'registerMobileAgent');
       dismissLoadingAndShowError(toastId, 'Failed to register mobile agent');
       return null;
     }
@@ -723,7 +1210,7 @@ export function useVisitorState(): UseVisitorStateReturn {
         setMobileAgentSubmissions(response.data);
       }
     } catch (error) {
-      logger.error('Failed to fetch agent submissions', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshAgentSubmissions');
     } finally {
       setLoading(prev => ({ ...prev, agentSubmissions: false }));
     }
@@ -755,7 +1242,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, `Failed to ${action} submission`);
       return false;
     } catch (error) {
-      logger.error('Failed to process agent submission', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'processAgentSubmission');
       dismissLoadingAndShowError(toastId, `Failed to ${action} submission`);
       return false;
     }
@@ -779,7 +1266,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to synchronize mobile agent');
       return false;
     } catch (error) {
-      logger.error('Failed to sync mobile agent', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'syncMobileAgent');
       dismissLoadingAndShowError(toastId, 'Failed to synchronize mobile agent');
       return false;
     }
@@ -789,7 +1276,21 @@ export function useVisitorState(): UseVisitorStateReturn {
   const refreshHardwareDevices = useCallback(async (): Promise<void> => {
     setLoading(prev => ({ ...prev, hardwareDevices: true }));
     try {
-      const response = await visitorService.getHardwareDevices(propertyId);
+      const response = await retryWithBackoff(
+        () => visitorService.getHardwareDevices(propertyId),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (response.data) {
         setHardwareDevices(response.data);
         logger.info('Hardware devices refreshed', {
@@ -799,7 +1300,7 @@ export function useVisitorState(): UseVisitorStateReturn {
         });
       }
     } catch (error) {
-      logger.error('Failed to fetch hardware devices', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshHardwareDevices');
       // Don't show error for background refresh
     } finally {
       setLoading(prev => ({ ...prev, hardwareDevices: false }));
@@ -818,7 +1319,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       }
       return null;
     } catch (error) {
-      logger.error('Failed to get device status', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'getDeviceStatus');
       return null;
     }
   }, []);
@@ -826,7 +1327,21 @@ export function useVisitorState(): UseVisitorStateReturn {
   const printVisitorBadge = useCallback(async (visitorId: string, printerId?: string): Promise<boolean> => {
     const toastId = showLoading('Sending badge to printer...');
     try {
-      const response = await visitorService.printVisitorBadge(visitorId, printerId);
+      const response = await retryWithBackoff(
+        () => visitorService.printVisitorBadge(visitorId, printerId),
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 10000,
+          shouldRetry: (error) => {
+            if (error && typeof error === 'object' && 'response' in error) {
+              const axiosError = error as { response?: { status?: number } };
+              return axiosError.response?.status ? axiosError.response.status >= 500 : true;
+            }
+            return true;
+          }
+        }
+      );
       if (response.data) {
         const { print_job_id, status } = response.data;
         if (status === 'queued' || status === 'printing') {
@@ -840,7 +1355,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to print badge');
       return false;
     } catch (error) {
-      logger.error('Failed to print badge', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'printVisitorBadge');
       dismissLoadingAndShowError(toastId, 'Failed to print badge');
       return false;
     }
@@ -855,7 +1370,7 @@ export function useVisitorState(): UseVisitorStateReturn {
         setSystemConnectivity(response.data);
       }
     } catch (error) {
-      logger.error('Failed to get system connectivity', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshSystemStatus');
       // Set offline status on error
       setSystemConnectivity({
         network_status: 'offline',
@@ -889,7 +1404,7 @@ export function useVisitorState(): UseVisitorStateReturn {
         setEnhancedSettings(response.data);
       }
     } catch (error) {
-      logger.error('Failed to load enhanced settings', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'refreshEnhancedSettings');
       // Set default settings on error
       setEnhancedSettings({
         visitor_retention_days: 365,
@@ -950,7 +1465,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to update settings');
       return false;
     } catch (error) {
-      logger.error('Failed to update enhanced settings', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'updateEnhancedSettings');
       dismissLoadingAndShowError(toastId, 'Failed to update settings');
       return false;
     }
@@ -993,7 +1508,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowSuccess(toastId, 'Data synchronized successfully');
       return true;
     } catch (error) {
-      logger.error('Failed to sync offline data', error instanceof Error ? error : new Error(String(error)));
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'syncOfflineData');
       dismissLoadingAndShowError(toastId, 'Failed to synchronize data');
       return false;
     }
@@ -1039,8 +1554,10 @@ export function useVisitorState(): UseVisitorStateReturn {
 
     // Data - Mobile Agent & Hardware Integration
     mobileAgentDevices,
+    setMobileAgentDevices,
     mobileAgentSubmissions,
     hardwareDevices,
+    setHardwareDevices,
     systemConnectivity,
     enhancedSettings,
     bulkOperations,
@@ -1091,6 +1608,7 @@ export function useVisitorState(): UseVisitorStateReturn {
     // Actions - Security Requests
     refreshSecurityRequests,
     createSecurityRequest,
+    assignSecurityRequest,
 
     // Actions - Selection
     setSelectedVisitor,
@@ -1120,9 +1638,22 @@ export function useVisitorState(): UseVisitorStateReturn {
     refreshEnhancedSettings,
     updateEnhancedSettings,
 
-    // Actions - MSO Desktop Support
-    getCachedDataSummary,
-    enableOfflineMode,
-    syncOfflineData,
+  // Actions - MSO Desktop Support
+  getCachedDataSummary,
+  enableOfflineMode,
+  syncOfflineData,
+
+  // Observability
+  lastSynced,
+
+  // Conflict resolution
+  conflictInfo,
+  setConflictInfo,
+  handleConflictResolution,
+
+  // Offline queue
+  queuePendingCount: operationQueue.pendingCount,
+  queueFailedCount: operationQueue.failedCount,
+  retryQueue: operationQueue.retryFailed,
   };
 }

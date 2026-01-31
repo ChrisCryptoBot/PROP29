@@ -10,41 +10,48 @@ export const OfflineQueueManager: React.FC = () => {
     const {
         checkInQueuePendingCount,
         checkInQueueFailedCount,
-        retryCheckInQueue
+        retryCheckInQueue,
+        operationQueuePendingCount,
+        operationQueueFailedCount,
+        retryOperationQueue
     } = usePatrolContext();
 
     const handleRetryFailed = () => {
         try {
             retryCheckInQueue();
-            showSuccess('Retrying failed check-ins...');
+            retryOperationQueue();
+            showSuccess('Retrying failed operations...');
         } catch (error) {
-            showError('Failed to retry check-ins');
+            showError('Failed to retry operations');
         }
     };
 
-    if (checkInQueuePendingCount === 0 && checkInQueueFailedCount === 0) {
+    const totalPending = checkInQueuePendingCount + operationQueuePendingCount;
+    const totalFailed = checkInQueueFailedCount + operationQueueFailedCount;
+
+    if (totalPending === 0 && totalFailed === 0) {
         return null;
     }
 
     return (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
             <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                 <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                        <div className="w-10 h-10 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-sync-alt text-white"></i>
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest">Offline Queue</span>
                     </span>
                     <div className="flex items-center gap-2">
-                        {checkInQueuePendingCount > 0 && (
+                        {totalPending > 0 && (
                             <Badge variant="warning" className="glass-card border-none">
-                                {checkInQueuePendingCount} pending
+                                {totalPending} pending
                             </Badge>
                         )}
-                        {checkInQueueFailedCount > 0 && (
+                        {totalFailed > 0 && (
                             <Badge variant="destructive" className="glass-card border-none">
-                                {checkInQueueFailedCount} failed
+                                {totalFailed} failed
                             </Badge>
                         )}
                     </div>
@@ -52,30 +59,34 @@ export const OfflineQueueManager: React.FC = () => {
             </CardHeader>
             <CardContent className="px-6 py-6">
                 <div className="space-y-4">
-                    {checkInQueuePendingCount > 0 && (
+                    {totalPending > 0 && (
                         <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-bold text-amber-400">
-                                        {checkInQueuePendingCount} check-in{checkInQueuePendingCount !== 1 ? 's' : ''} pending sync
+                                        {totalPending} operation{totalPending !== 1 ? 's' : ''} pending sync
                                     </p>
                                     <p className="text-[10px] text-amber-300/70 mt-1">
-                                        These will sync automatically when connection is restored
+                                        {checkInQueuePendingCount > 0 && `${checkInQueuePendingCount} check-in${checkInQueuePendingCount !== 1 ? 's' : ''}, `}
+                                        {operationQueuePendingCount > 0 && `${operationQueuePendingCount} other operation${operationQueuePendingCount !== 1 ? 's' : ''}`}
+                                        {checkInQueuePendingCount === 0 && operationQueuePendingCount === 0 && 'These will sync automatically when connection is restored'}
                                     </p>
                                 </div>
                                 <i className="fas fa-clock text-amber-400/50 text-2xl" />
                             </div>
                         </div>
                     )}
-                    {checkInQueueFailedCount > 0 && (
+                    {totalFailed > 0 && (
                         <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <p className="text-sm font-bold text-red-400">
-                                        {checkInQueueFailedCount} check-in{checkInQueueFailedCount !== 1 ? 's' : ''} failed to sync
+                                        {totalFailed} operation{totalFailed !== 1 ? 's' : ''} failed to sync
                                     </p>
                                     <p className="text-[10px] text-red-300/70 mt-1">
-                                        These check-ins exceeded retry attempts and need manual intervention
+                                        {checkInQueueFailedCount > 0 && `${checkInQueueFailedCount} check-in${checkInQueueFailedCount !== 1 ? 's' : ''}, `}
+                                        {operationQueueFailedCount > 0 && `${operationQueueFailedCount} other operation${operationQueueFailedCount !== 1 ? 's' : ''}`}
+                                        {checkInQueueFailedCount === 0 && operationQueueFailedCount === 0 && 'These operations exceeded retry attempts and need manual intervention'}
                                     </p>
                                 </div>
                                 <i className="fas fa-exclamation-triangle text-red-400/50 text-2xl" />
@@ -87,15 +98,15 @@ export const OfflineQueueManager: React.FC = () => {
                                 className="w-full"
                             >
                                 <i className="fas fa-redo mr-2" />
-                                Retry Failed Check-ins
+                                Retry Failed Operations
                             </Button>
                         </div>
                     )}
-                    {checkInQueuePendingCount === 0 && checkInQueueFailedCount === 0 && (
+                    {totalPending === 0 && totalFailed === 0 && (
                         <EmptyState
                             icon="fas fa-check-circle"
                             title="Queue is empty"
-                            description="All check-ins have been synced successfully"
+                            description="All operations have been synced successfully"
                         />
                     )}
                 </div>

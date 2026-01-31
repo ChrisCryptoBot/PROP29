@@ -154,6 +154,16 @@ export const CreateRouteModal: React.FC<CreateRouteModalProps> = ({ isOpen, onCl
             onClose={onClose}
             title={initialData ? 'Edit Route' : 'Create Route'}
             className="max-w-2xl"
+            footer={
+                <>
+                    <Button onClick={onClose} variant="subtle" className="text-xs font-black uppercase tracking-widest">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSubmit} variant="primary" className="text-xs font-black uppercase tracking-widest">
+                        {initialData ? 'Update Route' : 'Create Route'}
+                    </Button>
+                </>
+            }
         >
             <div className="space-y-4">
                 <div>
@@ -229,14 +239,6 @@ export const CreateRouteModal: React.FC<CreateRouteModalProps> = ({ isOpen, onCl
                             <option value="weekly" className="bg-slate-900">Weekly</option>
                         </select>
                     </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-                <Button onClick={onClose} variant="subtle" className="text-xs font-black uppercase tracking-widest">
-                    Cancel
-                </Button>
-                <Button onClick={handleSubmit} variant="primary" className="text-xs font-black uppercase tracking-widest">
-                    {initialData ? 'Update Route' : 'Create Route'}
-                </Button>
             </div>
         </Modal>
     );

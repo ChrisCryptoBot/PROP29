@@ -28,8 +28,8 @@ import ModuleShell from '../../components/Layout/ModuleShell';
 
 const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'storage', label: 'Storage Management' },
-    { id: 'analytics', label: 'Analytics & Reports' },
+    { id: 'storage', label: 'Storage' },
+    { id: 'analytics', label: 'Analytics' },
     { id: 'settings', label: 'Settings' }
 ];
 
@@ -107,6 +107,20 @@ const LostFoundContent: React.FC<{
                     isOpen={showReportModal}
                     onClose={() => setShowReportModal(false)}
                 />
+
+                {/* Quick Action FAB - Gold Standard */}
+                <div className="fixed bottom-8 right-8 z-50">
+                    <Button
+                        onClick={() => setShowRegisterModal(true)}
+                        variant="primary"
+                        size="icon"
+                        className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
+                        title="Register New Item"
+                        aria-label="Register New Item"
+                    >
+                        <i className="fas fa-plus text-xl" />
+                    </Button>
+                </div>
             </ModuleShell>
         );
     };

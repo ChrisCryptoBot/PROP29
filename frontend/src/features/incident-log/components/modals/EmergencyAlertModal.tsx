@@ -21,8 +21,7 @@ const EMERGENCY_ALERT_TYPES = [
 ];
 
 export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen, onClose }) => {
-    const { createEmergencyAlert } = useIncidentLogContext();
-    const propertyId = localStorage.getItem('propertyId') || '';
+    const { createEmergencyAlert, propertyId } = useIncidentLogContext();
 
     const [formData, setFormData] = useState<Partial<EmergencyAlertCreate>>({
         property_id: propertyId,
@@ -162,7 +161,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
         >
             <div className="space-y-6">
                 <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                    <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                         <i className="fas fa-exclamation-triangle text-white" />
                     </div>
                     <div>
@@ -172,7 +171,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                     {/* Warning Banner */}
                     <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                         <div className="flex items-start space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-white/5 shadow-2xl">
+                            <div className="w-8 h-8 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-white/5 ">
                                 <i className="fas fa-exclamation text-white text-sm" />
                             </div>
                             <div>

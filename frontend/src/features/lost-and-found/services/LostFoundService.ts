@@ -15,7 +15,6 @@ import type {
   LostFoundItemUpdate,
   LostFoundItemFilters,
   LostFoundClaim,
-  LostFoundMatch,
   LostFoundMetrics,
   LostFoundSettings
 } from '../types/lost-and-found.types';
@@ -99,19 +98,6 @@ class LostFoundService {
     return apiService.post<{ notified: boolean }>(`/lost-found/items/${itemId}/notify`, body);
   }
 
-  /**
-   * Match items using AI
-   * POST /api/lost-found/match
-   */
-  async matchItems(
-    itemType: string,
-    description: string
-  ): Promise<ApiResponse<LostFoundMatch[]>> {
-    return apiService.post<LostFoundMatch[]>('/lost-found/match', {
-      item_type: itemType,
-      description
-    });
-  }
 
   /**
    * Get metrics/analytics

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { useSecurityOperationsContext } from '../../context/SecurityOperationsContext';
+import { useSecurityOperationsTelemetry } from '../../hooks/useSecurityOperationsTelemetry';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { cn } from '../../../../utils/cn';
 
@@ -15,6 +16,7 @@ export const EvidenceManagementTab: React.FC = () => {
     archiveEvidence,
     canManageEvidence,
   } = useSecurityOperationsContext();
+  const { trackAction } = useSecurityOperationsTelemetry();
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'reviewed' | 'archived'>('all');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -49,6 +51,7 @@ export const EvidenceManagementTab: React.FC = () => {
   const handleBulkApprove = async () => {
     if (selectedItems.size === 0) return;
     
+    trackAction('bulk_review', 'evidence', { count: selectedItems.size });
     setBulkActionLoading(true);
     try {
       const promises = Array.from(selectedItems).map(itemId => markEvidenceReviewed(itemId));
@@ -62,6 +65,7 @@ export const EvidenceManagementTab: React.FC = () => {
   const handleBulkArchive = async () => {
     if (selectedItems.size === 0) return;
     
+    trackAction('bulk_archive', 'evidence', { count: selectedItems.size });
     setBulkActionLoading(true);
     try {
       const promises = Array.from(selectedItems).map(itemId => archiveEvidence(itemId));
@@ -77,8 +81,9 @@ export const EvidenceManagementTab: React.FC = () => {
 
   if (loading.evidence && list.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading evidence" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Evidence...</p>
       </div>
     );
   }
@@ -87,8 +92,8 @@ export const EvidenceManagementTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Evidence Management">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Evidence Management</h2>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-1 italic opacity-70 text-slate-400">
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Evidence Management</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Review and archive video and photo evidence
           </p>
         </div>
@@ -116,7 +121,10 @@ export const EvidenceManagementTab: React.FC = () => {
                       ? "bg-white/10 border-white/20 text-white"
                       : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
                   )}
-                  onClick={() => setStatusFilter(status)}
+                  onClick={() => {
+                    setStatusFilter(status);
+                    trackAction('filter_change', 'evidence', { filter: status });
+                  }}
                 >
                   {status === 'all' ? 'All Evidence' : status.charAt(0).toUpperCase() + status.slice(1)}
                 </Button>

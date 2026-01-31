@@ -6,7 +6,9 @@ from schemas import (
     EmergencyAlertCreate, EmergencyAlertResponse,
     IncidentSettings, IncidentSettingsResponse,
     PatternRecognitionRequest, PatternRecognitionResponse,
-    ReportExportRequest, UserActivityResponse
+    ReportExportRequest, UserActivityResponse,
+    BulkOperationResult,
+    BulkApproveRequest, BulkRejectRequest, BulkDeleteRequest, BulkStatusRequest
 )
 from services.incident_service import IncidentService
 from api.auth_dependencies import get_current_user, require_admin_role, check_user_has_property_access
@@ -34,6 +36,11 @@ class AIClassificationResponse(BaseModel):
     confidence: float
     reasoning: str
     fallback_used: bool
+
+
+class ConvertAlertBody(BaseModel):
+    """Request body for emergency alert convert"""
+    overrides: Optional[Dict[str, Any]] = None
 
 
 @router.get("/", response_model=List[IncidentResponse])
@@ -380,3 +387,182 @@ async def export_report(
     except Exception as e:
         logger.error(f"Failed to export report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to export report. Please try again.")
+
+
+# =======================================================
+# PRODUCTION READINESS STUBS
+# These endpoints are called by the frontend but not yet fully implemented
+# Returning 501 (Not Implemented) or mock data to prevent 404s
+# =======================================================
+
+@router.post("/bulk/approve", response_model=BulkOperationResult)
+async def bulk_approve_incidents(
+    body: BulkApproveRequest,
+    current_user: User = Depends(get_current_user),
+    request_obj: Request = None
+):
+    """Bulk approve incidents (pending_review -> open)."""
+    request_info = {
+        "ip_address": request_obj.client.host if request_obj and request_obj.client else "0.0.0.0",
+        "user_agent": request_obj.headers.get("user-agent", "unknown") if request_obj else "unknown",
+        "session_id": request_obj.headers.get("x-session-id") if request_obj else None
+    } if request_obj else {}
+    return await IncidentService.bulk_approve_incidents(body, str(current_user.user_id), request_info)
+
+
+@router.post("/bulk/reject", response_model=BulkOperationResult)
+async def bulk_reject_incidents(
+    body: BulkRejectRequest,
+    current_user: User = Depends(get_current_user),
+    request_obj: Request = None
+):
+    """Bulk reject incidents (set status closed with rejection reason)."""
+    request_info = {
+        "ip_address": request_obj.client.host if request_obj and request_obj.client else "0.0.0.0",
+        "user_agent": request_obj.headers.get("user-agent", "unknown") if request_obj else "unknown",
+        "session_id": request_obj.headers.get("x-session-id") if request_obj else None
+    } if request_obj else {}
+    return await IncidentService.bulk_reject_incidents(body, str(current_user.user_id), request_info)
+
+
+@router.post("/bulk/delete", response_model=BulkOperationResult)
+async def bulk_delete_incidents(
+    body: BulkDeleteRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Bulk delete incidents (admin/property access)."""
+    return await IncidentService.bulk_delete_incidents(body, str(current_user.user_id))
+
+
+@router.post("/bulk/status", response_model=BulkOperationResult)
+async def bulk_status_change(
+    body: BulkStatusRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Bulk status change."""
+    return await IncidentService.bulk_status_change(body, str(current_user.user_id))
+
+
+@router.get("/agents/performance")
+async def get_agent_performance_metrics(
+    agent_id: Optional[str] = Query(None),
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get agent performance metrics - STUB (returns empty array)"""
+    return []
+
+
+@router.get("/agents/{agent_id}/trust-score")
+async def get_agent_trust_score(
+    agent_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get agent trust score - STUB (returns default)"""
+    return {"trust_score": 50, "level": "medium"}
+
+
+@router.get("/hardware/health")
+async def get_hardware_health(
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all hardware device health - STUB (returns empty array)"""
+    return []
+
+
+@router.get("/hardware/{device_id}/status")
+async def get_hardware_device_status(
+    device_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get hardware device status. Returns default unknown when device not yet registered (Plug & Play ready)."""
+    return {
+        "device_id": device_id,
+        "device_name": "Unknown device",
+        "device_type": "other",
+        "status": "offline",
+        "last_heartbeat": None,
+        "health_score": 0,
+        "incident_count_24h": 0,
+        "issues": []
+    }
+
+
+@router.get("/hardware/summary")
+async def get_hardware_summary(
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get hardware incident summary - STUB (returns empty)"""
+    return {
+        "total_devices": 0,
+        "online_devices": 0,
+        "offline_devices": 0,
+        "devices_with_incidents": 0,
+        "total_incidents": 0
+    }
+
+
+@router.get("/settings/enhanced")
+async def get_enhanced_settings(
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get enhanced settings - STUB (returns defaults)"""
+    return {
+        "agent_settings": {
+            "auto_approval_enabled": False,
+            "auto_approval_threshold": 80,
+            "bulk_approval_enabled": True,
+            "agent_performance_alerts": True,
+            "low_trust_score_threshold": 50,
+            "require_manager_review_below_threshold": True,
+            "performance_metrics_retention_days": 90,
+            "auto_flag_declining_agents": True,
+            "notification_preferences": {
+                "email_low_trust_alerts": True,
+                "email_bulk_operation_results": False,
+                "email_agent_performance_reports": True
+            }
+        },
+        "hardware_settings": {
+            "auto_create_incidents_from_events": False,
+            "device_offline_alert_enabled": True,
+            "device_offline_threshold_minutes": 15,
+            "supported_device_types": ["camera", "sensor", "access_control"],
+            "auto_assign_hardware_incidents": False,
+            "hardware_incident_default_severity": "MEDIUM",
+            "device_maintenance_alerts": True,
+            "low_battery_alert_threshold": 20
+        },
+        "emergency_alert_settings": {
+            "auto_convert_to_incident": False,
+            "require_confirmation": True,
+            "notification_channels": ["email", "sms"],
+            "escalation_timeout_minutes": 5
+        }
+    }
+
+
+@router.put("/settings/enhanced")
+async def update_enhanced_settings(
+    settings: Dict[str, Any],
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Update enhanced settings. Accepts and returns settings (persistence can be added later)."""
+    return settings
+
+
+@router.post("/emergency-alert/{alert_id}/convert", response_model=IncidentResponse)
+async def convert_emergency_alert(
+    alert_id: str,
+    body: Optional[ConvertAlertBody] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Convert emergency alert (stored as incident) to incident with optional overrides."""
+    overrides = body.overrides if body else None
+    return await IncidentService.convert_emergency_alert_to_incident(
+        alert_id, str(current_user.user_id), overrides
+    )

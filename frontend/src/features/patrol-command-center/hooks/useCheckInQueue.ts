@@ -3,7 +3,7 @@
  * Used when checkpoint check-ins fail due to network; flushed on online + periodic interval.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import { PatrolEndpoint } from '../../../services/PatrolEndpoint';
 import { showSuccess } from '../../../utils/toast';
 
@@ -63,6 +63,12 @@ export interface UseCheckInQueueOptions {
 
 export function useCheckInQueue(options: UseCheckInQueueOptions = {}) {
     const [queue, setQueue] = useState<QueuedCheckInEntry[]>(loadQueue);
+
+    // Use ref to store latest onSynced callback to prevent flush recreation
+    const onSyncedRef = useRef(options.onSynced);
+    useEffect(() => {
+        onSyncedRef.current = options.onSynced;
+    }, [options.onSynced]);
 
     const persist = useCallback((q: QueuedCheckInEntry[]) => {
         setQueue(q);
@@ -130,10 +136,10 @@ export function useCheckInQueue(options: UseCheckInQueueOptions = {}) {
             const syncedCount = updated.filter((e) => e.sync_status === 'synced').length;
             if (syncedCount > 0) {
                 showSuccess('Queued check-ins synced');
-                options.onSynced?.();
+                onSyncedRef.current?.();
             }
         }
-    }, [options.onSynced, persist]);
+    }, [persist]);
 
     const retryFailed = useCallback(() => {
         const q = loadQueue();
@@ -182,7 +188,8 @@ export function useCheckInQueue(options: UseCheckInQueueOptions = {}) {
     const pendingCount = queue.filter((e) => e.sync_status === 'pending').length;
     const failedCount = queue.filter((e) => e.sync_status === 'failed').length;
 
-    return {
+    // Return stable object reference to prevent unnecessary re-renders
+    return useMemo(() => ({
         loadQueue: loadQueueFromStorage,
         enqueue,
         flush,
@@ -191,5 +198,5 @@ export function useCheckInQueue(options: UseCheckInQueueOptions = {}) {
         queue,
         pendingCount,
         failedCount
-    };
+    }), [loadQueueFromStorage, enqueue, flush, retryFailed, removeQueuedCheckIn, queue, pendingCount, failedCount]);
 }

@@ -3,6 +3,7 @@ import { useTeamChatContext } from '../../context/TeamChatContext';
 import { Button } from '../../../../components/UI/Button';
 import { SearchBar } from '../../../../components/UI/SearchBar';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 
 export const Sidebar: React.FC = () => {
     const {
@@ -217,7 +218,7 @@ export const Sidebar: React.FC = () => {
                                                 <div className="flex items-center space-x-2">
                                                     <p className="text-[10px] text-white/30 uppercase tracking-tighter font-medium">{member.role}</p>
                                                     {member.location && (
-                                                        <span className="text-[9px] font-bold text-blue-500 truncate mt-0.5 tracking-widest">• {member.location}</span>
+                                                        <span className="text-[9px] font-bold text-blue-500 truncate mt-0.5 tracking-widest">• {formatLocationDisplay(member.location) || '—'}</span>
                                                     )}
                                                 </div>
                                             </div>

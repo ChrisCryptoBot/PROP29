@@ -1,17 +1,23 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { SearchBar } from '../../../../components/UI/SearchBar';
 import { useSecurityOperationsContext } from '../../context/SecurityOperationsContext';
+import { useSecurityOperationsTelemetry } from '../../hooks/useSecurityOperationsTelemetry';
 import { EmptyState } from '../../../../components/UI/EmptyState';
-import { showError, showSuccess, showLoading, dismissLoadingAndShowSuccess } from '../../../../utils/toast';
+import { showError, showSuccess, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import * as securityOpsService from '../../services/securityOperationsCenterService';
 import { cn } from '../../../../utils/cn';
+import type { ExportJob, BatchExportJob } from '../../services/securityOperationsCenterService';
 
 export const RecordingsTab: React.FC = () => {
   const { recordings, loading, setSelectedRecording, canManageCameras } = useSecurityOperationsContext();
+  const { trackAction } = useSecurityOperationsTelemetry();
   const [search, setSearch] = useState('');
   const [selectedRecordings, setSelectedRecordings] = useState<Set<string>>(new Set());
   const [bulkExportLoading, setBulkExportLoading] = useState(false);
+  const [activeExports, setActiveExports] = useState<Map<string, ExportJob>>(new Map());
+  const [activeBatchExports, setActiveBatchExports] = useState<Map<string, BatchExportJob>>(new Map());
 
   const filteredRecordings = useMemo(() => {
     if (!search.trim()) return recordings;
@@ -43,20 +49,104 @@ export const RecordingsTab: React.FC = () => {
     setSelectedRecordings(newSelection);
   };
 
+  // Poll export job status
+  const pollExportStatus = useCallback(async (exportId: string) => {
+    const job = await securityOpsService.getExportStatus(exportId);
+    if (job) {
+      setActiveExports(prev => {
+        const updated = new Map(prev);
+        updated.set(exportId, job);
+        return updated;
+      });
+
+      if (job.status === 'completed' && job.download_url) {
+        // Trigger download
+        const downloadUrl = securityOpsService.getExportDownloadUrl(exportId);
+        window.open(downloadUrl, '_blank');
+        setActiveExports(prev => {
+          const updated = new Map(prev);
+          updated.delete(exportId);
+          return updated;
+        });
+        return true;
+      } else if (job.status === 'failed') {
+        showError(`Export failed: ${job.error_message || 'Unknown error'}`);
+        setActiveExports(prev => {
+          const updated = new Map(prev);
+          updated.delete(exportId);
+          return updated;
+        });
+        return true;
+      }
+    }
+    return false;
+  }, []);
+
+  // Poll batch export status
+  const pollBatchExportStatus = useCallback(async (batchId: string) => {
+    // Note: Backend doesn't have a batch status endpoint yet, so we'll check file existence
+    // In production, add GET /exports/batch/{batch_id}/status endpoint
+    const downloadUrl = securityOpsService.getBatchExportDownloadUrl(batchId);
+    
+    // Try to fetch the file to check if it's ready
+    try {
+      const response = await fetch(downloadUrl);
+      if (response.ok) {
+        // File is ready, trigger download
+        window.open(downloadUrl, '_blank');
+        setActiveBatchExports(prev => {
+          const updated = new Map(prev);
+          updated.delete(batchId);
+          return updated;
+        });
+        return true;
+      }
+    } catch {
+      // File not ready yet, continue polling
+    }
+    return false;
+  }, []);
+
+  // Polling effect for active exports
+  useEffect(() => {
+    if (activeExports.size === 0 && activeBatchExports.size === 0) return;
+
+    const interval = setInterval(async () => {
+      for (const [exportId] of activeExports) {
+        await pollExportStatus(exportId);
+      }
+      for (const [batchId] of activeBatchExports) {
+        await pollBatchExportStatus(batchId);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [activeExports, activeBatchExports, pollExportStatus, pollBatchExportStatus]);
+
   const handleBulkExport = async () => {
     if (selectedRecordings.size === 0) return;
     
+    trackAction('bulk_export', 'recording', { count: selectedRecordings.size });
     setBulkExportLoading(true);
     const toastId = showLoading(`Preparing ${selectedRecordings.size} recordings for export...`);
     
     try {
-      // Simulate export API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const recordingIds = Array.from(selectedRecordings);
+      const batchResult = await securityOpsService.exportRecordingsBatch(recordingIds, 'mp4', 'high');
       
-      dismissLoadingAndShowSuccess(toastId, `Export initiated for ${selectedRecordings.size} recordings. Download will start shortly.`);
-      setSelectedRecordings(new Set());
+      if (batchResult) {
+        setActiveBatchExports(prev => {
+          const updated = new Map(prev);
+          updated.set(batchResult.batch_id, batchResult);
+          return updated;
+        });
+        dismissLoadingAndShowSuccess(toastId, `Export initiated for ${selectedRecordings.size} recordings. Download will start when ready.`);
+        setSelectedRecordings(new Set());
+      } else {
+        throw new Error('Export initiation failed');
+      }
     } catch (error) {
-      showError('Export failed. Please try again.');
+      dismissLoadingAndShowError(toastId, 'Export failed. Please try again.');
     } finally {
       setBulkExportLoading(false);
     }
@@ -65,6 +155,7 @@ export const RecordingsTab: React.FC = () => {
   const handleSingleExport = async (recordingId: string, recordingName: string, event: React.MouseEvent) => {
     event.stopPropagation();
     
+    trackAction('export', 'recording', { recordingId, recordingName });
     const toastId = showLoading(`Exporting ${recordingName}...`);
     
     try {
@@ -82,8 +173,9 @@ export const RecordingsTab: React.FC = () => {
 
   if (loading.recordings && recordings.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading recordings" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Recordings...</p>
       </div>
     );
   }
@@ -92,8 +184,8 @@ export const RecordingsTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Recordings">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Recordings</h2>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-1 italic opacity-70 text-slate-400">
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Recordings</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Browse and download recorded footage
           </p>
         </div>
@@ -114,7 +206,12 @@ export const RecordingsTab: React.FC = () => {
                 className="w-full bg-white/5 border-white/5 text-white placeholder:text-white/20 focus:border-blue-500/50 transition-all rounded-xl pl-10"
                 placeholder="Search recordings by camera or date..."
                 value={search}
-                onChange={setSearch}
+                onChange={(value) => {
+                  setSearch(value);
+                  if (value.trim()) {
+                    trackAction('search', 'recording', { query: value });
+                  }
+                }}
               />
             </div>
             <Button
@@ -232,11 +329,77 @@ export const RecordingsTab: React.FC = () => {
               );
             })}
 
+            {/* Active Export Jobs */}
+            {activeExports.size > 0 && (
+              <div className="col-span-full space-y-2">
+                {Array.from(activeExports.values()).map(job => (
+                  <div key={job.export_id} className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                      <div>
+                        <span className="text-blue-400 font-bold text-sm">Exporting recording...</span>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          Status: {job.status} · Progress: {job.progress}%
+                        </p>
+                      </div>
+                    </div>
+                    {job.status === 'completed' && (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => {
+                          const downloadUrl = securityOpsService.getExportDownloadUrl(job.export_id);
+                          window.open(downloadUrl, '_blank');
+                        }}
+                        className="text-[10px] font-black uppercase tracking-widest"
+                      >
+                        <i className="fas fa-download mr-2" />
+                        Download
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Active Batch Export Jobs */}
+            {activeBatchExports.size > 0 && (
+              <div className="col-span-full space-y-2">
+                {Array.from(activeBatchExports.values()).map(batch => (
+                  <div key={batch.batch_id} className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+                      <div>
+                        <span className="text-blue-400 font-bold text-sm">Batch Export Processing...</span>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          {batch.completed_count}/{batch.total_count} completed · {batch.failed_count} failed
+                        </p>
+                      </div>
+                    </div>
+                    {batch.status === 'completed' && batch.download_url && (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => {
+                          const downloadUrl = securityOpsService.getBatchExportDownloadUrl(batch.batch_id);
+                          window.open(downloadUrl, '_blank');
+                        }}
+                        className="text-[10px] font-black uppercase tracking-widest"
+                      >
+                        <i className="fas fa-download mr-2" />
+                        Download ZIP
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Bulk Export Progress */}
             {bulkExportLoading && (
               <div className="col-span-full bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
                 <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-                <span className="text-blue-400 font-bold text-sm">Processing bulk export...</span>
+                <span className="text-blue-400 font-bold text-sm">Initiating bulk export...</span>
               </div>
             )}
 

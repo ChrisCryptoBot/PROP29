@@ -53,6 +53,7 @@ from api.banned_individuals_endpoints import router as banned_individuals_router
 from api.patrol_endpoints import router as patrol_router
 from api.handover_endpoints import router as handover_router
 from api.equipment_endpoints import router as equipment_router
+from api.maintenance_requests_endpoints import router as maintenance_requests_router
 from api.lockdown_endpoints import router as lockdown_router
 from api.mobile_agent_endpoints import router as mobile_agent_router
 
@@ -154,6 +155,7 @@ api_router.include_router(banned_individuals_router)
 api_router.include_router(patrol_router)
 api_router.include_router(handover_router)
 api_router.include_router(equipment_router)
+api_router.include_router(maintenance_requests_router)
 api_router.include_router(lockdown_router)
 api_router.include_router(mobile_agent_router)
 
@@ -238,11 +240,17 @@ if __name__ == "__main__":
     logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
     logger.info("Backend will be available at: http://127.0.0.1:8000")
     logger.info("API docs will be available at: http://127.0.0.1:8000/docs")
+    # NOTE (Windows): Uvicorn reload/watch mode can trigger noisy WinError 5
+    # (named pipe PermissionError) in some restricted environments. Default to
+    # reload OFF on Windows unless explicitly forced.
+    reload_enabled = os.getenv("UVICORN_RELOAD", "true").strip().lower() in {"1", "true", "yes", "on"}
+    if os.name == "nt" and os.getenv("FORCE_UVICORN_RELOAD", "").strip().lower() not in {"1", "true", "yes", "on"}:
+        reload_enabled = False
     
     uvicorn.run(
         "main:app",
         host="127.0.0.1", 
         port=8000,
         log_level="info",
-        reload=True
+        reload=reload_enabled
     )

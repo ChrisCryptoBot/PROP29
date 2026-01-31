@@ -8,7 +8,6 @@ import { SearchBar } from '../../../../components/UI/SearchBar';
 import { Select } from '../../../../components/UI/Select';
 import { Modal } from '../../../../components/UI/Modal';
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
-import { TemplateSuggestionsPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
 import { PatrolEndpoint, PatrolAuditLog } from '../../../../services/PatrolEndpoint';
@@ -17,39 +16,16 @@ import {
     UpcomingPatrol,
     Checkpoint
 } from '../../types';
-
-const FILTERS_STORAGE_KEY = 'patrol-management.filters';
+import { CreateTemplateModal } from '../modals/CreateTemplateModal';
+import { ReassignOfficerModal } from '../modals/ReassignOfficerModal';
+import { CheckpointCheckInModal } from '../modals/CheckpointCheckInModal';
 
 type PriorityFilter = 'all' | 'low' | 'medium' | 'high' | 'critical';
 type HistoryFilter = 'all' | 'completed' | 'cancelled';
 
-function loadFilters(): { search: string; priority: PriorityFilter; history: HistoryFilter } {
-    try {
-        const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
-        if (!raw) return { search: '', priority: 'all', history: 'all' };
-        const parsed = JSON.parse(raw) as { search?: string; priority?: string; history?: string };
-        const priority = ['all', 'low', 'medium', 'high', 'critical'].includes(parsed.priority ?? '') ? (parsed.priority as PriorityFilter) : 'all';
-        const history = ['all', 'completed', 'cancelled'].includes(parsed.history ?? '') ? (parsed.history as HistoryFilter) : 'all';
-        return {
-            search: typeof parsed.search === 'string' ? parsed.search : '',
-            priority,
-            history
-        };
-    } catch {
-        return { search: '', priority: 'all', history: 'all' };
-    }
+function getDefaultFilters(): { search: string; priority: PriorityFilter; history: HistoryFilter } {
+    return { search: '', priority: 'all', history: 'all' };
 }
-
-function saveFilters(f: { search: string; priority: PriorityFilter; history: HistoryFilter }) {
-    try {
-        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(f));
-    } catch (_) {}
-}
-
-// Placeholder imports for Modals (will be created next)
-import { CreateTemplateModal } from '../modals/CreateTemplateModal';
-import { ReassignOfficerModal } from '../modals/ReassignOfficerModal';
-import { CheckpointCheckInModal } from '../modals/CheckpointCheckInModal';
 
 export const PatrolManagementTab: React.FC = () => {
     const {
@@ -81,12 +57,12 @@ export const PatrolManagementTab: React.FC = () => {
 
 
     // Local UI State (persisted)
-    const [patrolSearchQuery, setPatrolSearchQuery] = useState(() => loadFilters().search);
-    const [patrolPriorityFilter, setPatrolPriorityFilter] = useState<PriorityFilter>(() => loadFilters().priority);
-    const [patrolHistoryFilter, setPatrolHistoryFilter] = useState<HistoryFilter>(() => loadFilters().history);
+    const [patrolSearchQuery, setPatrolSearchQuery] = useState(() => getDefaultFilters().search);
+    const [patrolPriorityFilter, setPatrolPriorityFilter] = useState<PriorityFilter>(() => getDefaultFilters().priority);
+    const [patrolHistoryFilter, setPatrolHistoryFilter] = useState<HistoryFilter>(() => getDefaultFilters().history);
 
     useEffect(() => {
-        saveFilters({ search: patrolSearchQuery, priority: patrolPriorityFilter, history: patrolHistoryFilter });
+        // Filters are now managed in component state only (no localStorage)
     }, [patrolSearchQuery, patrolPriorityFilter, patrolHistoryFilter]);
     const [auditLogs, setAuditLogs] = useState<PatrolAuditLog[]>([]);
     const [isAuditLoading, setIsAuditLoading] = useState(false);
@@ -190,34 +166,13 @@ export const PatrolManagementTab: React.FC = () => {
                     </p>
                 </div>
             </div>
-            {/* AI Template Suggestions */}
-            {upcomingPatrols.length > 0 && routes.length > 0 && (
-                <TemplateSuggestionsPanel
-                    patrolHistory={upcomingPatrols}
-                    incidents={[]}
-                    onCreateTemplate={(suggestion) => {
-                        if (!suggestion || !suggestion.name?.trim()) {
-                            showError('Invalid suggestion');
-                            return;
-                        }
-                        // Validate suggestion has required fields
-                        if (!suggestion.routeId && !suggestion.route) {
-                            showError('Template suggestion missing route information');
-                            return;
-                        }
-                        setEditingTemplate(suggestion as any);
-                        setShowCreateTemplate(true);
-                        showSuccess(`Template "${suggestion.name}" ready to create`);
-                    }}
-                />
-            )}
 
             {/* Patrol Templates */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-file-alt text-white"></i>
                             </div>
                             <span className="text-sm font-black uppercase tracking-widest">Patrol Templates</span>
@@ -318,7 +273,7 @@ export const PatrolManagementTab: React.FC = () => {
                 </CardContent>
             </Card>
             {/* Active Patrols */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
@@ -343,17 +298,17 @@ export const PatrolManagementTab: React.FC = () => {
                             />
                         </div>
                         <div className="md:w-48">
-                            <select
+                            <Select
                                 value={patrolPriorityFilter}
-                                onChange={(e) => setPatrolPriorityFilter(e.target.value as any)}
-                                className="w-full px-3 py-2 border border-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900/50 text-slate-300 focus:ring-0 focus:border-indigo-500/30 h-10"
+                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setPatrolPriorityFilter(e.target.value as any)}
+                                className="h-10"
                             >
-                                <option value="all" className="bg-slate-900">ALL LEVELS</option>
-                                <option value="critical" className="bg-slate-900">CRITICAL</option>
-                                <option value="high" className="bg-slate-900">HIGH</option>
-                                <option value="medium" className="bg-slate-900">MEDIUM</option>
-                                <option value="low" className="bg-slate-900">LOW</option>
-                            </select>
+                                <option value="all">ALL LEVELS</option>
+                                <option value="critical">CRITICAL</option>
+                                <option value="high">HIGH</option>
+                                <option value="medium">MEDIUM</option>
+                                <option value="low">LOW</option>
+                            </Select>
                         </div>
                     </div>
 
@@ -493,7 +448,7 @@ export const PatrolManagementTab: React.FC = () => {
                 </CardContent>
             </Card>
             {/* History */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl opacity-80 hover:opacity-100 transition-opacity">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 opacity-80 hover:opacity-100 transition-opacity">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="text-white text-sm font-black uppercase tracking-widest">Patrol History</CardTitle>
                 </CardHeader>
@@ -525,7 +480,7 @@ export const PatrolManagementTab: React.FC = () => {
             </Card>
 
             {/* Audit Log */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="text-white text-sm font-black uppercase tracking-widest">Audit Log</span>

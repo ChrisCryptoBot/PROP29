@@ -26,13 +26,9 @@ import PropertyItems from './pages/modules/PropertyItems';
 import AccessControlModule from './pages/modules/AccessControlModule';
 import Visitors from './pages/modules/Visitors';
 import Patrols from './pages/modules/Patrols/index';
-// import Admin from './pages/modules/Admin'; // Deleted old module
 import SmartLockers from './pages/modules/SmartLockers/index';
 import SmartParking from './pages/modules/SmartParking';
-// Digital Handover - Using new modular architecture
 import DigitalHandoverModule from './features/digital-handover';
-// Old monolithic file (can be removed after validation):
-// import DigitalHandover from './pages/modules/DigitalHandover';
 import GuestSafety from './features/guest-safety';
 import IoTMonitoring from './pages/modules/IoTMonitoring';
 

@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from 'react';
-import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../utils/toast';
+import { showLoading, showSuccess, showError, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, dismissToast } from '../../../utils/toast';
 import { StateUpdateService } from '../../../services/StateUpdateService';
 import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import { PatrolEndpoint } from '../../../services/PatrolEndpoint';
@@ -21,6 +21,20 @@ export interface UsePatrolActionsArgs {
     setEmergencyStatus: React.Dispatch<React.SetStateAction<EmergencyStatus>>;
     refresh: () => Promise<void>;
     selectedPropertyId: string | null;
+    operationQueue?: {
+        enqueue: (operation: string, payload: Record<string, unknown>) => string;
+    };
+    setLastSyncTimestamp?: (timestamp: Date) => void;
+    requestDedup?: {
+        isDuplicate: (requestKey: string) => boolean;
+        recordRequest: (requestKey: string, ...args: any[]) => void;
+        clearRequest: (requestKey: string) => void;
+    };
+    operationLock?: {
+        acquireLock: (operation: string, entityId: string) => boolean;
+        releaseLock: (operation: string, entityId: string) => void;
+        isLocked: (operation: string, entityId: string) => boolean;
+    };
 }
 
 export function usePatrolActions({
@@ -31,7 +45,11 @@ export function usePatrolActions({
     emergencyStatus,
     setEmergencyStatus,
     refresh,
-    selectedPropertyId
+    selectedPropertyId,
+    operationQueue,
+    setLastSyncTimestamp,
+    requestDedup,
+    operationLock
 }: UsePatrolActionsArgs) {
     const { trackAction, trackPerformance, trackError } = usePatrolTelemetry();
     
@@ -59,6 +77,14 @@ export function usePatrolActions({
                 showError('Can only deploy to scheduled patrols');
                 return;
             }
+            // Check for duplicate request
+            const requestKey = `deploy_officer-${patrolId}-${officerId}`;
+            if (requestDedup?.isDuplicate(requestKey)) {
+                showError('Deployment request already in progress. Please wait.');
+                return;
+            }
+            requestDedup?.recordRequest(requestKey, patrolId, officerId);
+
             const toastId = showLoading('Deploying officer...');
             const startTime = Date.now();
             trackAction('deploy_officer_start', 'patrol', { officerId, patrolId });
@@ -74,6 +100,18 @@ export function usePatrolActions({
                     version: typeof patrol.version === 'number' ? patrol.version + 1 : undefined
                 })
             );
+
+            // Check if offline - enqueue if so
+            if (!navigator.onLine && operationQueue) {
+                operationQueue.enqueue('deploy_officer', {
+                    patrolId,
+                    officerId,
+                    version: patrol.version
+                });
+                dismissToast(toastId);
+                showSuccess('Deployment queued for sync when connection is restored');
+                return;
+            }
 
             try {
                 const payload: { guard_id: string; status: string; version?: number } = {
@@ -101,8 +139,25 @@ export function usePatrolActions({
                 const duration = Date.now() - startTime;
                 trackPerformance('deploy_officer', duration, { officerId, patrolId });
                 trackAction('deploy_officer_success', 'patrol', { officerId, patrolId, duration });
+                setLastSyncTimestamp?.(new Date());
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('deploy_officer', patrolId);
                 dismissLoadingAndShowSuccess(toastId, `Officer ${officer.name} deployed successfully!`);
             } catch (err: unknown) {
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('deploy_officer', patrolId);
+                const isNetworkIssue = !navigator.onLine || !(err as { response?: unknown }).response;
+                if (isNetworkIssue && operationQueue) {
+                    // Enqueue for retry when online
+                    operationQueue.enqueue('deploy_officer', {
+                        patrolId,
+                        officerId,
+                        version: patrol.version
+                    });
+                    dismissToast(toastId);
+                    showSuccess('Deployment queued for sync when connection is restored');
+                    return;
+                }
                 const duration = Date.now() - startTime;
                 trackError(err as Error, { action: 'deploy_officer', officerId, patrolId, duration });
                 // Rollback optimistic update
@@ -149,6 +204,7 @@ export function usePatrolActions({
             }
             const toastId = showLoading('Completing patrol...');
             const startTime = Date.now();
+            const requestKey = `complete_patrol-${patrolId}`;
             trackAction('complete_patrol_start', 'patrol', { patrolId });
             
             // Optimistic update
@@ -160,6 +216,17 @@ export function usePatrolActions({
                 if (assigned) {
                     setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: 'off-duty', currentPatrol: undefined }));
                 }
+            }
+
+            // Check if offline - enqueue if so
+            if (!navigator.onLine && operationQueue) {
+                operationQueue.enqueue('complete_patrol', {
+                    patrolId,
+                    version: patrol.version
+                });
+                dismissToast(toastId);
+                showSuccess('Patrol completion queued for sync when connection is restored');
+                return;
             }
 
             try {
@@ -184,8 +251,24 @@ export function usePatrolActions({
                 const duration = Date.now() - startTime;
                 trackPerformance('complete_patrol', duration, { patrolId });
                 trackAction('complete_patrol_success', 'patrol', { patrolId, duration });
+                setLastSyncTimestamp?.(new Date());
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('complete_patrol', patrolId);
                 dismissLoadingAndShowSuccess(toastId, 'Patrol completed successfully!');
             } catch (e) {
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('complete_patrol', patrolId);
+                const isNetworkIssue = !navigator.onLine || !(e as { response?: unknown }).response;
+                if (isNetworkIssue && operationQueue) {
+                    // Enqueue for retry when online
+                    operationQueue.enqueue('complete_patrol', {
+                        patrolId,
+                        version: patrol.version
+                    });
+                    dismissToast(toastId);
+                    showSuccess('Patrol completion queued for sync when connection is restored');
+                    return;
+                }
                 const duration = Date.now() - startTime;
                 trackError(e as Error, { action: 'complete_patrol', patrolId, duration });
                 // Rollback optimistic update
@@ -238,6 +321,7 @@ export function usePatrolActions({
                 return;
             }
             const toastId = showLoading('Reassigning officer...');
+            const requestKey = `reassign_officer-${patrolId}-${newOfficerId}`;
             
             // Optimistic update
             const previousPatrolOfficer = patrol.assignedOfficer;
@@ -250,6 +334,18 @@ export function usePatrolActions({
                 setOfficers((prev) => StateUpdateService.updateItem(prev, oldOfficer.id, { status: 'off-duty', currentPatrol: undefined }));
             }
             setOfficers((prev) => StateUpdateService.updateItem(prev, newOfficerId, { status: 'on-duty', currentPatrol: patrolId }));
+
+            // Check if offline - enqueue if so
+            if (!navigator.onLine && operationQueue) {
+                operationQueue.enqueue('reassign_officer', {
+                    patrolId,
+                    newOfficerId,
+                    version: patrol.version
+                });
+                dismissToast(toastId);
+                showSuccess('Officer reassignment queued for sync when connection is restored');
+                return;
+            }
 
             try {
                 const payload: { guard_id: string; version?: number } = { guard_id: newOfficerId };
@@ -269,8 +365,25 @@ export function usePatrolActions({
                     }
                 );
                 
+                setLastSyncTimestamp?.(new Date());
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('reassign_officer', patrolId);
                 dismissLoadingAndShowSuccess(toastId, `Officer ${newOfficer.name} assigned to patrol successfully`);
             } catch (err: unknown) {
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('reassign_officer', patrolId);
+                const isNetworkIssue = !navigator.onLine || !(err as { response?: unknown }).response;
+                if (isNetworkIssue && operationQueue) {
+                    // Enqueue for retry when online
+                    operationQueue.enqueue('reassign_officer', {
+                        patrolId,
+                        newOfficerId,
+                        version: patrol.version
+                    });
+                    dismissToast(toastId);
+                    showSuccess('Officer reassignment queued for sync when connection is restored');
+                    return;
+                }
                 // Rollback optimistic update
                 setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { assignedOfficer: previousPatrolOfficer }));
                 if (oldOfficer && previousOldOfficerState) {
@@ -304,6 +417,7 @@ export function usePatrolActions({
                 return;
             }
             const toastId = showLoading('Cancelling patrol...');
+            const requestKey = `cancel_patrol-${patrolId}`;
             
             // Optimistic update
             const previousPatrolState = patrol.status;
@@ -314,6 +428,17 @@ export function usePatrolActions({
                 if (assigned) {
                     setOfficers((prev) => StateUpdateService.updateItem(prev, assigned.id, { status: 'off-duty', currentPatrol: undefined }));
                 }
+            }
+
+            // Check if offline - enqueue if so
+            if (!navigator.onLine && operationQueue) {
+                operationQueue.enqueue('cancel_patrol', {
+                    patrolId,
+                    version: patrol.version
+                });
+                dismissToast(toastId);
+                showSuccess('Patrol cancellation queued for sync when connection is restored');
+                return;
             }
 
             try {
@@ -334,8 +459,24 @@ export function usePatrolActions({
                     }
                 );
                 
+                setLastSyncTimestamp?.(new Date());
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('cancel_patrol', patrolId);
                 dismissLoadingAndShowSuccess(toastId, 'Patrol cancelled successfully');
             } catch (err: unknown) {
+                requestDedup?.clearRequest(requestKey);
+                operationLock?.releaseLock('cancel_patrol', patrolId);
+                const isNetworkIssue = !navigator.onLine || !(err as { response?: unknown }).response;
+                if (isNetworkIssue && operationQueue) {
+                    // Enqueue for retry when online
+                    operationQueue.enqueue('cancel_patrol', {
+                        patrolId,
+                        version: patrol.version
+                    });
+                    dismissToast(toastId);
+                    showSuccess('Patrol cancellation queued for sync when connection is restored');
+                    return;
+                }
                 // Rollback optimistic update
                 setUpcomingPatrols((prev) => StateUpdateService.updateItem(prev, patrolId, { status: previousPatrolState }));
                 if (patrol.assignedOfficer && previousOfficerState) {
@@ -364,6 +505,16 @@ export function usePatrolActions({
             showError('No officers on duty to alert');
             return;
         }
+        // Check for duplicate request (use timestamp to allow multiple alerts, but prevent rapid duplicates)
+        const requestKey = `emergency_alert-${Date.now()}`;
+        // Allow multiple emergency alerts, but prevent duplicates within 1 second
+        const recentKey = `emergency_alert-recent`;
+        if (requestDedup?.isDuplicate(recentKey)) {
+            showError('Emergency alert request already in progress. Please wait.');
+            return;
+        }
+        requestDedup?.recordRequest(recentKey);
+
         const toastId = showLoading('Sending emergency alert...');
         const startTime = Date.now();
         const previousEmergencyStatus = { ...emergencyStatus };
@@ -403,7 +554,7 @@ export function usePatrolActions({
             dismissLoadingAndShowError(toastId, 'Failed to send emergency alert. Please try again or contact support.');
             ErrorHandlerService.handle(error, 'emergencyAlert');
         }
-    }, [officers, selectedPropertyId, setEmergencyStatus, emergencyStatus, trackAction, trackPerformance, trackError]);
+    }, [officers, selectedPropertyId, setEmergencyStatus, emergencyStatus, trackAction, trackPerformance, trackError, operationQueue, setLastSyncTimestamp, requestDedup, operationLock]);
 
     return {
         handleDeployOfficer,

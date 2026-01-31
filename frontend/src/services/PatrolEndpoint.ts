@@ -146,30 +146,6 @@ export class PatrolEndpoint {
         return response.data;
     }
 
-    /**
-     * AI Officer Match
-     */
-    static async getAIMetches(patrolData: any, officersList: any[]): Promise<any> {
-        const response = await axios.post(`${API_BASE_URL}/patrols/ai-match-officer`, {
-            patrol: patrolData,
-            officers: officersList
-        }, {
-            headers: getAuthHeaders()
-        });
-        return response.data;
-    }
-
-    /**
-     * AI Route Optimization
-     */
-    static async optimizeRoute(routeData: any): Promise<any> {
-        const response = await axios.post(`${API_BASE_URL}/patrols/ai-optimize-route`, {
-            route: routeData
-        }, {
-            headers: getAuthHeaders()
-        });
-        return response.data;
-    }
 
     /**
      * Get all officers

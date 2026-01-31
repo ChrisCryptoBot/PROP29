@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button } from '../../../../components/UI/Button';
 import { Modal } from '../../../../components/UI/Modal';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
-import { Badge } from '../../../../components/UI/Badge';
 import { cn } from '../../../../utils/cn';
 import { IncidentCreate, IncidentSeverity, IncidentStatus, IncidentType } from '../../types/incident-log.types';
 import { showError } from '../../../../utils/toast';
@@ -16,12 +15,9 @@ interface CreateIncidentModalProps {
 export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen, onClose }) => {
     const {
         createIncident,
-        getAIClassification,
-        aiSuggestion,
-        loading
+        loading,
+        propertyId
     } = useIncidentLogContext();
-
-    const propertyId = localStorage.getItem('propertyId') || '';
 
     const [formData, setFormData] = useState<Partial<IncidentCreate>>({
         title: '',
@@ -35,7 +31,6 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
         description: ''
     });
 
-    const [showAISuggestion, setShowAISuggestion] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
@@ -59,22 +54,6 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
         }
     };
 
-    const handleGetAISuggestion = async () => {
-        if (!formData.description || !formData.title) return;
-        await getAIClassification(formData.title, formData.description, formData.location);
-        setShowAISuggestion(true);
-    };
-
-    const handleApplyAISuggestion = () => {
-        if (aiSuggestion) {
-            setFormData(prev => ({
-                ...prev,
-                incident_type: aiSuggestion.incident_type as IncidentType,
-                severity: aiSuggestion.severity as IncidentSeverity
-            }));
-            setShowAISuggestion(false);
-        }
-    };
 
     const handleSubmit = async () => {
         // Form validation
@@ -234,104 +213,6 @@ export const CreateIncidentModal: React.FC<CreateIncidentModalProps> = ({ isOpen
                         />
                     </div>
 
-                    <div className="border border-white/5 bg-white/5 rounded-xl p-4">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center text-white border border-white/5 shadow-2xl">
-                                    <i className="fas fa-robot"></i>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-white">AI-Powered Classification</p>
-                                    <p className="text-xs text-[color:var(--text-sub)]">Get instant suggestions for incident type and severity</p>
-                                </div>
-                            </div>
-                            <Button
-                                onClick={handleGetAISuggestion}
-                                disabled={loading.ai || !formData.description}
-                                size="sm"
-                                variant="outline"
-                                className="border-blue-500/30 text-blue-300 hover:bg-blue-500/10 uppercase tracking-widest font-black text-[9px]"
-                            >
-                                {loading.ai ? (
-                                    <>
-                                        <i className="fas fa-spinner fa-spin mr-2"></i>
-                                        Analyzing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <i className="fas fa-magic mr-2"></i>
-                                        Get AI Suggestion
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-
-                    {showAISuggestion && aiSuggestion && (
-                        <div className="mt-4 bg-white/5 border border-white/5 rounded-xl p-4 shadow-2xl">
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-amber-500/80 to-slate-900 rounded-lg flex items-center justify-center text-white border border-white/5 shadow-2xl">
-                                        <i className="fas fa-lightbulb"></i>
-                                    </div>
-                                    <h4 className="font-bold text-white">AI Suggestion</h4>
-                                    <Badge className={cn(
-                                        aiSuggestion.confidence >= 0.8 ? "bg-green-500/20 text-green-300 border-green-500/30" :
-                                            aiSuggestion.confidence >= 0.6 ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30" :
-                                                "bg-red-500/20 text-red-300 border-red-500/30"
-                                    )}>
-                                        {(aiSuggestion.confidence * 100).toFixed(0)}% Confidence
-                                    </Badge>
-                                </div>
-                                <button
-                                    onClick={() => setShowAISuggestion(false)}
-                                    className="text-slate-400 hover:text-white transition-colors"
-                                >
-                                    <i className="fas fa-times"></i>
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-3">
-                                <div className="p-3 rounded-lg border border-white/5 bg-white/5">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-1">Suggested Type</p>
-                                    <p className="font-bold text-white capitalize">
-                                        {aiSuggestion.incident_type.replace('_', ' ')}
-                                    </p>
-                                </div>
-                                <div className="p-3 rounded-lg border border-white/5 bg-white/5">
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-1">Suggested Severity</p>
-                                    <p className="font-bold text-white">
-                                        {aiSuggestion.severity}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="p-3 mb-3 rounded-lg border border-white/5 bg-white/5">
-                                <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-1">AI Reasoning</p>
-                                <p className="text-sm text-slate-300">{aiSuggestion.reasoning}</p>
-                            </div>
-
-                            <div className="flex items-center justify-end space-x-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowAISuggestion(false)}
-                                    className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] hover:text-white hover:bg-white/5"
-                                >
-                                    Dismiss
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={handleApplyAISuggestion}
-                                    variant="outline"
-                                    className="text-[9px] font-black uppercase tracking-widest border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                                >
-                                    <i className="fas fa-check mr-2"></i>
-                                    Apply Suggestion
-                                </Button>
-                            </div>
-                        </div>
-                    )}
             </div>
         </Modal>
     );

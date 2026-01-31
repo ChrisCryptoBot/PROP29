@@ -5,6 +5,7 @@ import { Badge } from '../UI/Badge';
 import { showLoading, dismissLoadingAndShowSuccess, showError } from '../../utils/toast';
 import { patrolAI } from '../../services/PatrolAIService';
 import { logger } from '../../services/logger';
+import { formatLocationDisplay } from '../../utils/formatLocation';
 import '../../styles/modern-glass.css';
 
 interface Props {
@@ -100,7 +101,7 @@ export const ScheduleSuggestionsPanel: React.FC<Props> = ({ schedule, incidents,
                         <span className="flex items-center"><i className="fas fa-clock mr-1.5 text-slate-600"></i>{suggestion.timeframe}</span>
                       )}
                       {suggestion.location && (
-                        <span className="flex items-center"><i className="fas fa-map-marker-alt mr-1.5 text-slate-600"></i>{suggestion.location}</span>
+                        <span className="flex items-center"><i className="fas fa-map-marker-alt mr-1.5 text-slate-600"></i>{formatLocationDisplay(suggestion.location) || '—'}</span>
                       )}
                     </div>
                   </div>

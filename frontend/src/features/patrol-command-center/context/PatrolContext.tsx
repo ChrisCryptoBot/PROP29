@@ -65,6 +65,11 @@ export interface PatrolContextValue {
     // Check-in queue (offline sync)
     checkInQueuePendingCount: number;
     checkInQueueFailedCount: number;
+    
+    // Operation queue (offline sync for all operations)
+    operationQueuePendingCount: number;
+    operationQueueFailedCount: number;
+    retryOperationQueue: () => void;
 
     /** True when navigator.onLine is false; deploy disabled, show banner */
     isOffline: boolean;

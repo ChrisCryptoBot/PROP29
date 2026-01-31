@@ -24,7 +24,6 @@ export const SettingsTab: React.FC = React.memo(() => {
         qrCodePrefix: 'LF',
         autoArchiveAfterDays: 30,
         autoNotificationEnabled: true,
-        aiMatchingEnabled: true,
         requirePhotoDocumentation: true,
         chainOfCustodyTracking: true,
         highValueThreshold: 500,
@@ -47,7 +46,6 @@ export const SettingsTab: React.FC = React.memo(() => {
                 qrCodePrefix: settings.qrCodePrefix,
                 autoArchiveAfterDays: settings.autoArchiveAfterDays,
                 autoNotificationEnabled: settings.autoNotificationEnabled,
-                aiMatchingEnabled: settings.aiMatchingEnabled,
                 requirePhotoDocumentation: settings.requirePhotoDocumentation,
                 chainOfCustodyTracking: settings.chainOfCustodyTracking,
                 highValueThreshold: settings.highValueThreshold,
@@ -84,7 +82,6 @@ export const SettingsTab: React.FC = React.memo(() => {
             qrCodePrefix: localSettings.qrCodePrefix,
             autoArchiveAfterDays: localSettings.autoArchiveAfterDays,
             autoNotificationEnabled: localSettings.autoNotificationEnabled,
-            aiMatchingEnabled: localSettings.aiMatchingEnabled,
             requirePhotoDocumentation: localSettings.requirePhotoDocumentation,
             chainOfCustodyTracking: localSettings.chainOfCustodyTracking,
             highValueThreshold: localSettings.highValueThreshold,
@@ -177,18 +174,6 @@ export const SettingsTab: React.FC = React.memo(() => {
                             type="checkbox"
                             checked={localSettings.autoNotificationEnabled}
                             onChange={(e) => setLocalSettings(prev => ({ ...prev, autoNotificationEnabled: e.target.checked }))}
-                            className="w-5 h-5 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500"
-                        />
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg">
-                        <div>
-                            <p className="text-sm font-bold text-white">AI Matching Enabled</p>
-                            <p className="text-xs text-slate-400">Use AI to match found items with guest descriptions</p>
-                        </div>
-                        <input
-                            type="checkbox"
-                            checked={localSettings.aiMatchingEnabled}
-                            onChange={(e) => setLocalSettings(prev => ({ ...prev, aiMatchingEnabled: e.target.checked }))}
                             className="w-5 h-5 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500"
                         />
                     </div>

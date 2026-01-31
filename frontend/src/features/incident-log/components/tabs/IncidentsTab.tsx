@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { IncidentStatus } from '../../types/incident-log.types';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 
@@ -125,11 +127,12 @@ export const IncidentsTab: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Incident Log</p>
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Incident Management</h2>
-                    <p className="text-[11px] text-[color:var(--text-sub)]">Review, filter, and act on live incidents.</p>
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Incident Management</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Review, filter, and act on live incidents
+                    </p>
                 </div>
             </div>
             {/* PRINT ONLY LAYOUT */}
@@ -152,7 +155,7 @@ export const IncidentsTab: React.FC = () => {
                                         <div><strong>ID:</strong> {incident.incident_id}</div>
                                         <div><strong>Type:</strong> <span className="uppercase">{incident.incident_type}</span></div>
                                         <div><strong>Date:</strong> {incident.created_at}</div>
-                                        <div><strong>Location:</strong> {typeof incident.location === 'string' ? incident.location : incident.location?.area}</div>
+                                        <div><strong>Location:</strong> {formatLocationDisplay(incident.location) || 'Unknown'}</div>
                                         <div><strong>Severity:</strong> <span className="badge-print">{incident.severity}</span></div>
                                         <div><strong>Status:</strong> <span className="badge-print">{incident.status}</span></div>
                                     </div>
@@ -202,11 +205,11 @@ export const IncidentsTab: React.FC = () => {
             </div>
 
             {/* SCREEN LAYOUT */}
-            <Card className="glass-card border border-white/5 shadow-2xl no-print">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl no-print">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center text-xl text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                 <i className="fas fa-tasks text-white" />
                             </div>
                             <span className="uppercase tracking-tight">Incident Management</span>
@@ -400,7 +403,7 @@ export const IncidentsTab: React.FC = () => {
             </Card>
 
             {/* Incident List */}
-            <Card className="glass-card border border-white/5 shadow-2xl mb-8 no-print">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl mb-8 no-print">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-white uppercase tracking-tight">All Incidents ({filteredIncidents.length})</CardTitle>
                     <Button variant="outline" size="sm" onClick={handleSelectAll} className="border-white/5 text-slate-300 hover:bg-white/5 hover:text-white">
@@ -409,7 +412,14 @@ export const IncidentsTab: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {paginatedIncidents.length === 0 ? (
+                        {loading.incidents && incidents.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading incidents" />
+                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">
+                                    Loading Incidents...
+                                </p>
+                            </div>
+                        ) : paginatedIncidents.length === 0 ? (
                             <EmptyState
                                 icon="fas fa-list-alt"
                                 title="No Incidents Found"
@@ -422,7 +432,7 @@ export const IncidentsTab: React.FC = () => {
                                 }}
                             />
                         ) : (
-                            filteredIncidents.map((incident) => {
+                            paginatedIncidents.map((incident) => {
                                 const id = incident.incident_id;
                                 const isSelected = selectedIds.includes(id);
                                 const sourceLabel = incident.source
@@ -435,7 +445,7 @@ export const IncidentsTab: React.FC = () => {
                                         className={cn(
                                             "p-4 border rounded-lg transition-all cursor-pointer",
                                             isSelected
-                                                ? "border-blue-500/50 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]"
+                                                ? "border-white/30 bg-white/10"
                                                 : "border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20"
                                         )}
                                         onClick={() => toggleSelect(id)}
@@ -459,7 +469,7 @@ export const IncidentsTab: React.FC = () => {
                                                 </div>
                                                 <p className="text-slate-400 text-sm mb-2">{incident.description}</p>
                                                 <div className="flex items-center space-x-4 text-xs text-slate-500 font-medium">
-                                                    <span><i className="fas fa-map-marker-alt mr-1" />{typeof incident.location === 'string' ? incident.location : incident.location?.area || 'Unknown'}</span>
+                                                    <span><i className="fas fa-map-marker-alt mr-1" />{formatLocationDisplay(incident.location) || 'Unknown'}</span>
                                                     <span><i className="fas fa-clock mr-1" />{incident.created_at}</span>
                                                 </div>
                                             </div>
@@ -477,6 +487,78 @@ export const IncidentsTab: React.FC = () => {
                             })
                         )}
                     </div>
+                    
+                    {/* Pagination Controls */}
+                    {filteredIncidents.length > 0 && totalPages > 1 && (
+                        <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                            <div className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">
+                                Showing <span className="text-[color:var(--text-main)]">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                                <span className="text-[color:var(--text-main)]">{Math.min(currentPage * itemsPerPage, filteredIncidents.length)}</span> of{' '}
+                                <span className="text-[color:var(--text-main)]">{filteredIncidents.length}</span> incidents
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="glass"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                                >
+                                    <i className="fas fa-chevron-left mr-1" />
+                                    Previous
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pageNum: number;
+                                        if (totalPages <= 5) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage <= 3) {
+                                            pageNum = i + 1;
+                                        } else if (currentPage >= totalPages - 2) {
+                                            pageNum = totalPages - 4 + i;
+                                        } else {
+                                            pageNum = currentPage - 2 + i;
+                                        }
+                                        return (
+                                            <Button
+                                                key={pageNum}
+                                                variant={currentPage === pageNum ? 'primary' : 'glass'}
+                                                size="sm"
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className="text-[10px] font-black uppercase tracking-widest min-w-[2rem]"
+                                            >
+                                                {pageNum}
+                                            </Button>
+                                        );
+                                    })}
+                                </div>
+                                <Button
+                                    variant="glass"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                                >
+                                    Next
+                                    <i className="fas fa-chevron-right ml-1" />
+                                </Button>
+                                <Select
+                                    id="items-per-page"
+                                    value={itemsPerPage.toString()}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                    className="text-[10px] font-black uppercase tracking-widest w-20 ml-2"
+                                >
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </Select>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

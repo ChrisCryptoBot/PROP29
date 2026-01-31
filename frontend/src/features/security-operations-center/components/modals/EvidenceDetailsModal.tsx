@@ -44,19 +44,19 @@ export const EvidenceDetailsModal: React.FC = () => {
       size="lg"
       footer={
         <div className="flex justify-end gap-3">
+          <Button variant="subtle" onClick={handleClose} className="text-xs font-black uppercase tracking-widest">
+            Close
+          </Button>
           {canManageEvidence && (
             <Button
-              variant="glass"
-              className="text-xs font-black uppercase tracking-widest bg-white/10 border-white/20"
+              variant="primary"
+              className="text-xs font-black uppercase tracking-widest"
               onClick={handleUpdateStatus}
               disabled={loading.actions || editStatus === selectedEvidence.status}
             >
               {loading.actions ? 'Updating...' : 'Update status'}
             </Button>
           )}
-          <Button variant="subtle" onClick={handleClose} className="text-xs font-black uppercase tracking-widest">
-            Close
-          </Button>
         </div>
       }
     >

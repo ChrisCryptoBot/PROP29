@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { SecurityOperationsProvider, useSecurityOperationsContext } from './context/SecurityOperationsContext';
+import { CameraModalManagerProvider } from './context/CameraModalManagerContext';
+import { CameraWallLayoutProvider } from './context/CameraWallLayoutContext';
 import { LiveViewTab } from './components/tabs/LiveViewTab';
 import { RecordingsTab } from './components/tabs/RecordingsTab';
 import { EvidenceManagementTab } from './components/tabs/EvidenceManagementTab';
 import { AnalyticsTab } from './components/tabs/AnalyticsTab';
 import { SettingsTab } from './components/tabs/SettingsTab';
 import { ProvisioningTab } from './components/tabs/ProvisioningTab';
+import { AuditTrailTab } from './components/tabs/AuditTrailTab';
 import { EvidenceDetailsModal } from './components/modals';
+import { SecurityOperationsWebSocketIntegration } from './components/SecurityOperationsWebSocketIntegration';
+import { CameraModalRenderer } from './components/CameraModalRenderer';
+import { OfflineQueueIndicator } from './components/OfflineQueueIndicator';
+import { OfflineBanner } from './components/OfflineBanner';
 import type { TabId } from './types/security-operations.types';
 import ModuleShell from '../../components/Layout/ModuleShell';
 import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
@@ -14,14 +21,16 @@ import { electronBridge } from '../../services/ElectronBridge';
 import { showSuccess, showError, showInfo } from '../../utils/toast';
 import ErrorBoundaryProvider from '../../components/ErrorBoundary/ErrorBoundaryProvider';
 import { offlineStorageService } from '../../services/OfflineStorageService';
+import { ErrorHandlerService } from '../../services/ErrorHandlerService';
 
 const tabs: { id: TabId; label: string }[] = [
   { id: 'live', label: 'Live View' },
   { id: 'recordings', label: 'Recordings' },
-  { id: 'evidence', label: 'Evidence Management' },
+  { id: 'evidence', label: 'Evidence' },
   { id: 'analytics', label: 'Analytics' },
-  { id: 'settings', label: 'Settings' },
   { id: 'provisioning', label: 'Provisioning' },
+  { id: 'audit-trail', label: 'Audit Trail' },
+  { id: 'settings', label: 'Settings' },
 ];
 
 const SecurityOperationsGlobalRefresh: React.FC = () => {
@@ -147,6 +156,8 @@ const OrchestratorContent: React.FC = () => {
         return <SettingsTab />;
       case 'provisioning':
         return <ProvisioningTab />;
+      case 'audit-trail':
+        return <AuditTrailTab />;
       default:
         return null;
     }
@@ -160,6 +171,7 @@ const OrchestratorContent: React.FC = () => {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
+      actions={<OfflineQueueIndicator />}
     >
       <div role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
         {renderTab()}
@@ -174,12 +186,19 @@ export const SecurityOperationsCenterOrchestrator: React.FC = () => {
     <ErrorBoundaryProvider
       onError={(error, errorInfo) => {
         // Report to monitoring service in production
-        console.error('Security Operations Center Error:', error, errorInfo);
+        ErrorHandlerService.handle(error, 'Security Operations Center Error - SecurityOperationsCenterOrchestrator');
       }}
     >
       <SecurityOperationsProvider>
-        <SecurityOperationsGlobalRefresh />
-        <OrchestratorContent />
+        <CameraModalManagerProvider>
+          <CameraWallLayoutProvider>
+            <OfflineBanner />
+            <SecurityOperationsGlobalRefresh />
+            <SecurityOperationsWebSocketIntegration />
+            <OrchestratorContent />
+            <CameraModalRenderer />
+          </CameraWallLayoutProvider>
+        </CameraModalManagerProvider>
       </SecurityOperationsProvider>
     </ErrorBoundaryProvider>
   );

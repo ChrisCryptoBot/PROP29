@@ -1,20 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, Body, File, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, Body, File, UploadFile, Form, Header, Request
 from fastapi.responses import RedirectResponse, Response, FileResponse
 from typing import List, Any, Dict, Optional
 from datetime import datetime, timezone
 import uuid
+import os
 
 from sqlalchemy import text
 
 from schemas import CameraCreate, CameraUpdate, CameraResponse, CameraMetricsResponse, CameraStatus
-from api.auth_dependencies import get_current_user, require_security_manager_or_admin
+from api.auth_dependencies import get_current_user, require_security_manager_or_admin, verify_hardware_ingest_key
 from services.security_operations_service import CameraService
 from services.evidence_file_service import evidence_file_service
 from services.recording_export_service import recording_export_service
 from services.analytics_engine_service import analytics_engine
 from database import SessionLocal, engine
-from models import Camera
+from models import Camera, SecurityOperationsAuditLog
 import logging
+import hashlib
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -419,6 +422,92 @@ def list_user_exports(
     return {"data": exports}
 
 
+def _create_audit_entry(
+    action: str,
+    entity: str,
+    entity_id: str,
+    user_id: str,
+    changes: Optional[Dict[str, Any]] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    request: Optional[Request] = None
+) -> None:
+    """Create tamper-evident audit log entry."""
+    try:
+        with SessionLocal() as db:
+            # Build hash for integrity verification
+            hash_data = {
+                "action": action,
+                "entity": entity,
+                "entity_id": entity_id,
+                "user_id": user_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "changes": changes or {},
+            }
+            hash_str = hashlib.sha256(json.dumps(hash_data, sort_keys=True).encode()).hexdigest()
+            
+            audit_entry = SecurityOperationsAuditLog(
+                user_id=user_id,
+                action=action,
+                entity=entity,
+                entity_id=entity_id,
+                changes=changes,
+                extra_metadata=metadata,
+                ip_address=request.client.host if request else None,
+                user_agent=request.headers.get("user-agent") if request else None,
+                hash=hash_str
+            )
+            db.add(audit_entry)
+            db.commit()
+    except Exception as e:
+        logger.error(f"Failed to create audit entry: {e}")
+
+
+@router.get("/audit-trail")
+def get_audit_trail(
+    entity: Optional[str] = None,
+    entity_id: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    current_user=Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get audit trail entries. RBAC: Security Manager or Admin only."""
+    # Check permissions
+    if not (hasattr(current_user, 'role') and current_user.role in ['security_manager', 'admin']):
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    
+    try:
+        with SessionLocal() as db:
+            query = db.query(SecurityOperationsAuditLog)
+            
+            if entity:
+                query = query.filter(SecurityOperationsAuditLog.entity == entity)
+            if entity_id:
+                query = query.filter(SecurityOperationsAuditLog.entity_id == entity_id)
+            
+            total = query.count()
+            entries = query.order_by(SecurityOperationsAuditLog.timestamp.desc()).offset(offset).limit(limit).all()
+            
+            return {
+                "data": [{
+                    "id": e.audit_id,
+                    "timestamp": e.timestamp.isoformat(),
+                    "userId": e.user_id,
+                    "action": e.action,
+                    "entity": e.entity,
+                    "entityId": e.entity_id,
+                    "changes": e.changes,
+                    "metadata": e.extra_metadata,
+                    "hash": e.hash
+                } for e in entries],
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+    except Exception as e:
+        logger.error(f"Failed to get audit trail: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve audit trail")
+
+
 def _evidence_with_status() -> List[Dict[str, Any]]:
     out = []
     for e in _MOCK_EVIDENCE:
@@ -690,3 +779,396 @@ def report_camera_issue(
     })
     logger.info("Camera issue reported (stub)", extra={"camera_id": camera_id})
     return {"ok": True, "camera_id": camera_id}
+
+
+# ============================================================================
+# Mobile Agent & Hardware Device Integration Endpoints
+# ============================================================================
+
+@router.post("/cameras/ingest/mobile-agent")
+async def ingest_mobile_agent_camera_data(
+    payload: Dict[str, Any] = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+    current_user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Ingest camera data from mobile agent application.
+    Auth: JWT or X-API-Key (mobile agent).
+    """
+    try:
+        # Verify hardware ingest key if provided (for mobile agents)
+        if x_api_key:
+            await verify_hardware_ingest_key(x_api_key)
+        
+        agent_id = payload.get("agent_id")
+        camera_name = payload.get("camera_name", f"Mobile Agent Camera - {agent_id}")
+        location = payload.get("location", "Unknown")
+        stream_url = payload.get("stream_url")
+        status = payload.get("status", "online")
+        
+        # Create or update camera from mobile agent
+        camera_data = {
+            "name": camera_name,
+            "location": location,
+            "status": status,
+            "source_stream_url": stream_url,
+        }
+        
+        # Check if camera already exists for this agent (using source_metadata)
+        with SessionLocal() as db:
+            existing = db.query(Camera).filter(
+                Camera.name == camera_name
+            ).filter(
+                Camera.source_metadata.contains({"agent_id": agent_id}) if hasattr(Camera, 'source_metadata') else False
+            ).first()
+            
+            if not existing:
+                # Try alternative: check by name pattern
+                existing = db.query(Camera).filter(
+                    Camera.name.like(f"%{agent_id}%")
+                ).first()
+            
+            if existing:
+                # Update existing camera
+                for key, value in camera_data.items():
+                    if hasattr(existing, key):
+                        setattr(existing, key, value)
+                if hasattr(existing, 'last_heartbeat'):
+                    existing.last_heartbeat = datetime.now(timezone.utc)
+                if hasattr(existing, 'source_metadata'):
+                    existing.source_metadata = existing.source_metadata or {}
+                    existing.source_metadata.update({"agent_id": agent_id, "source": "mobile_agent"})
+                db.commit()
+                db.refresh(existing)
+                logger.info(f"Mobile agent camera updated: {existing.camera_id} from agent {agent_id}")
+                return {"ok": True, "camera_id": str(existing.camera_id), "action": "updated"}
+            else:
+                # Create new camera
+                new_camera = Camera(**camera_data)
+                new_camera.camera_id = uuid.uuid4()
+                if hasattr(new_camera, 'created_at'):
+                    new_camera.created_at = datetime.now(timezone.utc)
+                if hasattr(new_camera, 'last_heartbeat'):
+                    new_camera.last_heartbeat = datetime.now(timezone.utc)
+                if hasattr(new_camera, 'source_metadata'):
+                    new_camera.source_metadata = {"agent_id": agent_id, "source": "mobile_agent"}
+                db.add(new_camera)
+                db.commit()
+                db.refresh(new_camera)
+                logger.info(f"Mobile agent camera created: {new_camera.camera_id} from agent {agent_id}")
+                return {"ok": True, "camera_id": str(new_camera.camera_id), "action": "created"}
+                
+    except Exception as e:
+        logger.error(f"Failed to ingest mobile agent camera data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to ingest camera data: {str(e)}")
+
+
+@router.post("/cameras/ingest/hardware-device")
+async def ingest_hardware_device_camera_data(
+    payload: Dict[str, Any] = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+) -> Dict[str, Any]:
+    """
+    Ingest camera data from hardware device (Plug & Play).
+    Auth: X-API-Key (hardware) required.
+    """
+    try:
+        # Verify hardware ingest key (required for hardware devices)
+        await verify_hardware_ingest_key(x_api_key)
+        
+        device_id = payload.get("device_id")
+        device_name = payload.get("device_name", f"Hardware Camera - {device_id}")
+        location = payload.get("location", "Unknown")
+        stream_url = payload.get("stream_url")
+        status = payload.get("status", "online")
+        device_type = payload.get("device_type", "camera")
+        
+        # Create or update camera from hardware device
+        camera_data = {
+            "name": device_name,
+            "location": location,
+            "status": status,
+            "source_stream_url": stream_url,
+        }
+        
+        # Check if camera already exists for this device (using source_metadata)
+        with SessionLocal() as db:
+            existing = db.query(Camera).filter(
+                Camera.name == device_name
+            ).first()
+            
+            if not existing and hasattr(Camera, 'source_metadata'):
+                # Try to find by device_id in metadata
+                existing = db.query(Camera).filter(
+                    Camera.source_metadata.contains({"device_id": device_id})
+                ).first()
+            
+            if existing:
+                # Update existing camera
+                for key, value in camera_data.items():
+                    if hasattr(existing, key):
+                        setattr(existing, key, value)
+                if hasattr(existing, 'last_heartbeat'):
+                    existing.last_heartbeat = datetime.now(timezone.utc)
+                if hasattr(existing, 'source_metadata'):
+                    existing.source_metadata = existing.source_metadata or {}
+                    existing.source_metadata.update({"device_id": device_id, "source": "hardware_device", "device_type": device_type})
+                db.commit()
+                db.refresh(existing)
+                logger.info(f"Hardware device camera updated: {existing.camera_id} from device {device_id}")
+                return {"ok": True, "camera_id": str(existing.camera_id), "action": "updated"}
+            else:
+                # Create new camera
+                new_camera = Camera(**camera_data)
+                new_camera.camera_id = uuid.uuid4()
+                if hasattr(new_camera, 'created_at'):
+                    new_camera.created_at = datetime.now(timezone.utc)
+                if hasattr(new_camera, 'last_heartbeat'):
+                    new_camera.last_heartbeat = datetime.now(timezone.utc)
+                if hasattr(new_camera, 'source_metadata'):
+                    new_camera.source_metadata = {"device_id": device_id, "source": "hardware_device", "device_type": device_type}
+                db.add(new_camera)
+                db.commit()
+                db.refresh(new_camera)
+                logger.info(f"Hardware device camera created: {new_camera.camera_id} from device {device_id}")
+                return {"ok": True, "camera_id": str(new_camera.camera_id), "action": "created"}
+                
+    except Exception as e:
+        logger.error(f"Failed to ingest hardware device camera data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to ingest camera data: {str(e)}")
+
+
+@router.post("/cameras/{camera_id}/ptz")
+async def control_camera_ptz(
+    camera_id: str,
+    action: str = Body(..., embed=True, description="PTZ action: pan_left, pan_right, tilt_up, tilt_down, zoom_in, zoom_out, home"),
+    current_user=Depends(require_security_manager_or_admin),
+) -> Dict[str, Any]:
+    """
+    Control camera PTZ (Pan-Tilt-Zoom).
+    Auth: Security Manager or Admin only.
+    """
+    try:
+        with SessionLocal() as db:
+            camera = db.query(Camera).filter(Camera.camera_id == uuid.UUID(camera_id)).first()
+            if not camera:
+                raise HTTPException(status_code=404, detail="Camera not found")
+            
+            # Validate action
+            valid_actions = ["pan_left", "pan_right", "tilt_up", "tilt_down", "zoom_in", "zoom_out", "home"]
+            if action not in valid_actions:
+                raise HTTPException(status_code=400, detail=f"Invalid action. Must be one of: {', '.join(valid_actions)}")
+            
+            # TODO: In production, this would send command to camera hardware via ONVIF/RTSP
+            # For now, log the action
+            logger.info(f"PTZ command sent: camera_id={camera_id}, action={action}, user={current_user.user_id}")
+            
+            return {
+                "ok": True,
+                "camera_id": camera_id,
+                "action": action,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to control PTZ: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to control PTZ: {str(e)}")
+
+
+@router.post("/cameras/{camera_id}/heartbeat")
+async def record_camera_heartbeat(
+    camera_id: str,
+    payload: Dict[str, Any] = Body(default=None),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+    current_user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Record heartbeat from camera hardware device.
+    Auth: JWT or X-API-Key (hardware).
+    """
+    try:
+        # Verify hardware ingest key if provided
+        if x_api_key:
+            await verify_hardware_ingest_key(x_api_key)
+        
+        with SessionLocal() as db:
+            camera = db.query(Camera).filter(Camera.camera_id == uuid.UUID(camera_id)).first()
+            if not camera:
+                raise HTTPException(status_code=404, detail="Camera not found")
+            
+            # Update heartbeat timestamp
+            camera.last_heartbeat = datetime.now(timezone.utc)
+            
+            # Update status if provided
+            if payload and "status" in payload:
+                camera.status = payload["status"]
+            
+            db.commit()
+            logger.info(f"Camera heartbeat recorded: {camera_id}")
+            return {"ok": True, "camera_id": camera_id, "timestamp": camera.last_heartbeat.isoformat()}
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to record camera heartbeat: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to record heartbeat: {str(e)}")
+
+
+@router.post("/recordings/ingest/mobile-agent")
+async def ingest_mobile_agent_recording(
+    payload: Dict[str, Any] = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+    current_user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Ingest recording from mobile agent application.
+    Auth: JWT or X-API-Key (mobile agent).
+    """
+    try:
+        if x_api_key:
+            await verify_hardware_ingest_key(x_api_key)
+        
+        agent_id = payload.get("agent_id")
+        camera_id = payload.get("camera_id")
+        recording_url = payload.get("recording_url")
+        duration = payload.get("duration", 0)
+        timestamp = payload.get("timestamp", datetime.now(timezone.utc).isoformat())
+        
+        # Create recording entry (stub - would integrate with recording service)
+        recording_id = str(uuid.uuid4())
+        logger.info(f"Mobile agent recording ingested: {recording_id} from agent {agent_id}, camera {camera_id}")
+        
+        return {
+            "ok": True,
+            "recording_id": recording_id,
+            "camera_id": camera_id,
+            "agent_id": agent_id,
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to ingest mobile agent recording: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to ingest recording: {str(e)}")
+
+
+@router.post("/evidence/ingest/mobile-agent")
+async def ingest_mobile_agent_evidence(
+    payload: Dict[str, Any] = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+    current_user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Ingest evidence from mobile agent application.
+    Auth: JWT or X-API-Key (mobile agent).
+    """
+    try:
+        if x_api_key:
+            await verify_hardware_ingest_key(x_api_key)
+        
+        agent_id = payload.get("agent_id")
+        camera_id = payload.get("camera_id")
+        evidence_type = payload.get("evidence_type", "image")
+        evidence_url = payload.get("evidence_url")
+        description = payload.get("description", "Mobile agent evidence")
+        timestamp = payload.get("timestamp", datetime.now(timezone.utc).isoformat())
+        
+        # Create evidence entry (stub - would integrate with evidence service)
+        evidence_id = str(uuid.uuid4())
+        logger.info(f"Mobile agent evidence ingested: {evidence_id} from agent {agent_id}, camera {camera_id}")
+        
+        return {
+            "ok": True,
+            "evidence_id": evidence_id,
+            "camera_id": camera_id,
+            "agent_id": agent_id,
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to ingest mobile agent evidence: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to ingest evidence: {str(e)}")
+
+
+@router.post("/cameras/register/hardware-device")
+async def register_hardware_camera_device(
+    payload: Dict[str, Any] = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+) -> Dict[str, Any]:
+    """
+    Register a new hardware camera device (Plug & Play).
+    Auth: X-API-Key (hardware) required.
+    """
+    try:
+        # Verify hardware ingest key (required)
+        await verify_hardware_ingest_key(x_api_key)
+        
+        device_id = payload.get("device_id")
+        device_name = payload.get("device_name", f"Hardware Camera - {device_id}")
+        device_type = payload.get("device_type", "camera")
+        location = payload.get("location", "Unknown")
+        stream_url = payload.get("stream_url")
+        capabilities = payload.get("capabilities", {})
+        
+        # Register device as camera
+        camera_data = {
+            "name": device_name,
+            "location": location,
+            "status": "online",
+            "source_stream_url": stream_url,
+        }
+        
+        with SessionLocal() as db:
+            # Check if device already registered (using source_metadata)
+            existing = None
+            if hasattr(Camera, 'source_metadata'):
+                existing = db.query(Camera).filter(
+                    Camera.source_metadata.contains({"device_id": device_id})
+                ).first()
+            
+            if not existing:
+                # Try by name
+                existing = db.query(Camera).filter(
+                    Camera.name == device_name
+                ).first()
+            
+            if existing:
+                # Update metadata if needed
+                if hasattr(existing, 'source_metadata'):
+                    existing.source_metadata = existing.source_metadata or {}
+                    existing.source_metadata.update({"device_id": device_id, "source": "hardware_device", "device_type": device_type})
+                    db.commit()
+                logger.info(f"Hardware device {device_id} already registered as camera {existing.camera_id}")
+                return {
+                    "ok": True,
+                    "camera_id": str(existing.camera_id),
+                    "action": "already_registered",
+                }
+            
+            # Create new camera
+            new_camera = Camera(**camera_data)
+            new_camera.camera_id = uuid.uuid4()
+            if hasattr(new_camera, 'created_at'):
+                new_camera.created_at = datetime.now(timezone.utc)
+            if hasattr(new_camera, 'last_heartbeat'):
+                new_camera.last_heartbeat = datetime.now(timezone.utc)
+            if hasattr(new_camera, 'source_metadata'):
+                new_camera.source_metadata = {"device_id": device_id, "source": "hardware_device", "device_type": device_type}
+            db.add(new_camera)
+            db.commit()
+            db.refresh(new_camera)
+            
+            logger.info(f"Hardware device {device_id} registered as camera {new_camera.camera_id}")
+            return {
+                "ok": True,
+                "camera_id": str(new_camera.camera_id),
+                "action": "registered",
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registering hardware camera device: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to register hardware device"
+        )

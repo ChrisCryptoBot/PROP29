@@ -3,12 +3,14 @@
  * Tab for managing security requests
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
 import { useVisitorContext } from '../../context/VisitorContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { cn } from '../../../../utils/cn';
-import { showSuccess } from '../../../../utils/toast';
+import { formatLocationDisplay } from '../../utils/formatLocation';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 
 export const SecurityRequestsTab: React.FC = React.memo(() => {
@@ -17,18 +19,23 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
     securityRequests,
     loading,
     updateVisitor,
+    assignSecurityRequest,
     // Mobile Agent & Hardware Integration
     mobileAgentSubmissions,
     hardwareDevices,
     processAgentSubmission,
     refreshAgentSubmissions
   } = useVisitorContext();
+  const { user } = useAuth();
 
-  const handleAssign = async (requestId: string, visitorId: string) => {
-    // Update the security request status to 'in_progress'
-    // For now, we'll show a success message
-    // TODO: Implement proper security request update when backend endpoint is available
-    showSuccess('Request assigned and in progress');
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  const handleAssign = async (requestId: string, _visitorId: string) => {
+    const assigneeId = user?.user_id ?? '';
+    if (!assigneeId) return;
+    await assignSecurityRequest(requestId, assigneeId, 'in_progress');
   };
 
   // Get all security requests from visitors
@@ -61,12 +68,11 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Visitor Security</p>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Security Requests & Agent Submissions</h2>
-          <p className="text-[11px] text-[color:var(--text-sub)]">
+      {/* Page Header - Gold Standard */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Security Requests & Agent Submissions</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Process mobile agent submissions, security clearances, and incident escalations.
           </p>
         </div>
@@ -87,7 +93,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
         <Card className="glass-card border border-white/5 shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center text-xl text-white">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
                 <i className="fas fa-mobile-alt text-white" />
               </div>
               <span className="uppercase tracking-tight">Pending Mobile Agent Submissions ({mobileAgentSubmissions.length})</span>
@@ -125,10 +131,10 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                       <div className="text-[10px] text-slate-500">
                         <i className="fas fa-clock mr-1" />
                         {new Date(submission.timestamp).toLocaleString()}
-                        {submission.location && (
+                        {submission.location != null && (
                           <>
                             <i className="fas fa-map-marker-alt ml-3 mr-1" />
-                            GPS: {submission.location.lat.toFixed(6)}, {submission.location.lng.toFixed(6)}
+                            GPS: {formatLocationDisplay(submission.location)}
                           </>
                         )}
                       </div>
@@ -205,7 +211,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                       </span>
                       <span className={cn(
                         "px-2.5 py-1 text-[10px] font-black rounded uppercase tracking-wider border",
-                        request.priority === 'urgent' ? 'text-red-400 bg-red-500/10 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.2)]' :
+                        request.priority === 'urgent' ? 'text-red-400 bg-red-500/10 border-red-500/20' :
                           request.priority === 'high' ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' :
                             request.priority === 'normal' ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' :
                               'text-slate-500 bg-white/5 border-white/5'
@@ -225,7 +231,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                     <p className="text-white font-black text-lg mb-1 leading-tight group-hover:text-blue-400 transition-colors">{request.description}</p>
                     <p className="text-sm text-slate-400 italic font-medium">
                       Source: {visitor?.first_name} {visitor?.last_name}
-                      {request.location && ` <span className="mx-2 opacity-30">•</span> Zone: ${request.location}`}
+                      {request.location && <> <span className="mx-2 opacity-30">•</span> Zone: {formatLocationDisplay(request.location)}</>}
                     </p>
                     {request.response && (
                       <div className="mt-4 p-3 bg-blue-500/5 rounded-lg border border-blue-500/20 italic">
@@ -239,7 +245,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                         size="sm"
                         variant="primary"
                         onClick={() => handleAssign(request.id, visitor?.id || '')}
-                        className="text-[10px] font-black uppercase tracking-widest px-6 shadow-lg shadow-orange-500/10"
+                        className="text-[10px] font-black uppercase tracking-widest px-6"
                       >
                         Assign Response
                       </Button>

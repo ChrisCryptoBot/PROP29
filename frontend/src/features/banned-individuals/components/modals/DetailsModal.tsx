@@ -183,9 +183,15 @@ export const DetailsModal: React.FC = () => {
                                     .map((alert) => (
                                         <div key={alert.id} className="p-4 bg-white/5 border border-white/5 rounded-xl shadow-sm hover:border-blue-500/30 transition-all hover:bg-white/[0.07]">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="font-bold text-white">{alert.location}</span>
+                                                <span className="font-bold text-white">
+                                                    {typeof alert.location === 'string'
+                                                        ? alert.location
+                                                        : alert.location != null && typeof alert.location === 'object' && 'lat' in alert.location && 'lng' in alert.location
+                                                            ? `${Number((alert.location as { lat: number; lng: number }).lat).toFixed(6)}, ${Number((alert.location as { lat: number; lng: number }).lng).toFixed(6)}`
+                                                            : 'Unknown'}
+                                                </span>
                                                 <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest">
-                                                    {alert.confidence}% Confidence
+                                                    {alert.confidence != null ? `${alert.confidence}%` : ''} Confirmed
                                                 </span>
                                             </div>
                                             <p className="text-sm text-slate-400 mb-2">{alert.actionTaken}</p>

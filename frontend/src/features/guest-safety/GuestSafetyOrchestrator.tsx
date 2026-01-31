@@ -28,6 +28,7 @@ import {
   CreateIncidentModal,
 } from './components/modals';
 import ModuleShell from '../../components/Layout/ModuleShell';
+import { Button } from '../../components/UI/Button';
 import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
 import type { TabId } from './types/guest-safety.types';
 
@@ -136,14 +137,16 @@ const OrchestratorContent: React.FC = () => {
 
       {/* Quick Action FAB - Gold Standard */}
       <div className="fixed bottom-8 right-8 z-50">
-        <button
+        <Button
           onClick={() => setShowCreateIncidentModal(true)}
-          className="w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-red-700 hover:scale-110 transition-all group"
+          variant="destructive"
+          size="icon"
+          className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
           title="Create Incident"
           aria-label="Create Incident"
         >
-          <i className="fas fa-exclamation-triangle text-xl group-hover:scale-110 transition-transform" />
-        </button>
+          <i className="fas fa-exclamation-triangle text-xl" />
+        </Button>
       </div>
     </ModuleShell>
     </>

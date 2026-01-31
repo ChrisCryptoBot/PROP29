@@ -74,12 +74,11 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Visitor Security</p>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Mobile Agent Configuration</h2>
-          <p className="text-[11px] text-[color:var(--text-sub)]">
+      {/* Page Header - Gold Standard */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Mobile Agent Configuration</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Manage mobile patrol agent devices and configure system integration settings.
           </p>
         </div>
@@ -109,7 +108,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-network-wired text-white" />
             </div>
             <span className="uppercase tracking-tight">API Integration Configuration</span>
@@ -178,7 +177,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-mobile-alt text-white" />
             </div>
             <span className="uppercase tracking-tight">Registered Mobile Agents ({mobileAgentDevices.length})</span>
@@ -366,7 +365,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-shield-virus text-white" />
             </div>
             <span className="uppercase tracking-tight">Mobile Agent Capabilities</span>

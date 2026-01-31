@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { DeviceHealthStatus } from '../../types/incident-log.types';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import {
     LineChart,
     Line,
@@ -212,10 +213,10 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                 {activeTab === 'overview' && (
                     <div className="space-y-6">
                         {/* Device Information */}
-                        <Card className="glass-card border border-white/5">
+                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="flex items-center text-white">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                         <i className={cn("fas text-white", getDeviceTypeIcon(displayDevice.device_type))} />
                                     </div>
                                     Device Information
@@ -272,7 +273,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                         {/* Current Issues */}
                         {displayDevice.issues.length > 0 && (
-                            <Card className="glass-card border border-white/5">
+                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                                 <CardHeader>
                                     <CardTitle className="text-white">Current Issues ({displayDevice.issues.length})</CardTitle>
                                 </CardHeader>
@@ -310,7 +311,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                 {/* Health History Tab */}
                 {activeTab === 'history' && (
-                    <Card className="glass-card border border-white/5">
+                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="text-white">Health Score History (30 Days)</CardTitle>
                         </CardHeader>
@@ -361,7 +362,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                 {/* Incidents Tab */}
                 {activeTab === 'incidents' && (
-                    <Card className="glass-card border border-white/5">
+                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="text-white">Device Incidents ({deviceIncidents.length})</CardTitle>
                         </CardHeader>
@@ -382,7 +383,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                                                     <div className="flex items-center space-x-3 mt-2 text-xs text-slate-500">
                                                         <span><i className="fas fa-clock mr-1" />{new Date(incident.created_at).toLocaleString()}</span>
                                                         <span><i className="fas fa-map-marker-alt mr-1" />
-                                                            {typeof incident.location === 'string' ? incident.location : incident.location?.area || 'Unknown'}
+                                                            {formatLocationDisplay(incident.location) || 'Unknown'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -416,7 +417,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                 {/* Maintenance Tab */}
                 {activeTab === 'maintenance' && (
-                    <Card className="glass-card border border-white/5">
+                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="text-white">Maintenance & Actions</CardTitle>
                         </CardHeader>

@@ -3,6 +3,7 @@ import { Button } from '../../../../components/UI/Button';
 import { Modal } from '../../../../components/UI/Modal';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showError } from '../../../../utils/toast';
 import { incidentService } from '../../services/IncidentService';
+import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { cn } from '../../../../utils/cn';
 
 interface ReportModalProps {
@@ -11,7 +12,7 @@ interface ReportModalProps {
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => {
-    const propertyId = localStorage.getItem('propertyId') || '';
+    const { propertyId } = useIncidentLogContext();
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
     const [showCustomRange, setShowCustomRange] = useState(false);

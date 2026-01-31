@@ -160,22 +160,6 @@ async def check_individual(
             detail=f"Error checking individual: {str(e)}"
         )
 
-@router.post("/facial-recognition", response_model=dict)
-async def facial_recognition_check(
-    photo_data: str,
-    db: Session = Depends(get_db)
-):
-    """Check if a photo matches any banned individuals using facial recognition."""
-    try:
-        service = BannedIndividualsService(db)
-        result = service.facial_recognition_check(photo_data)
-        return result
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error in facial recognition check: {str(e)}"
-        )
-
 @router.post("/{banned_id}/detection", response_model=dict)
 async def record_detection(
     banned_id: str,
@@ -220,21 +204,6 @@ async def get_detection_statistics(
             detail=f"Error getting detection statistics: {str(e)}"
         )
 
-@router.get("/statistics/facial-recognition", response_model=dict)
-async def get_facial_recognition_status(
-    db: Session = Depends(get_db)
-):
-    """Get facial recognition system status and statistics."""
-    try:
-        service = BannedIndividualsService(db)
-        status = service.get_facial_recognition_status()
-        return status
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting facial recognition status: {str(e)}"
-        )
-
 @router.get("/metrics/overview", response_model=dict)
 async def get_overview_metrics(
     property_id: Optional[str] = None,
@@ -244,7 +213,6 @@ async def get_overview_metrics(
     try:
         service = BannedIndividualsService(db)
         
-        # Get basic statistics
         individuals = service.get_banned_individuals(
             property_id=property_id,
             is_active=True,
@@ -256,15 +224,14 @@ async def get_overview_metrics(
             days=7
         )
         
-        fr_status = service.get_facial_recognition_status()
+        records_with_photo = sum(1 for i in individuals if i.get("photo_url"))
         
         return {
             "active_bans": len(individuals),
             "recent_detections": detection_stats.get("recent_detections", 0),
-            "facial_recognition_accuracy": fr_status.get("accuracy", 0),
+            "facial_recognition_accuracy": records_with_photo,
             "chain_wide_bans": len([i for i in individuals if i.get("is_permanent", False)]),
-            "detection_rate": detection_stats.get("detection_rate", 0),
-            "training_status": fr_status.get("training_status", "NEEDS_TRAINING")
+            "detection_rate": detection_stats.get("detection_rate", 0)
         }
     except Exception as e:
         raise HTTPException(

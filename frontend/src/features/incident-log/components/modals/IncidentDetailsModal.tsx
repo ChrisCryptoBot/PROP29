@@ -6,6 +6,7 @@ import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { Incident, IncidentEvidence } from '../../types/incident-log.types';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useAuth } from '../../../../hooks/useAuth';
 import { showError, showSuccess } from '../../../../utils/toast';
 import { incidentService } from '../../services/IncidentService';
@@ -27,6 +28,18 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
         loading
     } = useIncidentLogContext();
     const { user } = useAuth();
+
+    const [evidenceType, setEvidenceType] = useState<'photos' | 'videos' | 'documents' | 'cctv_clips'>('photos');
+    const [evidenceUrl, setEvidenceUrl] = useState('');
+    const [users, setUsers] = useState<Array<{ user_id: string; name: string; email?: string }>>([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
+    const [showAssignDropdown, setShowAssignDropdown] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && incident?.incident_id) {
+            getIncidentActivity(incident.incident_id);
+        }
+    }, [isOpen, incident?.incident_id, getIncidentActivity]);
 
     if (!incident) return null;
 
@@ -72,18 +85,6 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
         : undefined);
     const evidence = incident.evidence || {};
     const activities = activityByIncident[id] || [];
-
-    const [evidenceType, setEvidenceType] = useState<'photos' | 'videos' | 'documents' | 'cctv_clips'>('photos');
-    const [evidenceUrl, setEvidenceUrl] = useState('');
-    const [users, setUsers] = useState<Array<{ user_id: string; name: string; email?: string }>>([]);
-    const [loadingUsers, setLoadingUsers] = useState(false);
-    const [showAssignDropdown, setShowAssignDropdown] = useState(false);
-
-    useEffect(() => {
-        if (isOpen && incident?.incident_id) {
-            getIncidentActivity(incident.incident_id);
-        }
-    }, [isOpen, incident?.incident_id, getIncidentActivity]);
 
     const handleAssignToMe = async () => {
         if (!user?.user_id) {
@@ -142,7 +143,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                     <i className={cn(getTypeIcon(incident.incident_type), "text-white text-lg")} />
                                 </div>
                                 <h3 className="text-lg font-bold text-white">{incident.title}</h3>
@@ -162,7 +163,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                             <div>
                                 <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] block mb-1">Type</label>
                                 <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                         <i className={cn(getTypeIcon(incident.incident_type), "text-white text-sm")} />
                                     </div>
                                     <span>{incident.incident_type}</span>
@@ -171,16 +172,16 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                             <div>
                                 <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] block mb-1">Location</label>
                                 <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                         <i className="fas fa-map-marker-alt text-white text-sm" />
                                     </div>
-                                    <span>{typeof incident.location === 'string' ? incident.location : incident.location?.area || 'Unknown'}</span>
+                                    <span>{formatLocationDisplay(incident.location) || 'Unknown'}</span>
                                 </div>
                             </div>
                             <div>
                                 <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] block mb-1">Created At</label>
                                 <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                         <i className="fas fa-clock text-white text-sm" />
                                     </div>
                                     <span>{new Date(incident.created_at).toLocaleString()}</span>
@@ -192,7 +193,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                             <div>
                                 <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] block mb-1">Reporter</label>
                                 <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                         <i className="fas fa-user-shield text-white text-sm" />
                                     </div>
                                     <span>{reporterLabel}</span>
@@ -202,7 +203,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                                 <div>
                                     <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] block mb-1">Source</label>
                                     <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                             <i className="fas fa-satellite-dish text-white text-sm" />
                                         </div>
                                         <span>{sourceLabel}</span>
@@ -251,7 +252,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                                     </div>
                                 ) : (
                                     <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                             <i className="fas fa-user text-white text-sm" />
                                         </div>
                                         <span className="flex-1">
@@ -274,7 +275,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                             <div>
                                 <label className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] block mb-1">Last Updated</label>
                                 <div className="flex items-center space-x-3 text-white bg-white/5 p-3 rounded-lg border border-white/5">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
                                         <i className="fas fa-history text-white text-sm" />
                                     </div>
                                     <span>{incident.updated_at ? new Date(incident.updated_at).toLocaleString() : 'Never'}</span>
@@ -456,7 +457,7 @@ export const IncidentDetailsModal: React.FC<IncidentDetailsModalProps> = ({ isOp
                                 <div className="space-y-3">
                                     {activities.map((activity) => (
                                         <div key={activity.activity_id} className="flex items-start gap-3 bg-white/5 border border-white/5 rounded-md px-3 py-2">
-                                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 shadow-2xl shrink-0">
+                                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5  shrink-0">
                                                 <i className="fas fa-history text-white text-xs" />
                                             </div>
                                             <div className="flex-1 min-w-0">

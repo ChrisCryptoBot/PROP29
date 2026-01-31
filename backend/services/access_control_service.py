@@ -1543,6 +1543,27 @@ class AccessControlService:
             )
 
     @staticmethod
+    async def check_idempotency(idempotency_key: str) -> Optional[Dict[str, Any]]:
+        """Check if an event with this idempotency_key already exists"""
+        db = SessionLocal()
+        try:
+            existing = db.query(AccessControlEvent).filter(
+                AccessControlEvent.idempotency_key == idempotency_key
+            ).first()
+            if existing:
+                return {
+                    "id": existing.event_id,
+                    "timestamp": existing.timestamp.isoformat() if existing.timestamp else None,
+                    "status": "duplicate"
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error checking idempotency: {e}")
+            return None
+        finally:
+            db.close()
+
+    @staticmethod
     async def review_agent_event(
         event_id: str,
         action: str,
@@ -1573,4 +1594,187 @@ class AccessControlService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to review event"
-            ) 
+            )
+
+    @staticmethod
+    async def record_access_point_heartbeat(
+        point_id: str,
+        device_id: Optional[str],
+        firmware_version: Optional[str],
+        battery_level: Optional[int],
+        sensor_status: Optional[str]
+    ) -> Dict[str, Any]:
+        """Record heartbeat from access point hardware device"""
+        db = SessionLocal()
+        try:
+            point = db.query(AccessPoint).filter(AccessPoint.access_point_id == point_id).first()
+            if not point:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Access point {point_id} not found"
+                )
+            
+            # Update heartbeat timestamp and device info
+            now = datetime.utcnow()
+            details = point.details or {}
+            details["last_heartbeat"] = now.isoformat()
+            details["isOnline"] = True
+            if device_id:
+                details["device_id"] = device_id
+            if firmware_version:
+                details["firmware_version"] = firmware_version
+            if battery_level is not None:
+                details["battery_level"] = battery_level
+            if sensor_status:
+                details["sensor_status"] = sensor_status
+            
+            point.details = details
+            db.commit()
+            db.refresh(point)
+            
+            logger.info(f"Heartbeat recorded for access point {point_id}")
+            return {
+                "point_id": point_id,
+                "last_heartbeat": now.isoformat(),
+                "isOnline": True
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error recording heartbeat: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to record heartbeat"
+            )
+        finally:
+            db.close()
+
+    @staticmethod
+    async def get_access_points_health(property_id: Optional[str]) -> Dict[str, Dict[str, Any]]:
+        """Get health status for all access points (heartbeat data)"""
+        db = SessionLocal()
+        try:
+            query = db.query(AccessPoint)
+            if property_id:
+                query = query.filter(AccessPoint.property_id == property_id)
+            
+            points = query.all()
+            health_data = {}
+            
+            for point in points:
+                details = point.details or {}
+                last_heartbeat = details.get("last_heartbeat")
+                is_online = details.get("isOnline", True)
+                
+                # Determine connection status based on heartbeat
+                connection_status = "unknown"
+                if last_heartbeat:
+                    try:
+                        last_hb_time = datetime.fromisoformat(last_heartbeat.replace('Z', '+00:00'))
+                        elapsed = (datetime.utcnow() - last_hb_time.replace(tzinfo=None)).total_seconds()
+                        # 15 minute threshold
+                        connection_status = "online" if elapsed < 900 else "offline"
+                    except:
+                        connection_status = "unknown"
+                elif is_online:
+                    connection_status = "online"
+                else:
+                    connection_status = "offline"
+                
+                health_data[point.access_point_id] = {
+                    "point_id": point.access_point_id,
+                    "name": point.name,
+                    "last_heartbeat": last_heartbeat,
+                    "connection_status": connection_status,
+                    "isOnline": is_online,
+                    "device_id": details.get("device_id"),
+                    "firmware_version": details.get("firmware_version"),
+                    "battery_level": details.get("battery_level")
+                }
+            
+            return health_data
+        except Exception as e:
+            logger.error(f"Error getting access points health: {e}")
+            return {}
+        finally:
+            db.close()
+
+    @staticmethod
+    async def register_hardware_device(payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Register a new hardware access point device (Plug & Play)"""
+        db = SessionLocal()
+        try:
+            device_id = payload.get("device_id")
+            if not device_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="device_id is required"
+                )
+            
+            # Check if device already exists
+            existing = db.query(AccessPoint).filter(
+                AccessPoint.details.contains({"device_id": device_id})
+            ).first()
+            
+            if existing:
+                # Update existing device
+                details = existing.details or {}
+                details.update({
+                    "device_id": device_id,
+                    "firmware_version": payload.get("firmware_version"),
+                    "hardware_vendor": payload.get("hardware_vendor"),
+                    "mac_address": payload.get("mac_address"),
+                    "ip_address": payload.get("ip_address"),
+                    "capabilities": payload.get("capabilities", []),
+                    "last_heartbeat": datetime.utcnow().isoformat(),
+                    "isOnline": True,
+                    "registered_at": datetime.utcnow().isoformat()
+                })
+                existing.details = details
+                existing.location = payload.get("location", existing.location)
+                existing.type = payload.get("device_type", existing.type)
+                db.commit()
+                db.refresh(existing)
+                
+                logger.info(f"Hardware device {device_id} updated")
+                return AccessControlService._map_access_point(existing)
+            
+            # Create new access point for device
+            default_property_id = AccessControlService._get_default_property_id(db, None)
+            new_point = AccessPoint(
+                property_id=default_property_id,
+                name=payload.get("location", f"Device {device_id}"),
+                location=payload.get("location", "Unknown"),
+                type=payload.get("device_type", "door"),
+                status="active",
+                details={
+                    "device_id": device_id,
+                    "firmware_version": payload.get("firmware_version"),
+                    "hardware_vendor": payload.get("hardware_vendor"),
+                    "mac_address": payload.get("mac_address"),
+                    "ip_address": payload.get("ip_address"),
+                    "capabilities": payload.get("capabilities", []),
+                    "last_heartbeat": datetime.utcnow().isoformat(),
+                    "isOnline": True,
+                    "registered_at": datetime.utcnow().isoformat()
+                }
+            )
+            db.add(new_point)
+            db.commit()
+            db.refresh(new_point)
+            
+            logger.info(f"Hardware device {device_id} registered as access point {new_point.access_point_id}")
+            return AccessControlService._map_access_point(new_point)
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error registering hardware device: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to register hardware device"
+            )
+        finally:
+            db.close() 

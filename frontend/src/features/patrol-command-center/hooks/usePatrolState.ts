@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
     PatrolOfficer,
     UpcomingPatrol,
@@ -21,9 +21,12 @@ import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import { PatrolEndpoint } from '../../../services/PatrolEndpoint';
 import { retryWithBackoff } from '../../../utils/retryWithBackoff';
 import apiService from '../../../services/ApiService';
+import { logger } from '../../../services/logger';
 import { useCheckInQueue } from './useCheckInQueue';
+import { usePatrolOperationQueue } from './usePatrolOperationQueue';
 import { usePatrolActions } from './usePatrolActions';
 import { useRequestDeduplication } from './useRequestDeduplication';
+import { usePatrolOperationLock } from './usePatrolOperationLock';
 import { useEdgeCaseHandling } from './useEdgeCaseHandling';
 import { usePatrolTelemetry } from './usePatrolTelemetry';
 import {
@@ -203,7 +206,7 @@ export const usePatrolState = (): PatrolContextValue => {
         return () => {
             isMounted = false;
         };
-    }, [selectedPropertyId, selectedPropertyTimezone]);
+    }, [selectedPropertyId]);
 
     const fetchData = useCallback(async () => {
         setIsLoading(true);
@@ -467,8 +470,16 @@ export const usePatrolState = (): PatrolContextValue => {
         flushIntervalMs: settings.realTimeSync ? 60000 : 120000
     });
 
+    const operationQueue = usePatrolOperationQueue({
+        onSynced: fetchData,
+        flushIntervalMs: settings.realTimeSync ? 60000 : 120000
+    });
+
     // Request deduplication for mobile agent integration
     const requestDedup = useRequestDeduplication();
+
+    // Operation lock for WebSocket race condition mitigation
+    const operationLock = usePatrolOperationLock();
 
     // Edge case handling
     const edgeCaseHandling = useEdgeCaseHandling({
@@ -485,18 +496,34 @@ export const usePatrolState = (): PatrolContextValue => {
     const { trackAction, trackPerformance, trackError: trackTelemetryError } = usePatrolTelemetry();
 
     // Initialize Data from Backend
+    // Only depend on selectedPropertyId to prevent infinite loops
+    // The fetchData function is stable (useCallback with proper deps), but we don't want to re-run when it changes
+    // Use request deduplication to prevent duplicate fetchData calls
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        const requestKey = `fetchPatrolData-${selectedPropertyId || 'default'}`;
+        if (requestDedup.isDuplicate(requestKey)) {
+            logger.debug('Skipping duplicate fetchPatrolData request', { module: 'PatrolState', propertyId: selectedPropertyId });
+            return;
+        }
+        requestDedup.recordRequest(requestKey, selectedPropertyId);
+        fetchData().finally(() => {
+            requestDedup.clearRequest(requestKey);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedPropertyId]);
+
+    // Store previous metrics values in a ref to prevent unnecessary updates
+    const prevMetricsValuesRef = useRef<string>('');
 
     // Recalculate Metrics when data changes
+    // Calculate metrics directly without useMemo to avoid dependency issues
+    // Use a ref-based comparison to prevent infinite loops
     useEffect(() => {
         const allCheckpoints = routes.flatMap(r => (r?.checkpoints || []));
         const totalCheckpoints = allCheckpoints.length;
         const completedCheckpoints = allCheckpoints.filter(cp => cp?.status === 'completed').length;
 
-        setMetrics(prev => ({
-            ...prev,
+        const newMetrics = {
             activePatrols: upcomingPatrols.filter(p => p && p.status === 'in-progress').length,
             totalOfficers: officers.length,
             onDutyOfficers: officers.filter(o => o && o.status === 'on-duty').length,
@@ -505,42 +532,83 @@ export const usePatrolState = (): PatrolContextValue => {
             totalRoutes: routes.length,
             activeRoutes: routes.filter(r => r && r.isActive).length,
             checkpointCompletionRate: totalCheckpoints > 0 ? Math.round((completedCheckpoints / totalCheckpoints) * 100) : 0,
-            totalPatrols: upcomingPatrols.length || prev.totalPatrols
-        }));
+            totalPatrols: upcomingPatrols.length
+        };
+
+        // Serialize metrics to string for comparison
+        const metricsKey = JSON.stringify(newMetrics);
+        
+        // Only update if values actually changed
+        if (prevMetricsValuesRef.current !== metricsKey) {
+            prevMetricsValuesRef.current = metricsKey;
+            
+            setMetrics(prevMetrics => ({
+                ...prevMetrics,
+                ...newMetrics,
+                totalPatrols: newMetrics.totalPatrols || prevMetrics.totalPatrols
+            }));
+        }
     }, [upcomingPatrols, officers, routes, alerts]);
 
     // Automatic offline detection based on heartbeat threshold
+    // Use ref to store latest officers to avoid dependency on officers array
+    const officersRef = useRef(officers);
+    useEffect(() => {
+        officersRef.current = officers;
+    }, [officers]);
+
     useEffect(() => {
         if (!settings.heartbeatOfflineThresholdMinutes) return;
 
         const checkOfflineStatus = () => {
             const thresholdMs = settings.heartbeatOfflineThresholdMinutes! * 60 * 1000;
             const now = Date.now();
+            const currentOfficers = officersRef.current;
 
-            setOfficers(prev => prev.map(officer => {
-                if (!officer.last_heartbeat) {
-                    // No heartbeat data - keep current status or mark as unknown
-                    return officer.connection_status === 'offline' ? officer : { ...officer, connection_status: 'unknown' as const };
-                }
-
-                try {
-                    const lastHeartbeat = new Date(officer.last_heartbeat).getTime();
-                    const elapsed = now - lastHeartbeat;
-                    const shouldBeOffline = elapsed > thresholdMs;
-
-                    if (shouldBeOffline && officer.connection_status !== 'offline') {
-                        return { ...officer, connection_status: 'offline' as const };
+            // Only update if status actually changed
+            setOfficers(prev => {
+                let hasChanges = false;
+                const updated = prev.map((officer, idx) => {
+                    // Find matching officer in ref to get latest heartbeat
+                    const refOfficer = currentOfficers.find(o => o.id === officer.id) || officer;
+                    
+                    if (!refOfficer.last_heartbeat) {
+                        // No heartbeat data - keep current status or mark as unknown
+                        if (officer.connection_status === 'offline' || officer.connection_status === 'unknown') {
+                            return officer;
+                        }
+                        hasChanges = true;
+                        return { ...officer, connection_status: 'unknown' as const };
                     }
-                    if (!shouldBeOffline && officer.connection_status === 'offline') {
-                        return { ...officer, connection_status: 'online' as const };
-                    }
-                } catch {
-                    // Invalid date - mark as unknown
-                    return { ...officer, connection_status: 'unknown' as const };
-                }
 
-                return officer;
-            }));
+                    try {
+                        const lastHeartbeat = new Date(refOfficer.last_heartbeat).getTime();
+                        const elapsed = now - lastHeartbeat;
+                        const shouldBeOffline = elapsed > thresholdMs;
+
+                        if (shouldBeOffline && officer.connection_status !== 'offline') {
+                            hasChanges = true;
+                            return { ...officer, connection_status: 'offline' as const };
+                        }
+                        if (!shouldBeOffline && officer.connection_status === 'offline') {
+                            hasChanges = true;
+                            return { ...officer, connection_status: 'online' as const };
+                        }
+                    } catch {
+                        // Invalid date - mark as unknown
+                        if (officer.connection_status === 'unknown') {
+                            return officer;
+                        }
+                        hasChanges = true;
+                        return { ...officer, connection_status: 'unknown' as const };
+                    }
+
+                    return officer; // No change
+                });
+
+                // Only update if something actually changed
+                return hasChanges ? updated : prev;
+            });
         };
 
         // Check immediately
@@ -550,53 +618,9 @@ export const usePatrolState = (): PatrolContextValue => {
         const interval = setInterval(checkOfflineStatus, 60000);
 
         return () => clearInterval(interval);
-    }, [settings.heartbeatOfflineThresholdMinutes, officers, setOfficers]);
+    }, [settings.heartbeatOfflineThresholdMinutes]); // Removed officers and setOfficers from deps
 
-    // State reconciliation: Fix officer/patrol status mismatches
-    useEffect(() => {
-        const reconcileState = () => {
-            // Find officers marked on-duty but not assigned to any active patrol
-            const onDutyOfficers = officers.filter(o => o.status === 'on-duty');
-            const activePatrols = upcomingPatrols.filter(p => p.status === 'in-progress');
-            
-            onDutyOfficers.forEach(officer => {
-                const hasActivePatrol = activePatrols.some(p => 
-                    p.assignedOfficer === officer.name && p.id === officer.currentPatrol
-                );
-                
-                if (!hasActivePatrol && officer.currentPatrol) {
-                    // Officer marked on-duty but patrol is not active - reconcile
-                    const patrol = upcomingPatrols.find(p => p.id === officer.currentPatrol);
-                    if (patrol && patrol.status !== 'in-progress') {
-                        // Patrol is not in-progress, mark officer as off-duty
-                        setOfficers(prev => StateUpdateService.updateItem(prev, officer.id, {
-                            status: 'off-duty',
-                            currentPatrol: undefined
-                        }));
-                    }
-                }
-            });
-
-            // Find active patrols without assigned officers or with officers marked off-duty
-            activePatrols.forEach(patrol => {
-                if (patrol.assignedOfficer) {
-                    const assignedOfficer = officers.find(o => o.name === patrol.assignedOfficer);
-                    if (assignedOfficer && assignedOfficer.status !== 'on-duty') {
-                        // Patrol is active but officer is not on-duty - reconcile
-                        setOfficers(prev => StateUpdateService.updateItem(prev, assignedOfficer.id, {
-                            status: 'on-duty',
-                            currentPatrol: patrol.id
-                        }));
-                    }
-                }
-            });
-        };
-
-        // Reconcile on data changes
-        if (officers.length > 0 && upcomingPatrols.length > 0) {
-            reconcileState();
-        }
-    }, [officers, upcomingPatrols, setOfficers]);
+    // State reconciliation is handled by useEdgeCaseHandling (debounced, prevents race conditions)
 
     const {
         handleDeployOfficer,
@@ -612,7 +636,13 @@ export const usePatrolState = (): PatrolContextValue => {
         setUpcomingPatrols,
         setEmergencyStatus,
         refresh: fetchData,
-        selectedPropertyId
+        selectedPropertyId,
+        operationQueue: {
+            enqueue: (operation: string, payload: Record<string, unknown>) => operationQueue.enqueue(operation as any, payload)
+        },
+        setLastSyncTimestamp,
+        requestDedup,
+        operationLock
     });
 
     const handleCheckpointCheckIn = useCallback(async (patrolId: string, checkpointId: string, notes?: string, deviceId?: string) => {
@@ -652,17 +682,18 @@ export const usePatrolState = (): PatrolContextValue => {
 
         const toastId = showLoading('Checking in to checkpoint...');
         const requestId = crypto.randomUUID();
+        const requestKey = `checkpoint_checkin-${patrolId}-${checkpointId}`;
         const startTime = Date.now();
         
         // Check for duplicate request (mobile agent integration)
-        if (requestDedup.isDuplicate(requestId)) {
+        if (requestDedup.isDuplicate(requestKey)) {
             dismissToast(toastId);
             showError('Duplicate check-in request detected. Please wait.');
             return;
         }
         
         // Record request for deduplication
-        requestDedup.recordRequest(requestId, patrolId, checkpointId);
+        requestDedup.recordRequest(requestKey, patrolId, checkpointId);
         
         // Track action start
         trackAction('checkpoint_checkin_start', 'checkpoint', { patrolId, checkpointId, requestId, ...(deviceId && { deviceId }) });
@@ -714,7 +745,7 @@ export const usePatrolState = (): PatrolContextValue => {
             // Update last sync timestamp on successful check-in
             setLastSyncTimestamp(new Date());
             // Clear request from deduplication cache
-            requestDedup.clearRequest(requestId);
+            requestDedup.clearRequest(requestKey);
             
             // Track success
             const duration = Date.now() - startTime;
@@ -800,6 +831,21 @@ export const usePatrolState = (): PatrolContextValue => {
             return;
         }
 
+        // Check if offline - enqueue if so
+        if (!navigator.onLine) {
+            operationQueue.enqueue('delete_template', { templateId });
+            showSuccess('Template deletion queued for sync when connection is restored');
+            return;
+        }
+
+        // Check for duplicate request
+        const requestKey = `delete_template-${templateId}`;
+        if (requestDedup.isDuplicate(requestKey)) {
+            showError('Delete request already in progress. Please wait.');
+            return;
+        }
+        requestDedup.recordRequest(requestKey, templateId);
+
         const toastId = showLoading('Deleting template...');
         const startTime = Date.now();
         trackAction('delete_template_start', 'template', { templateId });
@@ -813,12 +859,20 @@ export const usePatrolState = (): PatrolContextValue => {
                 }
             );
             setTemplates(prev => StateUpdateService.removeItem(prev, templateId));
+            setLastSyncTimestamp(new Date());
             dismissLoadingAndShowSuccess(toastId, 'Template deleted successfully');
         } catch (error) {
+            const isNetworkIssue = !navigator.onLine || !(error as { response?: unknown }).response;
+            if (isNetworkIssue) {
+                operationQueue.enqueue('delete_template', { templateId });
+                dismissToast(toastId);
+                showSuccess('Template deletion queued for sync when connection is restored');
+                return;
+            }
             dismissLoadingAndShowError(toastId, 'Failed to delete template. Please try again.');
             ErrorHandlerService.handle(error, 'deleteTemplate');
         }
-    }, [upcomingPatrols, templates]);
+    }, [upcomingPatrols, templates, operationQueue, setLastSyncTimestamp, requestDedup]);
 
 
     const handleDeleteRoute = useCallback(async (routeId: string) => {
@@ -843,6 +897,21 @@ export const usePatrolState = (): PatrolContextValue => {
             return;
         }
 
+        // Check if offline - enqueue if so
+        if (!navigator.onLine) {
+            operationQueue.enqueue('delete_route', { routeId });
+            showSuccess('Route deletion queued for sync when connection is restored');
+            return;
+        }
+
+        // Check for duplicate request
+        const requestKey = `delete_route-${routeId}`;
+        if (requestDedup.isDuplicate(requestKey)) {
+            showError('Delete request already in progress. Please wait.');
+            return;
+        }
+        requestDedup.recordRequest(requestKey, routeId);
+
         const toastId = showLoading('Deleting route...');
         const startTime = Date.now();
         trackAction('delete_route_start', 'route', { routeId });
@@ -856,12 +925,20 @@ export const usePatrolState = (): PatrolContextValue => {
                 }
             );
             setRoutes(prev => StateUpdateService.removeItem(prev, routeId));
+            setLastSyncTimestamp(new Date());
             dismissLoadingAndShowSuccess(toastId, 'Route deleted successfully');
         } catch (error) {
+            const isNetworkIssue = !navigator.onLine || !(error as { response?: unknown }).response;
+            if (isNetworkIssue) {
+                operationQueue.enqueue('delete_route', { routeId });
+                dismissToast(toastId);
+                showSuccess('Route deletion queued for sync when connection is restored');
+                return;
+            }
             dismissLoadingAndShowError(toastId, 'Failed to delete route. Please try again.');
             ErrorHandlerService.handle(error, 'deleteRoute');
         }
-    }, [routes, upcomingPatrols]);
+    }, [routes, upcomingPatrols, operationQueue, setLastSyncTimestamp, requestDedup]);
 
     const handleDeleteCheckpoint = useCallback(async (checkpointId: string, routeId: string) => {
         if (!checkpointId || !routeId) {
@@ -885,6 +962,14 @@ export const usePatrolState = (): PatrolContextValue => {
         if (!edgeCaseHandling.validateCheckpointDeletion(routeId)) {
             return;
         }
+
+        // Check for duplicate request
+        const requestKey = `delete_checkpoint-${checkpointId}-${routeId}`;
+        if (requestDedup.isDuplicate(requestKey)) {
+            showError('Delete request already in progress. Please wait.');
+            return;
+        }
+        requestDedup.recordRequest(requestKey, checkpointId, routeId);
 
         const toastId = showLoading('Deleting checkpoint...');
         const startTime = Date.now();
@@ -969,6 +1054,9 @@ export const usePatrolState = (): PatrolContextValue => {
         retryCheckInQueue: checkInQueue.retryFailed,
         checkInQueuePendingCount: checkInQueue.pendingCount,
         checkInQueueFailedCount: checkInQueue.failedCount,
+        operationQueuePendingCount: operationQueue.pendingCount,
+        operationQueueFailedCount: operationQueue.failedCount,
+        retryOperationQueue: operationQueue.retryFailed,
         isOffline,
         activeTab,
         setActiveTab,

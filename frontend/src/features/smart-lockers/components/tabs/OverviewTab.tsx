@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../../../components
 import { useSmartLockersContext } from '../../context/SmartLockersContext';
 import { getStatusBadgeClass, getSizeBadgeClass } from '../../utils/badgeHelpers';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 
 export const OverviewTab: React.FC = () => {
@@ -71,7 +72,7 @@ export const OverviewTab: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-white uppercase tracking-tighter">{locker.lockerNumber}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)]">{locker.location}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)]">{formatLocationDisplay(locker.location) || '—'}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">

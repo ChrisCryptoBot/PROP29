@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { useIoTEnvironmentalContext } from '../../context/IoTEnvironmentalContext';
 import { renderSensorIcon } from '../../utils/sensorIcons';
@@ -140,7 +141,7 @@ const SensorsTab: React.FC = () => {
                     <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] block">LOCATION</span>
                     <span className="text-[10px] font-black text-white/70 uppercase flex items-center">
                       <i className="fas fa-map-marker-alt mr-1.5 text-blue-500/60" />
-                      {sensor.location}
+                      {formatLocationDisplay(sensor.location as string | { lat?: number; lng?: number } | null) || '—'}
                     </span>
                   </div>
                   <div className="space-y-1">

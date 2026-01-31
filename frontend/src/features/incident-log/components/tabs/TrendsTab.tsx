@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import {
     LineChart,
     Line,
@@ -114,9 +115,7 @@ export const TrendsTab: React.FC = () => {
 
     const locationHotspots = useMemo(() => {
         const locationCounts = incidents.reduce((acc: Record<string, number>, incident: Incident) => {
-            const location = typeof incident.location === 'string'
-                ? incident.location
-                : incident.location?.area;
+            const location = formatLocationDisplay(incident.location);
             if (!location) return acc;
             acc[location] = (acc[location] || 0) + 1;
             return acc;
@@ -211,11 +210,12 @@ export const TrendsTab: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Incident Log</p>
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">Trends & Analytics</h2>
-                    <p className="text-[11px] text-[color:var(--text-sub)]">Visualize incident patterns over time.</p>
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Trends & Analytics</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Visualize incident patterns over time
+                    </p>
                 </div>
                 <div className="flex items-center gap-4">
                     {/* View Mode Selection */}
@@ -316,7 +316,7 @@ export const TrendsTab: React.FC = () => {
                 </div>
             </div>
             {dateRange === 'custom' && (
-                <Card className="glass-card border border-white/5 shadow-2xl">
+                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -343,10 +343,10 @@ export const TrendsTab: React.FC = () => {
             )}
             {/* Conditional Analytics Views */}
             {viewMode === 'incidents' && (
-                <Card className="glass-card border border-white/5 shadow-2xl">
+                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="flex items-center text-xl text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                 <i className="fas fa-chart-line text-white" />
                             </div>
                             <span className="uppercase tracking-tight">Incident Trends Over Time</span>
@@ -380,10 +380,10 @@ export const TrendsTab: React.FC = () => {
             )}
 
             {viewMode === 'sources' && (
-                <Card className="glass-card border border-white/5 shadow-2xl">
+                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                     <CardHeader>
                         <CardTitle className="flex items-center text-xl text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                 <i className="fas fa-source-alt text-white" />
                             </div>
                             <span className="uppercase tracking-tight">Incident Sources Over Time</span>
@@ -422,10 +422,10 @@ export const TrendsTab: React.FC = () => {
             {viewMode === 'performance' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Agent Performance Trends */}
-                    <Card className="glass-card border border-white/5 shadow-2xl">
+                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="flex items-center text-xl text-white">
-                                <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                                <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                     <i className="fas fa-user-shield text-white" />
                                 </div>
                                 <span className="uppercase tracking-tight">Agent Performance</span>
@@ -459,10 +459,10 @@ export const TrendsTab: React.FC = () => {
                     </Card>
 
                     {/* Hardware Health Trends */}
-                    <Card className="glass-card border border-white/5 shadow-2xl">
+                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="flex items-center text-xl text-white">
-                                <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                                <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                                     <i className="fas fa-microchip text-white" />
                                 </div>
                                 <span className="uppercase tracking-tight">Hardware Health</span>
@@ -498,10 +498,10 @@ export const TrendsTab: React.FC = () => {
             )}
 
             {/* Incident Type Distribution */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-chart-pie text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Incident Type Distribution</span>
@@ -524,7 +524,12 @@ export const TrendsTab: React.FC = () => {
                                         cx="50%"
                                         cy="50%"
                                         labelLine={false}
-                                        label={(entry) => `${entry.type}: ${entry.percentage}%`}
+                                        label={((entry: any, index: number) => {
+                                            // Recharts label function receives the data entry, but TypeScript types it incorrectly
+                                            // Access the data entry from typeDistribution using the index
+                                            const dataEntry = typeDistribution[index];
+                                            return dataEntry ? `${dataEntry.type}: ${dataEntry.percentage}%` : '';
+                                        }) as any}
                                         outerRadius={80}
                                         fill="#8884d8"
                                         dataKey="count"
@@ -560,10 +565,10 @@ export const TrendsTab: React.FC = () => {
             </Card>
 
             {/* Location Hotspots */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-map-marker-alt text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Location Hotspots</span>
@@ -596,10 +601,10 @@ export const TrendsTab: React.FC = () => {
             </Card>
 
             {/* Time Pattern Analysis */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className="fas fa-clock text-white" />
                         </div>
                         <span className="uppercase tracking-tight">Time Pattern Analysis</span>

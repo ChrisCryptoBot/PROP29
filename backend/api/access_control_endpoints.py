@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header, Body, Query
 from fastapi.responses import StreamingResponse
 from typing import Any, Dict, Optional, List
 import csv
 import io
 from datetime import datetime
-from api.auth_dependencies import get_current_user_optional
+from api.auth_dependencies import get_current_user_optional, verify_hardware_ingest_key
 from models import User
 from schemas import (
     AccessControlEmergencyRequest,
@@ -149,8 +149,25 @@ async def create_agent_event(
     """
     Endpoint for agent mobile devices to submit access events.
     Events are created with review_status='pending' and require manager approval.
+    
+    Features:
+    - Idempotency: Duplicate events (same idempotency_key) are rejected
+    - Source tracking: Tracks agent_id, device_id, and metadata
+    - Auto-validation: Validates access point and user exist
     """
     user_id = str(current_user.user_id) if current_user else None
+    
+    # Check idempotency if key provided
+    if payload.idempotency_key:
+        existing = await AccessControlService.check_idempotency(payload.idempotency_key)
+        if existing:
+            return {
+                "data": existing,
+                "message": "Event already submitted (idempotent)",
+                "success": True,
+                "duplicate": True
+            }
+    
     data = await AccessControlService.create_agent_event(
         payload.dict(),
         property_id,
@@ -353,6 +370,79 @@ async def export_access_events(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+@router.post("/points/{point_id}/heartbeat")
+async def access_point_heartbeat(
+    point_id: str,
+    body: Optional[Dict[str, Any]] = Body(None),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+) -> Dict[str, Any]:
+    """
+    Record heartbeat from access point hardware device.
+    Auth: JWT or X-API-Key (hardware).
+    
+    Updates last_heartbeat timestamp and connection status.
+    """
+    if current_user is None and not x_api_key:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    if current_user is None and x_api_key:
+        await verify_hardware_ingest_key(x_api_key)
+    
+    device_id = (body or {}).get("device_id") if body else None
+    data = await AccessControlService.record_access_point_heartbeat(
+        point_id,
+        device_id,
+        (body or {}).get("firmware_version"),
+        (body or {}).get("battery_level"),
+        (body or {}).get("sensor_status")
+    )
+    return {"ok": True, "point_id": point_id, "data": data}
+
+
+@router.get("/points/health")
+async def access_points_health(
+    property_id: Optional[str] = Query(None),
+    current_user: User | None = Depends(get_current_user_optional)
+) -> Dict[str, Any]:
+    """
+    Get access point health status (last_heartbeat, connection_status).
+    Returns heartbeat data for all access points or filtered by property_id.
+    """
+    data = await AccessControlService.get_access_points_health(property_id)
+    return {"data": data}
+
+
+@router.post("/points/register")
+async def register_hardware_device(
+    payload: Dict[str, Any] = Body(...),
+    x_api_key: Optional[str] = Header(default=None, alias="x-api-key"),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+) -> Dict[str, Any]:
+    """
+    Register a new hardware access point device (Plug & Play).
+    Auth: X-API-Key (hardware) required.
+    
+    Payload:
+    {
+        "device_id": "unique-device-id",
+        "device_type": "door" | "gate" | "elevator" | "turnstile" | "barrier",
+        "firmware_version": "1.0.0",
+        "hardware_vendor": "VendorName",
+        "mac_address": "00:11:22:33:44:55",
+        "ip_address": "192.168.1.100",
+        "location": "Building A - Main Entrance",
+        "capabilities": ["card", "biometric", "pin"]
+    }
+    """
+    if current_user is None and not x_api_key:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    if current_user is None and x_api_key:
+        await verify_hardware_ingest_key(x_api_key)
+    
+    data = await AccessControlService.register_hardware_device(payload)
+    return {"data": data, "message": "Device registered successfully", "success": True}
 
 
 @router.get("/reports/export")

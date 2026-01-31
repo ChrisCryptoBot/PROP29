@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { PatrolContext, usePatrolContext } from './context/PatrolContext';
 import { usePatrolState } from './hooks/usePatrolState';
 import { usePatrolWebSocket } from './hooks/usePatrolWebSocket';
 import { usePatrolTelemetry } from './hooks/usePatrolTelemetry';
 
 // Tabs
-import { DashboardTab } from './components/tabs/DashboardTab';
+import { OverviewTab } from './components/tabs/OverviewTab';
 import { PatrolManagementTab } from './components/tabs/PatrolManagementTab';
 import { DeploymentTab } from './components/tabs/DeploymentTab';
 import { RoutesCheckpointsTab } from './components/tabs/RoutesCheckpointsTab';
@@ -22,13 +22,22 @@ const PatrolGlobalRefresh: React.FC = () => {
     const { register, unregister } = useGlobalRefresh();
     const { refreshPatrolData } = usePatrolContext();
 
+    // Use ref to store latest refreshPatrolData function to prevent re-registration loops
+    const refreshPatrolDataRef = useRef(refreshPatrolData);
+    useEffect(() => {
+        refreshPatrolDataRef.current = refreshPatrolData;
+    }, [refreshPatrolData]);
+
+    // register and unregister are stable (useCallback with empty deps in GlobalRefreshContext)
+    // We use an empty dependency array to prevent re-registration on every render
     useEffect(() => {
         const handler = async () => {
-            await refreshPatrolData();
+            await refreshPatrolDataRef.current();
         };
         register('patrol-command-center', handler);
         return () => unregister('patrol-command-center');
-    }, [register, unregister, refreshPatrolData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty deps - register/unregister are stable, refreshPatrolData is accessed via ref
 
     return null;
 };
@@ -43,6 +52,9 @@ const PatrolCommandCenterLayout: React.FC = () => {
         isOffline,
         settings,
         checkInQueuePendingCount,
+        checkInQueueFailedCount,
+        operationQueuePendingCount,
+        operationQueueFailedCount,
         lastSyncTimestamp,
         setUpcomingPatrols,
         setOfficers,
@@ -108,12 +120,12 @@ const PatrolCommandCenterLayout: React.FC = () => {
 
     const tabs = useMemo(() => {
         const base = [
-            { id: 'dashboard' as const, label: 'Dashboard' },
+            { id: 'dashboard' as const, label: 'Overview' },
             { id: 'patrol-management' as const, label: checkInQueuePendingCount > 0 ? (
                 <span>Patrol Management <span className="text-amber-400">• {checkInQueuePendingCount} pending</span></span>
             ) : 'Patrol Management' },
-            { id: 'deployment' as const, label: 'Deployment' },
             { id: 'routes-checkpoints' as const, label: 'Routes & Checkpoints' },
+            { id: 'deployment' as const, label: 'Deployment' },
             { id: 'patrol-settings' as const, label: 'Settings' }
         ];
         return base;
@@ -133,7 +145,7 @@ const PatrolCommandCenterLayout: React.FC = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <DashboardTab setActiveTab={setActiveTab} />;
+                return <OverviewTab setActiveTab={setActiveTab} />;
             case 'patrol-management':
                 return <PatrolManagementTab />;
             case 'deployment':
@@ -152,7 +164,7 @@ const PatrolCommandCenterLayout: React.FC = () => {
                                 <p className="text-slate-500 mb-4">The requested tab does not exist.</p>
                                 <Button onClick={() => setActiveTab('dashboard')}>
                                     <i className="fas fa-home mr-2"></i>
-                                    Go to Dashboard
+                                    Go to Overview
                                 </Button>
                             </CardContent>
                         </Card>
@@ -187,11 +199,23 @@ const PatrolCommandCenterLayout: React.FC = () => {
             {isOffline && (
                 <div className="bg-amber-500/20 border-b border-amber-500/50 px-4 py-2">
                     <div className="flex items-center justify-between">
-                        <p className="text-amber-400 text-xs font-black uppercase tracking-wider">
-                            {settings.offlineMode
-                                ? 'Offline mode — changes will sync when connection is restored. Deployment is disabled.'
-                                : 'Online only — reconnect to continue. Deployment is disabled.'}
-                        </p>
+                        <div className="flex items-center gap-4">
+                            <p className="text-amber-400 text-xs font-black uppercase tracking-wider">
+                                {settings.offlineMode
+                                    ? 'Offline mode — changes will sync when connection is restored. Deployment is disabled.'
+                                    : 'Online only — reconnect to continue. Deployment is disabled.'}
+                            </p>
+                            {(checkInQueuePendingCount > 0 || operationQueuePendingCount > 0) && (
+                                <span className="text-[9px] font-mono text-amber-300/70 uppercase tracking-widest">
+                                    {checkInQueuePendingCount + operationQueuePendingCount} pending sync{checkInQueuePendingCount + operationQueuePendingCount !== 1 ? 's' : ''}
+                                </span>
+                            )}
+                            {(checkInQueueFailedCount > 0 || operationQueueFailedCount > 0) && (
+                                <span className="text-[9px] font-mono text-red-300/70 uppercase tracking-widest">
+                                    {checkInQueueFailedCount + operationQueueFailedCount} failed
+                                </span>
+                            )}
+                        </div>
                         {lastSyncTimestamp && (
                             <p className="text-[9px] font-mono text-amber-300/70 uppercase tracking-widest ml-4">
                                 Last sync: {lastSyncTimestamp.toLocaleTimeString()}

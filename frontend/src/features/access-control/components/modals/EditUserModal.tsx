@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
 import type { AccessControlUser, UserRole, UserStatus, AccessLevel } from '../../../../shared/types/access-control.types';
 import type { AccessSchedule } from '../../../../shared/types/access-control.types';
 import { cn } from '../../../../utils/cn';
+import { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';
 
 export interface UserFormData {
   name: string;
@@ -84,10 +86,19 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     }
   }, [user, setIsFormDirty]);
 
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const handleClose = () => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+    if (isFormDirty) {
+      setShowDiscardModal(true);
       return;
     }
+    onClose();
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    setIsFormDirty(false);
     onClose();
   };
 
@@ -166,6 +177,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -215,21 +227,21 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="edit-user-role" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Role</label>
-              <select id="edit-user-role" value={formData.role} onChange={(e) => updateFormData({ role: e.target.value as UserRole })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
+              <Select id="edit-user-role" value={formData.role} onChange={(e) => updateFormData({ role: e.target.value as UserRole })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
                 {AVAILABLE_ROLES.map(role => <option key={role} value={role}>{role}</option>)}
-              </select>
+              </Select>
             </div>
             <div>
               <label htmlFor="edit-user-status" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Status</label>
-              <select id="edit-user-status" value={formData.status} onChange={(e) => updateFormData({ status: e.target.value as UserStatus })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
+              <Select id="edit-user-status" value={formData.status} onChange={(e) => updateFormData({ status: e.target.value as UserStatus })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
                 {AVAILABLE_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}
-              </select>
+              </Select>
             </div>
             <div>
               <label htmlFor="edit-user-access-level" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Access Level</label>
-              <select id="edit-user-access-level" value={formData.accessLevel} onChange={(e) => updateFormData({ accessLevel: e.target.value as AccessLevel })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
+              <Select id="edit-user-access-level" value={formData.accessLevel} onChange={(e) => updateFormData({ accessLevel: e.target.value as AccessLevel })} className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono [&>option]:bg-slate-900">
                 {AVAILABLE_ACCESS_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}
-              </select>
+              </Select>
             </div>
           </div>
         </div>
@@ -273,5 +285,11 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         </div>
       </div>
     </Modal>
+      <ConfirmDiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleConfirmDiscard}
+      />
+    </>
   );
 };

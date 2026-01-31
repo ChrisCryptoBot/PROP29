@@ -2,11 +2,6 @@ import React from 'react';
 import { useModal } from '../../contexts/ModalContext';
 import { modalConfig, MODAL_TYPES, ModalType, ModalConfig } from '../../config/modalConfig';
 
-// Import only existing modal components
-// import SecurityAlertsModal from './SecurityAlertsModal';
-// import PatrolCommandCenterModal from './PatrolCommandCenterModal'; // DELETED
-// import PredictiveIntelConfigModal from './PredictiveIntelConfigModal';
-
 interface PlaceholderModalProps {
     title: string;
     isOpen: boolean;

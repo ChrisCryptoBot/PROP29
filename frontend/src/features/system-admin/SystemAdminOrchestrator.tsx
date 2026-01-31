@@ -1,6 +1,6 @@
 import React from 'react';
 import { SystemAdminProvider, useSystemAdminContext } from './context/SystemAdminContext';
-import { DashboardTab } from './components/tabs/DashboardTab';
+import { OverviewTab } from './components/tabs/OverviewTab';
 import { UsersTab } from './components/tabs/UsersTab';
 import { RolesTab } from './components/tabs/RolesTab';
 import { PropertiesTab } from './components/tabs/PropertiesTab';
@@ -20,25 +20,25 @@ const SystemAdminOrchestratorContent: React.FC = () => {
     const { activeTab, setActiveTab, error } = useSystemAdminContext();
 
     const tabs = [
-        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'dashboard', label: 'Overview' },
         { id: 'users', label: 'Users' },
         { id: 'roles', label: 'Roles' },
         { id: 'properties', label: 'Properties' },
-        { id: 'system', label: 'System' },
         { id: 'security', label: 'Security' },
-        { id: 'audit', label: 'Audit Log' }
+        { id: 'system', label: 'System' },
+        { id: 'audit', label: 'Audit' }
     ];
 
     const renderTabContent = () => {
         switch (activeTab) {
-            case 'dashboard': return <DashboardTab />;
+            case 'dashboard': return <OverviewTab />;
             case 'users': return <UsersTab />;
             case 'roles': return <RolesTab />;
             case 'properties': return <PropertiesTab />;
             case 'system': return <SystemTab />;
             case 'security': return <SecurityTab />;
             case 'audit': return <AuditTab />;
-            default: return <DashboardTab />;
+            default: return <OverviewTab />;
         }
     };
 

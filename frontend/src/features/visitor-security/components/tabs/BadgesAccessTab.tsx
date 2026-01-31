@@ -56,21 +56,20 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
 
   if (loading.visitors && checkedInVisitors.length === 0) {
     return (
-      <div className="text-center py-12">
-        <i className="fas fa-spinner fa-spin text-3xl text-[color:var(--text-sub)] mb-4" />
-        <p className="text-[color:var(--text-sub)]">Synchronizing credential data...</p>
+      <div className="flex flex-col items-center justify-center py-12" role="status" aria-label="Loading badges">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Synchronizing credential data...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header with Hardware Status */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Visitor Security</p>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Badges & Access Control</h2>
-          <p className="text-[11px] text-[color:var(--text-sub)]">
+      {/* Page Header - Gold Standard */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Badges & Access Control</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Physical credential management, hardware integration, and sector access control.
           </p>
         </div>
@@ -103,7 +102,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
         <Card className="glass-card border border-white/5 shadow-2xl">
           <CardHeader>
             <CardTitle className="flex items-center text-xl text-white">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
                 <i className="fas fa-microchip text-white" />
               </div>
               <span className="uppercase tracking-tight">Hardware Device Status</span>
@@ -200,7 +199,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
       <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
         <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
           <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-emerald-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-emerald-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-id-badge text-white text-sm" />
             </div>
             Active Credentials & Sector Access ({checkedInVisitors.length})

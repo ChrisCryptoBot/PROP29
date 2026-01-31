@@ -9,6 +9,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useHandoverContext } from '../../context/HandoverContext';
 import { showSuccess } from '../../../../utils/toast';
 import { EmptyState } from '../../../../components/UI/EmptyState';
@@ -177,7 +178,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                   <div>
                     <h4 className="font-bold text-[color:var(--text-main)] text-sm">{task.description}</h4>
                     <p className="text-xs text-[color:var(--text-sub)] mt-1 font-mono opacity-80">
-                      Location: {task.location} | Priority: {task.priority}
+                      Location: {formatLocationDisplay(task.location) || '—'} | Priority: {task.priority}
                     </p>
                     <p className="text-[10px] text-[color:var(--text-sub)] mt-1 uppercase tracking-wider opacity-60">Category: {task.category}</p>
                   </div>
@@ -317,7 +318,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                   {request.location && (
                     <p className="text-xs text-[color:var(--text-sub)] mt-1">
                       <i className="fas fa-map-marker-alt mr-1" />
-                      {request.location}
+                      {formatLocationDisplay(request.location) || '—'}
                     </p>
                   )}
                   <Button

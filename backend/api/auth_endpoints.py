@@ -123,7 +123,3 @@ async def refresh_token(request: RefreshRequest):
     Refresh access token
     """
     return await AuthService.refresh_token(request.refresh_token)
-
-# Export get_current_user for use in other modules
-# This allows backward compatibility with existing imports
-get_current_user = get_current_user_dep

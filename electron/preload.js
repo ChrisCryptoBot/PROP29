@@ -20,5 +20,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // System info
   getPlatform: () => process.platform,
-  getVersion: () => process.versions.electron
+  getVersion: () => process.versions.electron,
+  
+  // Multi-monitor support
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  on: (channel, callback) => {
+    const subscription = (_event, ...args) => callback(...args);
+    ipcRenderer.on(channel, subscription);
+    return () => ipcRenderer.removeListener(channel, subscription);
+  },
+  off: (channel, callback) => ipcRenderer.removeListener(channel, callback)
 }); 

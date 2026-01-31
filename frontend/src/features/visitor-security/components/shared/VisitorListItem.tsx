@@ -9,6 +9,7 @@ import { Button } from '../../../../components/UI/Button';
 import { StatusBadge } from './StatusBadge';
 import { SecurityClearanceBadge } from './SecurityClearanceBadge';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../utils/formatLocation';
 import type { Visitor } from '../../types/visitor-security.types';
 
 export interface VisitorListItemProps {
@@ -57,13 +58,13 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
         "flex items-center justify-between p-4 rounded-xl border transition-all group",
         onSelect ? 'cursor-pointer' : '',
         isOverdue
-          ? "bg-red-500/5 border-red-500/30 hover:bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.1)] relative overflow-hidden"
+          ? "bg-red-500/5 border-red-500/30 hover:bg-red-500/10 relative overflow-hidden"
           : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20"
       )}
       onClick={handleClick}
     >
       {isOverdue && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-600 animate-pulse" />
       )}
 
       <div className="flex items-center space-x-4 flex-1">
@@ -77,7 +78,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
             {visitor.first_name[0]}{visitor.last_name[0]}
           </Avatar>
           {isOverdue && (
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border border-black shadow-lg z-10">
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border border-black z-10">
               <i className="fas fa-clock text-[8px] text-white animate-pulse" />
             </div>
           )}
@@ -95,7 +96,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
             )}
           </div>
           <p className="text-sm text-[color:var(--text-sub)]/70">
-            {visitor.purpose} <span className="mx-1 opacity-30">•</span> {visitor.location}
+            {visitor.purpose} <span className="mx-1 opacity-30">•</span> {formatLocationDisplay(visitor.location)}
           </p>
           {visitor.event_name && !compact && (
             <span className="inline-block mt-2 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter rounded text-indigo-400 bg-indigo-500/10 border border-indigo-500/20">

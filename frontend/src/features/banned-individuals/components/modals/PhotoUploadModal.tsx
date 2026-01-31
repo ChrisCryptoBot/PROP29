@@ -42,8 +42,8 @@ export const PhotoUploadModal: React.FC = () => {
                                 Security Compliance Warning
                             </h5>
                             <p className="text-xs text-amber-200/60 leading-relaxed font-medium">
-                                Upload a clear, front-facing biometric image. Images will be automatically purged based on your data retention policy.
-                                By uploading, you certify that this imagery is required for legitimate security purposes and site safety.
+                                Upload a clear reference photo for in-person verification. Images are purged per your retention policy.
+                                Staff use this to compare during manual checks (e.g. at bar, lobby).
                             </p>
                         </div>
 
@@ -64,7 +64,7 @@ export const PhotoUploadModal: React.FC = () => {
                                     <i className="fas fa-fingerprint text-white text-2xl" />
                                 </div>
                                 <div>
-                                    <p className="text-white font-bold uppercase tracking-widest text-xs">Select Biometric Image</p>
+                                    <p className="text-white font-bold uppercase tracking-widest text-xs">Select reference photo</p>
                                     <p className="text-slate-500 text-[10px] mt-1.5 uppercase tracking-tighter">Accepts JPG, PNG, WEBP (Max 10MB)</p>
                                 </div>
                             </div>
@@ -80,8 +80,7 @@ export const PhotoUploadModal: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Existing Signature Found</span>
-                                    <span className="text-xs font-bold text-blue-400 italic mt-1 block">training_model_active.v4</span>
+                                    <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Existing reference photo</span>
                                 </div>
                             </div>
                         )}

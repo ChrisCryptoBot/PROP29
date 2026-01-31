@@ -28,6 +28,7 @@ import {
   AccessLoggingConfigModal,
   NotificationSettingsConfigModal,
   BackupRecoveryConfigModal,
+  ConfirmDeleteModal,
   type BiometricConfig,
   type AccessTimeoutsConfig,
   type EmergencyOverrideConfig,
@@ -54,6 +55,11 @@ const ConfigurationTabComponent: React.FC = () => {
   const [showCreateMappingModal, setShowCreateMappingModal] = useState(false);
   const [groupForm, setGroupForm] = useState({ name: '', description: '', accessPoints: '' });
   const [mappingForm, setMappingForm] = useState({ role: '', zoneName: '', accessPoints: '' });
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
+  const [showDeleteGroupModal, setShowDeleteGroupModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<AccessPointGroup | null>(null);
+  const [showDeleteMappingModal, setShowDeleteMappingModal] = useState(false);
+  const [mappingToDelete, setMappingToDelete] = useState<RoleZoneMapping | null>(null);
 
   // Modals state
   const [showBiometricConfig, setShowBiometricConfig] = useState(false);
@@ -126,10 +132,12 @@ const ConfigurationTabComponent: React.FC = () => {
     setBackupModalDirty(false);
   }, []);
 
-  const handleResetConfiguration = useCallback(async () => {
-    if (!window.confirm('Are you sure you want to reset all configuration changes? This cannot be undone.')) {
-      return;
-    }
+  const handleResetConfiguration = useCallback(() => {
+    setShowResetConfirmModal(true);
+  }, []);
+
+  const handleConfirmResetConfiguration = useCallback(() => {
+    setShowResetConfirmModal(false);
     // Reset all configs to their initial states
     setBiometricConfig({
       enabled: false, requireFingerprint: true, requireFaceId: false, requireIris: false, requireVoice: false,
@@ -194,6 +202,24 @@ const ConfigurationTabComponent: React.FC = () => {
     }
   }, []);
 
+  const handleConfirmDeleteGroup = useCallback(() => {
+    if (!groupToDelete) return;
+    setAccessPointGroups(prev => prev.filter(g => g.id !== groupToDelete.id));
+    setShowDeleteGroupModal(false);
+    setGroupToDelete(null);
+    showSuccess(`Access point group "${groupToDelete.name}" deleted`);
+  }, [groupToDelete]);
+
+  const handleConfirmDeleteMapping = useCallback(() => {
+    if (!mappingToDelete) return;
+    setRoleZoneMappings(prev => prev.filter(m => 
+      m.role !== mappingToDelete.role || m.zoneName !== mappingToDelete.zoneName
+    ));
+    setShowDeleteMappingModal(false);
+    setMappingToDelete(null);
+    showSuccess(`Role-zone mapping "${mappingToDelete.role}" → "${mappingToDelete.zoneName}" deleted`);
+  }, [mappingToDelete]);
+
   const handleCreateGroup = useCallback(() => {
     if (!groupForm.name.trim()) {
       showError('Group name is required.');
@@ -245,10 +271,12 @@ const ConfigurationTabComponent: React.FC = () => {
   return (
     <div className="space-y-6" role="main" aria-label="Configuration">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-2xl font-black uppercase tracking-tighter text-[color:var(--text-main)]">Configuration</h2>
-          <p className="text-[color:var(--text-sub)] font-medium">System settings, permissions, and security policies</p>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Configuration</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            System settings, permissions, and security policies
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -287,10 +315,10 @@ const ConfigurationTabComponent: React.FC = () => {
       {/* Configuration Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" role="group" aria-label="Configuration sections">
         {/* Security Settings */}
-        <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+        <Card className="glass-card border border-white/5 bg-transparent">
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
                 <i className="fas fa-shield-alt text-white" />
               </div>
               <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Security Settings</span>
@@ -355,10 +383,10 @@ const ConfigurationTabComponent: React.FC = () => {
         </Card>
 
         {/* System Settings */}
-        <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+        <Card className="glass-card border border-white/5 bg-transparent">
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
                 <i className="fas fa-cog text-white" />
               </div>
               <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">System Settings</span>
@@ -424,11 +452,11 @@ const ConfigurationTabComponent: React.FC = () => {
       </div>
 
       {/* Access Point Grouping Section */}
-      <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+      <Card className="glass-card border border-white/5 bg-transparent">
         <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
                 <i className="fas fa-layer-group text-white" />
               </div>
               <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Access Point Grouping</span>
@@ -487,10 +515,8 @@ const ConfigurationTabComponent: React.FC = () => {
                         variant="destructive"
                         className="bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 h-8 text-[10px]"
                         onClick={() => {
-                          if (window.confirm(`Delete group "${group.name}"? This will not delete the access points themselves.`)) {
-                            setAccessPointGroups(prev => prev.filter(g => g.id !== group.id));
-                            showSuccess(`Group "${group.name}" deleted`);
-                          }
+                          setGroupToDelete(group);
+                          setShowDeleteGroupModal(true);
                         }}
                         aria-label={`Delete access point group ${group.name}`}
                       >
@@ -518,11 +544,11 @@ const ConfigurationTabComponent: React.FC = () => {
       </Card>
 
       {/* Role-to-Zone Mapping Section */}
-      <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+      <Card className="glass-card border border-white/5 bg-transparent">
         <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
                 <i className="fas fa-route text-white" />
               </div>
               <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Role-to-Zone Mapping</span>
@@ -588,10 +614,8 @@ const ConfigurationTabComponent: React.FC = () => {
                         variant="destructive"
                         className="bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 h-8 text-[10px]"
                         onClick={() => {
-                          if (window.confirm(`Delete role-zone mapping for "${mapping.role}" → "${mapping.zoneName}"?`)) {
-                            setRoleZoneMappings(prev => prev.filter(m => m.id !== mapping.id));
-                            showSuccess('Role-zone mapping deleted');
-                          }
+                          setMappingToDelete(mapping);
+                          setShowDeleteMappingModal(true);
                         }}
                         aria-label={`Delete role-zone mapping ${mapping.role} to ${mapping.zoneName}`}
                       >
@@ -618,11 +642,11 @@ const ConfigurationTabComponent: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+      <Card className="glass-card border border-white/5 bg-transparent">
         <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
                 <i className="fas fa-clipboard-list text-white" />
               </div>
               <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Recent Audit Trail</span>
@@ -909,6 +933,38 @@ const ConfigurationTabComponent: React.FC = () => {
         onConfigChange={(updates) => setBackupConfig(prev => ({ ...prev, ...updates }))}
         isFormDirty={backupModalDirty}
         setIsFormDirty={setBackupModalDirty}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={showResetConfirmModal}
+        onClose={() => setShowResetConfirmModal(false)}
+        onConfirm={handleConfirmResetConfiguration}
+        title="Reset Configuration"
+        message="Are you sure you want to reset all configuration changes? This cannot be undone."
+      />
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteGroupModal}
+        onClose={() => {
+          setShowDeleteGroupModal(false);
+          setGroupToDelete(null);
+        }}
+        onConfirm={handleConfirmDeleteGroup}
+        title="Delete Access Point Group"
+        message={`Delete group "${groupToDelete?.name}"? This will not delete the access points themselves.`}
+        itemName={groupToDelete?.name}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={showDeleteMappingModal}
+        onClose={() => {
+          setShowDeleteMappingModal(false);
+          setMappingToDelete(null);
+        }}
+        onConfirm={handleConfirmDeleteMapping}
+        title="Delete Role-Zone Mapping"
+        message={`Delete role-zone mapping for "${mappingToDelete?.role}" → "${mappingToDelete?.zoneName}"?`}
+        itemName={`${mappingToDelete?.role} → ${mappingToDelete?.zoneName}`}
       />
     </div>
   );

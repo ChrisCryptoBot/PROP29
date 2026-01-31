@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useIoTEnvironmentalContext } from '../../context/IoTEnvironmentalContext';
 import { renderSensorIcon } from '../../utils/sensorIcons';
 
@@ -126,7 +127,7 @@ const OverviewTab: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
                     <span className="text-white/20">Location Vector</span>
-                    <span className="text-white/70">{sensor.location}</span>
+                    <span className="text-white/70">{formatLocationDisplay(sensor.location as string | { lat?: number; lng?: number } | null) || '—'}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-white/5">
@@ -179,7 +180,7 @@ const OverviewTab: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-4 text-[9px] font-bold text-white/30 uppercase tracking-[0.15em]">
                     <span className="flex items-center gap-1.5">
                       <i className="fas fa-map-marker-alt text-red-500/60" />
-                      {alert.location}
+                      {formatLocationDisplay(alert.location as string | { lat?: number; lng?: number } | null) || '—'}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <i className="fas fa-microchip text-red-500/60" />

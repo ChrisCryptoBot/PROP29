@@ -6,7 +6,6 @@ import { EmptyState } from '../../../../components/UI/EmptyState';
 import { Avatar } from '../../../../components/UI/Avatar';
 import { SearchBar } from '../../../../components/UI/SearchBar';
 import { Select } from '../../../../components/UI/Select';
-import { OfficerMatchingPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
 import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
@@ -150,59 +149,8 @@ export const DeploymentTab: React.FC = () => {
                     </p>
                 </div>
             </div>
-            {/* AI Officer Matching */}
-            {nextScheduledPatrol && officers.length > 0 ? (
-                <OfficerMatchingPanel
-                    selectedPatrol={{
-                        id: nextScheduledPatrol.id,
-                        name: nextScheduledPatrol.name || 'Unnamed Patrol',
-                        location: nextScheduledPatrol.location || 'Unknown',
-                        priority: nextScheduledPatrol.priority || 'medium',
-                        estimatedDuration: nextScheduledPatrol.duration || '45 min'
-                    }}
-                    officers={officers.map(o => ({
-                        ...o,
-                        activePatrols: upcomingPatrols.filter(p =>
-                            p && p.assignedOfficer === o.name && p.status === 'in-progress'
-                        ).length
-                    }))}
-                    onSelectOfficer={(officerId) => {
-                        if (!officerId) {
-                            showError('Invalid officer ID');
-                            return;
-                        }
-                        const officer = officers.find(o => o.id === officerId);
-                        if (!officer) {
-                            showError('Officer not found');
-                            return;
-                        }
-                        // Validate officer is available
-                        if (officer.status === 'on-duty') {
-                            showError('Officer is already on duty');
-                            return;
-                        }
-                        if (officer.status === 'unavailable') {
-                            showError('Officer is unavailable');
-                            return;
-                        }
-                        // Validate patrol is still scheduled
-                        const currentPatrol = upcomingPatrols.find(p => p.id === nextScheduledPatrol.id);
-                        if (!currentPatrol || currentPatrol.status !== 'scheduled') {
-                            showError('Patrol is no longer available for deployment');
-                            return;
-                        }
-                        requestDeploy(officer, nextScheduledPatrol);
-                    }}
-                />
-            ) : (
-                <EmptyState
-                    icon="fas fa-microchip"
-                    title="No scheduled patrols for matching"
-                    description="Schedule a patrol to get officer recommendations"
-                />
-            )}
 
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-6 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
@@ -258,11 +206,11 @@ export const DeploymentTab: React.FC = () => {
                                 const hasActivePatrol = upcomingPatrols.some(p => p.assignedOfficer === officer.name && p.status === 'in-progress');
 
                                 return (
-                                    <div key={officer.id} className="p-5 border border-white/5 rounded-2xl bg-slate-900/30 hover:border-indigo-500/20 transition-all duration-300 group shadow-2xl relative overflow-hidden">
+                                    <div key={officer.id} className="p-5 border border-white/5 rounded-2xl bg-slate-900/30 hover:border-indigo-500/20 transition-all duration-300 group relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-3xl rounded-full -mr-12 -mt-12 group-hover:bg-indigo-500/10 transition-all"></div>
 
                                         <div className="flex items-center space-x-4 mb-5">
-                                            <Avatar className="h-14 w-14 border border-white/5 shadow-2xl rounded-xl overflow-hidden ring-4 ring-indigo-500/5 group-hover:ring-indigo-500/15 transition-all">
+                                            <Avatar className="h-14 w-14 border border-white/5  rounded-xl overflow-hidden ring-4 ring-indigo-500/5 group-hover:ring-indigo-500/15 transition-all">
                                                 <div className="flex items-center justify-center h-full w-full bg-gradient-to-br from-blue-600/80 to-slate-900 text-white text-base font-black shadow-inner">
                                                     {officer.avatar || '?'}
                                                 </div>
@@ -294,7 +242,7 @@ export const DeploymentTab: React.FC = () => {
 
                                             <Button
                                                 size="sm"
-                                                className={`w-full h-10 text-[10px] font-black uppercase tracking-widest shadow-2xl transition-all ${isDeployed
+                                                className={`w-full h-10 text-[10px] font-black uppercase tracking-widest transition-all ${isDeployed
                                                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default'
                                                     : !nextScheduledPatrol || isOffline
                                                         ? 'bg-slate-900/50 text-slate-600 cursor-not-allowed border border-white/5'

@@ -85,19 +85,6 @@ async def get_stats(
         logger.error(f"Error getting stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/facial-recognition-status")
-async def get_fr_status(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """Get facial recognition system status"""
-    try:
-        service = BannedIndividualsService(db)
-        return service.get_facial_recognition_status()
-    except Exception as e:
-        logger.error(f"Error getting FR status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.get("/{banned_id}", response_model=BannedIndividualResponse)
 async def get_banned_individual(
     banned_id: str,
@@ -238,10 +225,7 @@ async def upload_photo(
         # In production, this would handle actual file upload
         photo_url = f"/api/banned-individuals/{banned_id}/photo"
         result = service.update_banned_individual(banned_id, photo_url=photo_url)
-        return {
-            "photo_url": photo_url,
-            "training_triggered": True
-        }
+        return {"photo_url": photo_url}
     except Exception as e:
         logger.error(f"Error uploading photo: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -288,41 +272,6 @@ async def update_settings(
         return {"success": result}
     except Exception as e:
         logger.error(f"Error updating settings: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.put("/facial-recognition/config")
-async def update_fr_config(
-    config: Dict[str, Any],
-    current_user: User = Depends(require_admin_role),
-    db: Session = Depends(get_db)
-):
-    """Update facial recognition configuration"""
-    try:
-        service = BannedIndividualsService(db)
-        result = service.update_fr_config(
-            confidence_threshold=config.get("confidence_threshold", 85),
-            retention_days=config.get("retention_days", 180)
-        )
-        return {"success": result}
-    except Exception as e:
-        logger.error(f"Error updating FR config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/facial-recognition/train")
-async def trigger_training(
-    current_user: User = Depends(require_admin_role),
-    db: Session = Depends(get_db)
-):
-    """Trigger facial recognition model training"""
-    try:
-        service = BannedIndividualsService(db)
-        training_id = service.trigger_training()
-        return {
-            "training_id": training_id,
-            "status": "TRAINING"
-        }
-    except Exception as e:
-        logger.error(f"Error triggering training: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/analytics")

@@ -9,6 +9,7 @@ import { useSmartLockersContext } from '../../context/SmartLockersContext';
 import { createReservationSchema, type CreateReservationInput } from '../../types/locker.schema';
 import { showError } from '../../../../utils/toast';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import type { ZodIssue } from 'zod';
 
 export const ReservationModal: React.FC = () => {
@@ -111,7 +112,7 @@ export const ReservationModal: React.FC = () => {
               <option value="" className="bg-slate-900">Select an available locker</option>
               {lockers.filter(l => l.status === 'available').map((locker) => (
                 <option key={locker.id} value={locker.id} className="bg-slate-900">
-                  {locker.lockerNumber} - {locker.location}
+                  {locker.lockerNumber} - {formatLocationDisplay(locker.location) || '—'}
                 </option>
               ))}
             </select>

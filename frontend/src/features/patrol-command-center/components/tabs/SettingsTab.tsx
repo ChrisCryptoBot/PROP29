@@ -108,10 +108,10 @@ export const SettingsTab: React.FC = () => {
                 </div>
             </div>
             {/* System Configuration */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-cog text-white"></i>
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest text-white">System Configuration</span>
@@ -229,10 +229,10 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Mobile App Integration */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-mobile-alt text-white"></i>
                         </div>
                         <span className="text-sm font-black uppercase tracking-widest text-white">Mobile App Integration</span>
@@ -297,7 +297,7 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Mobile App Configuration */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center">
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">

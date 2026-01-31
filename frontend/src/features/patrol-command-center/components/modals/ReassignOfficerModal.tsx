@@ -4,6 +4,7 @@ import { Modal } from '../../../../components/UI/Modal';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { showSuccess, showError } from '../../../../utils/toast';
 import { Avatar } from '../../../../components/UI/Avatar';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 
 interface ReassignOfficerModalProps {
     isOpen: boolean;
@@ -56,7 +57,7 @@ export const ReassignOfficerModal: React.FC<ReassignOfficerModalProps> = ({ isOp
                                 <span className={`inline-block w-2 h-2 rounded-full ${officer.status === 'on-duty' ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
                                 <span>{officer.status}</span>
                                 <span className="text-slate-600">•</span>
-                                <span>{officer.location}</span>
+                                <span>{formatLocationDisplay(officer.location) || '—'}</span>
                             </p>
                         </div>
                         {selectedOfficerId === officer.id && <i className="fas fa-check-circle text-blue-400"></i>}

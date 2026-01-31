@@ -110,7 +110,7 @@ export const RolesTab: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {['Dashboard', 'Users', 'Roles', 'Properties', 'System', 'Security', 'Audit'].map((module) => (
+                            {['Overview', 'Users', 'Roles', 'Properties', 'Security', 'System', 'Audit'].map((module) => (
                                 <tr key={module} className="hover:bg-white/5 transition-colors">
                                     <td className="py-4 px-4 font-bold text-white text-sm">{module}</td>
                                     <td className="py-4 px-4 text-center">
@@ -132,12 +132,12 @@ export const RolesTab: React.FC = () => {
                                         <Badge
                                             className={cn(
                                                 "font-bold uppercase text-[10px] tracking-widest px-2.5 py-1",
-                                                module === 'Dashboard' || module === 'Users'
+                                                module === 'Overview' || module === 'Users'
                                                     ? 'text-blue-300 bg-blue-500/20 border border-blue-500/30'
                                                     : 'text-slate-500 bg-white/5 border border-white/5'
                                             )}
                                         >
-                                            {module === 'Dashboard' || module === 'Users' ? 'Audit' : 'Denied'}
+                                            {module === 'Overview' || module === 'Users' ? 'Audit' : 'Denied'}
                                         </Badge>
                                     </td>
                                 </tr>

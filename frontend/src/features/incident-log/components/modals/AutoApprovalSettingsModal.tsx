@@ -4,6 +4,7 @@ import { Button } from '../../../../components/UI/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { AgentSettings, IncidentType, IncidentSeverity, AgentTrustLevel } from '../../types/incident-log.types';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { cn } from '../../../../utils/cn';
 
 interface AutoApprovalRule {
@@ -111,6 +112,8 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
     const [rules, setRules] = useState<AutoApprovalRule[]>(DEFAULT_RULES);
     const [editingRule, setEditingRule] = useState<AutoApprovalRule | null>(null);
     const [isCreatingRule, setIsCreatingRule] = useState(false);
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [ruleToDelete, setRuleToDelete] = useState<string | null>(null);
     
     // Global settings
     const [globalSettings, setGlobalSettings] = useState({
@@ -173,8 +176,15 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
     };
 
     const handleDeleteRule = (ruleId: string) => {
-        if (window.confirm('Are you sure you want to delete this rule?')) {
-            setRules(prev => prev.filter(r => r.id !== ruleId));
+        setRuleToDelete(ruleId);
+        setShowDeleteConfirmModal(true);
+    };
+
+    const confirmDeleteRule = () => {
+        if (ruleToDelete) {
+            setRules(prev => prev.filter(r => r.id !== ruleToDelete));
+            setRuleToDelete(null);
+            setShowDeleteConfirmModal(false);
         }
     };
 
@@ -232,6 +242,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
     if (!isOpen) return null;
 
     return (
+        <>
         <Modal 
             isOpen={isOpen} 
             onClose={onClose} 
@@ -403,7 +414,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                 {/* Thresholds Tab */}
                 {activeTab === 'thresholds' && (
                     <div className="space-y-6">
-                        <Card className="glass-card border border-white/5">
+                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="text-white">Global Thresholds</CardTitle>
                             </CardHeader>
@@ -526,7 +537,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                 {/* Testing Tab */}
                 {activeTab === 'testing' && (
                     <div className="space-y-6">
-                        <Card className="glass-card border border-white/5">
+                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                             <CardHeader>
                                 <CardTitle className="text-white">Rule Testing</CardTitle>
                                 <p className="text-sm text-slate-400">
@@ -587,7 +598,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
 
                 {/* Advanced Tab */}
                 {activeTab === 'advanced' && (
-                    <Card className="glass-card border border-white/5">
+                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                         <CardHeader>
                             <CardTitle className="text-white">Advanced Configuration</CardTitle>
                         </CardHeader>
@@ -604,7 +615,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-50">
-                                    <Card className="glass-card border border-white/5">
+                                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                                         <CardHeader>
                                             <CardTitle className="text-sm text-white">Rule Scheduling</CardTitle>
                                         </CardHeader>
@@ -619,7 +630,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                         </CardContent>
                                     </Card>
 
-                                    <Card className="glass-card border border-white/5">
+                                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                                         <CardHeader>
                                             <CardTitle className="text-sm text-white">Conditional Logic</CardTitle>
                                         </CardHeader>
@@ -640,6 +651,18 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                 )}
             </div>
         </Modal>
+        <ConfirmDeleteModal
+            isOpen={showDeleteConfirmModal}
+            onClose={() => {
+                setShowDeleteConfirmModal(false);
+                setRuleToDelete(null);
+            }}
+            onConfirm={confirmDeleteRule}
+            title="Delete Auto-Approval Rule"
+            message="Are you sure you want to delete this auto-approval rule? This action cannot be undone."
+            itemName={ruleToDelete ? rules.find(r => r.id === ruleToDelete)?.name : undefined}
+        />
+    </>
     );
 };
 

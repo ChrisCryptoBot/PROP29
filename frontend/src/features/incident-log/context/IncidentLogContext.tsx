@@ -10,7 +10,6 @@ import type {
   Incident,
   IncidentCreate,
   IncidentUpdate,
-  AIClassificationResponse,
   EmergencyAlertResponse,
   IncidentFilters,
   EscalationRule,
@@ -31,10 +30,16 @@ export interface IncidentLogContextValue {
     // Data - Core
     incidents: Incident[];
     selectedIncident: Incident | null;
-    aiSuggestion: AIClassificationResponse | null;
     escalationRules: EscalationRule[];
     activityByIncident: Record<string, UserActivity[]>;
     lastSynced: Date | null;
+    
+    // Offline Queue Status
+    queuePendingCount: number;
+    queueFailedCount: number;
+    
+    // Property Context
+    propertyId: string | undefined;
 
     // Data - Production Readiness Enhancements
     agentPerformanceMetrics: AgentPerformanceMetrics[];
@@ -68,8 +73,10 @@ export interface IncidentLogContextValue {
         showEmergencyAlertModal: boolean;
         // New production-ready modals
         showAgentPerformanceModal: boolean;
-        showBulkOperationModal: boolean;
         showAutoApprovalSettingsModal: boolean;
+        showBulkOperationModal: boolean;
+        showDeleteConfirmModal: boolean;
+        deleteIncidentId: string | null;
         selectedAgentId: string | null;
         bulkOperation: {
             type: 'approve' | 'reject' | 'delete' | 'status_change' | null;
@@ -84,9 +91,16 @@ export interface IncidentLogContextValue {
     // Actions - CRUD Operations
     refreshIncidents: (filters?: IncidentFilters) => Promise<void>;
     getIncident: (incidentId: string) => Promise<Incident | null>;
-    createIncident: (incident: IncidentCreate, useAI?: boolean) => Promise<Incident | null>;
-    updateIncident: (incidentId: string, updates: IncidentUpdate) => Promise<Incident | null>;
-    deleteIncident: (incidentId: string) => Promise<boolean>;
+    createIncident: (incident: IncidentCreate) => Promise<Incident | null>;
+    updateIncident: (
+        incidentId: string, 
+        updates: IncidentUpdate,
+        conflictResolution?: 'overwrite' | 'merge' | 'cancel',
+        onConflict?: (conflict: { localIncident: Incident; serverIncident: Incident; localChanges: Partial<Incident> }) => void
+    ) => Promise<Incident | null>;
+    deleteIncident: (incidentId: string) => void;
+    confirmDeleteIncident: () => Promise<boolean>;
+    cancelDeleteIncident: () => void;
 
     // Actions - Incident Management
     assignIncident: (incidentId: string, assigneeId: string) => Promise<boolean>;
@@ -94,7 +108,6 @@ export interface IncidentLogContextValue {
     escalateIncident: (incidentId: string, reason: string) => Promise<boolean>;
 
     // Actions - AI & Analysis
-    getAIClassification: (title: string, description: string, location?: any) => Promise<AIClassificationResponse | null>;
     getIncidentActivity: (incidentId: string) => Promise<UserActivity[]>;
     getPatternRecognition: (request: PatternRecognitionRequest) => Promise<PatternRecognitionResponse | null>;
 
@@ -106,7 +119,8 @@ export interface IncidentLogContextValue {
     setSelectedIncident: (incident: Incident | null) => void;
 
     // Actions - Bulk Operations (Enhanced)
-    bulkDelete: (incidentIds: string[]) => Promise<boolean>;
+    bulkDelete: (incidentIds: string[]) => void;
+    confirmBulkDelete: (incidentIds: string[], reason?: string) => Promise<BulkOperationResult | null>;
     bulkStatusChange: (incidentIds: string[], status: IncidentStatus) => Promise<boolean>;
     bulkApprove: (incidentIds: string[], reason?: string) => Promise<BulkOperationResult | null>;
     bulkReject: (incidentIds: string[], reason: string) => Promise<BulkOperationResult | null>;
@@ -136,6 +150,7 @@ export interface IncidentLogContextValue {
     
     // New modal controls for production-ready features
     setShowAgentPerformanceModal: (show: boolean, agentId?: string) => void;
+    setShowAutoApprovalSettingsModal: (show: boolean) => void;
     setShowBulkOperationModal: (show: boolean, operation?: {
         type: 'approve' | 'reject' | 'delete' | 'status_change';
         incidentIds: string[];
@@ -144,7 +159,8 @@ export interface IncidentLogContextValue {
         title: string;
         description: string;
     }) => void;
-    setShowAutoApprovalSettingsModal: (show: boolean) => void;
+    setShowDeleteConfirmModal: (show: boolean, incidentId?: string) => void;
+    operationLock: ReturnType<typeof import('../hooks/useIncidentLogOperationLock').useIncidentLogOperationLock>;
 }
 
 export const IncidentLogContext = createContext<IncidentLogContextValue | undefined>(undefined);

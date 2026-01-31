@@ -8,10 +8,9 @@ import React, { Suspense } from 'react';
 import { BannedIndividualsProvider, useBannedIndividualsContext } from '../../../banned-individuals/context/BannedIndividualsContext';
 import { OverviewTab } from '../../../banned-individuals/components/tabs/OverviewTab';
 import { ManagementTab } from '../../../banned-individuals/components/tabs/ManagementTab';
-import { FacialRecognitionTab } from '../../../banned-individuals/components/tabs/FacialRecognitionTab';
 import { DetectionsTab } from '../../../banned-individuals/components/tabs/DetectionsTab';
-import { AIAnalyticsTab } from '../../../banned-individuals/components/tabs/AIAnalyticsTab';
 import { AnalyticsTab } from '../../../banned-individuals/components/tabs/AnalyticsTab';
+import { AIAnalyticsTab } from '../../../banned-individuals/components/tabs/AIAnalyticsTab';
 import { SettingsTab } from '../../../banned-individuals/components/tabs/SettingsTab';
 import { CreateIndividualModal } from '../../../banned-individuals/components/modals/CreateIndividualModal';
 import { DetailsModal } from '../../../banned-individuals/components/modals/DetailsModal';
@@ -27,10 +26,9 @@ const BannedIndividualsTabContent: React.FC = () => {
   const subtabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'management', label: 'Records' },
-    { id: 'facial-recognition', label: 'Biometrics' },
     { id: 'detections', label: 'Detections' },
     { id: 'ai-analytics', label: 'Risk Analysis' },
-    { id: 'analytics', label: 'Reports' },
+    { id: 'analytics', label: 'Analytics' },
     { id: 'settings', label: 'Settings' },
   ];
 
@@ -38,7 +36,6 @@ const BannedIndividualsTabContent: React.FC = () => {
     switch (activeTab) {
       case 'overview': return <OverviewTab />;
       case 'management': return <ManagementTab />;
-      case 'facial-recognition': return <FacialRecognitionTab />;
       case 'detections': return <DetectionsTab />;
       case 'ai-analytics': return <AIAnalyticsTab />;
       case 'analytics': return <AnalyticsTab />;
@@ -58,7 +55,7 @@ const BannedIndividualsTabContent: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
                 activeTab === tab.id
-                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/20'
+                  ? 'bg-red-600 text-white border border-red-500/30'
                   : 'text-white/40 hover:text-white/60'
               }`}
             >
@@ -69,7 +66,7 @@ const BannedIndividualsTabContent: React.FC = () => {
         <Button
           onClick={() => setShowCreateModal(true)}
           variant="destructive"
-          className="font-black uppercase tracking-widest px-6 shadow-lg"
+          className="font-black uppercase tracking-widest px-6"
         >
           <i className="fas fa-plus mr-2" />
           Add Individual

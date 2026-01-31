@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../../../components
 import { useSoundMonitoringContext } from '../../context/SoundMonitoringContext';
 import { getSeverityBadgeClass, getStatusBadgeClass } from '../../utils/badgeHelpers';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import type { SoundAlert } from '../../types/sound-monitoring.types';
 
@@ -147,7 +148,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   </div>
                   <div>
                     <h3 className="text-sm font-black text-white uppercase tracking-widest">{alert.type}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)]">{alert.location}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)]">{formatLocationDisplay(alert.location as string | { lat?: number; lng?: number } | null) || '—'}</p>
                     <p className="text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest flex items-center">
                       <i className="fas fa-clock mr-1 opacity-50" />
                       {new Date(alert.timestamp).toLocaleString()}

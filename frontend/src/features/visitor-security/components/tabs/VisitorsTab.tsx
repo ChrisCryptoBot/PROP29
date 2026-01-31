@@ -3,9 +3,10 @@
  * Main tab for visitor management with filtering and actions
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
 import { useVisitorContext } from '../../context/VisitorContext';
 import { VisitorListItem } from '../shared';
 import { EmptyState } from '../../../../components/UI/EmptyState';
@@ -25,23 +26,40 @@ export const VisitorsTab: React.FC = React.memo(() => {
     setShowVisitorDetailsModal
   } = useVisitorContext();
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  // Reset to page 1 when filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
+  // Paginated visitors
+  const paginatedVisitors = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredVisitors.slice(start, end);
+  }, [filteredVisitors, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredVisitors.length / itemsPerPage);
+
   if (loading.visitors && filteredVisitors.length === 0) {
     return (
-      <div className="text-center py-12">
-        <i className="fas fa-spinner fa-spin text-3xl text-[color:var(--text-sub)] mb-4" />
-        <p className="text-[color:var(--text-sub)]">Loading visitors...</p>
+      <div className="flex flex-col items-center justify-center py-12" role="status" aria-label="Loading visitors">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading visitors...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header - Gold Standard Structure */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Visitor Security</p>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Visitor Registry & Management</h2>
-          <p className="text-[11px] text-slate-400">
+      {/* Page Header - Gold Standard */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Visitor Registry & Management</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Complete visitor lifecycle management with mobile agent integration and hardware verification.
           </p>
         </div>
@@ -97,7 +115,7 @@ export const VisitorsTab: React.FC = React.memo(() => {
 
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-2 mb-8">
-          {['all', 'registered', 'checked_in', 'checked_out', 'overdue'].map(filterType => (
+          {['all', 'registered', 'checked_in', 'checked_out', 'overdue', 'cancelled'].map(filterType => (
             <Button
               key={filterType}
               variant={filter === filterType ? 'default' : 'outline'}
@@ -106,7 +124,7 @@ export const VisitorsTab: React.FC = React.memo(() => {
               className={cn(
                 "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all",
                 filter === filterType
-                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 border-none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white border border-blue-500/30 border-none"
                   : "border-white/5 text-[color:var(--text-sub)] hover:bg-white/5 hover:text-white"
               )}
             >
@@ -129,28 +147,102 @@ export const VisitorsTab: React.FC = React.memo(() => {
             }}
           />
         ) : (
-          <div className="space-y-3">
-            {filteredVisitors.map(visitor => (
-              <VisitorListItem
-                key={visitor.id}
-                visitor={visitor}
-                onSelect={(v) => {
-                  setSelectedVisitor(v);
-                  setShowVisitorDetailsModal(true);
-                }}
-                onCheckIn={checkInVisitor}
-                onCheckOut={checkOutVisitor}
-                onGenerateQR={(v) => {
-                  setSelectedVisitor(v);
-                  setShowQRModal(true);
-                }}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3">
+              {paginatedVisitors.map(visitor => (
+                <VisitorListItem
+                  key={visitor.id}
+                  visitor={visitor}
+                  onSelect={(v) => {
+                    setSelectedVisitor(v);
+                    setShowVisitorDetailsModal(true);
+                  }}
+                  onCheckIn={checkInVisitor}
+                  onCheckOut={checkOutVisitor}
+                  onGenerateQR={(v) => {
+                    setSelectedVisitor(v);
+                    setShowQRModal(true);
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {filteredVisitors.length > 0 && totalPages > 1 && (
+              <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                <div className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">
+                  Showing <span className="text-[color:var(--text-main)]">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                  <span className="text-[color:var(--text-main)]">{Math.min(currentPage * itemsPerPage, filteredVisitors.length)}</span> of{' '}
+                  <span className="text-[color:var(--text-main)]">{filteredVisitors.length}</span> visitors
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                  >
+                    <i className="fas fa-chevron-left mr-1" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? 'primary' : 'glass'}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="text-[10px] font-black uppercase tracking-widest min-w-[2rem]"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                  >
+                    Next
+                    <i className="fas fa-chevron-right ml-1" />
+                  </Button>
+                  <Select
+                    id="items-per-page"
+                    value={itemsPerPage.toString()}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="text-[10px] font-black uppercase tracking-widest w-20 ml-2"
+                  >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
-    </div>
+  </div>
   );
 });
 

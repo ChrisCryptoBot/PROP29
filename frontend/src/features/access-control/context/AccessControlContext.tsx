@@ -40,6 +40,11 @@ export interface AccessControlContextValue {
     metrics: boolean;
   };
   
+  // Setters for WebSocket updates (internal use)
+  setAccessPoints: React.Dispatch<React.SetStateAction<AccessPoint[]>>;
+  setUsers: React.Dispatch<React.SetStateAction<AccessControlUser[]>>;
+  setAccessEvents: React.Dispatch<React.SetStateAction<AccessEvent[]>>;
+  
   // Actions
   refreshAccessPoints: () => Promise<void>;
   refreshUsers: () => Promise<void>;
@@ -66,6 +71,25 @@ export interface AccessControlContextValue {
   exportAccessReport: (format: 'pdf' | 'csv') => Promise<void>;
   recordAuditEntry: (entry: { action: string; status: 'success' | 'failure' | 'info'; target?: string; reason?: string; source?: 'web_admin' | 'mobile_agent' | 'system' }) => void;
   refreshAuditLog: () => Promise<void>;
+  
+  // Offline Queue Status
+  queuePendingCount: number;
+  queueFailedCount: number;
+  retryQueue: () => void;
+  
+  // Operation Lock (for WebSocket race condition mitigation)
+  operationLock: {
+    acquireLock: (operation: string, entityId: string) => boolean;
+    releaseLock: (operation: string, entityId: string) => void;
+    isLocked: (operation: string, entityId: string) => boolean;
+    clearExpiredLocks: () => void;
+  };
+  
+  // Property ID (derived from currentUser)
+  propertyId?: string;
+  
+  // Offline status
+  isOffline: boolean;
 }
 
 const AccessControlContext = createContext<AccessControlContextValue | undefined>(undefined);

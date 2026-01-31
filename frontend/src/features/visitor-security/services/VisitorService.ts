@@ -6,6 +6,7 @@
 
 import apiService from '../../../services/ApiService';
 import type { ApiResponse } from '../../../services/ApiService';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import type {
   Visitor,
   VisitorCreate,
@@ -127,7 +128,7 @@ class VisitorService {
       return { is_banned: false, matches: [], individuals: [] };
     } catch (error) {
       // If check fails, allow registration but log error
-      console.error('Failed to check banned individuals:', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'checkBannedIndividual');
       return { is_banned: false, matches: [], individuals: [] };
     }
   }
@@ -215,6 +216,21 @@ class VisitorService {
     requestData: SecurityRequestCreate
   ): Promise<ApiResponse<SecurityRequest>> {
     return apiService.post<SecurityRequest>('/visitors/security-requests', requestData);
+  }
+
+  /**
+   * Assign a security request to an officer
+   * PATCH /api/visitors/security-requests/:id
+   */
+  async assignSecurityRequest(
+    requestId: string,
+    assignedTo: string,
+    status: 'in_progress' | 'completed' | 'cancelled' = 'in_progress'
+  ): Promise<ApiResponse<SecurityRequest>> {
+    return apiService.patch<SecurityRequest>(`/visitors/security-requests/${requestId}`, {
+      assigned_to: assignedTo,
+      status
+    });
   }
 
   // =======================================================
@@ -500,7 +516,7 @@ class VisitorService {
       };
       localStorage.setItem('visitor-security-cache', JSON.stringify(cacheData));
     } catch (error) {
-      console.warn('Failed to cache data locally:', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'cacheDataLocally');
     }
   }
 

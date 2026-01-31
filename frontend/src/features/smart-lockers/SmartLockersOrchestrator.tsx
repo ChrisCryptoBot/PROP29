@@ -33,7 +33,7 @@ interface Tab {
 
 const tabs: Tab[] = [
   { id: 'overview', label: 'Overview' },
-  { id: 'lockers', label: 'Locker Management' },
+  { id: 'lockers', label: 'Lockers' },
   { id: 'reservations', label: 'Reservations' },
   { id: 'analytics', label: 'Analytics' },
   { id: 'settings', label: 'Settings' },
@@ -95,6 +95,22 @@ const OrchestratorContent: React.FC = () => {
       <CreateLockerModal />
       <ReservationModal />
       <LockerDetailsModal />
+
+      {/* Quick Action FAB - Gold Standard */}
+      {canCreateLocker && (
+        <div className="fixed bottom-8 right-8 z-50">
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            variant="primary"
+            size="icon"
+            className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
+            title="Create New Locker"
+            aria-label="Create New Locker"
+          >
+            <i className="fas fa-plus text-xl" />
+          </Button>
+        </div>
+      )}
     </ModuleShell>
   );
 };

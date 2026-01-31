@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Button } from '../../../../components/UI/Button';
 import { Badge } from '../../../../components/UI/Badge';
 import { EmptyState } from '../../../../components/UI/EmptyState';
-import { RouteOptimizationPanel } from '../../../../components/PatrolModule';
 import { usePatrolContext } from '../../context/PatrolContext';
 import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
 import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
 import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { PatrolEndpoint } from '../../../../services/PatrolEndpoint';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { PatrolRoute, Checkpoint } from '../../types';
 
 import { CreateRouteModal } from '../modals/CreateRouteModal';
@@ -48,87 +48,13 @@ export const RoutesCheckpointsTab: React.FC = () => {
                     </p>
                 </div>
             </div>
-            {/* AI Route Optimization */}
-            {routes && routes.length > 0 && routes[0] && routes[0].checkpoints && routes[0].checkpoints.length > 0 ? (
-                <RouteOptimizationPanel
-                    selectedRoute={{
-                        id: routes[0].id,
-                        name: routes[0].name || 'Unnamed Route',
-                        checkpoints: routes[0].checkpoints || [],
-                        estimatedDuration: routes[0].estimatedDuration || '45 min',
-                        performanceScore: routes[0].performanceScore ?? 0
-                    }}
-                    onApplyOptimization={async (optimizedSequence) => {
-                        if (!optimizedSequence || optimizedSequence.length === 0) {
-                            showError('Invalid optimization sequence');
-                            return;
-                        }
-                        const route = routes[0];
-                        if (!route) {
-                            showError('Route not found');
-                            return;
-                        }
-                        const activeOnRoute = (upcomingPatrols || []).filter(
-                            (p) => p?.status === 'in-progress' && (p.routeId === route?.id || p.location === route?.name)
-                        );
-                        if (activeOnRoute.length > 0) {
-                            showError('Cannot reorder checkpoints while an active patrol uses this route. Complete or cancel the patrol first.');
-                            return;
-                        }
-                        const toastId = showLoading('Applying route optimization...');
-                        try {
-                            const reordered = optimizedSequence
-                                .map((id: string) => route.checkpoints.find(cp => cp.id === id))
-                                .filter(Boolean);
-                            
-                            if (reordered.length !== route.checkpoints.length) {
-                                dismissLoadingAndShowError(toastId, 'Optimization sequence missing checkpoints');
-                                return;
-                            }
-                            
-                            const response = await retryWithBackoff(
-                                () => PatrolEndpoint.updateRoute(route.id, {
-                                    checkpoints: reordered
-                                }),
-                                {
-                                    maxRetries: 3,
-                                    baseDelay: 1000,
-                                    maxDelay: 5000
-                                }
-                            );
-                            setRoutes(prev => prev.map(r => r.id === route.id ? {
-                                ...r,
-                                checkpoints: response.checkpoints || reordered
-                            } : r));
-                            dismissLoadingAndShowSuccess(toastId, 'Route optimization applied');
-                        } catch (error) {
-                            dismissLoadingAndShowError(toastId, 'Failed to apply optimization. Please try again.');
-                            ErrorHandlerService.handle(error, 'applyRouteOptimization');
-                        }
-                    }}
-                />
-            ) : (
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                    <CardContent className="py-6">
-                        <EmptyState
-                            icon="fas fa-route"
-                            title="No routes available for optimization"
-                            description="Create routes to enable AI optimization"
-                            action={{
-                                label: "Create Route",
-                                onClick: () => setShowCreateRoute(true)
-                            }}
-                        />
-                    </CardContent>
-                </Card>
-            )}
 
             {/* Route Management */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-route text-white"></i>
                             </div>
                             <span className="text-sm font-black uppercase tracking-widest">Patrol Routes</span>
@@ -233,11 +159,11 @@ export const RoutesCheckpointsTab: React.FC = () => {
             </Card>
 
             {/* Checkpoint Management */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-map-marker-alt text-white"></i>
                             </div>
                             <span className="text-sm font-black uppercase tracking-widest">Checkpoint Management</span>
@@ -275,7 +201,7 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                                 <h3 className="font-bold text-[color:var(--text-main)]">{checkpoint.name}</h3>
                                                 {checkpoint.isCritical && <Badge variant="destructive" className="text-[10px] uppercase">Critical</Badge>}
                                             </div>
-                                            <p className="text-sm text-[color:var(--text-sub)] mt-0.5"><i className="fas fa-map-pin mr-1 text-slate-500"></i>{checkpoint.location}</p>
+                                            <p className="text-sm text-[color:var(--text-sub)] mt-0.5"><i className="fas fa-map-pin mr-1 text-slate-500"></i>{formatLocationDisplay(checkpoint.location) || '—'}</p>
                                             <div className="flex gap-2 mt-2">
                                                 <Badge variant={checkpoint.type === 'security' ? 'destructive' : checkpoint.type === 'safety' ? 'warning' : 'default'} className="glass-card border-none bg-black/20 text-slate-300">{checkpoint.type}</Badge>
                                                 <span className="text-xs font-mono text-slate-500 bg-black/20 px-2 py-0.5 rounded">Est: {checkpoint.estimatedTime ?? 0} min</span>

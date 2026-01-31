@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useIoTEnvironmentalContext } from '../../context/IoTEnvironmentalContext';
 import { renderSensorIcon } from '../../utils/sensorIcons';
 
@@ -74,7 +75,7 @@ const ViewSensorModal: React.FC = () => {
                 <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">LOCATION</label>
                 <p className="text-md font-bold text-white uppercase tracking-widest flex items-center">
                   <i className="fas fa-map-marker-alt mr-2 text-blue-500/60" />
-                  {viewingSensor.location}
+                  {formatLocationDisplay(viewingSensor.location as string | { lat?: number; lng?: number } | null) || '—'}
                 </p>
               </div>
 

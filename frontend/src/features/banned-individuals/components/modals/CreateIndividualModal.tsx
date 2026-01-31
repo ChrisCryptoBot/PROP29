@@ -190,7 +190,7 @@ export const CreateIndividualModal: React.FC = () => {
                         {/* Photo Upload Section */}
                         <div className="space-y-2">
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
-                                Biometric Photo <span className="text-blue-400">(Optional)</span>
+                                Reference photo <span className="text-blue-400">(Optional)</span>
                             </label>
                             <div className="relative group border-2 border-dashed border-white/5 rounded-2xl p-6 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
                                 <input
@@ -234,7 +234,7 @@ export const CreateIndividualModal: React.FC = () => {
                                 )}
                             </div>
                             <p className="text-[10px] text-slate-500 italic px-1">
-                                Upload a clear, front-facing photo for facial recognition. Can be added later if needed.
+                                Upload a clear reference photo for staff to compare during in-person checks. Optional.
                             </p>
                         </div>
 

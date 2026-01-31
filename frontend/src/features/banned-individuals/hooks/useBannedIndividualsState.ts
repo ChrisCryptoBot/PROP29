@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
     BannedIndividual,
     DetectionAlert,
-    FacialRecognitionStats,
     BannedIndividualsMetrics,
     BannedIndividualsAuditEntry,
     AuditSource
@@ -17,16 +16,25 @@ import { useOfflineSync } from '../../../hooks/useOfflineSync';
 
 interface BannedIndividualsSettings {
     autoSharePermanentBans: boolean;
-    facialRecognitionAlerts: boolean;
+    detectionAlerts: boolean;
     strictIdVerification: boolean;
     auditLogsRetention: string;
-    biometricDataPurge: string;
-    confidenceThreshold: number;
+    referencePhotoRetentionDays: string;
     retentionDays: number;
 }
 
 const MAX_AUDIT_ENTRIES = 500;
 const AUDIT_STORAGE_KEY = 'banned_individuals_audit_log';
+
+function formatLocationDisplay(loc: unknown): string {
+    if (loc == null) return 'Unknown';
+    if (typeof loc === 'string') return loc;
+    if (typeof loc === 'object' && loc !== null && 'lat' in loc && 'lng' in loc) {
+        const { lat, lng } = loc as { lat?: number; lng?: number };
+        if (typeof lat === 'number' && typeof lng === 'number') return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+    return 'Unknown';
+}
 
 export const useBannedIndividualsState = () => {
     const { user } = useAuth();
@@ -96,13 +104,6 @@ export const useBannedIndividualsState = () => {
     // Data state
     const [bannedIndividuals, setBannedIndividuals] = useState<BannedIndividual[]>([]);
     const [detectionAlerts, setDetectionAlerts] = useState<DetectionAlert[]>([]);
-    const [facialRecognitionStats, setFacialRecognitionStats] = useState<FacialRecognitionStats>({
-        accuracy: 0,
-        trainingStatus: 'NEEDS_TRAINING',
-        totalFaces: 0,
-        activeModels: 0,
-        lastTraining: ''
-    });
 
     const [metrics, setMetrics] = useState<BannedIndividualsMetrics>({
         activeBans: 0,
@@ -114,11 +115,10 @@ export const useBannedIndividualsState = () => {
     // Settings state
     const [settings, setSettings] = useState<BannedIndividualsSettings>({
         autoSharePermanentBans: true,
-        facialRecognitionAlerts: true,
+        detectionAlerts: true,
         strictIdVerification: false,
         auditLogsRetention: '180',
-        biometricDataPurge: '30',
-        confidenceThreshold: 85,
+        referencePhotoRetentionDays: '30',
         retentionDays: 180
     });
 
@@ -224,17 +224,13 @@ export const useBannedIndividualsState = () => {
             const individuals = await bannedIndividualsService.getIndividuals(propertyId);
             setBannedIndividuals(individuals);
 
-            const frStatus = await bannedIndividualsService.getFacialRecognitionStatus();
-            if (frStatus) {
-                setFacialRecognitionStats(frStatus);
-            }
-
             const stats = await bannedIndividualsService.getStats(propertyId);
             if (stats) {
+                const withPhoto = individuals.filter(ind => ind.photoUrl).length;
                 setMetrics({
                     activeBans: stats.total_banned_individuals,
                     recentDetections: stats.recent_detections,
-                    facialRecognitionAccuracy: frStatus?.accuracy || 0,
+                    facialRecognitionAccuracy: withPhoto,
                     chainWideBans: 0
                 });
             }
@@ -242,10 +238,16 @@ export const useBannedIndividualsState = () => {
             // Fetch detection alerts
             await fetchDetectionAlerts();
 
-            // Fetch settings
+            // Fetch settings (map legacy keys to current)
             const savedSettings = await bannedIndividualsService.getSettings(propertyId);
             if (savedSettings) {
-                setSettings(prev => ({ ...prev, ...savedSettings }));
+                setSettings(prev => ({
+                    ...prev,
+                    ...savedSettings,
+                    detectionAlerts: savedSettings.detectionAlerts ?? savedSettings.facialRecognitionAlerts ?? prev.detectionAlerts,
+                    referencePhotoRetentionDays: savedSettings.referencePhotoRetentionDays ?? savedSettings.biometricDataPurge ?? prev.referencePhotoRetentionDays,
+                    retentionDays: savedSettings.retentionDays ?? prev.retentionDays
+                }));
             }
 
             setLastSynced(new Date());
@@ -304,11 +306,11 @@ export const useBannedIndividualsState = () => {
             
             setMetrics(prev => ({ ...prev, recentDetections: prev.recentDetections + 1 }));
 
-            // Desktop notification for critical detections
-            if (settings.facialRecognitionAlerts && alert.confidence >= settings.confidenceThreshold) {
+            // Desktop notification for detection alerts (manual confirmation flow)
+            if (settings.detectionAlerts) {
                 electronBridge.showNotification({
-                    title: 'Banned Individual Detected',
-                    body: `${alert.individualName} detected at ${alert.location} (${alert.confidence}% confidence)`,
+                    title: 'Banned Individual Alert',
+                    body: `${alert.individualName} — ${alert.location}`,
                     urgency: 'critical',
                     timeoutType: 'never'
                 });
@@ -318,7 +320,7 @@ export const useBannedIndividualsState = () => {
         }
         
         isProcessingQueue.current = false;
-    }, [settings.facialRecognitionAlerts, settings.confidenceThreshold]);
+    }, [settings.detectionAlerts]);
 
     // WebSocket integration for real-time detection alerts
     useEffect(() => {
@@ -330,7 +332,7 @@ export const useBannedIndividualsState = () => {
                     id: data.detection.detection_id || data.detection.id || `temp-${Date.now()}-${Math.random()}`,
                     individualId: data.detection.banned_id || data.detection.individual_id,
                     individualName: data.detection.individual_name || 'Unknown',
-                    location: data.detection.location || 'Unknown',
+                    location: formatLocationDisplay(data.detection.location),
                     timestamp: data.detection.timestamp || new Date().toISOString(),
                     confidence: data.detection.confidence || 0,
                     status: data.detection.status || 'ACTIVE',
@@ -345,47 +347,8 @@ export const useBannedIndividualsState = () => {
             }
         });
 
-        const unsubscribeHardware = subscribe('facial_recognition_hardware_status', (data: any) => {
-            if (data && data.cameras) {
-                setHardwareStatus(prev => {
-                    const newCameras = data.cameras.map((cam: any) => ({
-                        id: cam.id,
-                        name: cam.name,
-                        status: cam.status,
-                        lastSeen: new Date(cam.last_seen || Date.now())
-                    }));
-                    
-                    // Track last known good state: update when cameras are online, preserve when going offline
-                    const hasOnlineCameras = newCameras.some((c: any) => c.status === 'online');
-                    const prevHadOnlineCameras = prev.cameras.some((c: any) => c.status === 'online');
-                    
-                    let lastKnownGoodState = prev.lastKnownGoodState;
-                    
-                    // If cameras were online and now going offline, preserve the timestamp
-                    if (prevHadOnlineCameras && !hasOnlineCameras && prev.lastKnownGoodState) {
-                        // Keep existing lastKnownGoodState
-                        lastKnownGoodState = prev.lastKnownGoodState;
-                    } 
-                    // If cameras are online now, update the timestamp
-                    else if (hasOnlineCameras) {
-                        lastKnownGoodState = new Date();
-                    }
-                    // If this is the first time we see cameras and they're online
-                    else if (hasOnlineCameras && !prev.lastKnownGoodState) {
-                        lastKnownGoodState = new Date();
-                    }
-                    
-                    return {
-                        cameras: newCameras,
-                        lastKnownGoodState
-                    };
-                });
-            }
-        });
-
         return () => {
             unsubscribeDetection();
-            unsubscribeHardware();
         };
     }, [isConnected, subscribe, processAlertQueue]);
 
@@ -544,10 +507,9 @@ export const useBannedIndividualsState = () => {
     }, [bannedIndividuals, selectedIndividuals]);
 
     const handlePhotoUpload = useCallback(async (file: File, individualId: string) => {
-        const toastId = showLoading('Uploading photo and training facial recognition...');
+        const toastId = showLoading('Uploading reference photo...');
         setLoading(prev => ({ ...prev, photo: true }));
         try {
-            // Validate file
             if (file.size > 10 * 1024 * 1024) {
                 throw new Error('File size must be less than 10MB');
             }
@@ -558,39 +520,24 @@ export const useBannedIndividualsState = () => {
             const result = await bannedIndividualsService.uploadPhoto(individualId, file);
 
             if (result) {
-                const trainingTriggered = result.trainingTriggered || false;
-                
                 setBannedIndividuals(prev => prev.map(ind =>
                     ind.id === individualId ? { ...ind, photoUrl: result.photoUrl } : ind
                 ));
-                
-                // Refresh facial recognition stats if training was triggered
-                if (trainingTriggered) {
-                    const frStatus = await bannedIndividualsService.getFacialRecognitionStatus();
-                    if (frStatus) {
-                        setFacialRecognitionStats(frStatus);
-                    }
-                }
-                
                 recordAuditEntry({
-                    action: 'UPLOAD_BIOMETRIC_PHOTO',
+                    action: 'UPLOAD_REFERENCE_PHOTO',
                     status: 'success',
                     target: selectedIndividual ? `${selectedIndividual.firstName} ${selectedIndividual.lastName}` : undefined,
-                    reason: trainingTriggered ? 'Photo uploaded and model training triggered' : 'Photo uploaded',
-                    metadata: {
-                        individualId: selectedIndividual?.id,
-                        trainingTriggered
-                    }
+                    reason: 'Reference photo uploaded for in-person verification',
+                    metadata: { individualId: selectedIndividual?.id }
                 });
-                
-                dismissLoadingAndShowSuccess(toastId, 'Photo uploaded and facial recognition model updated');
+                dismissLoadingAndShowSuccess(toastId, 'Reference photo uploaded');
                 setShowPhotoUploadModal(false);
             } else {
                 throw new Error('Upload failed');
             }
         } catch (error) {
             recordAuditEntry({
-                action: 'UPLOAD_BIOMETRIC_PHOTO',
+                action: 'UPLOAD_REFERENCE_PHOTO',
                 status: 'failure',
                 target: selectedIndividual ? `${selectedIndividual.firstName} ${selectedIndividual.lastName}` : undefined,
                 reason: error instanceof Error ? error.message : 'Unknown error'
@@ -697,24 +644,16 @@ export const useBannedIndividualsState = () => {
         try {
             const success = await bannedIndividualsService.updateSettings(settings, propertyId);
             if (success) {
-                // Also update facial recognition config if changed
-                await bannedIndividualsService.updateFacialRecognitionConfig({
-                    confidenceThreshold: settings.confidenceThreshold,
-                    retentionDays: settings.retentionDays
-                });
-                
                 recordAuditEntry({
                     action: 'UPDATE_SETTINGS',
                     status: 'success',
                     reason: 'Module settings updated',
                     metadata: {
-                        confidenceThreshold: settings.confidenceThreshold,
                         retentionDays: settings.retentionDays,
-                        facialRecognitionAlerts: settings.facialRecognitionAlerts,
+                        detectionAlerts: settings.detectionAlerts,
                         autoSharePermanentBans: settings.autoSharePermanentBans
                     }
                 });
-                
                 dismissLoadingAndShowSuccess(toastId, 'Settings saved successfully');
             } else {
                 throw new Error('Failed to save settings');
@@ -730,21 +669,6 @@ export const useBannedIndividualsState = () => {
             setLoading(prev => ({ ...prev, settings: false }));
         }
     }, [settings, propertyId, recordAuditEntry]);
-
-    const handleTriggerTraining = useCallback(async () => {
-        const toastId = showLoading('Triggering facial recognition training...');
-        try {
-            const result = await bannedIndividualsService.triggerFacialRecognitionTraining();
-            if (result) {
-                setFacialRecognitionStats(prev => ({ ...prev, trainingStatus: 'TRAINING' }));
-                dismissLoadingAndShowSuccess(toastId, 'Training started. Status will update when complete.');
-            } else {
-                throw new Error('Failed to trigger training');
-            }
-        } catch (error) {
-            dismissLoadingAndShowError(toastId, 'Failed to trigger training');
-        }
-    }, []);
 
     // Keyboard navigation
     useKeyboardNavigation([
@@ -811,7 +735,6 @@ export const useBannedIndividualsState = () => {
         selectedIndividuals, setSelectedIndividuals,
         bannedIndividuals,
         detectionAlerts,
-        facialRecognitionStats,
         metrics,
         settings, setSettings,
         hardwareStatus,
@@ -829,7 +752,6 @@ export const useBannedIndividualsState = () => {
         handleMarkFalsePositive,
         handleViewFootage,
         handleSaveSettings,
-        handleTriggerTraining,
         auditLog,
         recordAuditEntry,
         fetchData,

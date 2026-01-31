@@ -22,9 +22,13 @@ import { useAccessControlContext } from '../../context/AccessControlContext';
 import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
 import { AccessPointsFilter } from '../filters/AccessPointsFilter';
 import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
+import { retryWithBackoff } from '../../../../utils/retryWithBackoff';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import type { AccessPoint } from '../../../../shared/types/access-control.types';
 import { CreateAccessPointModal, type AccessPointFormData } from '../modals';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
+import { Select } from '../../../../components/UI/Select';
 
 function formatRefreshedAgo(d: Date | null): string {
   if (!d) return '';
@@ -147,6 +151,20 @@ const AccessPointsTabComponent: React.FC = () => {
     [filteredAccessPoints]
   );
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const totalPages = Math.ceil(filteredAccessPoints.length / itemsPerPage);
+  const paginatedAccessPoints = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredAccessPoints.slice(start, start + itemsPerPage);
+  }, [filteredAccessPoints, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, typeFilter]);
+
   // Handle sync with loading state
   const handleSyncCachedEvents = useCallback(async (accessPointId: string) => {
     setSyncingAccessPointId(accessPointId);
@@ -229,11 +247,26 @@ const AccessPointsTabComponent: React.FC = () => {
       showError('Reason is required to disable access points.');
       return;
     }
+    // Prevent concurrent bulk operations
+    if (bulkLoading) {
+      showError('A bulk operation is already in progress.');
+      return;
+    }
     const toastId = showLoading(`Updating ${filteredAccessPoints.length} access point(s)...`);
     setBulkLoading(true);
     try {
+      // Use retry logic for each update
       const results = await Promise.allSettled(
-        filteredAccessPoints.map(point => updateAccessPoint(point.id, { status }))
+        filteredAccessPoints.map(point => 
+          retryWithBackoff(
+            () => updateAccessPoint(point.id, { status }),
+            {
+              maxRetries: 3,
+              baseDelay: 1000,
+              maxDelay: 10000,
+            }
+          )
+        )
       );
       const failures = results
         .map((result, index) => (result.status === 'rejected' ? filteredAccessPoints[index].name : null))
@@ -260,10 +293,11 @@ const AccessPointsTabComponent: React.FC = () => {
       }
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Bulk update failed.');
+      ErrorHandlerService.logError(error, 'handleBulkStatusUpdate');
     } finally {
       setBulkLoading(false);
     }
-  }, [filteredAccessPoints, updateAccessPoint, bulkReason, closeBulkModal]);
+  }, [filteredAccessPoints, updateAccessPoint, bulkReason, closeBulkModal, bulkLoading]);
 
   // Loading state
   if (loading.accessPoints && accessPoints.length === 0) {
@@ -385,11 +419,12 @@ const AccessPointsTabComponent: React.FC = () => {
       {/* Access Points Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="list" aria-label="Access points list">
         {filteredAccessPoints.length > 0 ? (
-          filteredAccessPoints.map((point: AccessPoint) => (
+          <>
+            {paginatedAccessPoints.map((point: AccessPoint) => (
             <Card
               key={point.id}
               className={cn(
-                "bg-slate-900/50 backdrop-blur-xl border shadow-2xl transition-all duration-300 relative group overflow-hidden",
+                "bg-slate-900/50 backdrop-blur-xl border  transition-all duration-300 relative group overflow-hidden",
                 point.isOnline === false ? 'border-red-500/50 opacity-90' : 'border-white/5'
               )}
               role="listitem"
@@ -398,7 +433,7 @@ const AccessPointsTabComponent: React.FC = () => {
               {/* Offline Hardware Overlay */}
               {point.isOnline === false && (
                 <div className="absolute inset-0 bg-red-950/40 border border-red-500/30 rounded-lg flex items-center justify-center z-10 backdrop-blur-[2px]" role="alert" aria-live="polite">
-                  <div className="text-center p-6 bg-black/60 rounded-2xl border border-red-500/20 shadow-2xl scale-95 hover:scale-100 transition-transform">
+                  <div className="text-center p-6 bg-black/60 rounded-2xl border border-red-500/20  scale-95 hover:scale-100 transition-transform">
                     <i className="fas fa-broadcast-tower text-red-500 text-3xl mb-3 animate-pulse" aria-hidden="true" />
                     <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">OFFLINE</p>
                     <p className="text-[9px] text-red-200/40 font-bold mt-1 uppercase">Connection Lost</p>
@@ -439,7 +474,7 @@ const AccessPointsTabComponent: React.FC = () => {
                     <p className="text-[8px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-1.5 opacity-50">Location</p>
                     <div className="flex items-center text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-tight">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-2 border border-white/5 shrink-0"><i className="fas fa-map-pin text-white text-xs" aria-hidden="true" /></div>
-                      <span aria-label={`Location: ${point.location}`}>{point.location}</span>
+                      <span aria-label={`Location: ${formatLocationDisplay(point.location as string | { lat?: number; lng?: number } | null) || '—'}`}>{formatLocationDisplay(point.location as string | { lat?: number; lng?: number } | null) || '—'}</span>
                     </div>
                   </div>
                   <div className="p-3 bg-slate-900/30 rounded-xl border border-white/5">
@@ -615,7 +650,8 @@ const AccessPointsTabComponent: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-          ))
+          ))}
+          </>
         ) : (
           <div className="col-span-full">
             <EmptyState
@@ -650,6 +686,78 @@ const AccessPointsTabComponent: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredAccessPoints.length > 0 && totalPages > 1 && (
+        <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+          <div className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">
+            Showing <span className="text-[color:var(--text-main)]">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+            <span className="text-[color:var(--text-main)]">{Math.min(currentPage * itemsPerPage, filteredAccessPoints.length)}</span> of{' '}
+            <span className="text-[color:var(--text-main)]">{filteredAccessPoints.length}</span> access points
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="glass"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="text-[10px] font-black uppercase tracking-widest border-white/5"
+            >
+              <i className="fas fa-chevron-left mr-1" />
+              Previous
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? 'primary' : 'glass'}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="text-[10px] font-black uppercase tracking-widest min-w-[2rem]"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="glass"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="text-[10px] font-black uppercase tracking-widest border-white/5"
+            >
+              Next
+              <i className="fas fa-chevron-right ml-1" />
+            </Button>
+            <Select
+              id="items-per-page"
+              value={itemsPerPage.toString()}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="text-[10px] font-black uppercase tracking-widest w-20 ml-2"
+            >
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </Select>
+          </div>
+        </div>
+      )}
 
       <Modal
         isOpen={showBulkModal}

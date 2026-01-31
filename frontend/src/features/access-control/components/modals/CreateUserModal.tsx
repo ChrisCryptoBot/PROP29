@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
 import type { AccessControlUser, UserRole, UserStatus, AccessLevel } from '../../../../shared/types/access-control.types';
 import type { AccessSchedule } from '../../../../shared/types/access-control.types';
 import { cn } from '../../../../utils/cn';
+import { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';
 
 export interface UserFormData {
   name: string;
@@ -58,10 +60,20 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const handleClose = () => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Cancel anyway?')) {
+    if (isFormDirty) {
+      setShowDiscardModal(true);
       return;
     }
+    resetForm();
+    onClose();
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    setIsFormDirty(false);
     resetForm();
     onClose();
   };
@@ -162,6 +174,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -267,7 +280,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="user-role" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Role</label>
-              <select
+              <Select
                 id="user-role"
                 value={formData.role}
                 onChange={(e) => updateFormData({ role: e.target.value as UserRole })}
@@ -276,11 +289,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 {AVAILABLE_ROLES.map(role => (
                   <option key={role} value={role}>{role}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
               <label htmlFor="user-status" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Status</label>
-              <select
+              <Select
                 id="user-status"
                 value={formData.status}
                 onChange={(e) => updateFormData({ status: e.target.value as UserStatus })}
@@ -289,11 +302,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 {AVAILABLE_STATUSES.map(status => (
                   <option key={status} value={status}>{status}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
               <label htmlFor="user-access-level" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Access Level</label>
-              <select
+              <Select
                 id="user-access-level"
                 value={formData.accessLevel}
                 onChange={(e) => updateFormData({ accessLevel: e.target.value as AccessLevel })}
@@ -302,7 +315,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 {AVAILABLE_ACCESS_LEVELS.map(level => (
                   <option key={level} value={level}>{level}</option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         </div>
@@ -373,5 +386,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         </div>
       </div>
     </Modal>
+      <ConfirmDiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleConfirmDiscard}
+      />
+    </>
   );
 };

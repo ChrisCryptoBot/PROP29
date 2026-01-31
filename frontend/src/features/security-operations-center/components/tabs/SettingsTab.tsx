@@ -2,18 +2,21 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { useSecurityOperationsContext } from '../../context/SecurityOperationsContext';
+import { useSecurityOperationsTelemetry } from '../../hooks/useSecurityOperationsTelemetry';
 import apiService from '../../../../services/ApiService';
 import { showSuccess, showError } from '../../../../utils/toast';
 import { cn } from '../../../../utils/cn';
 
 export const SettingsTab: React.FC = () => {
   const { settings, loading, updateSettings, canUpdateSettings } = useSecurityOperationsContext();
+  const { trackAction } = useSecurityOperationsTelemetry();
   const [localSettings, setLocalSettings] = useState(settings);
   const [isDirty, setIsDirty] = useState(false);
   const [testConnectionLoading, setTestConnectionLoading] = useState(false);
 
   const handleTestConnection = useCallback(async () => {
     setTestConnectionLoading(true);
+    trackAction('test_connection', 'settings');
     try {
       await apiService.get('/security-operations/cameras');
       showSuccess('Connection OK. Security-operations API is reachable.');
@@ -22,7 +25,7 @@ export const SettingsTab: React.FC = () => {
     } finally {
       setTestConnectionLoading(false);
     }
-  }, []);
+  }, [trackAction]);
 
   useEffect(() => {
     setLocalSettings(settings);
@@ -45,8 +48,9 @@ export const SettingsTab: React.FC = () => {
 
   if (loading.settings) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading settings" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Settings...</p>
       </div>
     );
   }
@@ -55,8 +59,8 @@ export const SettingsTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Settings">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-white">Settings</h2>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] mt-1 italic opacity-70 text-slate-400">
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Settings</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Recording, retention, and notifications
           </p>
         </div>

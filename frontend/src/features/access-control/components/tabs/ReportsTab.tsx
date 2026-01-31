@@ -95,7 +95,7 @@ const ReportsTabComponent: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" role="group" aria-label="Report cards">
         {/* Access Pattern Report */}
         <Card
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:bg-white/5 hover:border-white/5 transition-all duration-300 cursor-pointer group"
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:bg-white/5 hover:border-white/5 transition-all duration-300 cursor-pointer group"
           onClick={() => openReport('Usage Analysis', 'Access frequency, trends, and access point utilization.', 'Last generated: Today')}
           role="button"
           tabIndex={0}
@@ -109,7 +109,7 @@ const ReportsTabComponent: React.FC = () => {
         >
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <i className="fas fa-chart-line text-white text-base" />
               </div>
               Usage Analysis
@@ -117,7 +117,7 @@ const ReportsTabComponent: React.FC = () => {
           </CardHeader>
           <CardContent className="p-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center border border-white/5 shadow-2xl">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center border border-white/5 ">
                 <i className="fas fa-chart-line text-white text-lg" />
               </div>
               <Badge variant="info" className="text-[8px] font-black uppercase tracking-widest">REAL-TIME</Badge>
@@ -135,7 +135,7 @@ const ReportsTabComponent: React.FC = () => {
 
         {/* Failed Access Report */}
         <Card
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:border-white/5 transition-all duration-300 cursor-pointer group"
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:border-white/5 transition-all duration-300 cursor-pointer group"
           onClick={() => openReport('Incident Analytics', 'Denied access attempts and alert activity.', 'Last generated: Today')}
           role="button"
           tabIndex={0}
@@ -149,7 +149,7 @@ const ReportsTabComponent: React.FC = () => {
         >
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <i className="fas fa-biohazard text-white text-base" />
               </div>
               Incident Analytics
@@ -177,7 +177,7 @@ const ReportsTabComponent: React.FC = () => {
 
         {/* Compliance Report */}
         <Card
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:border-white/5 transition-all duration-300 cursor-pointer group"
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:border-white/5 transition-all duration-300 cursor-pointer group"
           onClick={() => openReport('Compliance Report', 'Audit logs and compliance metrics.', 'Last generated: Today')}
           role="button"
           tabIndex={0}
@@ -191,7 +191,7 @@ const ReportsTabComponent: React.FC = () => {
         >
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <i className="fas fa-shield-alt text-white text-base" />
               </div>
               Compliance Report
@@ -221,7 +221,7 @@ const ReportsTabComponent: React.FC = () => {
 
         {/* User Activity Report */}
         <Card
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:border-white/5 transition-all duration-300 cursor-pointer group"
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:border-white/5 transition-all duration-300 cursor-pointer group"
           onClick={() => openReport('User Activity', 'Individual access history and patterns.', 'Last generated: Today')}
           role="button"
           tabIndex={0}
@@ -235,7 +235,7 @@ const ReportsTabComponent: React.FC = () => {
         >
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <i className="fas fa-fingerprint text-white text-base" />
               </div>
               User Activity
@@ -265,7 +265,7 @@ const ReportsTabComponent: React.FC = () => {
 
         {/* Access Point Utilization */}
         <Card
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:bg-white/5 transition-all duration-300 cursor-pointer group"
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:bg-white/5 transition-all duration-300 cursor-pointer group"
           onClick={() => openReport('Device Usage', 'Access point utilization and performance metrics.', 'Last generated: Today')}
           role="button"
           tabIndex={0}
@@ -279,7 +279,7 @@ const ReportsTabComponent: React.FC = () => {
         >
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <i className="fas fa-server text-white text-base" />
               </div>
               Device Usage
@@ -307,7 +307,7 @@ const ReportsTabComponent: React.FC = () => {
 
         {/* Time-Based Analysis */}
         <Card
-          className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:border-white/5 transition-all duration-300 cursor-pointer group"
+          className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:border-white/5 transition-all duration-300 cursor-pointer group"
           onClick={() => openReport('Activity Timeline', 'Chronological security and access activity.', 'Last generated: Today')}
           role="button"
           tabIndex={0}
@@ -321,7 +321,7 @@ const ReportsTabComponent: React.FC = () => {
         >
           <CardHeader className="border-b border-white/5 pb-4">
             <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-slate-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
+              <div className="w-12 h-12 bg-gradient-to-br from-slate-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
                 <i className="fas fa-timeline text-white text-base" />
               </div>
               Activity Timeline

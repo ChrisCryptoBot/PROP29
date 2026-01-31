@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// import logo from '../../assets/Final_logo.png';
 
 const SplashScreen: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);

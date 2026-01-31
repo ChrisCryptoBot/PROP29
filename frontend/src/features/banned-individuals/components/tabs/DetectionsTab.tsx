@@ -75,11 +75,17 @@ export const DetectionsTab: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mt-4">
                                         <div className="bg-white/5 p-3 rounded-lg border border-white/5">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">Location:</span>
-                                            <p className="font-bold text-[color:var(--text-main)] mt-1">{alert.location}</p>
+                                            <p className="font-bold text-[color:var(--text-main)] mt-1">
+                                            {typeof alert.location === 'string'
+                                                ? alert.location
+                                                : alert.location != null && typeof alert.location === 'object' && 'lat' in alert.location && 'lng' in alert.location
+                                                    ? `${Number((alert.location as { lat: number; lng: number }).lat).toFixed(6)}, ${Number((alert.location as { lat: number; lng: number }).lng).toFixed(6)}`
+                                                    : 'Unknown'}
+                                        </p>
                                         </div>
                                         <div className="bg-white/5 p-3 rounded-lg border border-white/5">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">Confidence:</span>
-                                            <p className="font-bold text-[color:var(--text-main)] mt-1">{alert.confidence}%</p>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">Confirmed</span>
+                                            <p className="font-bold text-[color:var(--text-main)] mt-1">{alert.confidence != null ? `${alert.confidence}%` : 'Yes'}</p>
                                         </div>
                                         <div className="bg-white/5 p-3 rounded-lg border border-white/5">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">Response Time:</span>

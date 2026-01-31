@@ -347,7 +347,10 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                                         borderRadius: '8px',
                                         color: '#cbd5e1'
                                     }}
-                                    formatter={(value: number) => `$${value.toLocaleString()}`}
+                                    formatter={(value: number | undefined) => {
+                                        if (value === undefined || value === null) return '$0';
+                                        return `$${value.toLocaleString()}`;
+                                    }}
                                 />
                                 <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorValue)" />
                             </AreaChart>

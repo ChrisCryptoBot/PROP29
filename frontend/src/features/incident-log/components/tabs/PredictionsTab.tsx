@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import LoadingSpinner from '../../../../components/UI/LoadingSpinner';
 import { Button } from '../../../../components/UI/Button';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { AgentTrustLevel } from '../../types/incident-log.types';
 import { Pattern } from '../../types/incident-log.types';
@@ -17,7 +18,8 @@ export const PredictionsTab: React.FC = () => {
         refreshIncidents,
         agentPerformanceMetrics,
         hardwareDevices,
-        getAgentTrustLevel 
+        getAgentTrustLevel,
+        propertyId
     } = useIncidentLogContext();
     const [patterns, setPatterns] = useState<Pattern[]>([]);
     const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
@@ -33,21 +35,20 @@ export const PredictionsTab: React.FC = () => {
             }
 
             try {
-                const propertyId = localStorage.getItem('propertyId') || undefined;
                 const response = await getPatternRecognition({
-                    time_range: '30d',
+                    time_range: timeRange,
                     property_id: propertyId,
                     analysis_types: ['incident_type', 'severity_trend', 'location_pattern']
                 });
                 setPatterns(response?.patterns || []);
             } catch (error) {
-                console.error('Failed to load pattern recognition:', error);
+                ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'loadPatternRecognition');
                 setPatterns([]);
             }
         };
 
         loadPatterns();
-    }, [getPatternRecognition, hasIncidents]);
+    }, [getPatternRecognition, hasIncidents, timeRange, propertyId]);
 
     // Agent risk predictions
     const agentRiskPredictions = useMemo(() => {
@@ -136,11 +137,12 @@ export const PredictionsTab: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Incident Log</p>
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">AI Predictions</h2>
-                    <p className="text-[11px] text-[color:var(--text-sub)]">Forecast risks and emerging patterns.</p>
+            <div className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">AI Predictions</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        Forecast risks and emerging patterns
+                    </p>
                 </div>
                 <div className="flex items-center gap-4">
                     {/* Prediction Type Selection */}
@@ -225,7 +227,7 @@ export const PredictionsTab: React.FC = () => {
                             const loadPatterns = async () => {
                                 if (!hasIncidents) return;
                                 try {
-                                    const propertyId = localStorage.getItem('propertyId') || undefined;
+                                    // Use context propertyId (already available from hook)
                                     const response = await getPatternRecognition({
                                         time_range: timeRange,
                                         property_id: propertyId,
@@ -247,10 +249,10 @@ export const PredictionsTab: React.FC = () => {
                 </div>
             </div>
             {/* AI Predictions - Enhanced with Agent and Hardware Predictions */}
-            <Card className="glass-card border border-white/5 shadow-2xl">
+            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
                             <i className={cn("fas text-white", 
                                 predictionType === 'incidents' ? 'fa-brain' :
                                 predictionType === 'agents' ? 'fa-user-shield' :
@@ -275,8 +277,11 @@ export const PredictionsTab: React.FC = () => {
                     {predictionType === 'incidents' && (
                         <>
                             {loading.related ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <LoadingSpinner size="lg" />
+                                <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                                    <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading patterns" />
+                                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">
+                                        Loading Patterns...
+                                    </p>
                                 </div>
                             ) : !hasIncidents || patterns.length === 0 ? (
                                 <EmptyState

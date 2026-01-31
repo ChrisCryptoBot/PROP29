@@ -3,11 +3,13 @@
  * Tab for managing events and event badges
  */
 
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Select } from '../../../../components/UI/Select';
 import { useVisitorContext } from '../../context/VisitorContext';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../utils/formatLocation';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 
 export const EventsTab: React.FC = React.memo(() => {
@@ -19,23 +21,35 @@ export const EventsTab: React.FC = React.memo(() => {
     setShowEventDetailsModal
   } = useVisitorContext();
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  // Paginated events
+  const paginatedEvents = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return events.slice(start, end);
+  }, [events, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(events.length / itemsPerPage);
+
   if (loading.events && events.length === 0) {
     return (
-      <div className="text-center py-12">
-        <i className="fas fa-spinner fa-spin text-3xl text-[color:var(--text-sub)] mb-4" />
-        <p className="text-[color:var(--text-sub)]">Retrieving event profiles...</p>
+      <div className="flex flex-col items-center justify-center py-12" role="status" aria-label="Loading events">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Retrieving event profiles...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page Header - Gold Standard Structure */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Visitor Security</p>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">Event Security Coordination</h2>
-          <p className="text-[11px] text-slate-400">
+      {/* Page Header - Gold Standard */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Event Security Coordination</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Large-scale event management with mobile agent coordination and hardware-integrated access control.
           </p>
         </div>
@@ -75,11 +89,12 @@ export const EventsTab: React.FC = React.memo(() => {
             }}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map(event => (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedEvents.map(event => (
               <Card
                 key={event.id}
-                className="bg-slate-900/30 border border-white/5 shadow-xl hover:border-blue-500/30 transition-all cursor-pointer group relative overflow-hidden"
+                className="bg-slate-900/30 border border-white/5 shadow-2xl hover:border-blue-500/30 transition-all cursor-pointer group relative overflow-hidden"
                 onClick={() => {
                   setSelectedEvent(event);
                   setShowEventDetailsModal(true);
@@ -98,7 +113,7 @@ export const EventsTab: React.FC = React.memo(() => {
                   <div className="space-y-3 text-xs">
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded border border-white/5">
                       <span className="text-slate-500 uppercase font-bold tracking-tighter text-[10px]">Location</span>
-                      <span className="font-black text-white">{event.location}</span>
+                      <span className="font-black text-white">{formatLocationDisplay(event.location)}</span>
                     </div>
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded border border-white/5">
                       <span className="text-slate-500 uppercase font-bold tracking-tighter text-[10px]">Attendee Logistics</span>
@@ -130,8 +145,81 @@ export const EventsTab: React.FC = React.memo(() => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {events.length > 0 && totalPages > 1 && (
+              <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-between">
+                <div className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">
+                  Showing <span className="text-[color:var(--text-main)]">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                  <span className="text-[color:var(--text-main)]">{Math.min(currentPage * itemsPerPage, events.length)}</span> of{' '}
+                  <span className="text-[color:var(--text-main)]">{events.length}</span> events
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                  >
+                    <i className="fas fa-chevron-left mr-1" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? 'primary' : 'glass'}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="text-[10px] font-black uppercase tracking-widest min-w-[2rem]"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="glass"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                  >
+                    Next
+                    <i className="fas fa-chevron-right ml-1" />
+                  </Button>
+                  <Select
+                    id="items-per-page"
+                    value={itemsPerPage.toString()}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="text-[10px] font-black uppercase tracking-widest w-20 ml-2"
+                  >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

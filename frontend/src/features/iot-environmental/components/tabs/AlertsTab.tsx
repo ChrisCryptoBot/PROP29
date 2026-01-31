@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useIoTEnvironmentalContext } from '../../context/IoTEnvironmentalContext';
 
 const AlertsTab: React.FC = () => {
@@ -125,7 +126,7 @@ const AlertsTab: React.FC = () => {
                             {alert.message}
                           </p>
                           <p className="text-[10px] text-white/40 mt-1 uppercase tracking-wider font-medium">
-                            Location: {alert.location}
+                            Location: {formatLocationDisplay(alert.location as string | { lat?: number; lng?: number } | null) || '—'}
                           </p>
                         </div>
 

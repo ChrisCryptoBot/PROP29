@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { SmartParkingProvider, useSmartParkingContext } from './context/SmartParkingContext';
 import { SearchBar } from '../../components/UI/SearchBar';
-import { DashboardTab } from './components/tabs/DashboardTab';
+import { OverviewTab } from './components/tabs/OverviewTab';
 import { SpacesTab } from './components/tabs/SpacesTab';
 import { GuestsTab } from './components/tabs/GuestsTab';
 import { AnalyticsTab } from './components/tabs/AnalyticsTab';
@@ -26,7 +26,7 @@ const SmartParkingOrchestratorContent: React.FC = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'dashboard':
-                return <DashboardTab />;
+                return <OverviewTab />;
             case 'spaces':
                 return <SpacesTab onAddSpace={() => setShowSpaceModal(true)} />;
             case 'guests':
@@ -46,7 +46,7 @@ const SmartParkingOrchestratorContent: React.FC = () => {
             title="Smart Parking"
             subtitle="Space Utilization & Guest Registry"
             tabs={[
-                { id: 'dashboard', label: 'Dashboard' },
+                { id: 'dashboard', label: 'Overview' },
                 { id: 'spaces', label: 'Spaces' },
                 { id: 'guests', label: 'Guests' },
                 { id: 'analytics', label: 'Analytics' },

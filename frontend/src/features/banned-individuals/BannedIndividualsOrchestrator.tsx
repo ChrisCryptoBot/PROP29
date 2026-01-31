@@ -2,7 +2,6 @@ import React, { Suspense } from 'react';
 import { BannedIndividualsProvider, useBannedIndividualsContext } from './context/BannedIndividualsContext';
 import { OverviewTab } from './components/tabs/OverviewTab';
 import { ManagementTab } from './components/tabs/ManagementTab';
-import { FacialRecognitionTab } from './components/tabs/FacialRecognitionTab';
 import { DetectionsTab } from './components/tabs/DetectionsTab';
 import { AIAnalyticsTab } from './components/tabs/AIAnalyticsTab';
 import { AnalyticsTab } from './components/tabs/AnalyticsTab';
@@ -25,10 +24,9 @@ const OrchestratorContent: React.FC = () => {
     const tabs = [
         { id: 'overview', label: 'Overview', icon: 'fa-shield-alt' },
         { id: 'management', label: 'Records', icon: 'fa-users-cog' },
-        { id: 'facial-recognition', label: 'Biometrics', icon: 'fa-eye' },
         { id: 'detections', label: 'Detections', icon: 'fa-history' },
-        { id: 'ai-analytics', label: 'Risk Analysis', icon: 'fa-brain' },
-        { id: 'analytics', label: 'Reports', icon: 'fa-chart-bar' },
+        { id: 'ai-analytics', label: 'Risk Analysis', icon: 'fa-chart-line' },
+        { id: 'analytics', label: 'Analytics', icon: 'fa-chart-bar' },
         { id: 'settings', label: 'Settings', icon: 'fa-cog' },
     ];
 
@@ -36,7 +34,6 @@ const OrchestratorContent: React.FC = () => {
         switch (activeTab) {
             case 'overview': return <OverviewTab />;
             case 'management': return <ManagementTab />;
-            case 'facial-recognition': return <FacialRecognitionTab />;
             case 'detections': return <DetectionsTab />;
             case 'ai-analytics': return <AIAnalyticsTab />;
             case 'analytics': return <AnalyticsTab />;
@@ -82,14 +79,16 @@ const OrchestratorContent: React.FC = () => {
 
             {/* Quick Action FAB - Gold Standard */}
             <div className="fixed bottom-8 right-8 z-50">
-                <button
+                <Button
                     onClick={() => setShowCreateModal(true)}
-                    className="w-14 h-14 bg-red-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-red-700 hover:scale-110 transition-all group"
+                    variant="destructive"
+                    size="icon"
+                    className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
                     title="Add Banned Individual"
                     aria-label="Add Banned Individual"
                 >
-                    <i className="fas fa-user-plus text-xl group-hover:scale-110 transition-transform" />
-                </button>
+                    <i className="fas fa-user-plus text-xl" />
+                </Button>
             </div>
         </ModuleShell >
     );

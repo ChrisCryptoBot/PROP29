@@ -81,7 +81,7 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = React.memo(({
 
         <Button
           variant="primary"
-          className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20"
+          className="w-full py-4 text-xs font-black uppercase tracking-[0.2em]"
           onClick={handleCopyQRCode}
         >
           <i className="fas fa-copy mr-2" />

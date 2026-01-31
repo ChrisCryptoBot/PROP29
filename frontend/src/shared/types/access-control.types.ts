@@ -69,6 +69,20 @@ export interface AccessEvent {
     result?: AccessResult;
     /** 'pending' = agent-submitted, needs manager review; 'approved' | 'rejected' */
     review_status?: 'pending' | 'approved' | 'rejected';
+    /** Source of the event: 'web_admin' | 'mobile_agent' | 'hardware_device' | 'system' */
+    source?: 'web_admin' | 'mobile_agent' | 'hardware_device' | 'system';
+    /** Agent ID if submitted by mobile agent */
+    source_agent_id?: string;
+    /** Device ID if submitted by hardware device */
+    source_device_id?: string;
+    /** Additional metadata from source */
+    source_metadata?: Record<string, unknown>;
+    /** Reviewed by user ID */
+    reviewed_by?: string;
+    /** Review timestamp */
+    reviewed_at?: string;
+    /** Rejection reason if rejected */
+    rejection_reason?: string;
 }
 
 export type AuditSource = 'web_admin' | 'mobile_agent' | 'system';
@@ -140,6 +154,12 @@ export interface CachedEvent {
 // ============================================================================
 
 export interface AccessMetrics {
+    // Mobile & Hardware Integration Metrics
+    mobileAgentEvents?: number;
+    hardwareDeviceEvents?: number;
+    pendingAgentEvents?: number;
+    offlineDevices?: number;
+    registeredDevices?: number;
     totalAccessPoints: number;
     activeAccessPoints: number;
     totalUsers: number;

@@ -15,6 +15,7 @@ import { useAuth } from '../../../../hooks/useAuth';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { useAccessControlContext } from '../../context/AccessControlContext';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 
 interface LockdownEvent {
   id: string;
@@ -336,7 +337,7 @@ export const LockdownFacilityTab: React.FC = () => {
           )}
         </div>
       )}
-      <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+      <Card className="glass-card border border-white/5 bg-transparent ">
         <CardContent className="pt-6">
           {isStale && (
             <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-4">
@@ -414,10 +415,10 @@ export const LockdownFacilityTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+      <Card className="glass-card border border-white/5 bg-transparent ">
         <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
               <i className="fas fa-microchip text-white" />
             </div>
             <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Hardware Devices</span>
@@ -440,7 +441,7 @@ export const LockdownFacilityTab: React.FC = () => {
                 )}
                 <div className="flex items-center gap-2 text-xs text-[color:var(--text-sub)] mb-1">
                   <i className="fas fa-map-marker-alt opacity-50"></i>
-                  {device.location}
+                  {formatLocationDisplay(device.location as string | { lat?: number; lng?: number } | null) || '—'}
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-[color:var(--text-sub)] opacity-70">
                   <i className="fas fa-clock opacity-50"></i>
@@ -467,10 +468,10 @@ export const LockdownFacilityTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border border-white/5 bg-transparent shadow-console">
+      <Card className="glass-card border border-white/5 bg-transparent ">
         <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
+            <div className="w-12 h-12 bg-gradient-to-br from-slate-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
               <i className="fas fa-history text-white" />
             </div>
             <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Lockdown History</span>

@@ -5,6 +5,7 @@ import { Badge } from '../UI/Badge';
 import { showLoading, dismissLoadingAndShowSuccess, showError } from '../../utils/toast';
 import { patrolAI } from '../../services/PatrolAIService';
 import { logger } from '../../services/logger';
+import { formatLocationDisplay } from '../../utils/formatLocation';
 import '../../styles/modern-glass.css';
 
 interface Officer {
@@ -95,7 +96,7 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
           <div className="mb-6 p-4 bg-slate-900/30 rounded-xl border border-white/5 shadow-inner">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Target Vector</p>
             <p className="text-sm font-black text-white">{selectedPatrol.name}</p>
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 italic">{selectedPatrol.location}</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 italic">{formatLocationDisplay(selectedPatrol.location) || '—'}</p>
           </div>
         )}
 

@@ -122,10 +122,10 @@ export const OverviewTab: React.FC = () => {
                     color="red"
                 />
                 <MetricCard
-                    icon="fa-eye"
-                    label="Facial Recognition"
-                    value={`${metrics.facialRecognitionAccuracy}%`}
-                    badge="Accuracy"
+                    icon="fa-image"
+                    label="Records with photo"
+                    value={metrics.facialRecognitionAccuracy}
+                    badge="Reference"
                     color="blue"
                 />
             </div>

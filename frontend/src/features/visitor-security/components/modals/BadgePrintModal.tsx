@@ -41,7 +41,7 @@ export const BadgePrintModal: React.FC<BadgePrintModalProps> = React.memo(({
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
 
           <div className="text-center mb-6 relative z-10">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[color:var(--border-subtle)]/30 shadow-xl">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-800 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[color:var(--border-subtle)]/30 shadow-2xl">
               <span className="text-white text-3xl font-black">
                 {selectedVisitor.first_name[0]}{selectedVisitor.last_name[0]}
               </span>
@@ -96,7 +96,7 @@ export const BadgePrintModal: React.FC<BadgePrintModalProps> = React.memo(({
 
         <Button
           variant="primary"
-          className="w-full py-4 text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20"
+          className="w-full py-4 text-xs font-black uppercase tracking-[0.2em]"
           onClick={handlePrint}
         >
           <i className="fas fa-print mr-2" />

@@ -170,6 +170,7 @@ export interface VisitorUpdate {
   security_clearance?: SecurityClearance | string;
   risk_level?: RiskLevel | string;
   access_points?: string[];
+  updated_at?: string;
 }
 
 // Visitor filters (for GET requests)

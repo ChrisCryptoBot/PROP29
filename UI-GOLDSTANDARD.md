@@ -1,6 +1,23 @@
 # UI Gold Standard: Security Console Design System
 
-This document defines the visual and interaction standards for the platform's high-contrast "Security Console" aesthetic.
+This document defines the visual and interaction standards for the platform's high-contrast "Security Console" aesthetic. It is the **universal reference for auditing every module** in the application.
+
+## Reference implementations (gold-standard modules)
+
+The following modules have been audited and aligned to this document. Use them as the source of truth when auditing other modules:
+
+- **Patrol Command Center** — `frontend/src/features/patrol-command-center`
+- **Access Control** — `frontend/src/features/access-control`
+- **Security Operations Center** — `frontend/src/features/security-operations-center`
+- **Incident Log** — `frontend/src/features/incident-log`
+
+When in doubt, match patterns (modals, page headers, buttons, cards, borders) to these four modules.
+
+**Tab names and order:** Canonical tab labels and order for all modules are defined in `docs/MODULE_TABS_NAMES_AND_ORDER.md`. Use that document when auditing tab naming (e.g. Overview, Settings, Analytics) and tab order.
+
+**How to audit a module:** Use the **Universal Module Audit Checklist** (at the end of this document) to audit every module. Work through each section; mark items N/A only where **§32 When patterns apply (optionality)** states the pattern does not apply (e.g. WebSocket N/A for static config modules).
+
+---
 
 ## 1. Visual Identity & Design Tokens
 
@@ -93,7 +110,7 @@ This document defines the visual and interaction standards for the platform's hi
 - **Title**: `text-xl font-black uppercase tracking-tighter text-white mb-6`
 - **Content**: Flat layout only. Use `space-y-4` or `space-y-6`. No inner card wrappers (no `p-4 bg-... rounded-xl` per field). Labels (view): `text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1`. Form labels: `block text-xs font-bold text-white mb-2 uppercase tracking-wider`. Values: `text-white font-bold` or `text-white font-mono text-sm` or `text-slate-300 text-sm`.
 - **Inputs**: use the **Standard Input** pattern from section 5. Same for `select`. Buttons: `text-xs font-black uppercase tracking-widest`.
-- **Actions**: right-aligned row with `variant="subtle"` for Cancel and `variant="primary"` for Save/Create.
+- **Actions**: Use the Modal component's **`footer`** prop for all action buttons. Right-aligned row: **Cancel first** (`variant="subtle"`), then primary action (`variant="primary"` for Save/Create, `variant="destructive"` for Delete). Do not place action buttons inside modal content.
 - **No close icon**: Do not render an “X” close button; Cancel is the only close control.
 - **Draggable**: All modals (and the **Global Clock**) are **draggable** for repositioning. Use the same pattern as `components/UI/GlobalClock`: **drag handle** = title bar (modals) or time display (Global Clock); `cursor-move` on the handle; `mousedown` → `mousemove` / `mouseup` to update position; clamp to viewport. Custom modals (e.g. Camera Live) must also support drag via a header/handle. `Modal` supports `draggable` (default `true`); set `draggable={false}` only when needed.
 
@@ -142,9 +159,9 @@ This document defines the visual and interaction standards for the platform's hi
 - **Left Side**: Title and subtitle
 - **Right Side**: Optional metadata (last refreshed time, status indicators)
 
-### Page Title
-- **Title**: `text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter`
-- **Subtitle**: `text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70`
+### Page Title (design tokens)
+- **Title**: `text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter` — use `var(--text-main)` (not raw `text-white`) for consistency across themes.
+- **Subtitle**: `text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70` — use `var(--text-sub)` (not raw `text-slate-400`).
 - **Example**:
   ```tsx
   <div className="flex justify-between items-end mb-8">
@@ -1023,6 +1040,16 @@ ErrorHandlerService.handle(error, 'operationName', {
 - **Error Boundaries**: Wrap tab content in ErrorBoundary
 
 ## 32. CRITICAL AUDIT CHECKPOINTS
+
+### When patterns apply (optionality)
+- **WebSocket**: Required only when the module has real-time data (e.g. live updates, events). N/A for static/reference modules (e.g. Settings-only tabs).
+- **Telemetry**: Required for all modules that perform user actions (create, update, delete, tab change). N/A for read-only or config-only modules if no user actions are tracked.
+- **Global refresh**: Required for all modules that display server-fetched data. Register with `useGlobalRefresh()` and implement Ctrl+Shift+R.
+- **Offline queue**: Required only when the module allows create/update/delete while offline. N/A for read-only or online-only modules.
+- **Hardware / heartbeat**: Required only when the module displays or controls hardware devices (cameras, access points, etc.). N/A otherwise.
+- **ErrorHandlerService**: Required for all modules; never use `console.error` for user-facing or operational errors.
+
+### Checklist
 - [ ] **BORDERS**: Are all cards using `border-white/5`? (Check for `border-slate-800`)
 - [ ] **METRIC COLOR**: Are metric numeric values `text-white`? (Check for semantic text colors)
 - [ ] **TYPE MONO**: Do license plates/prices use `font-mono`?
@@ -1076,9 +1103,9 @@ Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patr
 
 ---
 
-## 25. Module Audit Checklist
+## Universal Module Audit Checklist
 
-> **Purpose**: Use this checklist to audit every module against the UI-GOLDSTANDARD.md requirements. Check off each item as you verify it. Items marked with ⚠️ are critical and must pass.
+> **Purpose**: Use this checklist to audit **every module** against the UI-GOLDSTANDARD. Check off each item as you verify it. Items marked with ⚠️ are critical and must pass. For optionality (WebSocket, offline queue, hardware, etc.), see **§32 When patterns apply (optionality)**.
 
 ### Module Information
 - **Module Name**: _______________________

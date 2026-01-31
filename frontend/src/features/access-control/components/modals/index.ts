@@ -24,3 +24,7 @@ export type { NotificationSettingsConfig } from './NotificationSettingsConfigMod
 
 export { BackupRecoveryConfigModal } from './BackupRecoveryConfigModal';
 export type { BackupRecoveryConfig } from './BackupRecoveryConfigModal';
+
+export { ConfirmDeleteModal } from './ConfirmDeleteModal';
+export { EmergencyActionConfirmModal } from './EmergencyActionConfirmModal';
+export { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';

@@ -5,8 +5,9 @@ export * from './modals/EscalationModal';
 export * from './modals/AdvancedFiltersModal';
 export * from './modals/ReportModal';
 export * from './modals/EmergencyAlertModal';
+export * from './modals/ConflictResolutionModal';
 
-export * from './tabs/DashboardTab';
+export * from './tabs/OverviewTab';
 export * from './tabs/IncidentsTab';
 export * from './tabs/ReviewQueueTab';
 export * from './tabs/TrendsTab';

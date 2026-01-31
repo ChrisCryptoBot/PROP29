@@ -13,6 +13,7 @@ from schemas import (
 )
 from passlib.context import CryptContext
 from datetime import datetime
+from uuid import uuid4, UUID
 import os
 import logging
 from cachetools import TTLCache
@@ -191,12 +192,18 @@ class PatrolService:
         """Get patrols with optional filtering"""
         db = SessionLocal()
         try:
-            resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
-            query = db.query(Patrol).filter(Patrol.property_id == resolved_property_id)
-            if status:
-                query = query.filter(Patrol.status == status)
-            
-            patrols = query.order_by(Patrol.created_at.desc()).all()
+            try:
+                resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
+            except HTTPException:
+                # If no property found, use None and return mock data
+                resolved_property_id = None
+            if resolved_property_id:
+                query = db.query(Patrol).filter(Patrol.property_id == resolved_property_id)
+                if status:
+                    query = query.filter(Patrol.status == status)
+                patrols = query.order_by(Patrol.created_at.desc()).all()
+            else:
+                patrols = []
             
             if not patrols:
                 # Return mock patrols
@@ -369,7 +376,7 @@ class PatrolService:
             previous_guard_id = patrol.guard_id
             
             # Update fields (exclude version; we increment it ourselves)
-            update_data = {k: v for k, v in patrol_update.dict(exclude_unset=True).items() if k != "version"}
+            update_data = {k: v for k, v in patrol_update.model_dump(exclude_unset=True).items() if k != "version"}
             if "status" in update_data and update_data["status"]:
                 PatrolService._validate_patrol_status_transition(patrol.status, update_data["status"])
 
@@ -520,19 +527,16 @@ class PatrolService:
         db = SessionLocal()
         try:
             # Query users who have 'security_officer' or 'guard' role
-            # This relies on the User model having a way to query roles. 
-            # Since User.user_roles is a relationship to UserRole table, we join.
-            # However, for simplicity if roles is just a JSON or List in schema but Table in DB:
-            # Let's assume we filter by filtering all users and checking their roles in python 
-            # OR better: if User has a generic query.
-            # For now, let's fetch all users and filter in python to match the mock behavior if DB schema is complex
-            # But realistically:
             from models import UserRole
-            users = db.query(User).join(
-                UserRole, UserRole.user_id == User.user_id
-            ).filter(
-                UserRole.role_name.in_([UserRoleEnum.SECURITY_OFFICER, UserRoleEnum.GUARD])
-            ).all()
+            try:
+                users = db.query(User).join(
+                    UserRole, UserRole.user_id == User.user_id
+                ).filter(
+                    UserRole.role_name.in_([UserRoleEnum.SECURITY_OFFICER, UserRoleEnum.GUARD])
+                ).all()
+            except Exception as e:
+                logger.warning(f"Error querying officers from DB: {e}, returning mock data")
+                users = []
 
             # Helper to convert DB user to Response
             def map_user(u):
@@ -786,12 +790,12 @@ class PatrolService:
                 settings = PatrolSettings(property_id=resolved_property_id)
                 db.add(settings)
 
-            for field, value in settings_update.dict(exclude_unset=True).items():
+            for field, value in settings_update.model_dump(exclude_unset=True).items():
                 setattr(settings, field, value)
 
             db.commit()
             db.refresh(settings)
-            return PatrolSettingsResponse.from_orm(settings)
+            return PatrolSettingsResponse.model_validate(settings)
         finally:
             db.close()
 
@@ -987,8 +991,14 @@ class PatrolService:
     async def get_templates(property_id: Optional[str], user_id: Optional[str]) -> List[PatrolTemplateResponse]:
         db = SessionLocal()
         try:
-            resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
-            templates = db.query(PatrolTemplate).filter(PatrolTemplate.property_id == resolved_property_id).all()
+            try:
+                resolved_property_id = property_id or (PatrolService._get_default_property_id(db, user_id) if user_id else None)
+            except HTTPException:
+                resolved_property_id = None
+            if resolved_property_id:
+                templates = db.query(PatrolTemplate).filter(PatrolTemplate.property_id == resolved_property_id).all()
+            else:
+                templates = []
             
             if not templates:
                 # Return mock templates
@@ -1112,7 +1122,7 @@ class PatrolService:
             if not template:
                 raise ValueError("Template not found")
 
-            update_data = template_update.dict(exclude_unset=True)
+            update_data = template_update.model_dump(exclude_unset=True)
             if "schedule" in update_data:
                 PatrolService._validate_template_schedule(update_data.get("schedule") or {})
             if "route_id" in update_data and update_data.get("route_id"):
@@ -1806,9 +1816,16 @@ class PatrolService:
     @staticmethod  
     def _get_mock_routes() -> List[Dict[str, Any]]:
         """Return mock patrol routes"""
+        # Use consistent UUIDs for mock data
+        route1_id = UUID('00000000-0000-0000-0000-000000000001')
+        route2_id = UUID('00000000-0000-0000-0000-000000000002')
+        route3_id = UUID('00000000-0000-0000-0000-000000000003')
+        route4_id = UUID('00000000-0000-0000-0000-000000000004')
+        admin_id = UUID('00000000-0000-0000-0000-0000000000ff')
+        
         return [
             {
-                "route_id": "route-001",
+                "route_id": route1_id,
                 "property_id": "prop-001", 
                 "name": "Main Building Perimeter",
                 "description": "Complete perimeter check of main building including parking and access points",
@@ -1817,18 +1834,16 @@ class PatrolService:
                     {"id": "cp-002", "name": "Parking Garage", "location": {"lat": 40.7129, "lng": -74.0061}, "isCritical": False},
                     {"id": "cp-003", "name": "Loading Dock", "location": {"lat": 40.7127, "lng": -74.0062}, "isCritical": True}
                 ],
-                "estimated_duration": 45,
+                "estimated_duration": "45",
                 "difficulty": "easy",
                 "frequency": "daily",
                 "is_active": True,
-                "created_at": "2024-01-15T10:00:00Z",
-                "updated_at": "2025-01-20T15:30:00Z",
-                "created_by": "admin-001",
-                "performance_score": 94.2,
-                "last_used": "2025-01-23T14:00:00Z"
+                "created_at": datetime.fromisoformat("2024-01-15T10:00:00"),
+                "updated_at": datetime.fromisoformat("2025-01-20T15:30:00"),
+                "created_by": admin_id
             },
             {
-                "route_id": "route-002",
+                "route_id": route2_id,
                 "property_id": "prop-001",
                 "name": "Warehouse District", 
                 "description": "Security check of all warehouse facilities and storage areas",
@@ -1837,18 +1852,16 @@ class PatrolService:
                     {"id": "cp-005", "name": "Warehouse B", "location": {"lat": 40.7131, "lng": -74.0066}, "isCritical": True},
                     {"id": "cp-006", "name": "Security Office", "location": {"lat": 40.7132, "lng": -74.0067}, "isCritical": False}
                 ],
-                "estimated_duration": 60,
+                "estimated_duration": "60",
                 "difficulty": "medium", 
                 "frequency": "daily",
                 "is_active": True,
-                "created_at": "2024-02-01T11:00:00Z",
-                "updated_at": "2025-01-22T09:15:00Z",
-                "created_by": "admin-001",
-                "performance_score": 91.7,
-                "last_used": "2025-01-23T13:30:00Z"
+                "created_at": datetime.fromisoformat("2024-02-01T11:00:00"),
+                "updated_at": datetime.fromisoformat("2025-01-22T09:15:00"),
+                "created_by": admin_id
             },
             {
-                "route_id": "route-003",
+                "route_id": route3_id,
                 "property_id": "prop-001",
                 "name": "Emergency Response Route",
                 "description": "Rapid response route for incidents and emergencies", 
@@ -1856,18 +1869,16 @@ class PatrolService:
                     {"id": "cp-007", "name": "Incident Location", "location": {"lat": 40.7125, "lng": -74.0058}, "isCritical": True},
                     {"id": "cp-008", "name": "Security Command", "location": {"lat": 40.7126, "lng": -74.0059}, "isCritical": True}
                 ],
-                "estimated_duration": 30,
+                "estimated_duration": "30",
                 "difficulty": "easy",
                 "frequency": "as_needed",
                 "is_active": True,
-                "created_at": "2024-01-15T10:30:00Z",
-                "updated_at": "2025-01-23T12:00:00Z", 
-                "created_by": "admin-001",
-                "performance_score": 98.1,
-                "last_used": "2025-01-23T12:00:00Z"
+                "created_at": datetime.fromisoformat("2024-01-15T10:30:00"),
+                "updated_at": datetime.fromisoformat("2025-01-23T12:00:00"), 
+                "created_by": admin_id
             },
             {
-                "route_id": "route-004",
+                "route_id": route4_id,
                 "property_id": "prop-001",
                 "name": "Office Complex",
                 "description": "Interior patrol of office floors and common areas",
@@ -1876,15 +1887,13 @@ class PatrolService:
                     {"id": "cp-010", "name": "Floor 1-5", "location": {"lat": 40.7128, "lng": -74.0060}, "isCritical": False},
                     {"id": "cp-011", "name": "Roof Access", "location": {"lat": 40.7128, "lng": -74.0060}, "isCritical": True}
                 ],
-                "estimated_duration": 40,
+                "estimated_duration": "40",
                 "difficulty": "medium",
                 "frequency": "twice_daily", 
                 "is_active": True,
-                "created_at": "2024-03-10T14:00:00Z",
-                "updated_at": "2025-01-21T16:45:00Z",
-                "created_by": "admin-001",
-                "performance_score": 87.3,
-                "last_used": "2025-01-22T16:00:00Z"
+                "created_at": datetime.fromisoformat("2024-03-10T14:00:00"),
+                "updated_at": datetime.fromisoformat("2025-01-21T16:45:00"),
+                "created_by": admin_id
             }
         ]
 
@@ -1955,29 +1964,41 @@ class PatrolService:
     def _get_mock_settings() -> Dict[str, Any]:
         """Return mock patrol settings"""
         return {
+            "settings_id": UUID('00000000-0000-0000-0000-0000000000aa'),
             "property_id": "prop-001",
-            "auto_assign_patrols": True,
-            "require_checkpoint_photos": False,
-            "enable_gps_tracking": True,
-            "patrol_timeout_minutes": 90,
-            "checkpoint_timeout_minutes": 15,
-            "emergency_escalation_minutes": 5,
-            "heartbeat_interval_minutes": 5,
+            "default_patrol_duration_minutes": 45,
+            "patrol_frequency": "hourly",
+            "shift_handover_time": "06:00",
+            "emergency_response_minutes": 2,
+            "patrol_buffer_minutes": 5,
+            "max_concurrent_patrols": 5,
+            "real_time_sync": True,
+            "offline_mode": True,
+            "auto_schedule_updates": True,
+            "push_notifications": True,
+            "location_tracking": True,
+            "emergency_alerts": True,
+            "checkpoint_missed_alert": True,
+            "patrol_completion_notification": False,
+            "shift_change_alerts": False,
+            "route_deviation_alert": False,
+            "system_status_alerts": False,
+            "gps_tracking": True,
+            "biometric_verification": False,
+            "auto_report_generation": False,
+            "audit_logging": True,
+            "two_factor_auth": False,
+            "session_timeout": True,
+            "ip_whitelist": False,
+            "mobile_app_sync": True,
+            "api_integration": True,
+            "database_sync": True,
+            "webhook_support": False,
+            "cloud_backup": True,
+            "role_based_access": True,
+            "data_encryption": True,
             "heartbeat_offline_threshold_minutes": 15,
-            "route_deviation_alert_meters": 50,
-            "incident_auto_create": True,
-            "patrol_report_required": True,
-            "notification_preferences": {
-                "patrol_started": True,
-                "patrol_completed": True, 
-                "checkpoint_missed": True,
-                "emergency_alert": True,
-                "officer_offline": True
-            },
-            "ai_suggestions_enabled": True,
-            "template_suggestions_enabled": True,
-            "auto_schedule_recurring": True,
-            "backup_officer_assignment": True
+            "updated_at": datetime.now()
         }
 
     @staticmethod

@@ -141,25 +141,6 @@ export interface IncidentUpdate {
   updated_at?: string;
 }
 
-/**
- * AI Classification Request (matches backend AIClassificationRequest)
- */
-export interface AIClassificationRequest {
-  title: string;
-  description: string;
-  location?: IncidentLocation | null;
-}
-
-/**
- * AI Classification Response (matches backend AIClassificationResponse)
- */
-export interface AIClassificationResponse {
-  incident_type: string;
-  severity: string;
-  confidence: number; // 0-1
-  reasoning: string;
-  fallback_used: boolean;
-}
 
 /**
  * Emergency Alert Create (matches backend EmergencyAlertCreate)
@@ -435,7 +416,7 @@ export interface EmergencyAlertSettings {
  * Enhanced feedback for bulk operations
  */
 export interface BulkOperationResult {
-  operation_type: 'approve' | 'reject' | 'delete' | 'assign' | 'status_change';
+  operation_type: 'approve' | 'reject' | 'delete' | 'assign' | 'status_change' | 'bulk_delete';
   total: number;
   successful: number;
   failed: number;

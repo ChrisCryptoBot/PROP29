@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { Toggle } from '../../../../components/UI/Toggle';
+import { Select } from '../../../../components/UI/Select';
+import { ConfirmDiscardChangesModal } from './ConfirmDiscardChangesModal';
 
 export interface EmergencyOverrideConfig {
   enabled: boolean;
@@ -28,8 +30,6 @@ interface EmergencyOverrideConfigModalProps {
 
 const AVAILABLE_ROLES = ['admin', 'manager', 'employee', 'security'];
 
-import { Select } from '../../../../components/UI/Select';
-
 export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModalProps> = ({
   isOpen,
   onClose,
@@ -39,10 +39,19 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
   isFormDirty,
   setIsFormDirty
 }) => {
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const handleClose = () => {
-    if (isFormDirty && !window.confirm('You have unsaved changes. Cancel anyway?')) {
+    if (isFormDirty) {
+      setShowDiscardModal(true);
       return;
     }
+    onClose();
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowDiscardModal(false);
+    setIsFormDirty(false);
     onClose();
   };
 
@@ -60,6 +69,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
   };
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
@@ -259,6 +269,12 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
         </div>
       </div>
     </Modal>
+      <ConfirmDiscardChangesModal
+        isOpen={showDiscardModal}
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleConfirmDiscard}
+      />
+    </>
   );
 };
 

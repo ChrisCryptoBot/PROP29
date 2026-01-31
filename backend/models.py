@@ -1168,6 +1168,9 @@ class Camera(Base):
     is_recording = Column(Boolean, default=False)
     motion_detection_enabled = Column(Boolean, default=True)
     last_known_image_url = Column(String(500), nullable=True)
+    last_heartbeat = Column(DateTime(timezone=True), nullable=True)
+    last_status_change = Column(DateTime(timezone=True), nullable=True)
+    version = Column(Integer, default=1)  # Optimistic locking for concurrent updates
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -1188,6 +1191,25 @@ class CameraHealth(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     camera = relationship("Camera", back_populates="health")
+
+class SecurityOperationsAuditLog(Base):
+    __tablename__ = "security_operations_audit_logs"
+
+    audit_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(String(36), ForeignKey("users.user_id", ondelete="SET NULL"), nullable=True)
+    action = Column(String(100), nullable=False)  # 'create', 'update', 'delete', 'export', etc.
+    entity = Column(String(50), nullable=False)  # 'camera', 'recording', 'evidence', 'settings'
+    entity_id = Column(String(100), nullable=False)
+    changes = Column(JSON, nullable=True)  # {field: {from: value, to: value}}
+    extra_metadata = Column("metadata", JSON, nullable=True)  # Additional context (avoid reserved 'metadata')
+    ip_address = Column(String(64), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    hash = Column(String(64), nullable=True)  # Integrity hash for tamper detection
+
+    property = relationship("Property")
+    user = relationship("User", foreign_keys=[user_id])
 
 class EvacuationSession(Base):
     __tablename__ = "evacuation_sessions"

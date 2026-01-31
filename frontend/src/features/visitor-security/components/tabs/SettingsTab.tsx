@@ -58,9 +58,9 @@ export const SettingsTab: React.FC = React.memo(() => {
 
   if (loading.settings && !localSettings) {
     return (
-      <div className="text-center py-12">
-        <i className="fas fa-spinner fa-spin text-3xl text-[color:var(--text-sub)] mb-4" />
-        <p className="text-[color:var(--text-sub)]">Loading system configuration...</p>
+      <div className="flex flex-col items-center justify-center py-12" role="status" aria-label="Loading configuration">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading system configuration...</p>
       </div>
     );
   }
@@ -69,12 +69,11 @@ export const SettingsTab: React.FC = React.memo(() => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Visitor Security</p>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">System Configuration</h2>
-          <p className="text-[11px] text-[color:var(--text-sub)]">
+      {/* Page Header - Gold Standard */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">System Configuration</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
             Mobile agent integration, hardware devices, and MSO desktop deployment settings.
           </p>
         </div>
@@ -100,7 +99,7 @@ export const SettingsTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-users text-white" />
             </div>
             <span className="uppercase tracking-tight">Core Visitor Settings</span>
@@ -172,7 +171,7 @@ export const SettingsTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-mobile-alt text-white" />
             </div>
             <span className="uppercase tracking-tight">Mobile Agent Integration</span>
@@ -253,7 +252,7 @@ export const SettingsTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-microchip text-white" />
             </div>
             <span className="uppercase tracking-tight">Hardware Device Integration</span>
@@ -334,7 +333,7 @@ export const SettingsTab: React.FC = React.memo(() => {
       <Card className="glass-card border border-white/5 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3 shadow-lg border border-white/5">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
               <i className="fas fa-desktop text-white" />
             </div>
             <span className="uppercase tracking-tight">MSO Desktop Configuration</span>

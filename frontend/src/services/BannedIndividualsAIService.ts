@@ -223,7 +223,7 @@ export class BannedIndividualsAIService {
     if (riskLevel === 'CRITICAL' || riskLevel === 'HIGH') {
       recommendations.push('Immediate security alert required');
       recommendations.push('Notify all access points');
-      recommendations.push('Activate facial recognition monitoring');
+      recommendations.push('Flag for in-person verification');
     }
     if (similarNames > 1) {
       recommendations.push('Review for potential duplicate entries');

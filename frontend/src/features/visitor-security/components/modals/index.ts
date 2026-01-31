@@ -11,3 +11,4 @@ export * from './QRCodeModal';
 export * from './BadgePrintModal';
 export * from './VisitorDetailsModal';
 export * from './EventDetailsModal';
+export * from './ConflictResolutionModal';

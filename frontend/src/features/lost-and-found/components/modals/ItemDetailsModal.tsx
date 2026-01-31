@@ -141,20 +141,6 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
                                         <span className="text-sm text-slate-400">Expiration Date</span>
                                         <span className="font-semibold text-white">{new Date(expirationDate).toLocaleDateString()}</span>
                                     </div>
-                                    {selectedItem.aiMatchConfidence && (
-                                        <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                            <span className="text-sm text-slate-400">AI Match Confidence</span>
-                                            <div className="flex items-center space-x-2">
-                                                <div className="w-24 h-2 bg-slate-800 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-blue-500 transition-all duration-300 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                                                        style={{ width: `${selectedItem.aiMatchConfidence}%` }}
-                                                    />
-                                                </div>
-                                                <span className="text-sm font-bold text-blue-400">{selectedItem.aiMatchConfidence}%</span>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 

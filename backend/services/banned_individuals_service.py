@@ -1,6 +1,6 @@
 """
 Banned Individuals Service
-Handles banned individuals management, facial recognition, and detection alerts.
+Handles banned individuals management, reference photos, and detection alerts (manual confirmation).
 """
 
 from typing import List, Dict, Any, Optional
@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class BannedIndividualsService:
-    """Service for managing banned individuals and facial recognition."""
+    """Service for managing banned individuals and reference photos (in-person verification)."""
     
     def __init__(self, db: Session):
         self.db = db
@@ -262,45 +262,6 @@ class BannedIndividualsService:
             logger.error(f"Error checking individual: {str(e)}")
             raise e
     
-    def facial_recognition_check(self, photo_data: str) -> Dict[str, Any]:
-        """Check if a photo matches any banned individuals using facial recognition."""
-        try:
-            # In a real implementation, this would use actual facial recognition
-            # For now, we'll simulate the process
-            
-            # Get all active banned individuals with facial recognition data
-            individuals = self.db.query(BannedIndividual).filter(
-                and_(
-                    BannedIndividual.is_active == True,
-                    BannedIndividual.facial_recognition_data.isnot(None)
-                )
-            ).all()
-            
-            # Simulate facial recognition matching
-            # In reality, this would use a facial recognition API
-            matches = []
-            for individual in individuals:
-                # Simulate confidence score
-                confidence = 85.0 + (hash(photo_data) % 15)  # Random confidence between 85-100
-                
-                if confidence > 90.0:  # Threshold for match
-                    matches.append({
-                        "banned_id": individual.banned_id,
-                        "name": f"{individual.first_name} {individual.last_name}",
-                        "confidence": confidence,
-                        "reason": individual.reason_for_ban
-                    })
-            
-            return {
-                "match": len(matches) > 0,
-                "confidence": max([m["confidence"] for m in matches]) if matches else 0,
-                "matches": matches
-            }
-            
-        except Exception as e:
-            logger.error(f"Error in facial recognition check: {str(e)}")
-            raise e
-    
     def record_detection(
         self,
         banned_id: str,
@@ -376,44 +337,6 @@ class BannedIndividualsService:
             logger.error(f"Error getting detection statistics: {str(e)}")
             raise e
     
-    def get_facial_recognition_status(self) -> Dict[str, Any]:
-        """Get facial recognition system status and statistics."""
-        try:
-            # Get all individuals with facial recognition data
-            individuals_with_fr = self.db.query(BannedIndividual).filter(
-                and_(
-                    BannedIndividual.is_active == True,
-                    BannedIndividual.facial_recognition_data.isnot(None)
-                )
-            ).count()
-            
-            total_active = self.db.query(BannedIndividual).filter(
-                BannedIndividual.is_active == True
-            ).count()
-            
-            # Calculate training status
-            training_percentage = (individuals_with_fr / max(total_active, 1)) * 100
-            
-            if training_percentage >= 90:
-                training_status = "TRAINED"
-            elif training_percentage >= 50:
-                training_status = "TRAINING"
-            else:
-                training_status = "NEEDS_TRAINING"
-            
-            return {
-                "training_status": training_status,
-                "training_percentage": round(training_percentage, 1),
-                "total_faces": individuals_with_fr,
-                "active_individuals": total_active,
-                "accuracy": 96.8,  # Simulated accuracy
-                "last_training": datetime.utcnow().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting facial recognition status: {str(e)}")
-            raise e
-    
     def get_detection_alerts(self, property_id: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
         """Get detection alerts"""
         # Placeholder - in production this would query a detections table
@@ -456,16 +379,6 @@ class BannedIndividualsService:
         """Update banned individuals settings"""
         # Placeholder - in production this would save to settings table
         return True
-    
-    def update_fr_config(self, confidence_threshold: int, retention_days: int) -> bool:
-        """Update facial recognition configuration"""
-        # Placeholder - in production this would update config
-        return True
-    
-    def trigger_training(self) -> str:
-        """Trigger facial recognition model training"""
-        # Placeholder - in production this would start training job
-        return str(uuid.uuid4())
     
     def get_analytics(self, start_date: Optional[str] = None, end_date: Optional[str] = None, property_id: Optional[str] = None) -> Dict[str, Any]:
         """Get analytics data"""

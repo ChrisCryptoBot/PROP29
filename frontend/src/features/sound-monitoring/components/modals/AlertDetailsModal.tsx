@@ -8,6 +8,7 @@ import { useSoundMonitoringContext } from '../../context/SoundMonitoringContext'
 import { Button } from '../../../../components/UI/Button';
 import { getSeverityBadgeClass, getStatusBadgeClass } from '../../utils/badgeHelpers';
 import { cn } from '../../../../utils/cn';
+import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import type { SoundAlert } from '../../types/sound-monitoring.types';
 
 interface AlertDetailsModalProps {
@@ -71,7 +72,7 @@ export const AlertDetailsModal: React.FC<AlertDetailsModalProps> = ({
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">{alert.type}</h3>
               <div className="flex items-center text-blue-400 font-bold uppercase tracking-widest text-[10px] bg-blue-500/10 px-3 py-1.5 rounded-lg w-fit border border-blue-500/20">
                 <i className="fas fa-map-marker-alt mr-2" />
-                {alert.location}
+                {formatLocationDisplay(alert.location as string | { lat?: number; lng?: number } | null) || '—'}
               </div>
             </div>
 

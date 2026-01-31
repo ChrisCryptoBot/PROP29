@@ -2,7 +2,7 @@
  * Tabs Barrel Export
  */
 
-export { DashboardTab } from './DashboardTab';
+export { OverviewTab } from './OverviewTab';
 export { VisitorsTab } from './VisitorsTab';
 export { EventsTab } from './EventsTab';
 export { SecurityRequestsTab } from './SecurityRequestsTab';
