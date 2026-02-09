@@ -32,8 +32,12 @@ export interface SoundMonitoringContextValue {
   refreshZones: ReturnType<typeof useSoundMonitoringState>['refreshZones'];
   refreshMetrics: ReturnType<typeof useSoundMonitoringState>['refreshMetrics'];
   refreshAudioVisualization: ReturnType<typeof useSoundMonitoringState>['refreshAudioVisualization'];
+  settings: ReturnType<typeof useSoundMonitoringState>['settings'];
+  settingsForm: ReturnType<typeof useSoundMonitoringState>['settingsForm'];
+  setSettingsForm: ReturnType<typeof useSoundMonitoringState>['setSettingsForm'];
   getSettings: ReturnType<typeof useSoundMonitoringState>['getSettings'];
   updateSettings: ReturnType<typeof useSoundMonitoringState>['updateSettings'];
+  resetSettings: ReturnType<typeof useSoundMonitoringState>['resetSettings'];
 }
 
 const SoundMonitoringContext = createContext<SoundMonitoringContextValue | undefined>(undefined);

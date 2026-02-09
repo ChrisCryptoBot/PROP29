@@ -59,6 +59,10 @@ Camera payloads should include `lastHeartbeat`, `lastStatusChange`, and `version
 - **VMS/NVR / alarm systems**: Integrate via backend. Frontend consumes cameras, recordings, and evidence from existing API; add new endpoints and map in `securityOperationsCenterService.ts`.
 - **WebSocket**: Subscribe to channels for cameras, recordings, evidence, alerts; reconciliation is in `stateReconciliationService.ts` and WebSocket hook.
 
+## Cross-Module Navigation
+
+- **Deep link**: Opening `/modules/security-operations-center?cameraId=<id>` (e.g. from IoT Environmental) switches to Live View and opens the camera modal for that ID when the camera list has loaded. The `cameraId` query param is cleared after handling.
+
 ## For 3rd-Party Engineers
 
 - **Entry**: `SecurityOperationsCenterOrchestrator.tsx` wraps tabs and providers; routing is handled by the app.

@@ -481,7 +481,7 @@ export function useAccessControlState(): UseAccessControlStateReturn {
         queuedAt: new Date().toISOString()
       });
       showSuccess('Access point creation queued for sync when connection is restored');
-      // Return a mock point for optimistic update
+      // Return an optimistic point for UI until server responds
       const mockPoint: AccessPoint = {
         id: `temp-${Date.now()}`,
         name: point.name || 'New Access Point',
@@ -543,7 +543,7 @@ export function useAccessControlState(): UseAccessControlStateReturn {
           queuedAt: new Date().toISOString()
         });
         showSuccess('Access point creation queued for sync when connection is restored');
-        // Return mock point for optimistic update
+        // Return optimistic point for UI until server responds
         const mockPoint: AccessPoint = {
           id: `temp-${Date.now()}`,
           name: point.name || 'New Access Point',
@@ -563,8 +563,11 @@ export function useAccessControlState(): UseAccessControlStateReturn {
         return mockPoint;
       }
       throw error;
+    } finally {
+      operationLock.releaseLock('create_access_point', 'new');
+      requestDedup.clearRequest(requestKey);
     }
-  }, [refreshAccessPoints, trackAction, trackPerformance, trackError, operationQueue]);
+  }, [refreshAccessPoints, trackAction, trackPerformance, trackError, operationQueue, requestDedup, operationLock]);
 
   // Update Access Point
   const updateAccessPoint = useCallback(async (id: string, updates: Partial<AccessPoint>): Promise<AccessPoint> => {
@@ -721,8 +724,11 @@ export function useAccessControlState(): UseAccessControlStateReturn {
         return;
       }
       throw error;
+    } finally {
+      operationLock.releaseLock('delete_access_point', id);
+      requestDedup.clearRequest(requestKey);
     }
-  }, [trackAction, trackPerformance, trackError, operationQueue]);
+  }, [trackAction, trackPerformance, trackError, operationQueue, requestDedup, operationLock]);
 
   // Create User
   const createUser = useCallback(async (user: Partial<AccessControlUser>): Promise<AccessControlUser> => {
@@ -749,7 +755,7 @@ export function useAccessControlState(): UseAccessControlStateReturn {
         queuedAt: new Date().toISOString()
       });
       showSuccess('User creation queued for sync when connection is restored');
-      // Return a mock user for optimistic update
+      // Return an optimistic user for UI until server responds
       const mockUser: AccessControlUser = {
         id: `temp-${Date.now()}`,
         name: user.name || 'New User',
@@ -813,7 +819,7 @@ export function useAccessControlState(): UseAccessControlStateReturn {
           queuedAt: new Date().toISOString()
         });
         showSuccess('User creation queued for sync when connection is restored');
-        // Return mock user for optimistic update
+        // Return optimistic user for UI until server responds
         const mockUser: AccessControlUser = {
           id: `temp-${Date.now()}`,
           name: user.name || 'New User',

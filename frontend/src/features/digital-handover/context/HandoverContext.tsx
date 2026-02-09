@@ -13,7 +13,8 @@ import { useEquipment } from '../hooks/useEquipment';
 import { useHandoverDraft } from '../hooks/useHandoverDraft';
 import { useHandoverVerification } from '../hooks/useHandoverVerification';
 import { handoverService } from '../services/handoverService';
-import type { Handover, CreateHandoverRequest, UpdateHandoverRequest } from '../types';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
+import type { Handover, CreateHandoverRequest, UpdateHandoverRequest, StaffMember, ShiftTimelineEntry } from '../types';
 
 export interface HandoverContextValue {
   // Handovers data
@@ -48,8 +49,8 @@ export interface HandoverContextValue {
   refreshMetrics: ReturnType<typeof useHandoverMetrics>['refreshMetrics'];
 
   // Staff & Timeline
-  staff: any[];
-  timeline: any[];
+  staff: StaffMember[];
+  timeline: ShiftTimelineEntry[];
   refreshStaff: () => Promise<void>;
   refreshTimeline: () => Promise<void>;
 
@@ -65,6 +66,7 @@ export interface HandoverContextValue {
   maintenanceRequests: ReturnType<typeof useEquipment>['maintenanceRequests'];
   createEquipment: (data: any) => Promise<any>;
   createMaintenanceRequest: (data: any) => Promise<any>;
+  updateMaintenanceRequest: (id: string, data: any) => Promise<any>;
   refreshEquipment: () => Promise<void>;
 
   // Draft
@@ -85,6 +87,14 @@ export interface HandoverContextValue {
   setShowCreateModal: (show: boolean) => void;
   setShowEditModal: (show: boolean) => void;
   setShowDetailsModal: (show: boolean) => void;
+
+  // Confirm modal (e.g. delete handover)
+  confirmModal: { isOpen: boolean; title: string; message: string; onConfirm: () => void; variant?: 'destructive' | 'warning' | 'default' };
+  setConfirmModal: (v: { isOpen: boolean; title: string; message: string; onConfirm: () => void; variant?: 'destructive' | 'warning' | 'default' }) => void;
+
+  // Global refresh & last sync
+  lastSyncTimestamp: Date | null;
+  refreshAll: () => Promise<void>;
 }
 
 export const HandoverContext = createContext<HandoverContextValue | undefined>(undefined);
@@ -102,10 +112,17 @@ export const HandoverProvider: React.FC<HandoverProviderProps> = ({ children }) 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void; variant?: 'destructive' | 'warning' | 'default' }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // Additional data state
-  const [staff, setStaff] = useState<any[]>([]);
-  const [timeline, setTimeline] = useState<any[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [timeline, setTimeline] = useState<ShiftTimelineEntry[]>([]);
+  const [lastSyncTimestamp, setLastSyncTimestamp] = useState<Date | null>(null);
 
   // Hooks
   const handoversHook = useHandovers();
@@ -124,7 +141,7 @@ export const HandoverProvider: React.FC<HandoverProviderProps> = ({ children }) 
       const data = await handoverService.getStaff(propertyId);
       setStaff(data);
     } catch (error) {
-      console.error('Failed to load staff', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'DigitalHandover:refreshStaff');
     }
   }, []);
 
@@ -135,7 +152,7 @@ export const HandoverProvider: React.FC<HandoverProviderProps> = ({ children }) 
       const data = await handoverService.getShiftTimeline(propertyId);
       setTimeline(data);
     } catch (error) {
-      console.error('Failed to load timeline', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'DigitalHandover:refreshTimeline');
     }
   }, []);
 
@@ -143,6 +160,30 @@ export const HandoverProvider: React.FC<HandoverProviderProps> = ({ children }) 
     refreshStaff();
     refreshTimeline();
   }, [refreshStaff, refreshTimeline]);
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([
+      handoversHook.refreshHandovers(),
+      settingsHook.loadSettings(),
+      metricsHook.refreshMetrics(),
+      templatesHook.refreshTemplates(),
+      refreshStaff(),
+      refreshTimeline(),
+    ]);
+    const propertyId = localStorage.getItem('propertyId') || '';
+    if (propertyId) {
+      await equipmentHook.refreshEquipment(propertyId);
+    }
+    setLastSyncTimestamp(new Date());
+  }, [
+    handoversHook.refreshHandovers,
+    settingsHook.loadSettings,
+    metricsHook.refreshMetrics,
+    templatesHook.refreshTemplates,
+    refreshStaff,
+    refreshTimeline,
+    equipmentHook.refreshEquipment,
+  ]);
 
   // Context value
   const contextValue: HandoverContextValue = {
@@ -201,6 +242,7 @@ export const HandoverProvider: React.FC<HandoverProviderProps> = ({ children }) 
       const propertyId = localStorage.getItem('propertyId') || '';
       return equipmentHook.createMaintenanceRequest(propertyId, data);
     },
+    updateMaintenanceRequest: (id, data) => equipmentHook.updateMaintenanceRequest(id, data),
     refreshEquipment: () => {
       const propertyId = localStorage.getItem('propertyId') || '';
       return equipmentHook.refreshEquipment(propertyId);
@@ -233,6 +275,10 @@ export const HandoverProvider: React.FC<HandoverProviderProps> = ({ children }) 
     setShowCreateModal,
     setShowEditModal,
     setShowDetailsModal,
+    confirmModal,
+    setConfirmModal,
+    lastSyncTimestamp,
+    refreshAll,
   };
 
   return <HandoverContext.Provider value={contextValue}>{children}</HandoverContext.Provider>;

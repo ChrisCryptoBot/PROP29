@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 import { SearchBar } from './SearchBar';
 import { logger } from '../../services/logger';
+import { useNotifications } from '../../contexts/NotificationsContext';
 import './Sidebar.css';
 
 interface SidebarItem {
@@ -23,9 +24,15 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { notifications, unreadCount } = useNotifications();
   const [expandedSections, setExpandedSections] = useState<string[]>(['enhanced-security']);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  const recentNotifications = useMemo(
+    () => [...notifications].sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp)).slice(0, 3),
+    [notifications]
+  );
 
   const sidebarItems: SidebarItem[] = [
     {
@@ -116,23 +123,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
         isCollapsed && "collapsed"
       )}
     >
-      {/* Sidebar Header */}
+      {/* Sidebar Header - product name + subtitle */}
       <div className="sidebar-header">
-        <div className="flex items-center justify-center w-full">
+        <div className="flex items-center justify-center w-full gap-2">
           {!isCollapsed && (
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-xl">P2.9</span>
-                </div>
-              </div>
-              <h2 className="text-xl font-bold text-gray-800">Proper 2.9</h2>
-              <p className="text-sm text-gray-600">Security Systems</p>
-            </div>
-          )}
-          {isCollapsed && (
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">P2.9</span>
+            <div className="min-w-0 flex flex-col">
+              <h2 className="text-base font-black uppercase tracking-tight text-[color:var(--text-main)] truncate">Proper 2.9</h2>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-[color:var(--text-sub)]">Security Consoles</p>
             </div>
           )}
         </div>
@@ -149,45 +146,56 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="sidebar-nav">
+      {/* Navigation - Enhanced Security Modules dropdown */}
+      <nav className="sidebar-nav" role="navigation" aria-label="Security modules">
         {sidebarItems.map((item) => (
           <div key={item.id} className="sidebar-section">
             <button
+              type="button"
               onClick={() => toggleSection(item.id)}
               className={cn(
                 "sidebar-item",
                 expandedSections.includes(item.id) && "expanded"
               )}
+              aria-expanded={expandedSections.includes(item.id)}
+              aria-controls={`sidebar-modules-${item.id}`}
+              id={`sidebar-toggle-${item.id}`}
             >
-              <i className={item.icon}></i>
+              <i className={item.icon} aria-hidden></i>
               {!isCollapsed && (
                 <>
                   <span className="sidebar-label">{item.label}</span>
                   <i className={cn(
-                    "fas fa-chevron-down transition-transform duration-200",
+                    "fas fa-chevron-down sidebar-chevron",
                     expandedSections.includes(item.id) && "rotate-180"
-                  )}></i>
+                  )} aria-hidden></i>
                 </>
               )}
             </button>
 
             {!isCollapsed && expandedSections.includes(item.id) && item.children && (
-              <div className="sidebar-children">
+              <div
+                id={`sidebar-modules-${item.id}`}
+                className="sidebar-children"
+                role="group"
+                aria-labelledby={`sidebar-toggle-${item.id}`}
+              >
+                <div className="sidebar-children-label">Modules</div>
                 {item.children.map((child) => (
                   <button
                     key={child.id}
+                    type="button"
                     onClick={() => handleItemClick(child)}
                     className={cn(
                       "sidebar-child",
                       isItemActive(child) && "active"
                     )}
                   >
-                    <i className={child.icon}></i>
+                    <i className={child.icon} aria-hidden></i>
                     <span className="sidebar-label">{child.label}</span>
                     {child.badge && (
                       <span className={cn(
-                        "badge text-xs px-2 py-1 rounded-full",
+                        "sidebar-module-badge",
                         getBadgeColor(child.badgeColor || 'blue')
                       )}>
                         {child.badge}
@@ -228,11 +236,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
           </div>
         )}
 
-        {/* Profile Dropdown */}
+        {/* Profile Dropdown - flat styling */}
         {profileDropdownOpen && !isCollapsed && (
-          <div className="profile-dropdown">
+          <div
+            className="profile-dropdown"
+            role="menu"
+            aria-label="User menu"
+          >
             <div className="profile-dropdown-header">
-              <div className="profile-dropdown-avatar">
+              <div className="profile-dropdown-avatar" aria-hidden>
                 <i className="fas fa-user"></i>
               </div>
               <div className="profile-dropdown-info">
@@ -243,40 +255,83 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
 
             <div className="profile-dropdown-items">
               <button
+                type="button"
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('profile')}
+                role="menuitem"
               >
-                <i className="fas fa-user-cog"></i>
+                <i className="fas fa-user-cog" aria-hidden></i>
                 <span>Profile Settings</span>
               </button>
               <button
+                type="button"
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('settings')}
+                role="menuitem"
               >
-                <i className="fas fa-cog"></i>
+                <i className="fas fa-cog" aria-hidden></i>
                 <span>Account Settings</span>
               </button>
               <button
+                type="button"
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('notifications')}
+                role="menuitem"
               >
-                <i className="fas fa-bell"></i>
+                <i className="fas fa-bell" aria-hidden></i>
                 <span>Notifications</span>
-                <span className="notification-count">3</span>
+                {unreadCount > 0 && (
+                  <span className="notification-count" aria-label={`${unreadCount} unread`}>
+                    {unreadCount}
+                  </span>
+                )}
               </button>
+              {recentNotifications.length > 0 && (
+                <div className="profile-dropdown-recent">
+                  <div className="profile-dropdown-recent-label">Recent alerts</div>
+                  {recentNotifications.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      className="profile-dropdown-recent-item"
+                      onClick={() => {
+                        handleProfileAction('notifications');
+                      }}
+                      role="menuitem"
+                    >
+                      <span className="profile-dropdown-recent-title">{n.title}</span>
+                      <span className="profile-dropdown-recent-time">
+                        {new Date(n.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="profile-dropdown-recent-viewall"
+                    onClick={() => handleProfileAction('notifications')}
+                    role="menuitem"
+                  >
+                    View all notifications
+                  </button>
+                </div>
+              )}
               <button
+                type="button"
                 className="profile-dropdown-item"
                 onClick={() => handleProfileAction('help')}
+                role="menuitem"
               >
-                <i className="fas fa-question-circle"></i>
+                <i className="fas fa-question-circle" aria-hidden></i>
                 <span>Help & Support</span>
               </button>
-              <div className="profile-dropdown-divider"></div>
+              <div className="profile-dropdown-divider" role="separator"></div>
               <button
+                type="button"
                 className="profile-dropdown-item logout-item"
                 onClick={() => handleProfileAction('logout')}
+                role="menuitem"
               >
-                <i className="fas fa-sign-out-alt"></i>
+                <i className="fas fa-sign-out-alt" aria-hidden></i>
                 <span>Sign Out</span>
               </button>
             </div>
@@ -284,13 +339,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed = false, onToggle }) => {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer - design tokens */}
       <div className="sidebar-footer">
         {!isCollapsed && (
           <div className="text-center space-y-3">
             <div>
-              <p className="text-sm text-gray-500">© 2024 Proper 2.9</p>
-              <p className="text-xs text-gray-400">Security Management System</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">© 2024 Proper 2.9</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] mt-1">Security Management System</p>
             </div>
           </div>
         )}

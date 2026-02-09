@@ -143,21 +143,21 @@ export const DeploymentTab: React.FC = () => {
         <div className="space-y-6" role="main" aria-label="Patrol Deployment">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Deployment</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Deployment</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Assign officers and manage coverage
                     </p>
                 </div>
             </div>
 
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-6 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-users text-white"></i>
                             </div>
-                            <span className="text-sm font-black uppercase tracking-widest">Officer Roster</span>
+                            <span className="card-title-text">Officer Roster</span>
                         </span>
                         <div className="flex items-center space-x-4">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white/5 px-3 py-1 rounded-full border border-white/5">{filteredOfficers.length} OFFICER(S) FOUND</span>
@@ -206,12 +206,12 @@ export const DeploymentTab: React.FC = () => {
                                 const hasActivePatrol = upcomingPatrols.some(p => p.assignedOfficer === officer.name && p.status === 'in-progress');
 
                                 return (
-                                    <div key={officer.id} className="p-5 border border-white/5 rounded-2xl bg-slate-900/30 hover:border-indigo-500/20 transition-all duration-300 group relative overflow-hidden">
+                                    <div key={officer.id} className="p-5 border border-white/5 rounded-md bg-slate-900/30 hover:border-indigo-500/20 transition-colors group relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 blur-3xl rounded-full -mr-12 -mt-12 group-hover:bg-indigo-500/10 transition-all"></div>
 
                                         <div className="flex items-center space-x-4 mb-5">
-                                            <Avatar className="h-14 w-14 border border-white/5  rounded-xl overflow-hidden ring-4 ring-indigo-500/5 group-hover:ring-indigo-500/15 transition-all">
-                                                <div className="flex items-center justify-center h-full w-full bg-gradient-to-br from-blue-600/80 to-slate-900 text-white text-base font-black shadow-inner">
+                                            <Avatar className="h-14 w-14 border border-white/5 rounded-md overflow-hidden ring-4 ring-indigo-500/5 group-hover:ring-indigo-500/15 transition-colors">
+                                                <div className="flex items-center justify-center h-full w-full bg-blue-600 text-white text-base font-black shadow-inner">
                                                     {officer.avatar || '?'}
                                                 </div>
                                             </Avatar>

@@ -160,22 +160,22 @@ export const PatrolManagementTab: React.FC = () => {
         <div className="space-y-6" role="main" aria-label="Patrol Management">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Patrol Management</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Patrol Management</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Templates, active patrols, and audit trail
                     </p>
                 </div>
             </div>
 
             {/* Patrol Templates */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-file-alt text-white"></i>
                             </div>
-                            <span className="text-sm font-black uppercase tracking-widest">Patrol Templates</span>
+                            <span className="card-title-text">Patrol Templates</span>
                         </span>
                         <Button
                             onClick={() => { setEditingTemplate(null); setShowCreateTemplate(true); }}
@@ -193,10 +193,10 @@ export const PatrolManagementTab: React.FC = () => {
                             templates.map((template) => {
                                 const route = routes.find(r => r && r.id === template.routeId);
                                 return (
-                                    <div key={template.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-900/30 border border-white/5 hover:border-indigo-500/20 transition-all group">
+                                    <div key={template.id} className="flex items-center justify-between p-4 rounded-md bg-slate-900/30 border border-white/5 hover:border-indigo-500/20 transition-colors group">
                                         <div className="flex-1">
                                             <h3 className="font-black text-white uppercase tracking-widest text-xs mb-1">{template.name || 'Unnamed Template'}</h3>
-                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-3 opacity-70 italic">{template.description || 'No description'}</p>
+                                            <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest mb-3 italic">{template.description || 'No description'}</p>
                                             <div className="flex items-center space-x-4 flex-wrap gap-3">
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">Route: {route?.name || 'Route not found'}</span>
                                                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Cycle: <span className="text-white opacity-100">{template.schedule?.startTime || 'N/A'} - {template.schedule?.endTime || 'N/A'}</span></span>
@@ -273,14 +273,14 @@ export const PatrolManagementTab: React.FC = () => {
                 </CardContent>
             </Card>
             {/* Active Patrols */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                            <div className="w-10 h-10 bg-indigo-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-route text-white"></i>
                             </div>
-                            <span className="text-sm font-black uppercase tracking-widest">Live Patrol Monitoring</span>
+                            <span className="card-title-text">Live Patrol Monitoring</span>
                         </span>
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white/5 px-3 py-1 rounded-full border border-white/5">{activeFilteredPatrols.length} ACTIVE PATROLS</span>
                     </CardTitle>
@@ -325,7 +325,7 @@ export const PatrolManagementTab: React.FC = () => {
                                 const checkpoints = patrol.checkpoints?.length ? patrol.checkpoints : (route?.checkpoints || []);
 
                                 return (
-                                    <div key={patrol.id} className="p-5 border border-indigo-500/20 rounded-2xl bg-indigo-950/20 space-y-4 hover:border-indigo-500/40 transition-all group relative overflow-hidden">
+                                    <div key={patrol.id} className="p-5 border border-indigo-500/20 rounded-md bg-indigo-950/20 space-y-4 hover:border-indigo-500/40 transition-colors group relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
 
                                         <div className="flex justify-between items-start">
@@ -448,17 +448,22 @@ export const PatrolManagementTab: React.FC = () => {
                 </CardContent>
             </Card>
             {/* History */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 opacity-80 hover:opacity-100 transition-opacity">
+            <Card className="bg-slate-900/50 border border-white/5 opacity-80 hover:opacity-100 transition-opacity">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
-                    <CardTitle className="text-white text-sm font-black uppercase tracking-widest">Patrol History</CardTitle>
+                    <CardTitle className="flex items-center text-white">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-history text-white"></i>
+                        </div>
+                        <span className="card-title-text">Patrol History</span>
+                    </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6 py-6">
                     <div className="space-y-3">
                         {historyPatrols.length > 0 ? historyPatrols.map(p => (
-                            <div key={p.id} className="p-4 border border-white/5 rounded-xl flex justify-between items-center bg-slate-900/30 hover:bg-slate-900/50 transition-all group">
+                            <div key={p.id} className="p-4 border border-white/5 rounded-md flex justify-between items-center bg-slate-900/30 hover:bg-slate-900/50 transition-colors group">
                                 <div>
                                     <h4 className="font-black text-white uppercase tracking-widest text-xs mb-1">{p.name}</h4>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic opacity-70">
+                                    <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest italic">
                                         {p.startTime} <span className="mx-2 opacity-30">|</span> {p.status.toUpperCase()}
                                     </p>
                                 </div>
@@ -480,10 +485,15 @@ export const PatrolManagementTab: React.FC = () => {
             </Card>
 
             {/* Audit Log */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
-                        <span className="text-white text-sm font-black uppercase tracking-widest">Audit Log</span>
+                        <span className="flex items-center text-white">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                                <i className="fas fa-clipboard-list text-white"></i>
+                            </div>
+                            <span className="card-title-text">Audit Log</span>
+                        </span>
                         {(checkInQueuePendingCount > 0 || checkInQueueFailedCount > 0) && (
                             <div className="flex items-center gap-2">
                                 {checkInQueuePendingCount > 0 && (

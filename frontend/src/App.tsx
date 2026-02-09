@@ -6,16 +6,17 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Incidents from './pages/Incidents';
-import HelpSupport from './pages/HelpSupport';
-import Notifications from './pages/Notifications';
-import AccountSettings from './pages/AccountSettings';
-import ProfileSettings from './pages/ProfileSettings';
+import HelpSupport from './features/help-support';
+import Notifications from './features/user-notifications';
+import AccountSettings from './features/account-settings';
+import ProfileSettings from './features/profile-settings';
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import SplashScreen from './components/UI/SplashScreen';
 import { WebSocketProvider } from './components/UI/WebSocketProvider';
 import { ModalProvider, useModal } from './contexts/ModalContext';
 import { ModalManager } from './components/modals/ModalManager';
 import Layout from './components/Layout/Layout';
+import { HelpChatProvider } from './contexts/HelpChatContext';
 import { GlobalRefreshProvider } from './contexts/GlobalRefreshContext';
 import { NetworkStatusProvider } from './contexts/NetworkStatusContext';
 import { NotificationsProvider } from './contexts/NotificationsContext';
@@ -99,155 +100,29 @@ const MainAppContent: React.FC = () => {
           <Patrols />
         </ProtectedRoute>
       } />
-      <Route path="/help" element={
-        <ProtectedRoute>
-          <Layout>
-            <HelpSupport />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Layout>
-            <ProfileSettings />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Layout>
-            <AccountSettings />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/notifications" element={
-        <ProtectedRoute>
-          <Layout>
-            <Notifications />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      {/* Module Pages - All wrapped with Layout for persistent sidebar */}
-      <Route path="/modules/event-log" element={
-        <ProtectedRoute>
-          <Layout>
-            <IncidentLogModule />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/property-items" element={
-        <ProtectedRoute>
-          <Layout>
-            <PropertyItems />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/access-control" element={
-        <ProtectedRoute>
-          <Layout>
-            <AccessControlModule key="access-control" />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/visitors" element={
-        <ProtectedRoute>
-          <Layout>
-            <Visitors />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/patrol" element={
-        <ProtectedRoute>
-          <Layout>
-            <Patrols />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/admin" element={
-        <ProtectedRoute>
-          <Layout>
-            <SystemAdministration />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/smart-lockers" element={
-        <ProtectedRoute>
-          <Layout>
-            <SmartLockers />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/smart-parking" element={
-        <ProtectedRoute>
-          <Layout>
-            <SmartParking />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/system-administration" element={
-        <ProtectedRoute>
-          <Layout>
-            <SystemAdministration />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/digital-handover" element={
-        <ProtectedRoute>
-          <Layout>
-            <DigitalHandoverModule />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/guest-safety" element={
-        <ProtectedRoute>
-          <Layout>
-            <GuestSafety />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/iot-monitoring" element={
-        <ProtectedRoute>
-          <Layout>
-            <IoTMonitoring />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/notifications" element={
-        <ProtectedRoute>
-          <Layout>
-            <Notifications />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/modules/security-operations-center" element={
-        <ProtectedRoute>
-          <Layout>
-            <SecurityOperationsCenter />
-          </Layout>
-        </ProtectedRoute>
-      } />
-
-      <Route path="/view-cameras" element={
-        <ProtectedRoute>
-          <Layout>
-            <SecurityOperationsCenter />
-          </Layout>
-        </ProtectedRoute>
-      } />
-      {/* <Route path="/modules/SystemAdministrationAuth" element={<SystemAdministrationAuth />} /> */}
-      {/* <Route path="/modules/admin-auth" element={<SystemAdministrationAuth />} /> */}
-      <Route path="/modules/team-chat" element={
-        <Layout>
-          <TeamChat />
-        </Layout>
-      } />
-      <Route path="/modules/profile-settings" element={
-        <ProtectedRoute>
-          <Layout>
-            <ProfileSettings />
-          </Layout>
-        </ProtectedRoute>
-      } />
+      {/* Single Layout for all module routes so Live Chat stays open when navigating */}
+      <Route element={<ProtectedRoute><HelpChatProvider><Layout /></HelpChatProvider></ProtectedRoute>}>
+        <Route path="/help" element={<HelpSupport />} />
+        <Route path="/profile" element={<ProfileSettings />} />
+        <Route path="/settings" element={<AccountSettings />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/modules/event-log" element={<IncidentLogModule />} />
+        <Route path="/modules/property-items" element={<PropertyItems />} />
+        <Route path="/modules/access-control" element={<AccessControlModule key="access-control" />} />
+        <Route path="/modules/visitors" element={<Visitors />} />
+        <Route path="/modules/patrol" element={<Patrols />} />
+        <Route path="/modules/admin" element={<SystemAdministration />} />
+        <Route path="/modules/smart-lockers" element={<SmartLockers />} />
+        <Route path="/modules/smart-parking" element={<SmartParking />} />
+        <Route path="/modules/system-administration" element={<SystemAdministration />} />
+        <Route path="/modules/digital-handover" element={<DigitalHandoverModule />} />
+        <Route path="/modules/guest-safety" element={<GuestSafety />} />
+        <Route path="/modules/iot-monitoring" element={<IoTMonitoring />} />
+        <Route path="/modules/security-operations-center" element={<SecurityOperationsCenter />} />
+        <Route path="/view-cameras" element={<SecurityOperationsCenter />} />
+        <Route path="/modules/team-chat" element={<TeamChat />} />
+        <Route path="/modules/profile-settings" element={<ProfileSettings />} />
+      </Route>
       <Route path="*" element={<Navigate to="/modules/patrol" replace />} />
     </Routes>
   );

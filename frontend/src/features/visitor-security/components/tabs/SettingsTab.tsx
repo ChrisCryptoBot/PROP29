@@ -72,8 +72,8 @@ export const SettingsTab: React.FC = React.memo(() => {
       {/* Page Header - Gold Standard */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">System Configuration</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">System Configuration</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Mobile agent integration, hardware devices, and MSO desktop deployment settings.
           </p>
         </div>
@@ -96,13 +96,13 @@ export const SettingsTab: React.FC = React.memo(() => {
       </div>
 
       {/* Core Visitor Settings */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-users text-white" />
             </div>
-            <span className="uppercase tracking-tight">Core Visitor Settings</span>
+            <span className="card-title-text">Core Visitor Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -142,7 +142,7 @@ export const SettingsTab: React.FC = React.memo(() => {
               </div>
             </div>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Require Photo Capture</span>
                 <Toggle
                   checked={localSettings.require_photo}
@@ -152,7 +152,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                   })}
                 />
               </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Require Host Approval</span>
                 <Toggle
                   checked={localSettings.require_host_approval}
@@ -168,13 +168,13 @@ export const SettingsTab: React.FC = React.memo(() => {
       </Card>
 
       {/* Mobile Agent Integration Settings */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-mobile-alt text-white" />
             </div>
-            <span className="uppercase tracking-tight">Mobile Agent Integration</span>
+            <span className="card-title-text">Mobile Agent Integration</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -182,28 +182,28 @@ export const SettingsTab: React.FC = React.memo(() => {
             <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Core Configuration</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Mobile Agent System Enabled</span>
                   <Toggle
                     checked={localSettings.mobile_agent_settings.enabled}
                     onChange={(checked) => updateSetting('mobile_agent_settings', 'enabled', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Require GPS Location</span>
                   <Toggle
                     checked={localSettings.mobile_agent_settings.require_location}
                     onChange={(checked) => updateSetting('mobile_agent_settings', 'require_location', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Auto-Sync Enabled</span>
                   <Toggle
                     checked={localSettings.mobile_agent_settings.auto_sync_enabled}
                     onChange={(checked) => updateSetting('mobile_agent_settings', 'auto_sync_enabled', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Allow Bulk Operations</span>
                   <Toggle
                     checked={localSettings.mobile_agent_settings.allow_bulk_operations}
@@ -249,13 +249,13 @@ export const SettingsTab: React.FC = React.memo(() => {
       </Card>
 
       {/* Hardware Device Integration Settings */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-microchip text-white" />
             </div>
-            <span className="uppercase tracking-tight">Hardware Device Integration</span>
+            <span className="card-title-text">Hardware Device Integration</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -263,28 +263,28 @@ export const SettingsTab: React.FC = React.memo(() => {
             <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Device Types</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Card Reader Integration</span>
                   <Toggle
                     checked={localSettings.hardware_settings.card_reader_enabled}
                     onChange={(checked) => updateSetting('hardware_settings', 'card_reader_enabled', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Camera System Integration</span>
                   <Toggle
                     checked={localSettings.hardware_settings.camera_integration_enabled}
                     onChange={(checked) => updateSetting('hardware_settings', 'camera_integration_enabled', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Badge Printer Integration</span>
                   <Toggle
                     checked={localSettings.hardware_settings.printer_integration_enabled}
                     onChange={(checked) => updateSetting('hardware_settings', 'printer_integration_enabled', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Auto Badge Printing</span>
                   <Toggle
                     checked={localSettings.hardware_settings.auto_badge_printing}
@@ -296,14 +296,14 @@ export const SettingsTab: React.FC = React.memo(() => {
             <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monitoring & Alerts</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Device Health Monitoring</span>
                   <Toggle
                     checked={localSettings.hardware_settings.device_health_monitoring}
                     onChange={(checked) => updateSetting('hardware_settings', 'device_health_monitoring', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Alert on Device Offline</span>
                   <Toggle
                     checked={localSettings.hardware_settings.alert_on_device_offline}
@@ -330,13 +330,13 @@ export const SettingsTab: React.FC = React.memo(() => {
       </Card>
 
       {/* MSO Desktop Deployment Settings */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-desktop text-white" />
             </div>
-            <span className="uppercase tracking-tight">MSO Desktop Configuration</span>
+            <span className="card-title-text">MSO Desktop Configuration</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -344,7 +344,7 @@ export const SettingsTab: React.FC = React.memo(() => {
             <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Offline & Caching</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Offline Mode Enabled</span>
                   <Toggle
                     checked={localSettings.mso_settings.offline_mode_enabled}
@@ -382,7 +382,7 @@ export const SettingsTab: React.FC = React.memo(() => {
             <div className="space-y-4">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Performance & Recovery</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Auto Backup Enabled</span>
                   <Toggle
                     checked={localSettings.mso_settings.auto_backup_enabled}

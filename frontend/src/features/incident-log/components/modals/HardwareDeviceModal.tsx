@@ -66,29 +66,9 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                 setDeviceStatus(status);
             }
 
-            // Generate mock health history (in production, this would come from API)
+            // Health history from API when available (no mock data)
             if (displayDevice) {
-                const history = [];
-                const currentDate = new Date();
-                
-                for (let i = 30; i >= 0; i--) {
-                    const date = new Date(currentDate);
-                    date.setDate(date.getDate() - i);
-                    
-                    const baseScore = displayDevice.health_score;
-                    const variance = Math.random() * 20 - 10;
-                    const score = Math.max(0, Math.min(100, baseScore + variance));
-                    
-                    history.push({
-                        date: date.toISOString().split('T')[0],
-                        health_score: Math.round(score),
-                        issues: displayDevice.issues.filter(issue => 
-                            issue.severity === 'error' || issue.severity === 'critical'
-                        ).length
-                    });
-                }
-                
-                setHealthHistory(history);
+                setHealthHistory([]);
             }
         };
 
@@ -103,7 +83,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                 <div className="p-8">
                     <div className="text-center">
                         <i className="fas fa-microchip text-4xl text-slate-400 mb-4" />
-                        <h3 className="text-lg text-white mb-2">Device Not Found</h3>
+                        <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-2">Device Not Found</h3>
                         <p className="text-slate-400">The requested hardware device could not be found.</p>
                     </div>
                 </div>
@@ -186,7 +166,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
         >
             <div className="space-y-6">
                 {/* Tab Navigation */}
-                <div className="flex space-x-1 p-1 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex space-x-1 p-1 bg-white/5 rounded-md border border-white/5">
                     {[
                         { key: 'overview', label: 'Overview', icon: 'fa-info-circle' },
                         { key: 'history', label: 'Health History', icon: 'fa-chart-line' },
@@ -199,7 +179,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                             className={cn(
                                 "flex-1 flex items-center justify-center px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-md transition-all",
                                 activeTab === tab.key
-                                    ? "text-white bg-white/10 shadow-lg"
+                                    ? "text-white bg-white/10"
                                     : "text-slate-400 hover:text-white hover:bg-white/5"
                             )}
                         >
@@ -213,10 +193,10 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                 {activeTab === 'overview' && (
                     <div className="space-y-6">
                         {/* Device Information */}
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="flex items-center text-white">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                                    <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                         <i className={cn("fas text-white", getDeviceTypeIcon(displayDevice.device_type))} />
                                     </div>
                                     Device Information
@@ -273,14 +253,14 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                         {/* Current Issues */}
                         {displayDevice.issues.length > 0 && (
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                                 <CardHeader>
                                     <CardTitle className="text-white">Current Issues ({displayDevice.issues.length})</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-3">
                                         {displayDevice.issues.map((issue, index) => (
-                                            <div key={index} className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                            <div key={index} className="p-3 bg-white/5 rounded-md border border-white/5">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex items-center space-x-2 mb-1">
@@ -311,7 +291,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                 {/* Health History Tab */}
                 {activeTab === 'history' && (
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white">Health Score History (30 Days)</CardTitle>
                         </CardHeader>
@@ -362,7 +342,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                 {/* Incidents Tab */}
                 {activeTab === 'incidents' && (
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white">Device Incidents ({deviceIncidents.length})</CardTitle>
                         </CardHeader>
@@ -375,7 +355,7 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
                             ) : (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
                                     {deviceIncidents.slice(-10).reverse().map((incident) => (
-                                        <div key={incident.incident_id} className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div key={incident.incident_id} className="p-3 bg-white/5 rounded-md border border-white/5">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <h5 className="text-sm font-bold text-white">{incident.title}</h5>
@@ -417,13 +397,13 @@ export const HardwareDeviceModal: React.FC<HardwareDeviceModalProps> = ({
 
                 {/* Maintenance Tab */}
                 {activeTab === 'maintenance' && (
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white">Maintenance & Actions</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-6">
-                                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-md">
                                     <div className="flex items-center space-x-2">
                                         <i className="fas fa-info-circle text-blue-400" />
                                         <p className="text-sm text-blue-200">

@@ -20,22 +20,17 @@ export const VideoTimestampOverlay: React.FC<VideoTimestampOverlayProps> = ({
   showMilliseconds = true,
 }) => {
   const [timestamp, setTimestamp] = useState<Date>(new Date());
-  const animationFrameRef = useRef<number>();
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
-    const updateTimestamp = () => {
-      setTimestamp(new Date());
-      animationFrameRef.current = requestAnimationFrame(updateTimestamp);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(updateTimestamp);
-
+    const intervalMs = showMilliseconds ? 100 : 1000;
+    const updateTimestamp = () => setTimestamp(new Date());
+    updateTimestamp();
+    intervalRef.current = setInterval(updateTimestamp, intervalMs);
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [showMilliseconds]);
 
   const formatTimestamp = (date: Date): string => {
     const hours = date.getHours().toString().padStart(2, '0');

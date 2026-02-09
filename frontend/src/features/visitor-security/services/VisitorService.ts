@@ -158,6 +158,14 @@ class VisitorService {
   }
 
   /**
+   * Get a single event by ID
+   * GET /api/visitors/events/{event_id}
+   */
+  async getEvent(eventId: string): Promise<ApiResponse<Event>> {
+    return apiService.get<Event>(`/visitors/events/${eventId}`);
+  }
+
+  /**
    * Create a new event
    * POST /api/visitors/events
    */

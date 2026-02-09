@@ -24,12 +24,12 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       ref={ref}
       className={cn(
         variant === 'console'
-          ? 'rounded-2xl glass-card'
+          ? 'rounded-md glass-card bg-[color:var(--surface-card)] border border-white/10'
           : variant === 'glass'
-            ? 'rounded-2xl glass-card'
+            ? 'rounded-md glass-card bg-[color:var(--surface-card)] border border-white/10'
             : variant === 'soft'
-              ? 'rounded-2xl glass-soft'
-              : 'rounded-xl border-[1.5px] bg-[color:var(--surface-card)] border-[color:var(--border-subtle)] shadow-sm hover:shadow-md transition-all duration-200',
+              ? 'rounded-md glass-soft'
+              : 'rounded border-[1.5px] bg-[color:var(--surface-card)] border-[color:var(--border-subtle)] shadow-sm hover:shadow-md transition-all duration-200',
         className
       )}
       {...props}
@@ -57,10 +57,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, CardTitleProps>(
   ({ className, children, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn(
-        'text-2xl font-semibold leading-none tracking-tight',
-        className
-      )}
+      className={cn('flex items-center card-title-text', className)}
       {...props}
     >
       {children}

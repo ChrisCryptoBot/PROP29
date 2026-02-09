@@ -53,7 +53,7 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
             draggable={true}
         >
             <div className="space-y-6">
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-md p-4">
                     <div className="flex items-start gap-3">
                         <i className="fas fa-exclamation-triangle text-amber-400 text-xl mt-1" />
                         <div className="flex-1">
@@ -72,7 +72,7 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
                             Your Local Changes
                         </p>
-                        <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
+                        <div className="bg-white/5 border border-white/5 rounded-md p-3 space-y-2">
                             {changedFields.length > 0 ? (
                                 <ul className="space-y-1">
                                     {changedFields.map((field) => (
@@ -92,7 +92,7 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
                             Server Version Details
                         </p>
-                        <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
+                        <div className="bg-white/5 border border-white/5 rounded-md p-3 space-y-2">
                             <div className="text-xs text-slate-300">
                                 <p><strong>Title:</strong> {serverVersion.title}</p>
                                 <p><strong>Status:</strong> {serverVersion.status}</p>
@@ -106,7 +106,7 @@ export const ConflictResolutionModal: React.FC<ConflictResolutionModalProps> = (
                     </div>
                 </div>
 
-                <div className="bg-slate-800/50 border border-white/5 rounded-lg p-4">
+                <div className="bg-slate-800/50 border border-white/5 rounded-md p-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
                         Resolution Options
                     </p>

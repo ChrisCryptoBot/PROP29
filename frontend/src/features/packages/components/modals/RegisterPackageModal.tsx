@@ -105,14 +105,23 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
         }
     };
 
+    const [showUnsavedCloseConfirm, setShowUnsavedCloseConfirm] = useState(false);
+
     const handleClose = () => {
-        if (isFormDirty && !window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        if (isFormDirty) {
+            setShowUnsavedCloseConfirm(true);
             return;
         }
         onClose();
     };
 
+    const handleCloseAnyway = () => {
+        setShowUnsavedCloseConfirm(false);
+        onClose();
+    };
+
     return (
+        <>
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
@@ -130,7 +139,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                         value={formData.tracking_number || ''}
                         onChange={(e) => handleChange('tracking_number', e.target.value)}
                         placeholder="Enter tracking number"
-                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         required
                     />
                 </div>
@@ -146,7 +155,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                             value={formData.sender_name || ''}
                             onChange={(e) => handleChange('sender_name', e.target.value)}
                             placeholder="Enter sender name"
-                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                             required
                         />
                     </div>
@@ -160,7 +169,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                             value={formData.sender_contact || ''}
                             onChange={(e) => handleChange('sender_contact', e.target.value)}
                             placeholder="Phone or email"
-                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                     </div>
                 </div>
@@ -175,7 +184,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                         onChange={(e) => handleChange('description', e.target.value)}
                         placeholder="Package description"
                         rows={3}
-                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors resize-none"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors resize-none"
                     />
                 </div>
 
@@ -190,7 +199,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                             value={formData.size || ''}
                             onChange={(e) => handleChange('size', e.target.value)}
                             placeholder="e.g., small, medium, large"
-                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                     </div>
                     <div>
@@ -202,7 +211,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                             value={formData.weight || ''}
                             onChange={(e) => handleChange('weight', e.target.value ? parseFloat(e.target.value) : undefined)}
                             placeholder="Weight"
-                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                     </div>
                 </div>
@@ -218,28 +227,28 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                             value={formData.location?.building || ''}
                             onChange={(e) => handleLocationChange('building', e.target.value)}
                             placeholder="Building"
-                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                         <input
                             type="text"
                             value={formData.location?.floor || ''}
                             onChange={(e) => handleLocationChange('floor', e.target.value)}
                             placeholder="Floor"
-                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                         <input
                             type="text"
                             value={formData.location?.area || ''}
                             onChange={(e) => handleLocationChange('area', e.target.value)}
                             placeholder="Area"
-                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                         <input
                             type="text"
                             value={formData.location?.room || ''}
                             onChange={(e) => handleLocationChange('room', e.target.value)}
                             placeholder="Room"
-                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                            className="px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                         />
                     </div>
                 </div>
@@ -254,7 +263,7 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                         onChange={(e) => handleChange('notes', e.target.value)}
                         placeholder="Additional notes"
                         rows={2}
-                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors resize-none"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors resize-none"
                     />
                 </div>
 
@@ -288,6 +297,29 @@ export const RegisterPackageModal: React.FC<RegisterPackageModalProps> = React.m
                 </div>
             </div>
         </Modal>
+
+        {/* Unsaved changes confirmation */}
+        <Modal
+            isOpen={showUnsavedCloseConfirm}
+            onClose={() => setShowUnsavedCloseConfirm(false)}
+            title="Unsaved changes"
+            size="sm"
+            footer={
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setShowUnsavedCloseConfirm(false)}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleCloseAnyway}>
+                        Close anyway
+                    </Button>
+                </div>
+            }
+        >
+            <p className="text-slate-300">
+                You have unsaved changes. Are you sure you want to close?
+            </p>
+        </Modal>
+        </>
     );
 });
 

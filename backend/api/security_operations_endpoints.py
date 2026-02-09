@@ -1,20 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, File, UploadFile, Form, Header, Request
-from fastapi.responses import RedirectResponse, Response, FileResponse
+from fastapi.responses import RedirectResponse, Response, FileResponse, StreamingResponse
 from typing import List, Any, Dict, Optional
 from datetime import datetime, timezone
+import asyncio
 import uuid
 import os
 
+import httpx
 from sqlalchemy import text
 
 from schemas import CameraCreate, CameraUpdate, CameraResponse, CameraMetricsResponse, CameraStatus
-from api.auth_dependencies import get_current_user, require_security_manager_or_admin, verify_hardware_ingest_key
+from api.auth_dependencies import get_current_user, get_current_user_optional, require_security_manager_or_admin, verify_hardware_ingest_key
 from services.security_operations_service import CameraService
+from services.stream_proxy_service import HLS_GATEWAY_BASE_URL
+from services.stream_manager_service import stream_manager
 from services.evidence_file_service import evidence_file_service
 from services.recording_export_service import recording_export_service
 from services.analytics_engine_service import analytics_engine
 from database import SessionLocal, engine
-from models import Camera, SecurityOperationsAuditLog
+from models import Camera, CameraStatus, SecurityOperationsAuditLog
 import logging
 import hashlib
 import json
@@ -23,75 +27,38 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/security-operations", tags=["Security Operations"])
 
-# Public test streams for mock cameras (no auth; HLS + MP4 for viewer demo)
-_MOCK_STREAM_HLS = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-_MOCK_STREAM_HLS_ALT = "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8"
-_MOCK_STREAM_MP4 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
 
-_MOCK_CAMERA_IDS = [
-    "aaaaaaaa-1111-4000-8000-000000000001",
-    "aaaaaaaa-1111-4000-8000-000000000002",
-    "aaaaaaaa-1111-4000-8000-000000000003",
-]
+def _normalize_camera_id(camera_id: str) -> str:
+    """Normalize camera_id to hyphenated UUID string so lookup matches DB (stored as str(uuid))."""
+    if not camera_id:
+        return camera_id
+    try:
+        return str(uuid.UUID(camera_id))
+    except (ValueError, TypeError):
+        return camera_id
 
 
 def _db_has_no_cameras() -> bool:
-    """Use raw SQL to avoid ORM schema mismatches (e.g. missing source_stream_url). On any error, use mocks."""
+    """Use raw SQL to avoid ORM schema mismatches. On any error, assume no cameras."""
     try:
         with engine.connect() as conn:
             r = conn.execute(text("SELECT COUNT(*) FROM cameras")).scalar()
             return r == 0
     except Exception as e:
-        logger.warning("_db_has_no_cameras check failed, using mocks: %s", e)
+        logger.warning("_db_has_no_cameras check failed: %s", e)
         return True
 
 
-def _mock_cameras() -> List[CameraResponse]:
-    now = datetime.now(timezone.utc)
-    return [
-        CameraResponse(
-            camera_id=uuid.UUID(_MOCK_CAMERA_IDS[0]),
-            name="North Lobby",
-            location={"label": "North Lobby"},
-            ip_address="192.168.1.101",
-            stream_url=_MOCK_STREAM_HLS,
-            status=CameraStatus.ONLINE,
-            hardware_status=None,
-            is_recording=True,
-            motion_detection_enabled=True,
-            last_known_image_url=None,
-            created_at=now,
-            updated_at=now,
-        ),
-        CameraResponse(
-            camera_id=uuid.UUID(_MOCK_CAMERA_IDS[1]),
-            name="East Parking Lot",
-            location={"label": "East Parking Lot"},
-            ip_address="192.168.1.102",
-            stream_url=_MOCK_STREAM_MP4,
-            status=CameraStatus.ONLINE,
-            hardware_status=None,
-            is_recording=False,
-            motion_detection_enabled=True,
-            last_known_image_url=None,
-            created_at=now,
-            updated_at=now,
-        ),
-        CameraResponse(
-            camera_id=uuid.UUID(_MOCK_CAMERA_IDS[2]),
-            name="West Corridor",
-            location={"label": "West Corridor"},
-            ip_address="192.168.1.103",
-            stream_url=_MOCK_STREAM_HLS_ALT,
-            status=CameraStatus.ONLINE,
-            hardware_status=None,
-            is_recording=False,
-            motion_detection_enabled=True,
-            last_known_image_url=None,
-            created_at=now,
-            updated_at=now,
-        ),
-    ]
+def _empty_metrics() -> CameraMetricsResponse:
+    """Return zeroed metrics when no cameras in DB."""
+    return CameraMetricsResponse(
+        total=0,
+        online=0,
+        offline=0,
+        maintenance=0,
+        recording=0,
+        avg_uptime="0%",
+    )
 
 # Stub defaults for unimplemented endpoints (recordings, evidence, analytics, settings)
 _DEFAULT_ANALYTICS: Dict[str, Any] = {
@@ -117,55 +84,30 @@ _evidence_files: Dict[str, Dict[str, Any]] = {}  # evidence_id -> file_record
 _evidence_chain_of_custody: Dict[str, List[Dict[str, Any]]] = {}  # evidence_id -> custody_entries
 _report_issue_log: List[Dict[str, Any]] = []
 
-_MOCK_EVIDENCE: List[Dict[str, Any]] = [
-    {
-        "id": "ev-1",
-        "title": "Lobby motion 2024-01-15",
-        "camera": "North Lobby",
-        "time": "14:32",
-        "date": "2024-01-15",
-        "type": "video",
-        "size": "124 MB",
-        "incidentId": None,
-        "chainOfCustody": [
-            {"timestamp": "2024-01-15 14:32", "handler": "System", "action": "Captured"},
-            {"timestamp": "2024-01-15 14:35", "handler": "Security", "action": "Tagged"},
-        ],
-        "tags": ["motion", "lobby"],
-        "status": "pending",
-        "hasFiles": False,
-        "fileCount": 0
-    },
-    {
-        "id": "ev-2",
-        "title": "Parking lot snapshot",
-        "camera": "East Lot",
-        "time": "09:12",
-        "date": "2024-01-14",
-        "type": "photo",
-        "size": "2.1 MB",
-        "incidentId": None,
-        "chainOfCustody": [{"timestamp": "2024-01-14 09:12", "handler": "System", "action": "Captured"}],
-        "tags": ["parking"],
-        "status": "pending",
-        "hasFiles": False,
-        "fileCount": 0
-    },
-]
+# Evidence from DB when implemented; empty until then
+_EVIDENCE: List[Dict[str, Any]] = []
 
 @router.get("/cameras", response_model=List[CameraResponse])
 def list_cameras(current_user=Depends(get_current_user)):
     try:
         if _db_has_no_cameras():
-            return _mock_cameras()
+            return []
         return CameraService.list_cameras(user_id=str(current_user.user_id))
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.warning("list_cameras failed, returning mocks: %s", e)
-        return _mock_cameras()
+        logger.exception("list_cameras failed: %s", e)
+        raise HTTPException(status_code=503, detail="Failed to load cameras. Please try again.")
 
 @router.post("/cameras", response_model=CameraResponse, status_code=201)
 def create_camera(payload: CameraCreate, current_user=Depends(require_security_manager_or_admin)):
-    return CameraService.create_camera(payload, user_id=str(current_user.user_id))
+    try:
+        return CameraService.create_camera(payload, user_id=str(current_user.user_id))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Create camera failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to create camera: {str(e)}")
 
 @router.put("/cameras/{camera_id}", response_model=CameraResponse)
 def update_camera(camera_id: str, payload: CameraUpdate, current_user=Depends(require_security_manager_or_admin)):
@@ -176,26 +118,17 @@ def delete_camera(camera_id: str, current_user=Depends(require_security_manager_
     CameraService.delete_camera(camera_id)
     return None
 
-def _mock_metrics() -> CameraMetricsResponse:
-    return CameraMetricsResponse(
-        total=3,
-        online=3,
-        offline=0,
-        maintenance=0,
-        recording=1,
-        avg_uptime="100%",
-    )
-
-
 @router.get("/metrics", response_model=CameraMetricsResponse)
 def get_camera_metrics(current_user=Depends(get_current_user)):
     try:
         if _db_has_no_cameras():
-            return _mock_metrics()
+            return _empty_metrics()
         return CameraService.get_metrics()
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.warning("get_camera_metrics failed, returning mocks: %s", e)
-        return _mock_metrics()
+        logger.exception("get_camera_metrics failed: %s", e)
+        raise HTTPException(status_code=503, detail="Failed to load camera metrics. Please try again.")
 
 @router.get("/cameras/{camera_id}/stream")
 def get_camera_stream(camera_id: str, current_user=Depends(get_current_user)):
@@ -204,18 +137,140 @@ def get_camera_stream(camera_id: str, current_user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Stream not available")
     return RedirectResponse(camera.stream_url)
 
+
+@router.get("/cameras/{camera_id}/stream-status")
+async def get_camera_stream_status(
+    camera_id: str,
+    current_user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Check if the HLS stream is available. For RTSP cameras the backend serves HLS itself;
+    for others we probe the external HLS gateway.
+    """
+    camera_resp, source_stream_url, _ = CameraService.get_camera_and_stream_config(camera_id)
+    del camera_resp  # 404 already raised if not found
+    if stream_manager.is_rtsp_camera(camera_id, source_stream_url=source_stream_url):
+        return {
+            "gateway_reachable": True,
+            "manifest_available": stream_manager.manifest_exists(camera_id),
+            "source": "backend_rtsp",
+        }
+    gateway_base = HLS_GATEWAY_BASE_URL.rstrip("/")
+    manifest_url = f"{gateway_base}/hls/{camera_id}/index.m3u8"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(manifest_url)
+            return {
+                "gateway_reachable": True,
+                "manifest_available": r.status_code == 200,
+                "status_code": r.status_code,
+            }
+    except (httpx.ConnectError, httpx.TimeoutException):
+        return {
+            "gateway_reachable": False,
+            "manifest_available": False,
+            "hint": "Start the HLS gateway: scripts/run-hls-gateway.ps1",
+        }
+
+
+@router.get("/cameras/{camera_id}/hls/{path:path}")
+async def proxy_camera_hls(
+    camera_id: str,
+    path: str,
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    """
+    Serve HLS stream for the camera. For RTSP cameras, the backend starts FFmpeg on demand
+    and serves from local disk so users don't need to run scripts. Otherwise proxies to
+    the external HLS gateway.
+    """
+    camera_resp, source_stream_url, credentials = CameraService.get_camera_and_stream_config(camera_id)
+    del camera_resp  # 404 already raised if not found
+
+    # Built-in: RTSP cameras — start FFmpeg on demand and serve from local disk (single DB call above)
+    if stream_manager.is_rtsp_camera(camera_id, source_stream_url=source_stream_url):
+        # Run blocking ensure_stream_running in thread so the event loop is not blocked (avoids heartbeat/other requests timing out)
+        ok, err = await asyncio.to_thread(
+            stream_manager.ensure_stream_running,
+            camera_id,
+            source_stream_url=source_stream_url,
+            credentials=credentials,
+        )
+        if not ok:
+            logger.warning("HLS stream failed for camera %s: %s", camera_id, err or "unknown")
+            raise HTTPException(
+                status_code=503,
+                detail=err or "Stream could not be started. Check camera URL and that FFmpeg is installed.",
+            )
+        result = stream_manager.serve_stream_file(camera_id, path)
+        if result:
+            file_path, media_type = result
+            return FileResponse(
+                path=str(file_path),
+                media_type=media_type,
+                headers={"Cache-Control": "no-cache, no-store"},
+            )
+        # Segment/manifest missing: stream may have died — restart with shorter wait so we don't block 20s
+        ok2, _ = await asyncio.to_thread(
+            stream_manager.ensure_stream_running,
+            camera_id,
+            source_stream_url=source_stream_url,
+            credentials=credentials,
+            manifest_wait_timeout=8,
+        )
+        if ok2:
+            result2 = stream_manager.serve_stream_file(camera_id, path)
+            if result2:
+                file_path, media_type = result2
+                return FileResponse(
+                    path=str(file_path),
+                    media_type=media_type,
+                    headers={"Cache-Control": "no-cache, no-store"},
+                )
+        raise HTTPException(
+            status_code=503,
+            detail="Stream segment not ready. Retry in a moment.",
+        )
+
+    # Fallback: proxy to external HLS gateway (for non-RTSP or legacy setup)
+    gateway_url = f"{HLS_GATEWAY_BASE_URL.rstrip('/')}/hls/{camera_id}/{path}"
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.get(gateway_url)
+            r.raise_for_status()
+            content_type = r.headers.get("content-type", "application/vnd.apple.mpegurl")
+            return Response(
+                content=r.content,
+                status_code=r.status_code,
+                media_type=content_type,
+                headers={"Cache-Control": "no-cache, no-store"},
+            )
+    except httpx.HTTPStatusError as e:
+        logger.warning("HLS proxy upstream error for %s: %s", gateway_url, e.response.status_code)
+        raise HTTPException(status_code=e.response.status_code, detail="Stream gateway unavailable")
+    except (httpx.ConnectError, httpx.TimeoutException) as e:
+        logger.warning("HLS proxy unreachable %s: %s", gateway_url, e)
+        raise HTTPException(status_code=502, detail="Stream gateway unreachable; ensure FFmpeg and HLS gateway are running.")
+
+
 @router.get("/cameras/{camera_id}/last-image")
-def get_last_known_image(camera_id: str, current_user=Depends(get_current_user)):
+def get_last_known_image(camera_id: str, current_user=Depends(get_current_user_optional)):
+    """
+    Return last known frame or placeholder. Uses optional auth so <img src=".../last-image">
+    requests (which do not send the JWT) get 200 + placeholder instead of 403.
+    """
+    cid = _normalize_camera_id(camera_id)
     db = SessionLocal()
     try:
-        camera = db.query(Camera).filter(Camera.camera_id == camera_id).first()
+        camera = db.query(Camera).filter(Camera.camera_id == cid).first()
         if camera and camera.last_known_image_url and not camera.last_known_image_url.endswith("/last-image"):
             return RedirectResponse(camera.last_known_image_url)
     finally:
         db.close()
 
-    # Inline SVG placeholder to avoid missing assets
-    svg = f"""<svg xmlns='http://www.w3.org/2000/svg' width='640' height='360'>
+    # Inline SVG placeholder (no auth required for img tags that cannot send Authorization)
+    svg = """<svg xmlns='http://www.w3.org/2000/svg' width='640' height='360'>
 <rect width='100%' height='100%' fill='#0f172a'/>
 <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#e2e8f0' font-size='18' font-family='Arial'>
 Last known image unavailable
@@ -224,51 +279,8 @@ Last known image unavailable
     return Response(content=svg, media_type="image/svg+xml")
 
 
-# Mock recordings data
-_MOCK_RECORDINGS: List[Dict[str, Any]] = [
-    {
-        "id": "rec-1",
-        "camera_id": _MOCK_CAMERA_IDS[0],
-        "camera_name": "North Lobby",
-        "start_time": "2024-01-24 14:30:00",
-        "end_time": "2024-01-24 14:35:00",
-        "duration": "00:05:00",
-        "file_size": "45.2 MB",
-        "resolution": "1920x1080",
-        "format": "mp4",
-        "motion_detected": True,
-        "has_audio": False,
-        "status": "available"
-    },
-    {
-        "id": "rec-2", 
-        "camera_id": _MOCK_CAMERA_IDS[1],
-        "camera_name": "East Parking Lot",
-        "start_time": "2024-01-24 13:15:00",
-        "end_time": "2024-01-24 13:45:00", 
-        "duration": "00:30:00",
-        "file_size": "180.7 MB",
-        "resolution": "1920x1080",
-        "format": "mp4",
-        "motion_detected": False,
-        "has_audio": True,
-        "status": "available"
-    },
-    {
-        "id": "rec-3",
-        "camera_id": _MOCK_CAMERA_IDS[2],
-        "camera_name": "West Corridor",
-        "start_time": "2024-01-24 12:00:00",
-        "end_time": "2024-01-24 12:10:00",
-        "duration": "00:10:00", 
-        "file_size": "67.3 MB",
-        "resolution": "1920x1080",
-        "format": "mp4",
-        "motion_detected": True,
-        "has_audio": False,
-        "status": "available"
-    }
-]
+# Recordings from DB/export service when implemented; empty until then
+_RECORDINGS: List[Dict[str, Any]] = []
 
 
 @router.get("/recordings")
@@ -279,18 +291,13 @@ def list_recordings(
     current_user=Depends(get_current_user)
 ) -> Dict[str, List[Any]]:
     """List recordings with optional filtering."""
-    recordings = _MOCK_RECORDINGS.copy()
-    
-    # Apply filters
+    recordings = list(_RECORDINGS)
     if camera_id:
-        recordings = [r for r in recordings if r["camera_id"] == camera_id]
-    
+        recordings = [r for r in recordings if r.get("camera_id") == camera_id]
     if start_date:
-        recordings = [r for r in recordings if r["start_time"] >= start_date]
-    
+        recordings = [r for r in recordings if r.get("start_time", "") >= start_date]
     if end_date:
-        recordings = [r for r in recordings if r["end_time"] <= end_date]
-    
+        recordings = [r for r in recordings if r.get("end_time", "") <= end_date]
     return {"data": recordings}
 
 
@@ -303,7 +310,7 @@ async def export_recording(
 ) -> Dict[str, Any]:
     """Export a single recording with format conversion."""
     # Check if recording exists
-    recording = next((r for r in _MOCK_RECORDINGS if r["id"] == recording_id), None)
+    recording = next((r for r in _RECORDINGS if r.get("id") == recording_id), None)
     if not recording:
         raise HTTPException(status_code=404, detail="Recording not found")
     
@@ -343,7 +350,7 @@ async def export_recordings_batch(
         raise HTTPException(status_code=400, detail="Too many recordings (max 50)")
     
     # Verify all recordings exist
-    existing_ids = {r["id"] for r in _MOCK_RECORDINGS}
+    existing_ids = {r["id"] for r in _RECORDINGS}
     missing_ids = set(recording_ids) - existing_ids
     if missing_ids:
         raise HTTPException(status_code=404, detail=f"Recordings not found: {list(missing_ids)}")
@@ -462,6 +469,30 @@ def _create_audit_entry(
         logger.error(f"Failed to create audit entry: {e}")
 
 
+@router.post("/audit-trail", status_code=201)
+def create_audit_trail_entry(
+    request: Request,
+    body: Dict[str, Any] = Body(...),
+    current_user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Create an audit log entry (e.g. camera delete). Used by the frontend to record actions."""
+    action = body.get("action") or ""
+    entity = body.get("entity") or ""
+    entity_id = body.get("entity_id") or ""
+    changes = body.get("changes")
+    metadata = body.get("metadata")
+    _create_audit_entry(
+        action=action,
+        entity=entity,
+        entity_id=entity_id,
+        user_id=str(current_user.user_id),
+        changes=changes,
+        metadata=metadata,
+        request=request,
+    )
+    return {"ok": True}
+
+
 @router.get("/audit-trail")
 def get_audit_trail(
     entity: Optional[str] = None,
@@ -510,10 +541,9 @@ def get_audit_trail(
 
 def _evidence_with_status() -> List[Dict[str, Any]]:
     out = []
-    for e in _MOCK_EVIDENCE:
+    for e in _EVIDENCE:
         copied = dict(e)
-        copied["status"] = _evidence_status.get(e["id"], e["status"])
-        # Add file information
+        copied["status"] = _evidence_status.get(e["id"], e.get("status", "pending"))
         copied["hasFiles"] = e["id"] in _evidence_files
         copied["fileCount"] = 1 if e["id"] in _evidence_files else 0
         if e["id"] in _evidence_files:
@@ -642,11 +672,10 @@ def get_evidence_chain_of_custody(
     """Get complete chain of custody for evidence."""
     custody_chain = _evidence_chain_of_custody.get(evidence_id, [])
     
-    # Add default system entries if none exist
-    if not custody_chain and evidence_id in [e["id"] for e in _MOCK_EVIDENCE]:
-        evidence = next(e for e in _MOCK_EVIDENCE if e["id"] == evidence_id)
-        custody_chain = evidence.get("chainOfCustody", [])
-    
+    if not custody_chain and evidence_id in [e["id"] for e in _EVIDENCE]:
+        evidence = next((e for e in _EVIDENCE if e["id"] == evidence_id), None)
+        if evidence:
+            custody_chain = evidence.get("chainOfCustody", [])
     return {"data": custody_chain}
 
 
@@ -666,7 +695,7 @@ def update_evidence_status(
     status = (payload or {}).get("status")
     if status not in ("pending", "reviewed", "archived"):
         raise HTTPException(status_code=400, detail="status must be pending, reviewed, or archived")
-    ids = [e["id"] for e in _MOCK_EVIDENCE]
+    ids = [e["id"] for e in _EVIDENCE]
     if item_id not in ids:
         raise HTTPException(status_code=404, detail="Evidence item not found")
     _evidence_status[item_id] = status
@@ -949,8 +978,9 @@ async def control_camera_ptz(
     Auth: Security Manager or Admin only.
     """
     try:
+        cid = _normalize_camera_id(camera_id)
         with SessionLocal() as db:
-            camera = db.query(Camera).filter(Camera.camera_id == uuid.UUID(camera_id)).first()
+            camera = db.query(Camera).filter(Camera.camera_id == cid).first()
             if not camera:
                 raise HTTPException(status_code=404, detail="Camera not found")
             
@@ -993,18 +1023,19 @@ async def record_camera_heartbeat(
         if x_api_key:
             await verify_hardware_ingest_key(x_api_key)
         
+        cid = _normalize_camera_id(camera_id)
         with SessionLocal() as db:
-            camera = db.query(Camera).filter(Camera.camera_id == uuid.UUID(camera_id)).first()
+            camera = db.query(Camera).filter(Camera.camera_id == cid).first()
             if not camera:
                 raise HTTPException(status_code=404, detail="Camera not found")
             
             # Update heartbeat timestamp
             camera.last_heartbeat = datetime.now(timezone.utc)
-            
-            # Update status if provided
+            # Receiving a heartbeat means the device is live: set to online unless payload says otherwise
             if payload and "status" in payload:
                 camera.status = payload["status"]
-            
+            else:
+                camera.status = CameraStatus.ONLINE
             db.commit()
             logger.info(f"Camera heartbeat recorded: {camera_id}")
             return {"ok": True, "camera_id": camera_id, "timestamp": camera.last_heartbeat.isoformat()}

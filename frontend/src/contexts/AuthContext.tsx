@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { toast } from 'react-hot-toast';
 import { logger } from '../services/logger';
 import { env } from '../config/env';
+import { clearAppCache } from '../utils/clearAppCache';
 
 // Enhanced TypeScript interfaces
 export interface User {
@@ -35,6 +36,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => Promise<void>;
+  /** Clears all app cache (auth + feature caches) and signs out locally. Next load shows login. */
+  clearCacheAndLogout: () => void;
   refreshToken: () => Promise<boolean>;
   updateUser: (userData: Partial<User>) => Promise<boolean>;
 }
@@ -64,7 +67,13 @@ class AuthAPI {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        logger.error('API request failed', new Error(`HTTP ${response.status}: ${(errorData as { detail?: string }).detail || response.statusText}`), { module: 'AuthAPI', action: 'request', endpoint, errorData });
+        const isSessionCheck = response.status === 401 && (endpoint === '/users/me' || endpoint === '/auth/refresh');
+        const msg = `HTTP ${response.status}: ${(errorData as { detail?: string }).detail || response.statusText}`;
+        if (isSessionCheck) {
+          logger.debug('Session invalid or expired (expected when not logged in or after restart)', { module: 'AuthAPI', action: 'request', endpoint, status: 401 });
+        } else {
+          logger.error('API request failed', new Error(msg), { module: 'AuthAPI', action: 'request', endpoint, errorData });
+        }
         throw new Error((errorData as { detail?: string }).detail || `HTTP error! status: ${response.status}`);
       }
 
@@ -72,7 +81,10 @@ class AuthAPI {
       logger.debug('Response data received', { module: 'AuthAPI', action: 'request', endpoint });
       return data;
     } catch (error) {
-      logger.error('API request failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthAPI', action: 'request', endpoint, url });
+      const isSessionUnauthorized = error instanceof Error && (error.message === 'Invalid token' || error.message.startsWith('HTTP 401'));
+      if (!isSessionUnauthorized) {
+        logger.error('API request failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthAPI', action: 'request', endpoint, url });
+      }
       throw error;
     }
   }
@@ -209,6 +221,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+  const clearCacheAndLogout = useCallback((): void => {
+    logger.info('Clear cache and logout called', { module: 'AuthProvider', action: 'clearCacheAndLogout' });
+    clearAppCache();
+    setUser(null);
+    setIsAuthenticated(false);
+    toast.success('Cache cleared. Please sign in again.');
+  }, []);
+
   // Define refreshToken with proper dependencies
   const refreshToken = useCallback(async (): Promise<boolean> => {
     logger.debug('RefreshToken called', { module: 'AuthProvider', action: 'refreshToken' });
@@ -236,7 +256,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [logout]);
 
-  // Initialize auth state on mount - ONLY ONCE
+  // Initialize auth state on mount - ONLY ONCE. Always validate with backend so we never skip login on stale cache.
   useEffect(() => {
     if (isInitialized.current) {
       return;
@@ -247,41 +267,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuth = async (): Promise<void> => {
       try {
-        const savedUser = TokenManager.getUser();
         const accessToken = TokenManager.getAccessToken();
 
-        logger.debug('Checking saved tokens', { module: 'AuthProvider', action: 'initializeAuth', hasSavedUser: !!savedUser, hasAccessToken: !!accessToken });
+        if (!accessToken) {
+          TokenManager.clearTokens();
+          setLoading(false);
+          return;
+        }
 
-        if (savedUser && accessToken && !TokenManager.isTokenExpired(accessToken)) {
-          logger.debug('Valid tokens found, setting authenticated', { module: 'AuthProvider', action: 'initializeAuth' });
-          setUser(savedUser);
-          setIsAuthenticated(true);
-        } else if (accessToken && TokenManager.isTokenExpired(accessToken)) {
-          logger.debug('Token expired, attempting refresh', { module: 'AuthProvider', action: 'initializeAuth' });
+        // Always validate with backend; never trust localStorage alone so refresh always shows login when token is invalid.
+        const validateSession = async (): Promise<boolean> => {
+          try {
+            const currentUser = await AuthAPI.getCurrentUser();
+            TokenManager.setUser(currentUser);
+            setUser(currentUser);
+            setIsAuthenticated(true);
+            return true;
+          } catch {
+            return false;
+          }
+        };
+
+        if (await validateSession()) {
+          setLoading(false);
+          return;
+        }
+
+        // Access token invalid or expired - try refresh once
+        if (TokenManager.getRefreshToken()) {
           try {
             const response = await AuthAPI.refreshToken();
             TokenManager.setTokens(response);
-
-            // Update user data if needed
-            const currentUser = TokenManager.getUser();
-            if (currentUser) {
-              try {
-                const updatedUser = await AuthAPI.getCurrentUser();
-                TokenManager.setUser(updatedUser);
-                setUser(updatedUser);
-                setIsAuthenticated(true);
-              } catch (error) {
-                logger.error('Failed to get updated user', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'initializeAuth' });
-              }
+            if (await validateSession()) {
+              setLoading(false);
+              return;
             }
-          } catch (error) {
-            logger.warn('Refresh failed, clearing tokens', { module: 'AuthProvider', action: 'initializeAuth' });
-            TokenManager.clearTokens();
+          } catch {
+            // Refresh failed, fall through to clear
           }
         }
+
+        TokenManager.clearTokens();
+        setUser(null);
+        setIsAuthenticated(false);
       } catch (error) {
         logger.error('Auth initialization failed', error instanceof Error ? error : new Error(String(error)), { module: 'AuthProvider', action: 'initializeAuth' });
         TokenManager.clearTokens();
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
@@ -373,6 +406,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     login,
     logout,
+    clearCacheAndLogout,
     refreshToken,
     updateUser,
   };

@@ -53,6 +53,10 @@ const ConfigurationTabComponent: React.FC = () => {
   const [roleZoneMappings, setRoleZoneMappings] = useState<RoleZoneMapping[]>([]);
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [showCreateMappingModal, setShowCreateMappingModal] = useState(false);
+  const [showEditGroupModal, setShowEditGroupModal] = useState(false);
+  const [showEditMappingModal, setShowEditMappingModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<AccessPointGroup | null>(null);
+  const [editingMapping, setEditingMapping] = useState<RoleZoneMapping | null>(null);
   const [groupForm, setGroupForm] = useState({ name: '', description: '', accessPoints: '' });
   const [mappingForm, setMappingForm] = useState({ role: '', zoneName: '', accessPoints: '' });
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
@@ -121,15 +125,52 @@ const ConfigurationTabComponent: React.FC = () => {
   }, [biometricModalDirty, timeoutsModalDirty, emergencyModalDirty, loggingModalDirty, notificationModalDirty, backupModalDirty]);
 
   const handleSaveConfiguration = useCallback(async () => {
-    // In a real application, you would send these configurations to your backend
-    showSuccess('Configuration saved successfully!');
-    setConfigFormDirty(false);
-    setBiometricModalDirty(false);
-    setTimeoutsModalDirty(false);
-    setEmergencyModalDirty(false);
-    setLoggingModalDirty(false);
-    setNotificationModalDirty(false);
-    setBackupModalDirty(false);
+    // Persist configuration to localStorage for session persistence
+    // Note: Full backend integration pending - configuration is stored locally for this session
+    try {
+      const configData = {
+        biometric: biometricConfig,
+        timeouts: timeoutsConfig,
+        emergency: emergencyConfig,
+        logging: loggingConfig,
+        notification: notificationConfig,
+        backup: backupConfig,
+        accessPointGroups,
+        roleZoneMappings,
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem('access-control-config', JSON.stringify(configData));
+      showSuccess('Configuration saved locally. Changes will persist for this browser session.');
+      setConfigFormDirty(false);
+      setBiometricModalDirty(false);
+      setTimeoutsModalDirty(false);
+      setEmergencyModalDirty(false);
+      setLoggingModalDirty(false);
+      setNotificationModalDirty(false);
+      setBackupModalDirty(false);
+    } catch (error) {
+      showError('Failed to save configuration. Please try again.');
+    }
+  }, [biometricConfig, timeoutsConfig, emergencyConfig, loggingConfig, notificationConfig, backupConfig, accessPointGroups, roleZoneMappings]);
+
+  // Load saved configuration on mount
+  React.useEffect(() => {
+    try {
+      const savedConfig = localStorage.getItem('access-control-config');
+      if (savedConfig) {
+        const config = JSON.parse(savedConfig);
+        if (config.biometric) setBiometricConfig(config.biometric);
+        if (config.timeouts) setTimeoutsConfig(config.timeouts);
+        if (config.emergency) setEmergencyConfig(config.emergency);
+        if (config.logging) setLoggingConfig(config.logging);
+        if (config.notification) setNotificationConfig(config.notification);
+        if (config.backup) setBackupConfig(config.backup);
+        if (config.accessPointGroups) setAccessPointGroups(config.accessPointGroups);
+        if (config.roleZoneMappings) setRoleZoneMappings(config.roleZoneMappings);
+      }
+    } catch (error) {
+      // Silently fail - use defaults
+    }
   }, []);
 
   const handleResetConfiguration = useCallback(() => {
@@ -183,12 +224,78 @@ const ConfigurationTabComponent: React.FC = () => {
   }, []);
 
   const handleEditAccessPointGroup = useCallback((group: AccessPointGroup) => {
-    showSuccess(`Edit access point group "${group.name}" - modal will open here`);
+    setEditingGroup(group);
+    setGroupForm({
+      name: group.name,
+      description: group.description || '',
+      accessPoints: group.accessPointIds.join(', ')
+    });
+    setShowEditGroupModal(true);
   }, []);
 
   const handleEditRoleZoneMapping = useCallback((mapping: RoleZoneMapping) => {
-    showSuccess(`Edit role-zone mapping "${mapping.role}" → "${mapping.zoneName}" - modal will open here`);
+    setEditingMapping(mapping);
+    setMappingForm({
+      role: mapping.role,
+      zoneName: mapping.zoneName,
+      accessPoints: mapping.accessPointIds.join(', ')
+    });
+    setShowEditMappingModal(true);
   }, []);
+
+  const handleUpdateGroup = useCallback(() => {
+    if (!editingGroup) return;
+    if (!groupForm.name.trim()) {
+      showError('Group name is required.');
+      return;
+    }
+    const accessPointIds = groupForm.accessPoints
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    setAccessPointGroups((prev) => prev.map(g =>
+      g.id === editingGroup.id
+        ? {
+            ...g,
+            name: groupForm.name.trim(),
+            description: groupForm.description.trim(),
+            accessPointIds,
+            updatedAt: new Date().toISOString()
+          }
+        : g
+    ));
+    setGroupForm({ name: '', description: '', accessPoints: '' });
+    setShowEditGroupModal(false);
+    setEditingGroup(null);
+    showSuccess('Access point group updated.');
+  }, [editingGroup, groupForm]);
+
+  const handleUpdateMapping = useCallback(() => {
+    if (!editingMapping) return;
+    if (!mappingForm.role.trim() || !mappingForm.zoneName.trim()) {
+      showError('Role and zone name are required.');
+      return;
+    }
+    const accessPointIds = mappingForm.accessPoints
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    setRoleZoneMappings((prev) => prev.map(m =>
+      m.id === editingMapping.id
+        ? {
+            ...m,
+            role: mappingForm.role.trim(),
+            zoneName: mappingForm.zoneName.trim(),
+            accessPointIds,
+            updatedAt: new Date().toISOString()
+          }
+        : m
+    ));
+    setMappingForm({ role: '', zoneName: '', accessPoints: '' });
+    setShowEditMappingModal(false);
+    setEditingMapping(null);
+    showSuccess('Role-to-zone mapping updated.');
+  }, [editingMapping, mappingForm]);
 
   const handleTestConnection = useCallback(async () => {
     setTestConnectionLoading(true);
@@ -273,8 +380,8 @@ const ConfigurationTabComponent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Configuration</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Configuration</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             System settings, permissions, and security policies
           </p>
         </div>
@@ -315,13 +422,13 @@ const ConfigurationTabComponent: React.FC = () => {
       {/* Configuration Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" role="group" aria-label="Configuration sections">
         {/* Security Settings */}
-        <Card className="glass-card border border-white/5 bg-transparent">
-          <CardHeader className="border-b border-white/5 pb-4">
+        <Card className="bg-slate-900/50 border border-white/5">
+          <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
             <CardTitle className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+              <div className="card-title-icon-box" aria-hidden="true">
                 <i className="fas fa-shield-alt text-white" />
               </div>
-              <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Security Settings</span>
+              <span className="card-title-text">Security Settings</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
@@ -383,13 +490,13 @@ const ConfigurationTabComponent: React.FC = () => {
         </Card>
 
         {/* System Settings */}
-        <Card className="glass-card border border-white/5 bg-transparent">
-          <CardHeader className="border-b border-white/5 pb-4">
+        <Card className="bg-slate-900/50 border border-white/5">
+          <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
             <CardTitle className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+              <div className="card-title-icon-box" aria-hidden="true">
                 <i className="fas fa-cog text-white" />
               </div>
-              <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">System Settings</span>
+              <span className="card-title-text">System Settings</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
@@ -452,14 +559,14 @@ const ConfigurationTabComponent: React.FC = () => {
       </div>
 
       {/* Access Point Grouping Section */}
-      <Card className="glass-card border border-white/5 bg-transparent">
-        <CardHeader className="border-b border-white/5 pb-4">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+              <div className="card-title-icon-box" aria-hidden="true">
                 <i className="fas fa-layer-group text-white" />
               </div>
-              <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Access Point Grouping</span>
+              <span className="card-title-text">Access Point Grouping</span>
             </div>
             <Button
               variant="glass"
@@ -544,14 +651,14 @@ const ConfigurationTabComponent: React.FC = () => {
       </Card>
 
       {/* Role-to-Zone Mapping Section */}
-      <Card className="glass-card border border-white/5 bg-transparent">
-        <CardHeader className="border-b border-white/5 pb-4">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+              <div className="card-title-icon-box" aria-hidden="true">
                 <i className="fas fa-route text-white" />
               </div>
-              <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Role-to-Zone Mapping</span>
+              <span className="card-title-text">Role-to-Zone Mapping</span>
             </div>
             <Button
               variant="glass"
@@ -642,14 +749,14 @@ const ConfigurationTabComponent: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border border-white/5 bg-transparent">
-        <CardHeader className="border-b border-white/5 pb-4">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+              <div className="card-title-icon-box" aria-hidden="true">
                 <i className="fas fa-clipboard-list text-white" />
               </div>
-              <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Recent Audit Trail</span>
+              <span className="card-title-text">Recent Audit Trail</span>
             </div>
             {auditLog.length > 0 && (
               <Button
@@ -845,6 +952,137 @@ const ConfigurationTabComponent: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Edit Access Point Group Modal */}
+      <Modal
+        isOpen={showEditGroupModal}
+        onClose={() => {
+          setShowEditGroupModal(false);
+          setEditingGroup(null);
+          setGroupForm({ name: '', description: '', accessPoints: '' });
+        }}
+        title="Edit Access Point Group"
+        size="lg"
+        footer={
+          <>
+            <Button variant="subtle" onClick={() => {
+              setShowEditGroupModal(false);
+              setEditingGroup(null);
+              setGroupForm({ name: '', description: '', accessPoints: '' });
+            }}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleUpdateGroup} className="shadow-none hover:shadow-none">
+              Update Group
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
+              Group Name
+            </label>
+            <input
+              type="text"
+              value={groupForm.name}
+              onChange={(e) => setGroupForm((prev) => ({ ...prev, name: e.target.value }))}
+              className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+              placeholder="e.g. Lobby Doors"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
+              Description
+            </label>
+            <input
+              type="text"
+              value={groupForm.description}
+              onChange={(e) => setGroupForm((prev) => ({ ...prev, description: e.target.value }))}
+              className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+              placeholder="Optional summary"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
+              Access Point IDs (comma-separated)
+            </label>
+            <input
+              type="text"
+              value={groupForm.accessPoints}
+              onChange={(e) => setGroupForm((prev) => ({ ...prev, accessPoints: e.target.value }))}
+              className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+              placeholder="ap-1, ap-2"
+            />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Role-Zone Mapping Modal */}
+      <Modal
+        isOpen={showEditMappingModal}
+        onClose={() => {
+          setShowEditMappingModal(false);
+          setEditingMapping(null);
+          setMappingForm({ role: '', zoneName: '', accessPoints: '' });
+        }}
+        title="Edit Role-to-Zone Mapping"
+        size="lg"
+        footer={
+          <>
+            <Button variant="subtle" onClick={() => {
+              setShowEditMappingModal(false);
+              setEditingMapping(null);
+              setMappingForm({ role: '', zoneName: '', accessPoints: '' });
+            }}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleUpdateMapping} className="shadow-none hover:shadow-none">
+              Update Mapping
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
+              Role
+            </label>
+            <input
+              type="text"
+              value={mappingForm.role}
+              onChange={(e) => setMappingForm((prev) => ({ ...prev, role: e.target.value }))}
+              className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+              placeholder="e.g. Security"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
+              Zone Name
+            </label>
+            <input
+              type="text"
+              value={mappingForm.zoneName}
+              onChange={(e) => setMappingForm((prev) => ({ ...prev, zoneName: e.target.value }))}
+              className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+              placeholder="e.g. Floor 4"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
+              Access Point IDs (comma-separated)
+            </label>
+            <input
+              type="text"
+              value={mappingForm.accessPoints}
+              onChange={(e) => setMappingForm((prev) => ({ ...prev, accessPoints: e.target.value }))}
+              className="w-full h-10 px-4 bg-[color:var(--console-dark)] border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] text-sm font-bold"
+              placeholder="ap-1, ap-2"
+            />
+          </div>
+        </div>
+      </Modal>
+
       <BiometricConfigModal
         isOpen={showBiometricConfig}
         onClose={() => setShowBiometricConfig(false)}

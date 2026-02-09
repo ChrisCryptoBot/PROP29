@@ -90,7 +90,7 @@ export const BiometricConfigModal: React.FC<BiometricConfigModalProps> = ({
 
           {config.enabled && (
             <>
-            <div className="space-y-3 pl-4 border-l border-white/5">
+            <div className="space-y-3 pl-4">
                 <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 transition-colors">
                   <div>
                     <p className="text-xs font-bold text-white uppercase tracking-wider">Fingerprint</p>

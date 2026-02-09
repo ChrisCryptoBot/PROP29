@@ -66,8 +66,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const inputClasses =
     variant === 'dark'
-      ? 'w-full pl-10 pr-10 py-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-slate-200 focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/60 shadow-[0_0_18px_rgba(37,99,235,0.2)]'
-      : 'w-full pl-10 pr-10 py-2 border border-white/20 rounded-lg bg-white/5 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/60 shadow-[0_0_14px_rgba(37,99,235,0.2)]';
+      ? 'w-full pl-10 pr-10 py-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500/60'
+      : 'w-full pl-10 pr-10 py-2 border border-white/20 rounded-lg bg-white/5 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500/60';
 
   const iconClasses = variant === 'dark' ? 'text-white' : 'text-slate-300';
   const clearClasses = variant === 'dark' ? 'text-white/80 hover:text-white' : 'text-slate-300 hover:text-white';

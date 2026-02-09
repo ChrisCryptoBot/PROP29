@@ -194,7 +194,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
     >
       <div className="space-y-8">
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Basic Info</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Basic Info</p>
           <div>
             <label htmlFor="edit-user-name" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Full Name <span className="text-red-400">*</span></label>
             <input type="text" id="edit-user-name" value={formData.name} onChange={(e) => updateFormData({ name: e.target.value })} className={cn('w-full px-3 py-2 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:bg-white/10 font-mono placeholder-slate-500', errors.name ? 'border-red-500/50 focus:ring-red-500/20' : 'border-white/5 focus:ring-blue-500/20')} placeholder="e.g. John Smith" aria-label="User full name" />
@@ -223,7 +223,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         </div>
 
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Access Settings</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Access Settings</p>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="edit-user-role" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Role</label>
@@ -247,7 +247,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         </div>
 
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Access Schedule</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Access Schedule</p>
           <div>
             <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Active Days</label>
             <div className="grid grid-cols-7 gap-2">
@@ -274,7 +274,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
         </div>
 
         <div className="space-y-3">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Advanced Options</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Advanced Options</p>
           <label className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
             <div>
               <span className="text-xs font-bold text-white uppercase tracking-wider">Auto revoke on checkout</span>

@@ -30,7 +30,7 @@ const GuestsTabContent: React.FC<GuestsTabProps> = ({ onRegisterGuest }) => {
         switch (status) {
             case 'requested': return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-black uppercase"><i className="fas fa-bell mr-1" /> Requested</Badge>;
             case 'retrieving': return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[10px] font-black uppercase"><i className="fas fa-running mr-1" /> Retrieving</Badge>;
-            case 'ready': return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase animate-pulse"><i className="fas fa-car mr-1" /> Ready</Badge>;
+            case 'ready': return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-black uppercase"><i className="fas fa-car mr-1" /> Ready</Badge>;
             case 'delivered': return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20 text-[10px] font-black uppercase"><i className="fas fa-check-circle mr-1" /> Delivered</Badge>;
             default: return null;
         }
@@ -40,55 +40,37 @@ const GuestsTabContent: React.FC<GuestsTabProps> = ({ onRegisterGuest }) => {
         <div className="space-y-6">
             {/* Header / Summary */}
             <div className="flex justify-between items-end mb-8">
-                <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-4 shadow-2xl border border-white/5">
-                        <i className="fas fa-users text-white text-lg" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black uppercase tracking-tighter text-white">Guest Registry</h2>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mt-1">Live & Historical Parking Sessions</p>
-                    </div>
+                <div>
+                    <h2 className="page-title">Guest Registry</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">Live and historical parking sessions</p>
                 </div>
                 <Button
-                    variant="glass"
+                    variant="outline"
                     onClick={onRegisterGuest}
-                    className="relative group overflow-hidden px-8 h-10 active:scale-[0.98] border-white/5 hover:border-indigo-500/30"
+                    className="px-8 h-10 border-white/5 text-[10px] font-black uppercase tracking-widest"
                 >
-                    <div className="relative flex items-center">
-                        <i className="fas fa-user-plus mr-3 text-slate-500 group-hover:text-indigo-400 transition-colors" />
-                        <span className="font-black uppercase tracking-widest text-[10px] group-hover:text-white transition-colors">Secure Registration</span>
-                    </div>
+                    <i className="fas fa-user-plus mr-2" aria-hidden />
+                    Secure Registration
                 </Button>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                {[
-                    { label: 'Active Sessions', count: activeGuestParkings.length, icon: 'fa-user-check', color: 'from-indigo-600/80 to-slate-900', secondary: 'text-indigo-400' },
-                    { label: 'Completed Today', count: completedGuestParkings.length, icon: 'fa-history', color: 'from-emerald-600/80 to-slate-900', secondary: 'text-emerald-400' },
-                    { label: 'Violation Alerts', count: overdueGuestParkings.length, icon: 'fa-exclamation-triangle', color: 'from-red-600/80 to-slate-900', secondary: 'text-red-400' }
-                ].map((stat, i) => (
-                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/5 transition-all duration-300 group">
-                        <CardContent className="pt-6 px-6 pb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={cn("w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-white/5", stat.color)}>
-                                    <i className={cn("fas text-white text-lg", stat.icon)} />
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="text-3xl font-black text-white">{stat.count}</h3>
-                                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+            {/* Compact metrics bar (gold standard) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Guest registry metrics">
+                <span>Active <strong className="font-black text-white">{activeGuestParkings.length}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Completed today <strong className="font-black text-white">{completedGuestParkings.length}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Violations <strong className="font-black text-white">{overdueGuestParkings.length}</strong></span>
             </div>
 
             {/* Main Registry Table */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="px-6 pt-6 pb-2 border-none">
-                    <CardTitle className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] italic opacity-70">
-                        Guest Parking Registry
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="card-title-icon-box" aria-hidden="true">
+                            <i className="fas fa-list text-white" />
+                        </div>
+                        <span className="card-title-text">Guest Parking Registry</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -98,10 +80,10 @@ const GuestsTabContent: React.FC<GuestsTabProps> = ({ onRegisterGuest }) => {
                                 key={status}
                                 onClick={() => setFilter(status as any)}
                                 className={cn(
-                                    "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-all rounded-md border",
+                                    "font-black uppercase tracking-widest text-[10px] px-6 h-9 transition-colors rounded-md border",
                                     filter === status
-                                        ? "bg-[rgba(37,99,235,0.3)] text-white border border-[rgba(37,99,235,0.5)] shadow-[0_0_14px_rgba(37,99,235,0.5)]"
-                                        : "border-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                                        ? "bg-white/10 text-white border-white/20"
+                                        : "border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
                                 )}
                             >
                                 {status}
@@ -125,20 +107,20 @@ const GuestsTabContent: React.FC<GuestsTabProps> = ({ onRegisterGuest }) => {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="border-b border-white/5 bg-white/[0.01]">
-                                        <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Guest</th>
-                                        <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Vehicle</th>
-                                        <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Space / Cost</th>
-                                        <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">PMS Link</th>
-                                        <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
-                                        <th className="py-4 px-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
+                                    <tr className="border-b border-white/5 bg-white/5">
+                                        <th className="py-4 px-6 text-[9px] font-black text-slate-500 uppercase tracking-widest">Guest</th>
+                                        <th className="py-4 px-6 text-[9px] font-black text-slate-500 uppercase tracking-widest">Vehicle</th>
+                                        <th className="py-4 px-6 text-[9px] font-black text-slate-500 uppercase tracking-widest">Space / Cost</th>
+                                        <th className="py-4 px-6 text-[9px] font-black text-slate-500 uppercase tracking-widest">PMS Link</th>
+                                        <th className="py-4 px-6 text-[9px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+                                        <th className="py-4 px-6 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {displayGuests.map((guest) => (
-                                        <tr key={guest.id} className="border-b border-white/5 hover:bg-blue-500/5 transition-colors group">
+                                        <tr key={guest.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                                             <td className="py-4 px-6">
-                                                <div className="font-bold text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">{guest.guestName}</div>
+                                                <div className="font-bold text-white uppercase tracking-tight">{guest.guestName}</div>
                                                 <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-0.5 font-mono">{guest.id.substring(0, 8)}</div>
                                             </td>
                                             <td className="py-4 px-6">
@@ -170,13 +152,13 @@ const GuestsTabContent: React.FC<GuestsTabProps> = ({ onRegisterGuest }) => {
                                                     <div className="flex justify-end gap-2 text-[10px] font-black uppercase tracking-widest">
                                                         <button
                                                             onClick={() => handleGuestAction(guest.id, 'checkout')}
-                                                            className="bg-white/5 border border-white/5 text-slate-400 hover:bg-[rgba(5,150,105,0.3)] hover:text-white hover:border-[rgba(5,150,105,0.5)] px-4 py-2 rounded-md transition-all duration-300 active:scale-[0.95]"
+                                                            className="bg-white/5 border border-white/5 text-slate-400 hover:bg-emerald-500/10 hover:text-white hover:border-emerald-500/20 px-4 py-2 rounded-md transition-colors"
                                                         >
                                                             Checkout
                                                         </button>
                                                         <button
                                                             onClick={() => handleGuestAction(guest.id, 'valet')}
-                                                            className="bg-white/5 border border-white/5 text-slate-400 hover:bg-[rgba(79,70,229,0.3)] hover:text-white hover:border-[rgba(79,70,229,0.5)] px-4 py-2 rounded-md transition-all duration-300 active:scale-[0.95]"
+                                                            className="bg-white/5 border border-white/5 text-slate-400 hover:bg-blue-500/10 hover:text-white hover:border-blue-500/20 px-4 py-2 rounded-md transition-colors"
                                                         >
                                                             Valet
                                                         </button>

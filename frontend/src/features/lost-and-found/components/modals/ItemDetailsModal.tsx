@@ -1,31 +1,38 @@
 /**
  * Item Details Modal
- * Displays comprehensive information about a lost & found item
+ * Displays comprehensive information about a lost & found item. Uses global Modal (UI gold standard).
  */
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
+import React, { useState } from 'react';
 import { Button } from '../../../../components/UI/Button';
+import { Modal } from '../../../../components/UI/Modal';
 import { Avatar } from '../../../../components/UI/Avatar';
 import { useLostFoundContext } from '../../context/LostFoundContext';
-import { cn } from '../../../../utils/cn';
 import { LostFoundStatus } from '../../types/lost-and-found.types';
 
+const inputClass =
+  'w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 placeholder-slate-500';
+
 interface ItemDetailsModalProps {
-    isOpen: boolean;
-    onClose: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onClose }) => {
-    const {
-        selectedItem,
-        loading,
-        notifyGuest,
-        claimItem,
-        archiveItem
-    } = useLostFoundContext();
+  const {
+    selectedItem,
+    loading,
+    notifyGuest,
+    claimItem,
+    archiveItem,
+    updateItem,
+  } = useLostFoundContext();
+  const [managerConfirmId, setManagerConfirmId] = useState('');
+  const [managerConfirming, setManagerConfirming] = useState(false);
+  const [claimerName, setClaimerName] = useState('');
+  const [claimerContact, setClaimerContact] = useState('');
 
-    if (!isOpen || !selectedItem) return null;
+  if (!selectedItem) return null;
 
     const getStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
@@ -34,21 +41,6 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
             case 'expired': return 'text-amber-300 bg-amber-500/20 border border-amber-500/30';
             case 'donated': return 'text-indigo-300 bg-indigo-500/20 border border-indigo-500/30';
             default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
-        }
-    };
-
-    const getCategoryIcon = (category: string) => {
-        switch (category.toLowerCase()) {
-            case 'electronics': return 'fas fa-mobile-alt text-blue-400';
-            case 'jewelry': return 'fas fa-gem text-purple-400';
-            case 'personal items': return 'fas fa-wallet text-amber-400';
-            case 'accessories': return 'fas fa-sunglasses text-pink-400';
-            case 'clothing': return 'fas fa-tshirt text-indigo-400';
-            case 'documents': return 'fas fa-file-alt text-slate-400';
-            case 'keys': return 'fas fa-key text-yellow-400';
-            case 'sports equipment': return 'fas fa-basketball-ball text-orange-400';
-            case 'weapons': return 'fas fa-exclamation-triangle text-red-500';
-            default: return 'fas fa-box text-slate-400';
         }
     };
 
@@ -72,8 +64,8 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
     const handleClaimItem = async () => {
         await claimItem(selectedItem.item_id, {
             item_id: selectedItem.item_id,
-            claimer_name: 'Guest',
-            claimer_contact: '',
+            claimer_name: claimerName.trim() || 'Guest',
+            claimer_contact: claimerContact.trim(),
             description: 'Item claimed'
         });
         onClose();
@@ -84,278 +76,152 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ isOpen, onCl
         onClose();
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/5 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
-                            <i className={cn("text-lg", getCategoryIcon(category))} />
-                        </div>
-                        {itemName}
-                    </CardTitle>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 p-0 flex items-center justify-center transition-colors"
-                    >
-                        <i className="fas fa-times" />
-                    </Button>
-                </CardHeader>
+    const handleManagerConfirmNotified = async () => {
+        const id = managerConfirmId.trim();
+        if (!id) return;
+        setManagerConfirming(true);
+        try {
+            const result = await updateItem(selectedItem.item_id, {
+                managerApproved: true,
+                managerApprovedBy: id,
+                managerApprovedDate: new Date().toISOString()
+            });
+            if (result) {
+                setManagerConfirmId('');
+                setManagerConfirming(false);
+            }
+        } catch {
+            setManagerConfirming(false);
+        }
+    };
 
-                <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Left Column - Item Details */}
-                        <div className="space-y-6">
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Item Information</h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Category</span>
-                                        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded text-slate-300 bg-white/5 border border-white/5">{category}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Status</span>
-                                        <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded border ${getStatusBadgeClass(selectedItem.status)}`}>
-                                            {selectedItem.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Estimated Value</span>
-                                        <span className="font-semibold text-white">{value ? `$${value}` : 'Unknown'}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Date Found</span>
-                                        <span className="font-semibold text-white">{new Date(dateFound).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Location Found</span>
-                                        <span className="font-semibold text-white">{location}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Storage Location</span>
-                                        <span className="font-semibold text-white">{storageLocation}</span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-2 border-b border-white/5">
-                                        <span className="text-sm text-slate-400">Expiration Date</span>
-                                        <span className="font-semibold text-white">{new Date(expirationDate).toLocaleDateString()}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/5 pb-2">Description</h3>
-                                <div className="p-4 bg-white/5 rounded-lg border border-white/5">
-                                    <p className="text-sm text-slate-300 leading-relaxed italic">"{selectedItem.description}"</p>
-                                </div>
-                            </div>
-
-                            {selectedItem.qrCode && (
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 border-b border-white/5 pb-2">QR Code</h3>
-                                    <div className="p-6 bg-white/5 border border-white/5 rounded-lg text-center">
-                                        <div className="w-32 h-32 bg-white p-2 rounded-lg flex items-center justify-center mx-auto mb-3 shadow-lg">
-                                            <i className="fas fa-qrcode text-6xl text-slate-900" />
-                                        </div>
-                                        <p className="text-xs text-slate-500 font-mono bg-slate-900/50 py-1 px-3 rounded-full inline-block border border-white/5">
-                                            {selectedItem.qrCode}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Column - Guest Info & Actions */}
-                        <div className="space-y-6">
-                            {selectedItem.guestInfo && (
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Guest Information</h3>
-                                    <Card className="glass-card border-white/5 bg-white/5">
-                                        <CardContent className="p-4 space-y-3">
-                                            <div className="flex items-center space-x-3">
-                                                <Avatar className="w-12 h-12 ring-2 ring-white/10">
-                                                    <div className="w-full h-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-inner">
-                                                        {selectedItem.guestInfo.name.charAt(0)}
-                                                    </div>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-bold text-white">{selectedItem.guestInfo.name}</p>
-                                                    <p className="text-sm text-slate-400">Room {selectedItem.guestInfo.room}</p>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2 pt-3 border-t border-white/5">
-                                                <div className="flex items-center space-x-2 text-sm">
-                                                    <i className="fas fa-phone text-slate-500 w-4" />
-                                                    <span className="text-slate-300">{selectedItem.guestInfo.phone}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2 text-sm">
-                                                    <i className="fas fa-envelope text-slate-500 w-4" />
-                                                    <span className="text-slate-300">{selectedItem.guestInfo.email}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2 text-sm">
-                                                    <i className="fas fa-calendar text-slate-500 w-4" />
-                                                    <span className="text-slate-300">
-                                                        {new Date(selectedItem.guestInfo.checkInDate).toLocaleDateString()} - {new Date(selectedItem.guestInfo.checkOutDate).toLocaleDateString()}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            )}
-
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Notifications</h3>
-                                <Card className="glass-card border-white/5 bg-white/5">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <span className="text-sm text-slate-400">Notifications Sent</span>
-                                            <span className="px-2.5 py-1 text-[10px] font-bold rounded text-blue-300 bg-blue-500/20 border border-blue-500/30">
-                                                {selectedItem.notificationsSent || 0}
-                                            </span>
-                                        </div>
-                                        {selectedItem.lastNotificationDate && (
-                                            <div className="flex items-center justify-between mb-4">
-                                                <span className="text-sm text-slate-400">Last Notification</span>
-                                                <span className="text-sm text-white">{new Date(selectedItem.lastNotificationDate).toLocaleString()}</span>
-                                            </div>
-                                        )}
-                                        {selectedItem.status === LostFoundStatus.FOUND && selectedItem.guestInfo && (
-                                            <Button
-                                                variant="primary"
-                                                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold"
-                                                onClick={handleNotifyGuest}
-                                                disabled={loading.items}
-                                            >
-                                                <i className="fas fa-bell mr-2" />
-                                                Send Notification
-                                            </Button>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </div>
-
-                            {selectedItem.legalCompliance && (
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Legal Compliance</h3>
-                                    <Card className="glass-card border-white/5 bg-white/5">
-                                        <CardContent className="p-4 space-y-2">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-400">Retention Period</span>
-                                                <span className="font-medium text-white">{selectedItem.legalCompliance.retentionPeriod} days</span>
-                                            </div>
-                                            {selectedItem.legalCompliance.disposalDate && (
-                                                <>
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-slate-400">Disposal Date</span>
-                                                        <span className="font-medium text-white">
-                                                            {new Date(selectedItem.legalCompliance.disposalDate).toLocaleDateString()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-slate-400">Disposal Method</span>
-                                                        <span className="font-medium text-white">{selectedItem.legalCompliance.disposalMethod}</span>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            )}
-
-                            {category === 'Weapons' && (
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-white/5 pb-2">Manager Approval</h3>
-                                    {selectedItem.managerApproved === false ? (
-                                        <Card className="bg-red-500/10 border-red-500/30">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center space-x-2 mb-2">
-                                                    <i className="fas fa-exclamation-triangle text-red-500" />
-                                                    <span className="font-bold text-red-400">⚠️ Pending Manager Review</span>
-                                                </div>
-                                                <p className="text-sm text-red-300 mb-3">
-                                                    This item requires manager approval before it can be processed or released.
-                                                </p>
-                                                <Button
-                                                    className="w-full bg-red-600 hover:bg-red-500 text-white text-sm font-bold shadow-lg shadow-red-500/20"
-                                                    onClick={() => {
-                                                        // In real implementation, this would trigger a manager approval workflow
-                                                        onClose();
-                                                    }}
-                                                >
-                                                    <i className="fas fa-user-shield mr-2" />
-                                                    Request Manager Approval
-                                                </Button>
-                                            </CardContent>
-                                        </Card>
-                                    ) : selectedItem.managerApproved === true ? (
-                                        <Card className="bg-green-500/10 border-green-500/30">
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center space-x-2 mb-2">
-                                                    <i className="fas fa-check-circle text-green-500" />
-                                                    <span className="font-bold text-green-400">✓ Approved</span>
-                                                </div>
-                                                {selectedItem.managerApprovedBy && (
-                                                    <div className="space-y-1 text-sm">
-                                                        <div className="flex justify-between">
-                                                            <span className="text-green-300">Approved By:</span>
-                                                            <span className="font-medium text-white">{selectedItem.managerApprovedBy}</span>
-                                                        </div>
-                                                        <div className="flex justify-between">
-                                                            <span className="text-green-300">Date:</span>
-                                                            <span className="font-medium text-white">{selectedItem.managerApprovedDate}</span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </CardContent>
-                                        </Card>
-                                    ) : null}
-                                </div>
-                            )}
-
-                            {/* Quick Actions */}
-                            <div className="space-y-2">
-                                {selectedItem.status === LostFoundStatus.FOUND && (
-                                    <Button
-                                        variant="primary"
-                                        className="w-full bg-green-600 hover:bg-green-500 text-white font-bold"
-                                        onClick={handleClaimItem}
-                                        disabled={loading.items}
-                                    >
-                                        <i className="fas fa-check mr-2" />
-                                        Mark as Claimed
-                                    </Button>
-                                )}
-                                {selectedItem.status === LostFoundStatus.EXPIRED && (
-                                    <Button
-                                        variant="primary"
-                                        className="w-full bg-slate-600 hover:bg-slate-500 text-white font-bold"
-                                        onClick={handleArchiveItem}
-                                        disabled={loading.items}
-                                    >
-                                        <i className="fas fa-archive mr-2" />
-                                        Archive Item
-                                    </Button>
-                                )}
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-white/5 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
-                                    onClick={() => {
-                                        // Print QR code functionality
-                                        onClose();
-                                    }}
-                                >
-                                    <i className="fas fa-print mr-2" />
-                                    Print QR Code
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={itemName}
+      size="lg"
+      footer={<Button variant="subtle" onClick={onClose}>Cancel</Button>}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Item information</p>
+            <div className="space-y-2">
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Category</span><span className="text-white font-bold">{category}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Status</span><span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded border ${getStatusBadgeClass(selectedItem.status)}`}>{selectedItem.status}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Value</span><span className="text-white font-bold">{value ? `$${value}` : '—'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Date found</span><span className="text-white font-bold">{new Date(dateFound).toLocaleDateString()}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Location</span><span className="text-white font-bold">{location}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Storage</span><span className="text-white font-bold">{storageLocation}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500 text-sm">Expires</span><span className="text-white font-bold">{new Date(expirationDate).toLocaleDateString()}</span></div>
+            </div>
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Description</p>
+            <p className="text-sm text-slate-300">{selectedItem.description || '—'}</p>
+          </div>
+          {selectedItem.qrCode && (
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">QR code</p>
+              <div className="p-4 bg-white/5 border border-white/5 rounded-md text-center">
+                <i className="fas fa-qrcode text-4xl text-slate-400 mb-2 block" />
+                <p className="text-xs font-mono text-slate-400">{selectedItem.qrCode}</p>
+              </div>
+            </div>
+          )}
         </div>
-    );
+
+        <div className="space-y-6">
+          {selectedItem.guestInfo && (
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Guest</p>
+              <div className="flex items-center space-x-3 p-4 bg-white/5 border border-white/5 rounded-md">
+                <Avatar className="w-10 h-10 border border-white/5">
+                  <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                    {selectedItem.guestInfo.name.charAt(0)}
+                  </div>
+                </Avatar>
+                <div>
+                  <p className="font-bold text-white">{selectedItem.guestInfo.name}</p>
+                  <p className="text-sm text-slate-400">Room {selectedItem.guestInfo.room}</p>
+                  <p className="text-xs text-slate-500">{selectedItem.guestInfo.phone} · {selectedItem.guestInfo.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Notifications</p>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm"><span className="text-slate-500">Sent</span><span className="text-white font-bold">{selectedItem.notificationsSent || 0}</span></div>
+              {selectedItem.lastNotificationDate && <div className="flex justify-between text-sm"><span className="text-slate-500">Last</span><span className="text-white text-sm">{new Date(selectedItem.lastNotificationDate).toLocaleString()}</span></div>}
+              {selectedItem.status === LostFoundStatus.FOUND && selectedItem.guestInfo && (
+                <Button variant="primary" className="w-full mt-2" onClick={handleNotifyGuest} disabled={loading.items}>Send notification</Button>
+              )}
+            </div>
+          </div>
+          {selectedItem.legalCompliance && (
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Legal</p>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between"><span className="text-slate-500">Retention</span><span className="text-white font-bold">{selectedItem.legalCompliance.retentionPeriod} days</span></div>
+                {selectedItem.legalCompliance.disposalDate && (
+                  <>
+                    <div className="flex justify-between"><span className="text-slate-500">Disposal</span><span className="text-white font-bold">{new Date(selectedItem.legalCompliance.disposalDate).toLocaleDateString()}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Method</span><span className="text-white font-bold">{selectedItem.legalCompliance.disposalMethod}</span></div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          {category === 'Weapons' && (
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Manager</p>
+              {selectedItem.managerApproved === false ? (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-md space-y-3">
+                  <p className="text-sm text-red-300">Manager must confirm they were notified. Enter employee ID below.</p>
+                  <input type="text" value={managerConfirmId} onChange={(e) => setManagerConfirmId(e.target.value)} placeholder="Employee ID" className={inputClass} />
+                  <Button variant="destructive" className="w-full" onClick={handleManagerConfirmNotified} disabled={!managerConfirmId.trim() || managerConfirming}>
+                    {managerConfirming ? 'Confirming…' : 'Confirm I was notified'}
+                  </Button>
+                </div>
+              ) : selectedItem.managerApproved === true ? (
+                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-md text-sm text-green-400">
+                  Manager notified{selectedItem.managerApprovedBy ? ` by ${selectedItem.managerApprovedBy}` : ''}.
+                </div>
+              ) : null}
+            </div>
+          )}
+          <div className="space-y-2">
+            {selectedItem.status === LostFoundStatus.FOUND && (
+              <>
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Claimer name</label>
+                <input
+                  type="text"
+                  value={claimerName}
+                  onChange={(e) => setClaimerName(e.target.value)}
+                  placeholder="Guest or claimant name"
+                  className={inputClass}
+                />
+                <label className="block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Contact (optional)</label>
+                <input
+                  type="text"
+                  value={claimerContact}
+                  onChange={(e) => setClaimerContact(e.target.value)}
+                  placeholder="Phone or email"
+                  className={inputClass}
+                />
+                <Button variant="primary" className="w-full" onClick={handleClaimItem} disabled={loading.items}>Mark as claimed</Button>
+              </>
+            )}
+            {selectedItem.status === LostFoundStatus.EXPIRED && (
+              <Button variant="primary" className="w-full bg-slate-600 hover:bg-slate-500" onClick={handleArchiveItem} disabled={loading.items}>Archive item</Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
 };
 
 

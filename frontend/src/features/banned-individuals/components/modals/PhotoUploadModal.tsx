@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Modal } from '../../../../components/UI/Modal';
 import { useBannedIndividualsContext } from '../../context/BannedIndividualsContext';
 
 export const PhotoUploadModal: React.FC = () => {
@@ -14,29 +14,25 @@ export const PhotoUploadModal: React.FC = () => {
     if (!showPhotoUploadModal || !selectedIndividual) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/5 mb-6 group cursor-pointer">
-                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
-                            <i className="fas fa-camera text-white" />
-                        </div>
-                        Photo Upload
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-6">
-                        <div className="flex items-center space-x-4 p-4 bg-blue-500/5 border border-blue-500/20 rounded-2xl">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
-                                <i className="fas fa-user text-white text-lg" />
-                            </div>
+        <Modal
+            isOpen={showPhotoUploadModal}
+            onClose={() => setShowPhotoUploadModal(false)}
+            title="Photo upload"
+            size="md"
+            footer={<Button variant="subtle" onClick={() => setShowPhotoUploadModal(false)}>Cancel</Button>}
+        >
+            <div className="space-y-6">
+                <div className="flex items-center space-x-4 p-4 bg-white/5 border border-white/5 rounded-md">
+                    <div className="w-12 h-12 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                        <i className="fas fa-user text-white text-lg" />
+                    </div>
                             <div>
                                 <h4 className="font-black text-blue-400 uppercase tracking-tighter text-sm">Name: {selectedIndividual.firstName} {selectedIndividual.lastName}</h4>
                                 <p className="text-[10px] text-blue-300/40 font-bold uppercase tracking-widest mt-0.5">ID Ref: {selectedIndividual.id}</p>
                             </div>
                         </div>
 
-                        <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                        <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
                             <h5 className="text-[10px] font-bold text-amber-500 flex items-center mb-1.5 uppercase tracking-widest">
                                 <i className="fas fa-shield-alt mr-2" />
                                 Security Compliance Warning
@@ -47,7 +43,7 @@ export const PhotoUploadModal: React.FC = () => {
                             </p>
                         </div>
 
-                        <div className="relative group border-2 border-dashed border-white/5 rounded-2xl p-10 text-center hover:border-blue-500/30 transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.05]">
+                        <div className="relative group border-2 border-dashed border-white/5 rounded-lg p-10 text-center hover:border-blue-500/30 transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.05]">
                             <input
                                 type="file"
                                 accept="image/*"
@@ -60,7 +56,7 @@ export const PhotoUploadModal: React.FC = () => {
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
                             <div className="space-y-4">
-                                <div className="w-16 h-16 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                <div className="w-16 h-16 bg-blue-600 rounded-md flex items-center justify-center mx-auto border border-white/5">
                                     <i className="fas fa-fingerprint text-white text-2xl" />
                                 </div>
                                 <div>
@@ -71,8 +67,8 @@ export const PhotoUploadModal: React.FC = () => {
                         </div>
 
                         {selectedIndividual.photoUrl && (
-                            <div className="mt-4 p-5 border border-white/5 rounded-2xl bg-white/5 flex items-center space-x-5 shadow-inner">
-                                <div className="w-16 h-16 overflow-hidden rounded-xl shadow-2xl border border-white/5">
+                            <div className="mt-4 p-5 border border-white/5 rounded-lg bg-white/5 flex items-center space-x-5 shadow-inner">
+                                <div className="w-16 h-16 overflow-hidden rounded-lg  border border-white/5">
                                     <img
                                         src={selectedIndividual.photoUrl}
                                         alt="Current biometric"
@@ -85,18 +81,7 @@ export const PhotoUploadModal: React.FC = () => {
                             </div>
                         )}
 
-                        <div className="flex justify-end pt-5 border-t border-white/5">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowPhotoUploadModal(false)}
-                                className="px-8 py-3 font-black uppercase tracking-widest text-[10px] text-slate-400 hover:text-white border-white/5 hover:border-white/20 transition-all"
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+            </div>
+        </Modal>
     );
 };

@@ -187,6 +187,7 @@ class UserUpdate(BaseModel):
     preferred_language: Optional[str] = None
     timezone: Optional[str] = None
     profile_image_url: Optional[str] = None
+    preferences: Optional[Dict[str, Any]] = None
 
 class UserResponse(UserBase):
     user_id: UUID
@@ -195,6 +196,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime] = None
+    preferences: Dict[str, Any] = {}
     roles: List[Dict[str, Any]] = []
 
 # Property schemas
@@ -935,6 +937,7 @@ class GuestSafetyIncidentResponse(BaseModel):
     location: str
     severity: GuestSafetySeverity
     status: str
+    type: Optional[str] = "other"  # evacuation, medical, security, maintenance, service, noise, other
     reported_by: Optional[str] = None
     reported_at: datetime
     resolved_at: Optional[datetime] = None
@@ -1675,7 +1678,7 @@ class CameraResponse(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class CameraHealthResponse(BaseModel):
     camera_id: UUID
@@ -1852,3 +1855,394 @@ class ParkingSettingsResponse(BaseSchema, ParkingSettingsBase):
     settings_id: UUID
     property_id: UUID
     updated_at: datetime
+
+
+# ========== Mobile Agent Schemas ==========
+
+class PatrolSubmissionCreate(BaseModel):
+    agent_id: str
+    patrol_id: str
+    location_data: Dict[str, Any]
+    observations: Dict[str, Any]
+
+class PatrolSubmissionResponse(BaseModel):
+    submission_id: str
+    agent_id: str
+    patrol_id: str
+    timestamp: datetime
+    location_latitude: Optional[float] = None
+    location_longitude: Optional[float] = None
+    location_address: Optional[str] = None
+    observations: Optional[Dict[str, Any]] = None
+    photo_count: int = 0
+    photo_files: Optional[List[Dict[str, Any]]] = None
+    status: str
+    processed_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class MobileIncidentReportCreate(BaseModel):
+    agent_id: str
+    incident_type: str
+    severity: str
+    description: str
+    location_data: Dict[str, Any]
+
+class MobileIncidentReportResponse(BaseModel):
+    incident_id: str
+    agent_id: str
+    incident_type: str
+    severity: str
+    description: Optional[str] = None
+    location_latitude: Optional[float] = None
+    location_longitude: Optional[float] = None
+    location_address: Optional[str] = None
+    location_room: Optional[str] = None
+    timestamp: datetime
+    status: str
+    evidence_files: Optional[List[Dict[str, Any]]] = None
+    follow_up_required: bool = False
+    guest_safety_incident_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AgentLocationCreate(BaseModel):
+    agent_id: str
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+    altitude: Optional[float] = None
+    speed: Optional[float] = None
+    heading: Optional[float] = None
+
+class AgentLocationResponse(BaseModel):
+    agent_id: str
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+    altitude: Optional[float] = None
+    speed: Optional[float] = None
+    heading: Optional[float] = None
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AgentStatusResponse(BaseModel):
+    agent_id: str
+    last_seen: datetime
+    current_latitude: Optional[float] = None
+    current_longitude: Optional[float] = None
+    status: str
+    battery_level: Optional[int] = None
+    app_version: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# System Admin Schemas
+
+class RoleSchema(BaseModel):
+    role_id: UUID
+    role_name: UserRoleEnum
+    permissions: Dict[str, Any] = {}
+    is_active: bool = True
+    expires_at: Optional[datetime] = None
+
+class RoleCreate(BaseModel):
+    user_id: str
+    property_id: str
+    role_name: UserRoleEnum
+    permissions: Dict[str, Any] = {}
+    expires_at: Optional[datetime] = None
+
+class RoleUpdate(BaseModel):
+    permissions: Optional[Dict[str, Any]] = None
+    is_active: Optional[bool] = None
+    expires_at: Optional[datetime] = None
+
+class RoleResponse(RoleSchema):
+    user_id: str
+    property_id: str
+    assigned_at: datetime
+    assigned_by: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class IntegrationConfig(BaseModel):
+    """Configuration for third-party integrations"""
+    provider: str
+    is_active: bool = False
+    credentials: Dict[str, Any] = {}
+    settings: Dict[str, Any] = {}
+
+class SystemSettings(BaseModel):
+    """Global system settings"""
+    maintenance_mode: bool = False
+    allow_registration: bool = True
+    default_language: str = "en"
+    retention_policy_days: int = 365
+    security_level: str = "high"
+    integrations: Dict[str, IntegrationConfig] = {}
+
+class SystemLogResponse(BaseModel):
+    log_id: UUID
+    log_level: str
+    message: str
+    timestamp: datetime
+    service: str
+    log_metadata: Optional[Dict[str, Any]] = None
+    user_id: Optional[str] = None
+    property_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AccessControlAuditLogResponse(BaseModel):
+    audit_id: UUID
+    property_id: Optional[str] = None
+    actor: str
+    action: str
+    status: str
+    target: Optional[str] = None
+    reason: Optional[str] = None
+    source: Optional[str] = None
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+class APIKeyCreate(BaseModel):
+    name: str
+    property_id: str
+    scopes: List[str] = []
+    expires_days: Optional[int] = None
+
+class APIKeyResponse(BaseModel):
+    key_id: UUID
+    name: str
+    prefix: str
+    property_id: str
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+    is_active: bool
+    scopes: List[str]
+    last_used_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+# Chat Schemas
+
+class ChatChannelCreate(BaseModel):
+    name: str
+    property_id: str
+    type: str = "public"
+
+class ChatChannelResponse(BaseModel):
+    channel_id: UUID
+    property_id: str
+    name: str
+    type: str
+    created_at: datetime
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+class ChannelMembershipResponse(BaseModel):
+    membership_id: UUID
+    channel_id: str
+    user_id: str
+    role: str
+    joined_at: datetime
+    last_read_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class ChatAttachmentResponse(BaseModel):
+    attachment_id: UUID
+    message_id: str
+    file_name: str
+    file_type: str
+    file_size: int
+    file_path: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class MessageReadReceiptResponse(BaseModel):
+    receipt_id: UUID
+    message_id: str
+    user_id: str
+    read_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ChatMessageCreate(BaseModel):
+    channel_id: str
+    content: str
+    message_type: str = "text"
+    message_metadata: Optional[Dict[str, Any]] = None
+
+class ChatMessageResponse(BaseModel):
+    message_id: UUID
+    channel_id: str
+    user_id: str
+    content: str
+    timestamp: datetime
+    message_type: str
+    message_metadata: Optional[Dict[str, Any]] = None
+    sender_name: Optional[str] = None
+    attachments: List[ChatAttachmentResponse] = []
+    read_receipts: List[MessageReadReceiptResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+# Notification Schemas
+
+class NotificationCreate(BaseModel):
+    user_id: str
+    property_id: str
+    channel: str # email, sms, push
+    priority: str = "normal"
+    title: str
+    content: str
+    data: Optional[Dict[str, Any]] = None
+
+class NotificationResponse(BaseModel):
+    notification_id: UUID
+    user_id: str
+    property_id: str
+    channel: str
+    priority: str
+    title: str
+    content: str
+    status: str
+    error_message: Optional[str] = None
+    created_at: datetime
+    read_at: Optional[datetime] = None
+    data: Optional[Dict[str, Any]] = None
+
+    class Config:
+        from_attributes = True
+
+# Sound Monitoring Schemas
+
+class SoundSensorCreate(BaseModel):
+    property_id: str
+    name: str
+    location: Optional[Dict[str, Any]] = None
+    sensitivity: int = 50
+
+class SoundSensorResponse(BaseModel):
+    sensor_id: UUID
+    property_id: str
+    name: str
+    location: Optional[Dict[str, Any]] = None
+    status: str
+    sensitivity: int
+    last_heartbeat: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class MonitoringZoneCreate(BaseModel):
+    property_id: str
+    name: str
+    description: Optional[str] = None
+    boundary_points: Optional[List[Dict[str, float]]] = None
+    alert_threshold: int = 70
+
+class MonitoringZoneResponse(BaseModel):
+    zone_id: UUID
+    property_id: str
+    name: str
+    description: Optional[str] = None
+    boundary_points: Optional[List[Dict[str, float]]] = None
+    alert_threshold: int
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class SoundAlertCreate(BaseModel):
+    property_id: str
+    sensor_id: Optional[str] = None
+    zone_id: Optional[str] = None
+    alert_type: str = "other"
+    confidence: float
+    audio_clip_url: Optional[str] = None
+
+class SoundAlertResponse(BaseModel):
+    alert_id: UUID
+    property_id: str
+    sensor_id: Optional[str] = None
+    zone_id: Optional[str] = None
+    alert_type: str
+    confidence: float
+    audio_clip_url: Optional[str] = None
+    timestamp: datetime
+    is_verified: bool
+    verified_by: Optional[str] = None
+    incident_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# Integration Schemas
+
+class IntegrationCreate(BaseModel):
+    property_id: str
+    name: str
+    provider: str
+    configuration: Dict[str, Any] = {}
+    status: str = "active"
+
+class IntegrationResponse(BaseModel):
+    integration_id: UUID
+    property_id: str
+    name: str
+    provider: str
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    # We might not want to return configuration by default if it has secrets
+    # configuration: Dict[str, Any]
+
+    class Config:
+        from_attributes = True
+
+# System Setting Schemas
+
+class SystemSettingCreate(BaseModel):
+    key: str
+    value: Any
+    description: Optional[str] = None
+    is_encrypted: bool = False
+
+class SystemSettingResponse(BaseModel):
+    setting_id: UUID
+    key: str
+    value: Any
+    description: Optional[str] = None
+    is_encrypted: bool
+    updated_at: datetime
+    updated_by: Optional[str] = None
+
+    class Config:
+        from_attributes = True

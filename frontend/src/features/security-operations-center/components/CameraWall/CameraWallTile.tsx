@@ -12,12 +12,15 @@ import type { CameraTile } from '../../types/camera-wall.types';
 
 interface CameraWallTileProps {
   tile: CameraTile;
+  /** When changed, the stream player remounts and retries (e.g. after Refresh) */
+  streamRefreshKey?: number;
 }
 
 const MIN_TILE_WIDTH = 200;
 const MIN_TILE_HEIGHT = 150;
 
-export const CameraWallTile: React.FC<CameraWallTileProps> = ({ tile }) => {
+export const CameraWallTile: React.FC<CameraWallTileProps> = (props) => {
+  const { tile, streamRefreshKey = 0 } = props;
   const {
     updateTilePosition,
     updateTileSize,
@@ -108,7 +111,7 @@ export const CameraWallTile: React.FC<CameraWallTileProps> = ({ tile }) => {
     return (
       <div
         ref={tileRef}
-        className="absolute bg-slate-900/90 border border-white/5 rounded-lg p-2 shadow-2xl cursor-move"
+        className="absolute bg-slate-900 border border-white/5 rounded-md p-2 cursor-move"
         style={{
           left: tile.position.x,
           top: tile.position.y,
@@ -154,7 +157,7 @@ export const CameraWallTile: React.FC<CameraWallTileProps> = ({ tile }) => {
     <div
       ref={tileRef}
       className={cn(
-        "absolute bg-slate-900/90 border border-white/5 rounded-lg shadow-2xl overflow-hidden flex flex-col",
+        "absolute bg-slate-900 border border-white/5 rounded-md overflow-hidden flex flex-col",
         tile.isPinned && "ring-2 ring-blue-500/50"
       )}
       style={{
@@ -247,26 +250,39 @@ export const CameraWallTile: React.FC<CameraWallTileProps> = ({ tile }) => {
               <p className="text-[10px] text-white/50 font-black uppercase">Paused</p>
             </div>
           </div>
-        ) : tile.camera.status === 'online' && tile.camera.streamUrl ? (
-          <VideoStreamPlayer
-            src={tile.camera.streamUrl}
-            poster={tile.camera.lastKnownImageUrl}
-            className="w-full h-full object-contain"
-            errorClassName="w-full h-full flex items-center justify-center text-slate-400 text-sm border border-white/5"
-            showTimestamp={true}
-            timestampPosition="top-right"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            {tile.camera.lastKnownImageUrl ? (
-              <img
-                src={tile.camera.lastKnownImageUrl}
-                alt={`Last known: ${tile.camera.name}`}
-                className="max-w-full max-h-full object-contain opacity-60"
-              />
-            ) : (
-              <span className="text-slate-400 text-sm">No feed available</span>
+        ) : tile.camera.status === 'maintenance' ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-900/90 border border-amber-500/20">
+            <i className="fas fa-wrench text-2xl text-amber-400/80" aria-hidden />
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Maintenance</span>
+            <span className="text-[9px] text-slate-500">No live feed</span>
+          </div>
+        ) : tile.camera.streamUrl ? (
+          <div key={`stream-${tile.id}-${streamRefreshKey}`} className="w-full h-full relative">
+            <VideoStreamPlayer
+              src={tile.camera.streamUrl}
+              poster={tile.camera.lastKnownImageUrl}
+              className="w-full h-full object-contain"
+              errorClassName="w-full h-full flex items-center justify-center text-slate-400 text-sm border border-white/5"
+              showTimestamp={true}
+              timestampPosition="top-right"
+              cameraId={tile.camera.id}
+            />
+            {tile.camera.status === 'offline' && (
+              <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-500/90 text-white">
+                Offline
+              </span>
             )}
+          </div>
+        ) : tile.camera.status === 'offline' ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-900/90 border border-rose-500/20">
+            <i className="fas fa-video-slash text-2xl text-rose-400/80" aria-hidden />
+            <span className="text-[10px] font-black uppercase tracking-widest text-rose-400">Offline</span>
+            <span className="text-[9px] text-slate-500">No live feed</span>
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-900">
+            <i className="fas fa-video-slash text-xl text-slate-500" aria-hidden />
+            <span className="text-slate-400 text-sm">No feed available</span>
           </div>
         )}
       </div>

@@ -24,30 +24,30 @@ export const LockersManagementTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[color:var(--surface-card)] border-[1.5px] border-[color:var(--border-subtle)] group">
-        <CardHeader>
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg group-hover:scale-110 transition-transform" aria-hidden="true">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
               <i className="fas fa-list text-white text-lg" />
             </div>
             All Smart Lockers
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="space-y-4">
             {lockers.map((locker) => (
               <div
                 key={locker.id}
-                className="flex items-center justify-between p-4 border border-white/5 bg-white/5 rounded-2xl hover:bg-white/[0.08] transition-all group shadow-inner cursor-pointer"
+                className="flex items-center justify-between p-4 border border-white/5 bg-white/5 rounded-md hover:bg-white/10 cursor-pointer"
                 onClick={() => setSelectedLocker(locker)}
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <i className="fas fa-lock text-white text-xl" />
+                  <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                    <i className="fas fa-lock text-white text-lg" />
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-white uppercase tracking-tighter">{locker.lockerNumber}</h3>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)]">{formatLocationDisplay(locker.location) || '—'}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)]">{formatLocationDisplay(locker.location) || '—'}</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400 mt-1">
                       Battery: {locker.batteryLevel ?? 'N/A'}% | Signal: {locker.signalStrength ?? 'N/A'}%
                     </p>

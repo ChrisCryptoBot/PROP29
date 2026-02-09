@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../components
 import { Button } from '../../../../components/UI/Button';
 import { useLostFoundContext } from '../../context/LostFoundContext';
 import { cn } from '../../../../utils/cn';
-import { showSuccess } from '../../../../utils/toast';
+import { showSuccess, showInfo } from '../../../../utils/toast';
 
 export const SettingsTab: React.FC = React.memo(() => {
     const {
@@ -99,17 +99,22 @@ export const SettingsTab: React.FC = React.memo(() => {
             {/* Gold Standard Page Header */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Settings</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Settings</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Lost & Found system configuration and policies
                     </p>
                 </div>
             </div>
             {/* System Settings */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">System Settings</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-cog text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">System Settings</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Configure general system preferences
                     </p>
                 </CardHeader>
@@ -121,7 +126,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.defaultRetentionPeriod}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, defaultRetentionPeriod: parseInt(e.target.value) || 90 }))}
                             />
@@ -133,7 +138,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.expirationWarningDays}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, expirationWarningDays: parseInt(e.target.value) || 7 }))}
                             />
@@ -145,7 +150,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="text"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.qrCodePrefix}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, qrCodePrefix: e.target.value }))}
                                 placeholder="LF"
@@ -158,14 +163,14 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.autoArchiveAfterDays}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, autoArchiveAfterDays: parseInt(e.target.value) || 30 }))}
                             />
                             <p className="text-xs text-slate-500">Automatically archive expired items after this period</p>
                         </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-md">
                         <div>
                             <p className="text-sm font-bold text-white">Auto-Notification Enabled</p>
                             <p className="text-xs text-slate-400">Automatically notify guests when their items are found</p>
@@ -179,7 +184,6 @@ export const SettingsTab: React.FC = React.memo(() => {
                     </div>
                     <Button
                         variant="primary"
-                        className="bg-blue-600 hover:bg-blue-500 text-white uppercase tracking-wider font-bold"
                         onClick={handleSaveSystemSettings}
                         disabled={loading.settings}
                     >
@@ -190,10 +194,15 @@ export const SettingsTab: React.FC = React.memo(() => {
             </Card>
 
             {/* Category Management */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Category Management</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-folder text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">Category Management</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Manage item categories and their properties
                     </p>
                 </CardHeader>
@@ -201,12 +210,12 @@ export const SettingsTab: React.FC = React.memo(() => {
                     <div className="space-y-3 mb-4">
                         {categories.map((category) => (
                             <div key={category} className={cn(
-                                "flex items-center justify-between p-3 border rounded-lg hover:bg-white/5 transition-colors",
+                                "flex items-center justify-between p-3 border rounded-md hover:bg-white/5 transition-colors",
                                 category === 'Weapons' ? 'border-red-500/20 bg-red-500/5' : 'border-white/5 bg-white/5'
                             )}>
                                 <div className="flex items-center space-x-3">
                                     <div className={cn(
-                                        "w-8 h-8 rounded-lg flex items-center justify-center border border-white/5",
+                                        "w-8 h-8 rounded-md flex items-center justify-center border border-white/5",
                                         category === 'Weapons' ? 'bg-red-500/20' : 'bg-slate-800'
                                     )}>
                                         <i className={cn("text-sm", category === 'Weapons' ? 'text-red-400' : 'text-slate-400', getCategoryIcon(category))} />
@@ -222,19 +231,21 @@ export const SettingsTab: React.FC = React.memo(() => {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => showSuccess(`Editing ${category}`)}
+                                        onClick={() => showInfo('Category edit will be available when backend supports it.')}
                                         className="border-white/5 text-slate-400 hover:text-white hover:bg-white/10"
+                                        aria-label={`Edit ${category}`}
                                     >
-                                        <i className="fas fa-edit" />
+                                        <i className="fas fa-edit" aria-hidden />
                                     </Button>
                                     {category !== 'Weapons' && (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => showSuccess(`Deleted ${category}`)}
+                                            onClick={() => showInfo('Category delete will be available when backend supports it.')}
                                             className="border-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                            aria-label={`Delete ${category}`}
                                         >
-                                            <i className="fas fa-trash" />
+                                            <i className="fas fa-trash" aria-hidden />
                                         </Button>
                                     )}
                                 </div>
@@ -244,7 +255,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     <Button
                         variant="outline"
                         className="w-full border-dashed border-white/20 text-slate-400 hover:text-white hover:bg-white/5 hover:border-white/40"
-                        onClick={() => showSuccess('Add new category')}
+                        onClick={() => showInfo('Add category will be available when backend supports it.')}
                     >
                         <i className="fas fa-plus mr-2" />
                         Add New Category
@@ -253,19 +264,24 @@ export const SettingsTab: React.FC = React.memo(() => {
             </Card>
 
             {/* Storage Location Management */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Storage Location Management</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-map-marker-alt text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">Storage Location Management</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Configure storage locations and capacity
                     </p>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <div className="space-y-3 mb-4">
                         {storageLocations.map((location) => (
-                            <div key={location} className="flex items-center justify-between p-3 border border-white/5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                            <div key={location} className="flex items-center justify-between p-3 border border-white/5 rounded-md bg-white/5 hover:bg-white/10 transition-colors">
                                 <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+                                    <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                         <i className="fas fa-warehouse text-white text-sm" />
                                     </div>
                                     <div>
@@ -277,18 +293,20 @@ export const SettingsTab: React.FC = React.memo(() => {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => showSuccess(`Editing ${location}`)}
+                                        onClick={() => showInfo('Storage location edit will be available when backend supports it.')}
                                         className="border-white/5 text-slate-400 hover:text-white hover:bg-white/10"
+                                        aria-label={`Edit ${location}`}
                                     >
-                                        <i className="fas fa-edit" />
+                                        <i className="fas fa-edit" aria-hidden />
                                     </Button>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => showSuccess(`Deleted ${location}`)}
+                                        onClick={() => showInfo('Storage location delete will be available when backend supports it.')}
                                         className="border-white/5 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                        aria-label={`Delete ${location}`}
                                     >
-                                        <i className="fas fa-trash" />
+                                        <i className="fas fa-trash" aria-hidden />
                                     </Button>
                                 </div>
                             </div>
@@ -297,7 +315,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     <Button
                         variant="outline"
                         className="w-full border-dashed border-white/20 text-slate-400 hover:text-white hover:bg-white/5 hover:border-white/40"
-                        onClick={() => showSuccess('Add new storage location')}
+                        onClick={() => showInfo('Add storage location will be available when backend supports it.')}
                     >
                         <i className="fas fa-plus mr-2" />
                         Add New Location
@@ -306,10 +324,15 @@ export const SettingsTab: React.FC = React.memo(() => {
             </Card>
 
             {/* Notification Settings */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Notification Settings</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-bell text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">Notification Settings</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Configure notification templates and preferences
                     </p>
                 </CardHeader>
@@ -321,7 +344,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="text"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.emailSubject}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, emailSubject: e.target.value }))}
                             />
@@ -331,7 +354,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                                 Email Body Template
                             </label>
                             <textarea
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 rows={4}
                                 value={localSettings.emailBody}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, emailBody: e.target.value }))}
@@ -342,7 +365,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                                 SMS Template
                             </label>
                             <textarea
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 rows={2}
                                 value={localSettings.smsTemplate}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, smsTemplate: e.target.value }))}
@@ -362,10 +385,15 @@ export const SettingsTab: React.FC = React.memo(() => {
             </Card>
 
             {/* Legal & Compliance */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Legal & Compliance Settings</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-scale-balanced text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">Legal & Compliance Settings</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Configure disposal and legal compliance settings
                     </p>
                 </CardHeader>
@@ -376,7 +404,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                                 Default Disposal Method
                             </label>
                             <select
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
                                 value={localSettings.defaultDisposalMethod}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, defaultDisposalMethod: e.target.value }))}
                             >
@@ -392,7 +420,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.highValueThreshold}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, highValueThreshold: parseInt(e.target.value) || 500 }))}
                                 placeholder="500"
@@ -400,7 +428,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             <p className="text-xs text-slate-500">Items above this value require manager approval</p>
                         </div>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-md">
                         <div>
                             <p className="text-sm font-bold text-white">Require Photo Documentation</p>
                             <p className="text-xs text-slate-400">Require photos for all registered items</p>
@@ -412,7 +440,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             className="w-5 h-5 text-blue-600 bg-slate-900 border-slate-700 rounded focus:ring-blue-500"
                         />
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-md">
                         <div>
                             <p className="text-sm font-bold text-white">Chain of Custody Tracking</p>
                             <p className="text-xs text-slate-400">Track who handled each item</p>
@@ -425,8 +453,8 @@ export const SettingsTab: React.FC = React.memo(() => {
                         />
                     </div>
                     <Button
-                        variant="outline"
-                        className="w-full text-[10px] font-black uppercase tracking-widest h-12 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
+                        variant="primary"
+                        className="w-full"
                         onClick={handleSaveSystemSettings}
                         disabled={loading.settings}
                     >

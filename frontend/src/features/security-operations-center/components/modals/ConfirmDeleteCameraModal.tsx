@@ -28,7 +28,7 @@ export const ConfirmDeleteCameraModal: React.FC<ConfirmDeleteCameraModalProps> =
         <p className="text-sm text-white">
           Are you sure you want to remove this camera from the system?
         </p>
-        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+        <div className="p-3 rounded-md bg-red-500/10 border border-red-500/20">
           <p className="text-xs font-mono text-red-400 font-bold">
             {cameraName}
           </p>

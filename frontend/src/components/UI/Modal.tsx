@@ -102,7 +102,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
@@ -110,7 +110,7 @@ const Modal: React.FC<ModalProps> = ({
       <div
         ref={modalRef}
         className={cn(
-          'absolute bg-slate-900/70 rounded-lg p-6 border border-white/5 shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto',
+          'absolute bg-slate-900 rounded-md p-6 border border-white/10 max-h-[90vh] overflow-y-auto',
           sizeClasses[size],
           className
         )}

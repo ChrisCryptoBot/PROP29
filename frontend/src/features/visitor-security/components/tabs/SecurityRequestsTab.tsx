@@ -38,6 +38,23 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
     await assignSecurityRequest(requestId, assigneeId, 'in_progress');
   };
 
+  const handleComplete = async (requestId: string) => {
+    const assigneeId = user?.user_id ?? '';
+    if (!assigneeId) return;
+    await assignSecurityRequest(requestId, assigneeId, 'completed');
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    const assigneeId = user?.user_id ?? '';
+    if (!assigneeId) return;
+    await assignSecurityRequest(requestId, assigneeId, 'cancelled');
+  };
+
+  const handleRejectSubmission = async (submissionId: string) => {
+    const reason = window.prompt('Rejection reason (optional):', 'Requires additional verification');
+    await processAgentSubmission(submissionId, 'reject', reason ?? undefined);
+  };
+
   // Get all security requests from visitors
   const allSecurityRequests = React.useMemo(() => {
     const requests: Array<{ request: typeof securityRequests[0]; visitor: typeof visitors[0] }> = [];
@@ -71,8 +88,8 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
       {/* Page Header - Gold Standard */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Security Requests & Agent Submissions</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Security Requests & Agent Submissions</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Process mobile agent submissions, security clearances, and incident escalations.
           </p>
         </div>
@@ -81,7 +98,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
           onClick={() => refreshAgentSubmissions()}
           variant="outline"
           disabled={loading.agentSubmissions}
-          className="text-[9px] font-black uppercase tracking-widest border-white/5 text-slate-300 hover:bg-white/5"
+            className="text-[9px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:bg-white/5"
         >
           <i className={cn("fas fa-sync-alt mr-1", loading.agentSubmissions && "animate-spin")} />
           Refresh Submissions
@@ -90,13 +107,13 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
 
       {/* Mobile Agent Submissions Queue */}
       {mobileAgentSubmissions.length > 0 && (
-        <Card className="glass-card border border-white/5 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl text-white">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
-                <i className="fas fa-mobile-alt text-white" />
+        <Card className="bg-[color:var(--console-dark)] border border-white/5">
+          <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+            <CardTitle className="flex items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                <i className="fas fa-mobile-alt text-white" aria-hidden />
               </div>
-              <span className="uppercase tracking-tight">Pending Mobile Agent Submissions ({mobileAgentSubmissions.length})</span>
+              <span className="card-title-text">Pending Mobile Agent Submissions ({mobileAgentSubmissions.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -104,7 +121,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
               {mobileAgentSubmissions.map((submission) => (
                 <div 
                   key={submission.submission_id}
-                  className="p-4 border border-blue-500/20 rounded-lg bg-blue-500/5 hover:bg-blue-500/10 transition-colors"
+                  className="p-4 border border-blue-500/20 rounded-md bg-blue-500/5 hover:bg-blue-500/10 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -122,13 +139,13 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                           {submission.status}
                         </span>
                       </div>
-                      <h4 className="font-bold text-white mb-1">
+                      <h4 className="font-black text-white mb-1">
                         Agent {submission.agent_id.slice(0, 8)} - {submission.submission_type.replace('_', ' ')}
                       </h4>
                       <p className="text-sm text-slate-400 mb-2">
                         {submission.visitor_id ? `Visitor ID: ${submission.visitor_id}` : 'New visitor registration'}
                       </p>
-                      <div className="text-[10px] text-slate-500">
+                      <div className="text-[10px] text-[color:var(--text-sub)]">
                         <i className="fas fa-clock mr-1" />
                         {new Date(submission.timestamp).toLocaleString()}
                         {submission.location != null && (
@@ -155,7 +172,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => processAgentSubmission(submission.submission_id, 'reject', 'Requires additional verification')}
+                          onClick={() => handleRejectSubmission(submission.submission_id)}
                           disabled={loading.agentSubmissions}
                           className="text-[9px] font-black uppercase tracking-widest border-red-500/30 text-red-300 hover:bg-red-500/10"
                         >
@@ -173,13 +190,13 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
       )}
 
       {/* Traditional Security Requests - Gold Standard Pattern */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
         <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
-          <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center mr-3">
-              <i className="fas fa-shield-alt text-white text-sm" />
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+              <i className="fas fa-shield-alt text-white" aria-hidden />
             </div>
-            Security Clearance Requests ({allSecurityRequests.length})
+            <span className="card-title-text">Security Clearance Requests ({allSecurityRequests.length})</span>
           </CardTitle>
         </CardHeader>
       <CardContent className="px-6 pb-6">
@@ -195,7 +212,7 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
             {allSecurityRequests.map(({ request, visitor }) => (
               <div
                 key={request.id}
-                className="p-5 rounded-xl border border-white/5 bg-slate-900/30 hover:border-orange-500/30 transition-all group"
+                className="p-5 rounded-md border border-white/5 bg-[color:var(--console-dark)]/30 hover:border-orange-500/30 transition-colors group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -229,12 +246,12 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                       </span>
                     </div>
                     <p className="text-white font-black text-lg mb-1 leading-tight group-hover:text-blue-400 transition-colors">{request.description}</p>
-                    <p className="text-sm text-slate-400 italic font-medium">
+                    <p className="text-sm text-[color:var(--text-sub)] italic font-medium">
                       Source: {visitor?.first_name} {visitor?.last_name}
                       {request.location && <> <span className="mx-2 opacity-30">•</span> Zone: {formatLocationDisplay(request.location)}</>}
                     </p>
                     {request.response && (
-                      <div className="mt-4 p-3 bg-blue-500/5 rounded-lg border border-blue-500/20 italic">
+                      <div className="mt-4 p-3 bg-blue-500/5 rounded-md border border-blue-500/20 italic">
                         <p className="text-sm text-blue-300"><strong className="text-[10px] uppercase tracking-widest not-italic opacity-50 block mb-1">Response Protocol:</strong> {request.response}</p>
                       </div>
                     )}
@@ -249,6 +266,27 @@ export const SecurityRequestsTab: React.FC = React.memo(() => {
                       >
                         Assign Response
                       </Button>
+                    )}
+                    {request.status === 'in_progress' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleComplete(request.id)}
+                          className="text-[10px] font-black uppercase tracking-widest border-green-500/30 text-green-300 hover:bg-green-500/10"
+                        >
+                          <i className="fas fa-check mr-1" />
+                          Complete
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCancelRequest(request.id)}
+                          className="text-[10px] font-black uppercase tracking-widest border-slate-400/30 text-slate-300 hover:bg-white/10"
+                        >
+                          Cancel
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>

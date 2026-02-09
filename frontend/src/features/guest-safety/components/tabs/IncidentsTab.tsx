@@ -80,8 +80,9 @@ export const IncidentsTab: React.FC = () => {
 
   if (loading.incidents && incidents.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading incidents">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Incidents...</p>
       </div>
     );
   }
@@ -135,8 +136,8 @@ export const IncidentsTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Incidents</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Incidents</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Guest safety incident management and response coordination
           </p>
         </div>
@@ -191,93 +192,21 @@ export const IncidentsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="group" aria-label="Guest Safety key metrics">
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded uppercase">Critical</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                <i className="fas fa-exclamation-triangle text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Critical Incidents</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Critical incidents: ${metrics.critical}`}>
-                {metrics.critical}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Active priority incidents</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-orange-400 bg-orange-500/10 border border-orange-500/20 rounded uppercase">High</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                <i className="fas fa-exclamation-circle text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">High Priority</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`High priority incidents: ${metrics.high}`}>
-                {metrics.high}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Elevated safety risks</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">Resolved</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                <i className="fas fa-check-circle text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Resolved Today</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Resolved today: ${metrics.resolvedToday}`}>
-                {metrics.resolvedToday}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Completed today</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded uppercase">Active</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                <i className="fas fa-clock text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Response Time</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Average response time: ${metrics.avgResponseTime}`}>
-                {metrics.avgResponseTime}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Average response time</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Compact metrics bar (gold standard — no KPI cards at top) */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)]" role="group" aria-label="Guest Safety key metrics">
+        <span>Critical <strong className="font-black text-white">{metrics.critical}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>High <strong className="font-black text-white">{metrics.high}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Resolved today <strong className="font-black text-white">{metrics.resolvedToday}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Avg response <strong className="font-black text-white">{metrics.avgResponseTime}</strong></span>
       </div>
 
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-2xl" aria-hidden="true">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
               <i className="fas fa-exclamation-triangle text-white text-lg" />
             </div>
             Incidents
@@ -333,22 +262,32 @@ export const IncidentsTab: React.FC = () => {
           </div>
 
           {/* Incidents Grid */}
+          {filteredIncidents.length === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                icon="fas fa-clipboard-list"
+                title={activeFilter === 'all' ? 'No incidents' : 'No incidents found'}
+                description={activeFilter === 'all' ? 'Create an incident to get started.' : 'No incidents match your current filter.'}
+                action={activeFilter !== 'all' ? { label: 'Clear filter', onClick: () => setActiveFilter('all'), variant: 'outline' } : undefined}
+              />
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredIncidents.map((incident) => (
               <Card
                 key={incident.id}
-                className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:bg-slate-900/70 transition-all cursor-pointer group rounded-xl overflow-hidden"
+                className="bg-slate-900/30 border border-white/5 hover:bg-white/5 transition-colors cursor-pointer group rounded-md overflow-hidden"
                 onClick={() => setSelectedIncident(incident)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-black text-white uppercase tracking-tighter text-lg group-hover:text-blue-400 transition-colors">{incident.guestName}</h4>
+                    <h4 className="card-title-text">{incident.guestName}</h4>
                     <span className={cn("px-2.5 py-1 text-[10px] font-black rounded uppercase tracking-widest border", getPriorityBadgeClass(incident.priority))}>
                       {incident.priority}
                     </span>
                   </div>
 
-                  <div className="space-y-2 mb-6 bg-slate-900/30 p-3 rounded-xl border border-white/5">
+                  <div className="space-y-2 mb-6 bg-slate-900/30 p-3 rounded-md border border-white/5">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
                       <span className="text-slate-500">Room:</span>
                       <span className="text-white">{incident.guestRoom}</span>
@@ -432,16 +371,8 @@ export const IncidentsTab: React.FC = () => {
                 </CardContent>
               </Card>
             ))}
-            {filteredIncidents.length === 0 && (
-              <div className="col-span-full">
-                <EmptyState
-                  icon="fas fa-shield-heart"
-                  title="No incidents found"
-                  description="No active incident reports at this time"
-                />
-              </div>
-            )}
           </div>
+          )}
         </CardContent>
       </Card>
     </div>

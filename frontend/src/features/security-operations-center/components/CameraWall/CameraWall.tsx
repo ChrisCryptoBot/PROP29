@@ -17,9 +17,11 @@ interface CameraWallProps {
   onTileClick?: (cameraId: string) => void;
   /** Callback to switch back to the grid/layout view (fixed layout picker) */
   onSwitchToGrid?: () => void;
+  /** When changed, stream players remount so they retry loading (e.g. after user clicks Refresh) */
+  streamRefreshKey?: number;
 }
 
-export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, onSwitchToGrid }) => {
+export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, onSwitchToGrid, streamRefreshKey = 0 }) => {
   const {
     tiles,
     addTile,
@@ -44,6 +46,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [showPresetModal, setShowPresetModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [newLayoutName, setNewLayoutName] = useState('');
   const [newPresetName, setNewPresetName] = useState('');
   const [presetGridConfig, setPresetGridConfig] = useState({ columns: 4, rows: 3, tileSize: { width: 400, height: 300 } });
@@ -112,7 +115,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
   return (
     <div className="relative w-full h-full min-h-[600px] bg-slate-950/50 overflow-hidden">
       {/* Toolbar */}
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-white/5">
+      <div className="absolute top-4 left-4 z-50 flex items-center gap-2 bg-black/60 rounded-md p-2 border border-white/5">
         {onSwitchToGrid && (
           <Button
             size="sm"
@@ -168,12 +171,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
           <Button
             size="sm"
             variant="destructive"
-            onClick={() => {
-              if (window.confirm('Clear all tiles?')) {
-                clearAllTiles();
-                trackAction('clear_all_tiles', 'camera_wall');
-              }
-            }}
+            onClick={() => setShowClearAllConfirm(true)}
             className="text-[10px] font-black uppercase tracking-widest"
           >
             <i className="fas fa-times mr-2" />
@@ -186,7 +184,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
       </div>
 
       {/* Layout selector – always visible so users can discover and load saved layouts */}
-      <div className="absolute top-4 right-4 z-50 bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-white/5">
+      <div className="absolute top-4 right-4 z-50 bg-black/60 rounded-md p-2 border border-white/5">
         <Select
           value=""
           onChange={(e) => {
@@ -203,7 +201,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
       </div>
 
       {/* Preset selector – always visible so users can discover and apply templates */}
-      <div className="absolute top-16 right-4 z-50 bg-black/60 backdrop-blur-sm rounded-lg p-2 border border-white/5">
+      <div className="absolute top-16 right-4 z-50 bg-black/60 rounded-md p-2 border border-white/5">
         <Select
           value=""
           onChange={(e) => {
@@ -224,7 +222,7 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
 
       {/* Render tiles */}
       {tiles.map(tile => (
-        <CameraWallTile key={tile.id} tile={tile} />
+        <CameraWallTile key={tile.id} tile={tile} streamRefreshKey={streamRefreshKey} />
       ))}
 
       {/* Empty state */}
@@ -427,6 +425,36 @@ export const CameraWall: React.FC<CameraWallProps> = ({ cameras, onTileClick, on
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={showClearAllConfirm}
+        onClose={() => setShowClearAllConfirm(false)}
+        title="Clear all tiles?"
+        size="sm"
+        footer={
+          <>
+            <Button variant="subtle" onClick={() => setShowClearAllConfirm(false)} className="text-[10px] font-black uppercase tracking-widest">
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                clearAllTiles();
+                trackAction('clear_all_tiles', 'camera_wall');
+                setShowClearAllConfirm(false);
+              }}
+              className="text-[10px] font-black uppercase tracking-widest"
+            >
+              <i className="fas fa-times mr-2" />
+              Clear All
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[color:var(--text-sub)]">
+          Remove all tiles from the camera wall. Saved layouts are not affected.
+        </p>
       </Modal>
     </div>
   );

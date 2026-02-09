@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '../../../services/logger';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
     showLoading,
@@ -87,28 +88,29 @@ export function useLostFoundState(): UseLostFoundStateReturn {
         settings: false,
     });
 
+    const propertyIdFromAuth = currentUser?.roles?.[0];
+
     // Fetch Items
     const refreshItems = useCallback(async (filters?: LostFoundItemFilters) => {
         setLoading(prev => ({ ...prev, items: true }));
         try {
             const response = await lostFoundService.getItems({
                 ...filters,
-                property_id: filters?.property_id
+                property_id: filters?.property_id ?? propertyIdFromAuth
             });
 
             if (response.data) {
                 setItems(response.data);
             }
         } catch (error) {
-            logger.error('Failed to fetch items', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'refreshItems'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to fetch items', err, { module: 'LostFound', action: 'refreshItems' });
+            ErrorHandlerService.logError(err, 'LostFound:refreshItems');
             showError('Failed to load items');
         } finally {
             setLoading(prev => ({ ...prev, items: false }));
         }
-    }, []);
+    }, [propertyIdFromAuth]);
 
     // Get Single Item
     const getItem = useCallback(async (itemId: string): Promise<LostFoundItem | null> => {
@@ -147,10 +149,9 @@ export function useLostFoundState(): UseLostFoundStateReturn {
             dismissLoadingAndShowError(toastId, 'Failed to create item');
             return null;
         } catch (error) {
-            logger.error('Failed to create item', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'createItem'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to create item', err, { module: 'LostFound', action: 'createItem' });
+            ErrorHandlerService.logError(err, 'LostFound:createItem');
             dismissLoadingAndShowError(toastId, 'Failed to create item');
             return null;
         } finally {
@@ -200,10 +201,9 @@ export function useLostFoundState(): UseLostFoundStateReturn {
             dismissLoadingAndShowSuccess(toastId, 'Item deleted successfully');
             return true;
         } catch (error) {
-            logger.error('Failed to delete item', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'deleteItem'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to delete item', err, { module: 'LostFound', action: 'deleteItem' });
+            ErrorHandlerService.logError(err, 'LostFound:deleteItem');
             dismissLoadingAndShowError(toastId, 'Failed to delete item');
             return false;
         } finally {
@@ -254,10 +254,9 @@ export function useLostFoundState(): UseLostFoundStateReturn {
             dismissLoadingAndShowSuccess(toastId, 'Notification sent successfully');
             return true;
         } catch (error) {
-            logger.error('Failed to notify guest', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'notifyGuest'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to notify guest', err, { module: 'LostFound', action: 'notifyGuest' });
+            ErrorHandlerService.logError(err, 'LostFound:notifyGuest');
             dismissLoadingAndShowError(toastId, 'Failed to send notification');
             return false;
         } finally {
@@ -299,10 +298,9 @@ export function useLostFoundState(): UseLostFoundStateReturn {
                 setSettings(response.data);
             }
         } catch (error) {
-            logger.error('Failed to fetch settings', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'refreshSettings'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to fetch settings', err, { module: 'LostFound', action: 'refreshSettings' });
+            ErrorHandlerService.logError(err, 'LostFound:refreshSettings');
         } finally {
             setLoading(prev => ({ ...prev, settings: false }));
         }
@@ -354,10 +352,9 @@ export function useLostFoundState(): UseLostFoundStateReturn {
             dismissLoadingAndShowSuccess(toastId, 'Report exported successfully');
             return true;
         } catch (error) {
-            logger.error('Failed to export report', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'exportReport'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to export report', err, { module: 'LostFound', action: 'exportReport' });
+            ErrorHandlerService.logError(err, 'LostFound:exportReport');
             dismissLoadingAndShowError(toastId, 'Failed to export report');
             return false;
         }
@@ -399,10 +396,9 @@ export function useLostFoundState(): UseLostFoundStateReturn {
             dismissLoadingAndShowSuccess(toastId, 'Items updated successfully');
             return true;
         } catch (error) {
-            logger.error('Failed to update items', error instanceof Error ? error : new Error(String(error)), {
-                module: 'LostFound',
-                action: 'bulkStatusChange'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to update items', err, { module: 'LostFound', action: 'bulkStatusChange' });
+            ErrorHandlerService.logError(err, 'LostFound:bulkStatusChange');
             dismissLoadingAndShowError(toastId, 'Failed to update items');
             return false;
         } finally {

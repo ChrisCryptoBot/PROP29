@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { cn } from '../../../../utils/cn';
 import { formatLocationDisplay } from '../../../../utils/formatLocation';
+import { getSeverityBadgeClass, getStatusBadgeClass, getTypeIcon } from '../../utils/badgeHelpers';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { AgentTrustLevel } from '../../types/incident-log.types';
 import AgentPerformanceModal from '../modals/AgentPerformanceModal';
@@ -102,51 +102,12 @@ export const OverviewTab: React.FC = () => {
         };
     }, [incidents, hardwareDevices]);
 
-    const getSeverityBadgeClass = (severity: string) => {
-        switch (severity.toLowerCase()) {
-            case 'critical': return 'text-red-300 bg-red-500/20 border border-red-500/30';
-            case 'high': return 'text-orange-300 bg-orange-500/20 border border-orange-500/30';
-            case 'medium': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/30';
-            case 'low': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
-            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
-        }
-    };
-
-    const getStatusBadgeClass = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'pending_review': return 'text-amber-300 bg-amber-500/20 border border-amber-500/30';
-            case 'open':
-            case 'active': return 'text-red-300 bg-red-500/20 border border-red-500/30';
-            case 'investigating': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
-            case 'resolved': return 'text-green-300 bg-green-500/20 border border-green-500/30';
-            case 'closed':
-            case 'escalated': return 'text-orange-300 bg-orange-500/20 border border-orange-500/30';
-            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
-        }
-    };
-
-    const getTypeIcon = (type: string) => {
-        switch (type.toLowerCase()) {
-            case 'theft':
-            case 'security breach': return 'fas fa-shield-alt';
-            case 'fire':
-            case 'fire safety': return 'fas fa-fire';
-            case 'medical':
-            case 'guest safety': return 'fas fa-user-shield';
-            case 'flood':
-            case 'facility maintenance': return 'fas fa-tools';
-            case 'guest_complaint':
-            case 'guest relations': return 'fas fa-comments';
-            default: return 'fas fa-exclamation-triangle';
-        }
-    };
-
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Overview</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Overview</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Live incident metrics, mobile agent performance, and hardware integration status
                         {lastSynced && (
                             <span className="ml-2 text-[9px] text-slate-500">
@@ -160,13 +121,13 @@ export const OverviewTab: React.FC = () => {
                     {agentMetrics.totalAgents > 0 && (
                         <div className="flex items-center space-x-1 px-2 py-1 bg-blue-500/10 border border-blue-500/20 rounded">
                             <i className="fas fa-user-shield text-blue-400 text-xs" />
-                            <span className="text-[9px] text-blue-300">{agentMetrics.activeAgents} Agents</span>
+                            <span className="text-[9px] text-white">{agentMetrics.activeAgents} Agents</span>
                         </div>
                     )}
                     {hardwareMetrics.totalDevices > 0 && (
                         <div className="flex items-center space-x-1 px-2 py-1 bg-orange-500/10 border border-orange-500/20 rounded">
                             <i className="fas fa-microchip text-orange-400 text-xs" />
-                            <span className="text-[9px] text-orange-300">{hardwareMetrics.onlineDevices}/{hardwareMetrics.totalDevices} Online</span>
+                            <span className="text-[9px] text-white">{hardwareMetrics.onlineDevices}/{hardwareMetrics.totalDevices} Online</span>
                         </div>
                     )}
                     {agentMetrics.avgTrustScore > 0 && (
@@ -177,79 +138,18 @@ export const OverviewTab: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 mt-2 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-exclamation-triangle text-white text-xl" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active Incidents</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.active}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Open or investigating</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 mt-2 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-search text-white text-xl" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Under Investigation</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.investigating}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Cases in progress</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 mt-2 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-check-circle text-white text-xl" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Resolved Incidents</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.resolved}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Marked resolved</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl group">
-                    <CardContent className="pt-6 px-6 pb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-500/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 mt-2 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-inbox text-white text-xl" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Pending Review</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.pendingReview}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Awaiting approval</p>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Compact metrics bar (gold standard) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Incident metrics">
+                <span>Active <strong className="font-black text-white">{metrics.active}</strong> · Investigating <strong className="font-black text-white">{metrics.investigating}</strong> · Resolved <strong className="font-black text-white">{metrics.resolved}</strong> · Pending review <strong className="font-black text-white">{metrics.pendingReview}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Total <strong className="font-black text-white">{metrics.total}</strong></span>
             </div>
 
-            {/* Agent Performance Overview - PRODUCTION READINESS */}
+            {/* Agent Performance & Hardware (sections per gold standard) */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-2  border border-white/5">
-                                <i className="fas fa-user-shield text-white" />
-                            </div>
-                            <span className="uppercase tracking-tight">Agent Performance</span>
-                        </CardTitle>
+                <section aria-labelledby="il-agent-performance-heading" className="rounded-md border border-white/5 bg-slate-900/30 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 id="il-agent-performance-heading" className="text-sm font-black uppercase tracking-widest text-white">Agent Performance</h3>
                         <Button 
                             variant="outline" 
                             size="sm" 
@@ -260,8 +160,8 @@ export const OverviewTab: React.FC = () => {
                             <i className={cn("fas fa-sync-alt mr-1", loading.agentPerformance && "animate-spin")} />
                             Refresh
                         </Button>
-                    </CardHeader>
-                    <CardContent>
+                    </div>
+                    <div>
                         {loading.agentPerformance && agentPerformanceMetrics.length === 0 ? (
                             <div className="flex flex-col items-center justify-center min-h-[200px] space-y-4">
                                 <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading agent performance" />
@@ -280,20 +180,20 @@ export const OverviewTab: React.FC = () => {
                             <div className="space-y-4">
                                 {/* Agent Metrics Summary */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                    <div className="p-3 bg-white/5 rounded-md border border-white/5">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Agents</p>
                                                 <p className="text-2xl font-black text-white">{agentMetrics.totalAgents}</p>
-                                                <p className="text-[8px] text-green-400">{agentMetrics.activeAgents} active</p>
+                                                <p className="text-[8px] text-white">{agentMetrics.activeAgents} active</p>
                                             </div>
-                                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center">
+                                            <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
                                                 <i className="fas fa-users text-white text-sm" />
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                    <div className="p-3 bg-white/5 rounded-md border border-white/5">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Trust Score</p>
@@ -306,7 +206,7 @@ export const OverviewTab: React.FC = () => {
                                                     {agentMetrics.flaggedAgents} flagged
                                                 </p>
                                             </div>
-                                            <div className="w-8 h-8 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center">
+                                            <div className="w-8 h-8 bg-green-600 rounded-md flex items-center justify-center">
                                                 <i className="fas fa-shield-check text-white text-sm" />
                                             </div>
                                         </div>
@@ -319,8 +219,8 @@ export const OverviewTab: React.FC = () => {
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="p-2 bg-green-500/10 rounded border border-green-500/20">
                                             <div className="text-center">
-                                                <p className="text-sm font-bold text-green-300">{agentMetrics.highTrustAgents}</p>
-                                                <p className="text-[8px] text-green-400">High Trust</p>
+                                                <p className="text-sm font-bold text-white">{agentMetrics.highTrustAgents}</p>
+                                                <p className="text-[8px] text-slate-400">High Trust</p>
                                             </div>
                                         </div>
                                         <div className="p-2 bg-yellow-500/10 rounded border border-yellow-500/20">
@@ -331,8 +231,8 @@ export const OverviewTab: React.FC = () => {
                                         </div>
                                         <div className="p-2 bg-red-500/10 rounded border border-red-500/20">
                                             <div className="text-center">
-                                                <p className="text-sm font-bold text-red-300">{agentMetrics.lowTrustAgents}</p>
-                                                <p className="text-[8px] text-red-400">Low Trust</p>
+                                                <p className="text-sm font-bold text-white">{agentMetrics.lowTrustAgents}</p>
+                                                <p className="text-[8px] text-slate-400">Low Trust</p>
                                             </div>
                                         </div>
                                     </div>
@@ -376,18 +276,12 @@ export const OverviewTab: React.FC = () => {
                                 )}
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </section>
 
-                {/* Hardware Sources Overview - PRODUCTION READINESS */}
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-2  border border-white/5">
-                                <i className="fas fa-microchip text-white" />
-                            </div>
-                            <span className="uppercase tracking-tight">Hardware Sources</span>
-                        </CardTitle>
+                <section aria-labelledby="il-hardware-heading" className="rounded-md border border-white/5 bg-slate-900/30 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 id="il-hardware-heading" className="text-sm font-black uppercase tracking-widest text-white">Hardware Sources</h3>
                         <Button 
                             variant="outline" 
                             size="sm" 
@@ -398,8 +292,8 @@ export const OverviewTab: React.FC = () => {
                             <i className={cn("fas fa-sync-alt mr-1", loading.hardwareDevices && "animate-spin")} />
                             Refresh
                         </Button>
-                    </CardHeader>
-                    <CardContent>
+                    </div>
+                    <div>
                         {loading.hardwareDevices && hardwareDevices.length === 0 ? (
                             <div className="flex flex-col items-center justify-center min-h-[200px] space-y-4">
                                 <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" role="status" aria-label="Loading hardware devices" />
@@ -418,27 +312,27 @@ export const OverviewTab: React.FC = () => {
                             <div className="space-y-4">
                                 {/* Device Status Summary */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                    <div className="p-3 bg-white/5 rounded-md border border-white/5">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Connected Devices</p>
                                                 <p className="text-2xl font-black text-white">{hardwareMetrics.totalDevices}</p>
-                                                <p className="text-[8px] text-green-400">{hardwareMetrics.onlineDevices} online</p>
+                                                <p className="text-[8px] text-white">{hardwareMetrics.onlineDevices} online</p>
                                             </div>
-                                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center">
+                                            <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center">
                                                 <i className="fas fa-server text-white text-sm" />
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                    <div className="p-3 bg-white/5 rounded-md border border-white/5">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Device Incidents</p>
                                                 <p className="text-2xl font-black text-white">{hardwareMetrics.deviceIncidents}</p>
                                                 <p className="text-[8px] text-blue-400">24h period</p>
                                             </div>
-                                            <div className="w-8 h-8 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center">
+                                            <div className="w-8 h-8 bg-orange-600 rounded-md flex items-center justify-center">
                                                 <i className="fas fa-exclamation-triangle text-white text-sm" />
                                             </div>
                                         </div>
@@ -451,20 +345,20 @@ export const OverviewTab: React.FC = () => {
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="p-2 bg-green-500/10 rounded border border-green-500/20">
                                             <div className="text-center">
-                                                <p className="text-sm font-bold text-green-300">{hardwareMetrics.healthyDevices}</p>
-                                                <p className="text-[8px] text-green-400">Healthy</p>
+                                                <p className="text-sm font-bold text-white">{hardwareMetrics.healthyDevices}</p>
+                                                <p className="text-[8px] text-slate-400">Healthy</p>
                                             </div>
                                         </div>
                                         <div className="p-2 bg-red-500/10 rounded border border-red-500/20">
                                             <div className="text-center">
-                                                <p className="text-sm font-bold text-red-300">{hardwareMetrics.offlineDevices}</p>
+                                                <p className="text-sm font-bold text-white">{hardwareMetrics.offlineDevices}</p>
                                                 <p className="text-[8px] text-red-400">Offline</p>
                                             </div>
                                         </div>
                                         <div className="p-2 bg-orange-500/10 rounded border border-orange-500/20">
                                             <div className="text-center">
-                                                <p className="text-sm font-bold text-orange-300">{hardwareMetrics.criticalDevices}</p>
-                                                <p className="text-[8px] text-orange-400">Critical</p>
+                                                <p className="text-sm font-bold text-white">{hardwareMetrics.criticalDevices}</p>
+                                                <p className="text-[8px] text-slate-400">Critical</p>
                                             </div>
                                         </div>
                                     </div>
@@ -513,26 +407,20 @@ export const OverviewTab: React.FC = () => {
                                 )}
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </section>
             </div>
 
-            {/* Recent Incidents List */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-2  border border-white/5">
-                            <i className="fas fa-list-alt text-white" />
-                        </div>
-                        <span className="uppercase tracking-tight">Recent Incidents</span>
-                    </CardTitle>
+            {/* Recent Incidents (section per gold standard) */}
+            <section aria-labelledby="il-recent-incidents-heading">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 id="il-recent-incidents-heading" className="text-sm font-black uppercase tracking-widest text-white">Recent Incidents</h3>
                     <Button variant="outline" size="sm" onClick={() => refreshIncidents()} disabled={loading.incidents} className="border-white/5 text-slate-300 hover:bg-white/5 hover:text-white">
                         <i className={cn("fas fa-sync-alt mr-2", loading.incidents && "animate-spin")} />
                         Refresh
                     </Button>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
+                </div>
+                <div className="space-y-4">
                         {incidents.length === 0 ? (
                             <EmptyState
                                 icon="fas fa-shield-alt"
@@ -564,7 +452,7 @@ export const OverviewTab: React.FC = () => {
                                 return (
                                     <div
                                         key={incident.incident_id}
-                                        className="p-4 border border-white/5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors bg-white/5"
+                                        className="p-4 border border-white/5 rounded-md hover:bg-white/5 cursor-pointer transition-colors bg-white/5"
                                         onClick={() => setSelectedIncident(incident)}
                                     >
                                         <div className="flex items-start justify-between">
@@ -636,9 +524,8 @@ export const OverviewTab: React.FC = () => {
                                 );
                             })
                         )}
-                    </div>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
             {/* Agent Performance Modal */}
             <AgentPerformanceModal

@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { logger } from '../../../services/logger';
-import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showError } from '../../../utils/toast';
+import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showError, showSuccess } from '../../../utils/toast';
 import * as soundMonitoringService from '../services/soundMonitoringService';
 import type {
   SoundAlert,
@@ -52,9 +52,13 @@ export interface UseSoundMonitoringStateReturn {
   refreshMetrics: () => Promise<void>;
   refreshAudioVisualization: () => Promise<void>;
   
-  // Settings (future)
+  // Settings
+  settings: SoundMonitoringSettings | null;
+  settingsForm: SoundMonitoringSettings;
+  setSettingsForm: (settings: SoundMonitoringSettings) => void;
   getSettings: () => Promise<SoundMonitoringSettings | null>;
   updateSettings: (settings: Partial<SoundMonitoringSettings>) => Promise<void>;
+  resetSettings: () => void;
 }
 
 export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
@@ -105,6 +109,13 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
     timestamp: new Date().toISOString()
   });
   const [selectedAlert, setSelectedAlert] = useState<SoundAlert | null>(null);
+  const [settings, setSettings] = useState<SoundMonitoringSettings | null>(null);
+  const [settingsForm, setSettingsForm] = useState<SoundMonitoringSettings>({
+    alertThreshold: 70,
+    notificationEnabled: true,
+    autoAcknowledge: false,
+    zones: [],
+  });
   
   const [loading, setLoading] = useState({
     alerts: false,
@@ -212,7 +223,7 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
         module: 'SoundMonitoring',
         action: 'refreshAudioVisualization'
       });
-      // Don't show error toast (non-critical, mock data for now)
+      // Don't show error toast (non-critical)
     } finally {
       setLoading(prev => ({ ...prev, audio: false }));
     }
@@ -341,6 +352,10 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
   const getSettings = useCallback(async (): Promise<SoundMonitoringSettings | null> => {
     try {
       const data = await soundMonitoringService.getSettings();
+      if (data) {
+        setSettings(data);
+        setSettingsForm(data);
+      }
       return data;
     } catch (error) {
       logger.error('Failed to get sound monitoring settings', error instanceof Error ? error : new Error(String(error)), {
@@ -354,7 +369,7 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
   /**
    * Update settings (with RBAC check)
    */
-  const updateSettings = useCallback(async (settings: Partial<SoundMonitoringSettings>): Promise<void> => {
+  const updateSettings = useCallback(async (settingsUpdate: Partial<SoundMonitoringSettings>): Promise<void> => {
     // RBAC CHECK
     if (!canUpdateSettings) {
       showError('You do not have permission to update settings');
@@ -363,7 +378,10 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
     
     const toastId = showLoading('Updating settings...');
     try {
-      await soundMonitoringService.updateSettings(settings);
+      await soundMonitoringService.updateSettings(settingsUpdate);
+      const updatedSettings = { ...settingsForm, ...settingsUpdate };
+      setSettings(updatedSettings);
+      setSettingsForm(updatedSettings);
       dismissLoadingAndShowSuccess(toastId, 'Settings updated successfully');
       logger.info('Sound monitoring settings updated', { module: 'SoundMonitoring' });
     } catch (error) {
@@ -374,7 +392,21 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
       });
       throw error;
     }
-  }, [canUpdateSettings]);
+  }, [canUpdateSettings, settingsForm]);
+  
+  /**
+   * Reset settings to defaults
+   */
+  const resetSettings = useCallback(() => {
+    const defaults: SoundMonitoringSettings = {
+      alertThreshold: 70,
+      notificationEnabled: true,
+      autoAcknowledge: false,
+      zones: [],
+    };
+    setSettingsForm(defaults);
+    showSuccess('Settings reset to defaults');
+  }, []);
   
   // ============================================
   // INITIAL DATA LOAD
@@ -386,7 +418,9 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
     refreshZones();
     refreshMetrics();
     refreshAudioVisualization();
-  }, [refreshAlerts, refreshZones, refreshMetrics, refreshAudioVisualization]);
+    getSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
   
   // ============================================
   // RETURN
@@ -417,7 +451,11 @@ export function useSoundMonitoringState(): UseSoundMonitoringStateReturn {
     refreshZones,
     refreshMetrics,
     refreshAudioVisualization,
+    settings,
+    settingsForm,
+    setSettingsForm,
     getSettings,
     updateSettings,
+    resetSettings,
   };
 }

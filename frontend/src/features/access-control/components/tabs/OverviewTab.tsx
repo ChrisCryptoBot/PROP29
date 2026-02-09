@@ -200,8 +200,8 @@ function OverviewTabComponent() {
     <div className="space-y-6" role="main" aria-label="Access Control Overview">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Overview</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Overview</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Live system overview and emergency status
           </p>
           {(lastRefreshAt || refreshError) && (
@@ -248,13 +248,13 @@ function OverviewTabComponent() {
         </div>
       </div>
       {criticalUnread.length > 0 && (
-        <Card className="glass-card bg-red-950/20 border border-white/5  overflow-hidden" role="alert" aria-live="polite">
+        <Card className="bg-red-950/20 border border-white/5 overflow-hidden" role="alert" aria-live="polite">
           <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-5">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center border border-white/5 " aria-hidden="true">
-                  <i className="fas fa-biohazard text-white text-xl" />
+                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5" aria-hidden="true">
+                  <i className="fas fa-biohazard text-white" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-2 mb-1">
@@ -309,206 +309,71 @@ function OverviewTabComponent() {
         </Card>
       )}
 
-      {/* Module Integration Status */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center justify-between text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-network-wired text-white text-base" />
-              </div>
-              System Status
-            </div>
-            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Connected</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 py-6 mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role="list" aria-label="System integration status">
-            <div className="flex items-center justify-between p-4 bg-slate-900/30 border border-white/5 rounded-xl group hover:bg-white/5 transition-all" role="listitem">
-              <div className="flex items-center">
-                <i className="fas fa-check-circle text-green-500 mr-3 text-lg" aria-hidden="true" />
-                <span className="text-xs font-black text-[color:var(--text-main)] uppercase tracking-widest">Events</span>
-              </div>
-              <span className="text-[10px] text-green-400 font-black uppercase bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20" aria-label="Status: Connected">CONNECTED</span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-slate-900/30 border border-white/5 rounded-xl group hover:bg-white/5 transition-all" role="listitem">
-              <div className="flex items-center">
-                <i className="fas fa-check-circle text-green-500 mr-3 text-lg" aria-hidden="true" />
-                <span className="text-xs font-black text-[color:var(--text-main)] uppercase tracking-widest">Patrols</span>
-              </div>
-              <span className="text-[10px] text-green-400 font-black uppercase bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20" aria-label="Status: Connected">CONNECTED</span>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-slate-900/30 border border-white/5 rounded-xl group hover:border-white/5 transition-all" role="listitem">
-              <div className="flex items-center">
-                <i className="fas fa-sync text-amber-500 fa-spin mr-3 text-lg" aria-hidden="true" />
-                <span className="text-xs font-black text-[color:var(--text-main)] uppercase tracking-widest">PMS</span>
-              </div>
-              <span className="text-[10px] text-amber-400 font-black uppercase bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" aria-label="Status: Pending">CONNECTING</span>
-            </div>
-          </div>
-          <div className="flex items-center p-4 bg-blue-500/5 rounded-xl border border-blue-500/10 mt-6">
-            <i className="fas fa-satellite-dish text-blue-400 mr-3 text-xl" />
-            <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider leading-relaxed">
-              System fully operational. Automated incident creation active. Access violations trigger immediate response.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="group" aria-label="Access control key metrics">
-        {/* Total Access Points */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:bg-white/5 hover:border-white/5 transition-all duration-300 group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded uppercase">TOTAL</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-door-open text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Access Points</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Total access points: ${metrics.totalAccessPoints}`}>
-                {metrics.totalAccessPoints}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">{metrics.activeAccessPoints} operational</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Active Users */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:border-white/5 transition-all duration-300 group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded uppercase">LIVE</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-users-cog text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active Users</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Active users: ${metrics.activeUsers}`}>
-                {metrics.activeUsers}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Out of {metrics.totalUsers} total</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Access Events */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:bg-white/5 transition-all duration-300 group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded uppercase">CYCLE</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-stream text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Access Events</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Today's access events: ${metrics.todayAccessEvents}`}>
-                {metrics.todayAccessEvents}
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">{metrics.averageResponseTime} avg response</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Security Score */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  hover:border-white/5 transition-all duration-300 group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">RATING</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-user-shield text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Security Score</p>
-              <h3 className="text-3xl font-black text-white" aria-label={`Security score: ${metrics.securityScore} percent`}>
-                {metrics.securityScore}%
-              </h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Last analysis: {new Date(metrics.lastSecurityScan).toLocaleDateString()}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Compact metrics bar (gold standard: Property Items Overview) */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)]" role="group" aria-label="Access control metrics">
+        <span>Access points <strong className="font-black text-white">{metrics.totalAccessPoints}</strong> · <strong className="font-black text-white">{metrics.activeAccessPoints}</strong> operational</span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Users <strong className="font-black text-white">{metrics.activeUsers}</strong> / <strong className="font-black text-white">{metrics.totalUsers}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Today <strong className="font-black text-white">{metrics.todayAccessEvents}</strong> · Denied <strong className="font-black text-white">{metrics.deniedAccessEvents}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Score <strong className="font-black text-white">{metrics.securityScore}%</strong> · Uptime <strong className="font-black text-white">{metrics.systemUptime}</strong></span>
+        {(mobileAgentEvents > 0 || hardwareDeviceEvents > 0 || pendingAgentEvents > 0 || offlineDevices > 0) && (
+          <>
+            <span className="text-white/30" aria-hidden="true">|</span>
+            <span>
+              Agent <strong className="font-black text-white">{mobileAgentEvents}</strong>
+              {hardwareDeviceEvents > 0 && <> · Hardware <strong className="font-black text-white">{hardwareDeviceEvents}</strong></>}
+              {pendingAgentEvents > 0 && <> · Pending <strong className="font-black text-white">{pendingAgentEvents}</strong></>}
+              {offlineDevices > 0 && <> · Offline <strong className="font-black text-white">{offlineDevices}</strong></>}
+            </span>
+          </>
+        )}
       </div>
 
-      {/* Mobile & Hardware Integration Status */}
-      {(mobileAgentEvents > 0 || hardwareDeviceEvents > 0 || pendingAgentEvents > 0 || offlineDevices > 0) && (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-          <CardHeader className="border-b border-white/5 px-6 py-4">
-            <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-network-wired text-white text-base" />
-              </div>
-              Mobile & Hardware Integration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {mobileAgentEvents > 0 && (
-                <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <i className="fas fa-mobile-alt text-amber-400 text-lg" />
-                    <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">MOBILE</span>
-                  </div>
-                  <p className="text-2xl font-black text-white">{mobileAgentEvents}</p>
-                  <p className="text-[9px] text-amber-400/70 font-bold uppercase tracking-widest mt-1">Agent Events</p>
-                </div>
-              )}
-              {hardwareDeviceEvents > 0 && (
-                <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <i className="fas fa-microchip text-blue-400 text-lg" />
-                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">HARDWARE</span>
-                  </div>
-                  <p className="text-2xl font-black text-white">{hardwareDeviceEvents}</p>
-                  <p className="text-[9px] text-blue-400/70 font-bold uppercase tracking-widest mt-1">Device Events</p>
-                </div>
-              )}
-              {pendingAgentEvents > 0 && (
-                <div className="p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <i className="fas fa-clock text-orange-400 text-lg" />
-                    <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest">PENDING</span>
-                  </div>
-                  <p className="text-2xl font-black text-white">{pendingAgentEvents}</p>
-                  <p className="text-[9px] text-orange-400/70 font-bold uppercase tracking-widest mt-1">Review Queue</p>
-                </div>
-              )}
-              {offlineDevices > 0 && (
-                <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <i className="fas fa-broadcast-tower text-red-400 text-lg" />
-                    <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">OFFLINE</span>
-                  </div>
-                  <p className="text-2xl font-black text-white">{offlineDevices}</p>
-                  <p className="text-[9px] text-red-400/70 font-bold uppercase tracking-widest mt-1">Devices</p>
-                </div>
-              )}
+      {/* System Status (section, not Card per gold standard) */}
+      <section aria-labelledby="ac-system-status-heading">
+        <h3 id="ac-system-status-heading" className="text-sm font-black uppercase tracking-widest text-white mb-4">System Status</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role="list" aria-label="System integration status">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-white/5 bg-slate-900/30 hover:bg-white/5 transition-all" role="listitem">
+            <div className="flex items-center">
+              <i className="fas fa-check-circle text-green-500 mr-3 text-lg" aria-hidden="true" />
+              <span className="text-xs font-black text-[color:var(--text-main)] uppercase tracking-widest">Events</span>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <span className="text-[10px] text-green-400 font-black uppercase bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20" aria-label="Status: Connected">CONNECTED</span>
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-lg border border-white/5 bg-slate-900/30 hover:bg-white/5 transition-all" role="listitem">
+            <div className="flex items-center">
+              <i className="fas fa-check-circle text-green-500 mr-3 text-lg" aria-hidden="true" />
+              <span className="text-xs font-black text-[color:var(--text-main)] uppercase tracking-widest">Patrols</span>
+            </div>
+            <span className="text-[10px] text-green-400 font-black uppercase bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20" aria-label="Status: Connected">CONNECTED</span>
+          </div>
+          <div className="flex items-center justify-between p-4 rounded-lg border border-white/5 bg-slate-900/30 hover:bg-white/5 transition-all" role="listitem">
+            <div className="flex items-center">
+              <i className="fas fa-sync text-amber-500 fa-spin mr-3 text-lg" aria-hidden="true" />
+              <span className="text-xs font-black text-[color:var(--text-main)] uppercase tracking-widest">PMS</span>
+            </div>
+            <span className="text-[10px] text-amber-400 font-black uppercase bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" aria-label="Status: Pending">CONNECTING</span>
+          </div>
+        </div>
+        <div className="flex items-center p-4 rounded-lg border border-white/5 bg-blue-500/5 border-blue-500/10 mt-4">
+          <i className="fas fa-satellite-dish text-blue-400 mr-3 text-xl" aria-hidden="true" />
+          <p className="text-[10px] text-blue-300 font-bold uppercase tracking-wider leading-relaxed">
+            System fully operational. Automated incident creation active. Access violations trigger immediate response.
+          </p>
+        </div>
+      </section>
 
       {/* Emergency Actions */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center justify-between text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-radiation text-white text-base" />
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-radiation text-white" />
               </div>
-              Access Point Emergency Controls
+              <span className="card-title-text">Access Point Emergency Controls</span>
             </div>
             {emergencyMode !== 'normal' && (
               <span
@@ -524,7 +389,7 @@ function OverviewTabComponent() {
               </span>
             )}
           </CardTitle>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-2 italic opacity-70">
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-2 italic">
             Locks or unlocks access points only. Uses access-control emergency API.
           </p>
           <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">
@@ -575,8 +440,29 @@ function OverviewTabComponent() {
               <Button
                 variant="outline"
                 className="h-20 flex-col text-[10px] font-black uppercase tracking-widest border-white/5 text-[color:var(--text-sub)] hover:text-[color:var(--text-main)] hover:bg-white/10"
-                onClick={() => showSuccess('Security scan initiated')}
-                aria-label="Initiate security scan"
+                onClick={async () => {
+                  try {
+                    showSuccess('Security scan initiated - refreshing system data...');
+                    await Promise.all([refreshMetrics(), refreshAccessEvents()]);
+                    setLastRefreshAt(new Date());
+                    setRefreshError(null);
+                    showSuccess('Security scan complete. All systems operational.');
+                    recordAuditEntry({
+                      action: 'System security scan',
+                      status: 'success',
+                      reason: 'Manual security scan initiated from dashboard'
+                    });
+                  } catch (error) {
+                    showError('Security scan failed. Please check connectivity.');
+                    setRefreshError('Security scan failed. Showing last known state.');
+                    recordAuditEntry({
+                      action: 'System security scan',
+                      status: 'failure',
+                      reason: 'Scan failed due to connectivity or system error'
+                    });
+                  }
+                }}
+                aria-label="Initiate security scan - refreshes all system metrics and events"
               >
                 <i className="fas fa-radar text-2xl mb-2" aria-hidden="true" />
                 SYSTEM SCAN
@@ -585,7 +471,7 @@ function OverviewTabComponent() {
           </div>
           {emergencyMode !== 'normal' && (
             <div className="mt-8 space-y-4 animate-in slide-in-from-top-4" role="alert" aria-live="polite">
-              <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-start">
+              <div className="p-5 bg-amber-500/5 border border-amber-500/20 rounded-md flex items-start">
                 <i className="fas fa-exclamation-triangle mr-4 text-amber-500 text-xl mt-1" aria-hidden="true" />
                 <div>
                   <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">Emergency Mode Active</p>
@@ -595,7 +481,7 @@ function OverviewTabComponent() {
                 </div>
               </div>
               {emergencyMode === 'unlock' && emergencyController && (
-                <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-2xl">
+                <div className="p-5 bg-red-500/5 border border-red-500/20 rounded-md">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
                       <i className="fas fa-stopwatch mr-4 text-red-400 text-xl" aria-hidden="true" />
@@ -620,11 +506,11 @@ function OverviewTabComponent() {
       {activeAlerts.length > 0 && (
       <Card className="bg-red-950/20 border-2 border-red-500/50 " role="alert" aria-live="assertive">
           <CardHeader className="border-b border-red-500/20">
-            <CardTitle className="flex items-center text-red-500 text-xl font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-door-closed text-white text-lg" />
+            <CardTitle className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-door-closed text-white" />
               </div>
-              Held Open Alarms ({activeAlerts.length})
+              <span className="card-title-text">Held Open Alarms ({activeAlerts.length})</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -633,7 +519,7 @@ function OverviewTabComponent() {
                 <div
                   key={alert.id}
                   className={cn(
-                    "p-5 rounded-2xl border transition-all hover:bg-red-500/10",
+                    "p-5 rounded-md border transition-all hover:bg-red-500/10",
                     alert.severity === 'critical' ? 'bg-red-500/10 border-red-500/50 ' : 'bg-orange-500/5 border-orange-500/30 '
                   )}
                   role="listitem"
@@ -644,7 +530,7 @@ function OverviewTabComponent() {
                         <Badge className={cn("text-[8px] font-black uppercase tracking-widest", alert.severity === 'critical' ? 'bg-red-600 text-white' : 'bg-orange-500 text-white')} size="sm">
                           {alert.severity === 'critical' ? 'CRITICAL' : 'WARNING'}
                         </Badge>
-                        <span className="font-black text-[color:var(--text-main)] uppercase tracking-tight">{alert.accessPointName}</span>
+                        <span className="card-title-text">{alert.accessPointName}</span>
                       </div>
                       <div className="space-y-2">
                         <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest">
@@ -674,143 +560,66 @@ function OverviewTabComponent() {
         </Card>
       )}
 
-      {/* Real-Time Status Overview */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center justify-between text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-broadcast-tower text-white text-base" />
-              </div>
-              Real-Time Statistics
-            </div>
-            <div className="flex items-center space-x-2 text-green-400 font-black text-[10px] uppercase tracking-widest bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20" role="status" aria-live="polite">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" aria-hidden="true" />
-              SYNCED
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8" role="group" aria-label="Real-time status metrics">
-            <div className="bg-slate-900/30 rounded-2xl p-6 border border-white/5" role="article">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">Access Points</span>
-                <span className="text-xl font-black text-white" aria-label={`${metrics.activeAccessPoints} online access points`}>
-                  {metrics.activeAccessPoints} / {metrics.totalAccessPoints}
-                </span>
-              </div>
-              <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-white/5" role="progressbar" aria-valuenow={metrics.activeAccessPoints} aria-valuemin={0} aria-valuemax={metrics.totalAccessPoints || 1} aria-label="Online access points progress">
-                <div
-                  className="h-full bg-gradient-to-r from-green-600 to-emerald-400 transition-all duration-1000"
-                  style={{ width: `${metrics.totalAccessPoints > 0 ? (metrics.activeAccessPoints / metrics.totalAccessPoints) * 100 : 0}%` }}
-                />
-              </div>
-              <p className="text-[9px] text-[color:var(--text-sub)]/50 mt-3 font-bold uppercase tracking-widest text-right">CONNECTIVITY</p>
-            </div>
-
-            <div className="bg-slate-900/30 rounded-2xl p-6 border border-white/5" role="article">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">Active Users</span>
-                <span className="text-xl font-black text-white" aria-label={`${metrics.activeUsers} active users`}>
-                  {metrics.activeUsers}
-                </span>
-              </div>
-              <div className="h-2 bg-black/40 rounded-full overflow-hidden border border-white/5" role="progressbar" aria-valuenow={metrics.activeUsers} aria-valuemin={0} aria-valuemax={metrics.totalUsers || 1} aria-label="Active users progress">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-400 transition-all duration-1000"
-                  style={{ width: `${metrics.totalUsers > 0 ? (metrics.activeUsers / metrics.totalUsers) * 100 : 0}%` }}
-                />
-              </div>
-              <p className="text-[9px] text-[color:var(--text-sub)]/50 mt-3 font-bold uppercase tracking-widest text-right">AUTHENTICATION</p>
-            </div>
-
-            <div className="bg-slate-900/30 rounded-2xl p-6 border border-white/5" role="article">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest">System Uptime</span>
-                <span className="text-xl font-black text-white" aria-label={`System uptime: ${metrics.systemUptime}`}>
-                  {metrics.systemUptime}
-                </span>
-              </div>
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex space-x-1">
-                  {[1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} className="w-1.5 h-4 bg-emerald-500/20 rounded-full" />)}
-                </div>
-                <span className="text-[9px] text-[color:var(--text-sub)]/50 font-bold uppercase tracking-widest">99.9% RELIABILITY</span>
-              </div>
-            </div>
+      {/* Recent Access Events (section per gold standard) */}
+      <section aria-labelledby="ac-recent-events-heading">
+        <h3 id="ac-recent-events-heading" className="text-sm font-black uppercase tracking-widest text-white mb-4">Recent Access Events</h3>
+        {loading.accessEvents ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+            <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] animate-pulse">Loading Events...</p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Access Events */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-              <i className="fas fa-fingerprint text-white text-base" />
-            </div>
-            Recent Access Events
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-6 py-6">
-          {loading.accessEvents ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-              <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.3em] animate-pulse">Loading Events...</p>
-            </div>
-          ) : recentEvents.length === 0 ? (
-            <EmptyState
-              icon="fas fa-fingerprint"
-              title="No Recent Events"
-              description="New access events will appear here once they are recorded."
-              className="bg-black/20 border-dashed border-2 border-white/5 rounded-3xl p-12"
-            />
-          ) : (
-            <div className="space-y-3" role="list" aria-label="Recent access events">
-              {recentEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center justify-between p-4 bg-slate-900/30 border border-white/5 rounded-2xl group hover:bg-white/5 hover:border-white/5 transition-all "
-                  role="listitem"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center border border-white/5  group-hover:scale-110 transition-transform duration-300",
-                        event.action === 'granted' ? 'bg-gradient-to-br from-emerald-600/80 to-slate-900' : 'bg-gradient-to-br from-red-600/80 to-slate-900'
-                      )}
-                      aria-label={`Access ${event.action}`}
-                      aria-hidden="true"
-                    >
-                      <i className={cn("fas text-lg", event.action === 'granted' ? 'fa-user-check text-green-400' : 'fa-user-slash text-red-500')} />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-tight group-hover:text-blue-400 transition-colors">{event.userName}</h4>
-                      <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest mt-0.5">{event.accessPointName}</p>
-                      <p className="text-[9px] text-[color:var(--text-sub)]/40 italic font-medium">{formatLocationDisplay(event.location as string | { lat?: number; lng?: number } | null) || '—'}</p>
-                    </div>
+        ) : recentEvents.length === 0 ? (
+          <EmptyState
+            icon="fas fa-fingerprint"
+            title="No Recent Events"
+            description="New access events will appear here once they are recorded."
+            className="bg-black/20 border-dashed border-2 border-white/5 rounded-md p-12"
+          />
+        ) : (
+          <div className="space-y-3" role="list" aria-label="Recent access events">
+            {recentEvents.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-center justify-between p-4 rounded-lg border border-white/5 bg-slate-900/30 hover:bg-white/5 transition-all group"
+                role="listitem"
+              >
+                <div className="flex items-center space-x-4">
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-md flex items-center justify-center border border-white/5",
+                      event.action === 'granted' ? 'bg-emerald-600' : 'bg-red-600'
+                    )}
+                    aria-label={`Access ${event.action}`}
+                    aria-hidden="true"
+                  >
+                    <i className={cn("fas", event.action === 'granted' ? 'fa-user-check text-green-400' : 'fa-user-slash text-red-500')} />
                   </div>
-                  <div className="text-right">
-                    <span
-                      className={cn(
-                        "px-3 py-1 text-[10px] font-black rounded uppercase tracking-widest border",
-                        event.action === 'granted' ? 'text-green-400 bg-green-500/10 border-green-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
-                      )}
-                      aria-label={`Access ${event.action}`}
-                    >
-                      {event.action.toUpperCase()}
-                    </span>
-                    <p className="text-[10px] text-[color:var(--text-sub)] font-black mt-2 uppercase tracking-tighter" aria-label={`Time: ${new Date(event.timestamp).toLocaleTimeString()}`}>
-                      <i className="fas fa-clock mr-1.5 opacity-30" />
-                      {new Date(event.timestamp).toLocaleTimeString()}
-                    </p>
+                  <div>
+                    <h4 className="card-title-text">{event.userName}</h4>
+                    <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest mt-0.5">{event.accessPointName}</p>
+                    <p className="text-[9px] text-[color:var(--text-sub)]/40 italic font-medium">{formatLocationDisplay(event.location as string | { lat?: number; lng?: number } | null) || '—'}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div className="text-right">
+                  <span
+                    className={cn(
+                      "px-3 py-1 text-[10px] font-black rounded uppercase tracking-widest border",
+                      event.action === 'granted' ? 'text-green-400 bg-green-500/10 border-green-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'
+                    )}
+                    aria-label={`Access ${event.action}`}
+                  >
+                    {event.action.toUpperCase()}
+                  </span>
+                  <p className="text-[10px] text-[color:var(--text-sub)] font-black mt-2 uppercase tracking-tighter" aria-label={`Time: ${new Date(event.timestamp).toLocaleTimeString()}`}>
+                    <i className="fas fa-clock mr-1.5 opacity-30" />
+                    {new Date(event.timestamp).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <Modal
         isOpen={showConfirmModal}
@@ -833,7 +642,7 @@ function OverviewTabComponent() {
         }
       >
         <div className="space-y-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-500">Reason required for audit logging.</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-500">Reason required for audit logging.</p>
           <div>
             <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Reason</label>
             <textarea

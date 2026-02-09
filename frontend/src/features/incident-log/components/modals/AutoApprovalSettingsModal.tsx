@@ -282,7 +282,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
         >
             <div className="space-y-6">
                 {/* Tab Navigation */}
-                <div className="flex space-x-1 p-1 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex space-x-1 p-1 bg-white/5 rounded-md border border-white/5">
                     {[
                         { key: 'rules', label: 'Rules', icon: 'fa-list' },
                         { key: 'thresholds', label: 'Thresholds', icon: 'fa-sliders-h' },
@@ -295,7 +295,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                             className={cn(
                                 "flex-1 flex items-center justify-center px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-md transition-all",
                                 activeTab === tab.key
-                                    ? "text-white bg-white/10 shadow-lg"
+                                    ? "text-white bg-white/10"
                                     : "text-slate-400 hover:text-white hover:bg-white/5"
                             )}
                         >
@@ -309,7 +309,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                 {activeTab === 'rules' && (
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-white">Approval Rules</h3>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-white">Approval Rules</h3>
                             <Button 
                                 variant="outline" 
                                 size="sm" 
@@ -323,7 +323,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
 
                         <div className="space-y-3">
                             {rules.map((rule, index) => (
-                                <Card key={rule.id} className="glass-card border border-white/5">
+                                <Card key={rule.id} className="bg-slate-900/50 border border-white/5">
                                     <CardContent className="p-4">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
@@ -414,14 +414,14 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                 {/* Thresholds Tab */}
                 {activeTab === 'thresholds' && (
                     <div className="space-y-6">
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-white">Global Thresholds</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                                             <span className="text-sm font-bold text-white">Enable Auto-Approval</span>
                                             <button
                                                 onClick={() => setGlobalSettings(prev => ({ ...prev, enabled: !prev.enabled }))}
@@ -452,7 +452,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                                     ...prev, 
                                                     defaultTrustThreshold: parseInt(e.target.value) 
                                                 }))}
-                                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                                className="w-full h-2 bg-white/10 rounded-md appearance-none cursor-pointer"
                                             />
                                             <div className="flex justify-between text-xs text-slate-400">
                                                 <span>Low Trust (0)</span>
@@ -477,7 +477,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                                             <span className="text-sm font-bold text-white">Audit All Approvals</span>
                                             <button
                                                 onClick={() => setGlobalSettings(prev => ({ ...prev, auditAllApprovals: !prev.auditAllApprovals }))}
@@ -495,7 +495,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                             </button>
                                         </div>
 
-                                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                                             <span className="text-sm font-bold text-white">Allow Manager Overrides</span>
                                             <button
                                                 onClick={() => setGlobalSettings(prev => ({ ...prev, allowOverrides: !prev.allowOverrides }))}
@@ -537,7 +537,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                 {/* Testing Tab */}
                 {activeTab === 'testing' && (
                     <div className="space-y-6">
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-white">Rule Testing</CardTitle>
                                 <p className="text-sm text-slate-400">
@@ -549,7 +549,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                     {rules.filter(r => r.enabled).map(rule => {
                                         const testResult = testRule(rule);
                                         return (
-                                            <div key={rule.id} className="p-4 bg-white/5 rounded-lg border border-white/5">
+                                            <div key={rule.id} className="p-4 bg-white/5 rounded-md border border-white/5">
                                                 <div className="flex justify-between items-start mb-3">
                                                     <h4 className="text-sm font-bold text-white">{rule.name}</h4>
                                                     <span className={cn(
@@ -598,13 +598,13 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
 
                 {/* Advanced Tab */}
                 {activeTab === 'advanced' && (
-                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                    <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white">Advanced Configuration</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
                                     <div className="flex items-center space-x-2">
                                         <i className="fas fa-info-circle text-yellow-400" />
                                         <p className="text-sm text-yellow-200">
@@ -615,7 +615,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-50">
-                                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                                    <Card className="bg-slate-900/50 border border-white/5">
                                         <CardHeader>
                                             <CardTitle className="text-sm text-white">Rule Scheduling</CardTitle>
                                         </CardHeader>
@@ -630,7 +630,7 @@ export const AutoApprovalSettingsModal: React.FC<AutoApprovalSettingsModalProps>
                                         </CardContent>
                                     </Card>
 
-                                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                                    <Card className="bg-slate-900/50 border border-white/5">
                                         <CardHeader>
                                             <CardTitle className="text-sm text-white">Conditional Logic</CardTitle>
                                         </CardHeader>

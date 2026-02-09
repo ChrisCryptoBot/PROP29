@@ -59,8 +59,8 @@ export const SettingsTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Settings">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Settings</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Settings</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Recording, retention, and notifications
           </p>
         </div>
@@ -78,18 +78,18 @@ export const SettingsTab: React.FC = () => {
           Test connection
         </Button>
       </div>
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-              <i className="fas fa-cog text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-cog text-white" />
             </div>
-            System Settings
+            <span className="card-title-text">System Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-8">
           {!canUpdateSettings && (
-            <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-200 text-[10px] font-black uppercase tracking-widest flex items-center">
+            <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-md text-amber-200 text-[10px] font-black uppercase tracking-widest flex items-center">
               <i className="fas fa-lock mr-3 text-amber-500 text-sm" />
               Admin Lock Active. Settings are read-only.
             </div>
@@ -99,7 +99,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Recording Quality</label>
               <select
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.recordingQuality}
                 onChange={(e) => handleChange('recordingQuality', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -112,7 +112,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Archive Period</label>
               <select
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.recordingDuration}
                 onChange={(e) => handleChange('recordingDuration', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -125,7 +125,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Motion Sensitivity</label>
               <select
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.motionSensitivity}
                 onChange={(e) => handleChange('motionSensitivity', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -138,7 +138,7 @@ export const SettingsTab: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">Retention Policy</label>
               <select
-                className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
+                className="w-full bg-white/5 border border-white/5 rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer disabled:opacity-30"
                 value={localSettings.storageRetention}
                 onChange={(e) => handleChange('storageRetention', e.target.value)}
                 disabled={!canUpdateSettings}
@@ -150,7 +150,7 @@ export const SettingsTab: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 p-6 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 p-6 bg-white/5 rounded-md border border-white/5">
             <label className="flex items-center space-x-3 cursor-pointer group">
               <div className="relative flex items-center">
                 <input

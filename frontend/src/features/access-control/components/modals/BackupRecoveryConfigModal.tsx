@@ -92,7 +92,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
     >
       <div className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
             <div>
               <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Backups</h4>
               <p className="text-[10px] text-[color:var(--text-sub)] font-medium italic opacity-60 uppercase tracking-tight">Automated backups for recovery</p>
@@ -107,7 +107,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
           </div>
 
           {config.enabled && (
-            <div className="space-y-4 pl-6 border-l-2 border-white/5">
+            <div className="space-y-4 pl-6">
               <Select
                 id="backup-frequency"
                 label="Backup Frequency"
@@ -126,7 +126,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
               </Select>
 
               {config.backupFrequency === 'custom' && (
-                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl ml-6">
+                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md ml-6">
                   <label htmlFor="custom-schedule" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                     Custom Schedule (SCHEDULE_MANIFEST)
                   </label>
@@ -178,7 +178,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                 </Select>
               )}
 
-              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                 <label htmlFor="retention-days" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                   Snapshot Persistence (Days)
                 </label>
@@ -200,7 +200,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
               <div className="space-y-3 mt-8">
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Encryption & Compression</h5>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">CIPHER_ENCRYPTION</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">AES-256 system-level encryption</p>
@@ -214,7 +214,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">DATA_COMPRESSION</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">High-ratio pulse compression</p>
@@ -233,7 +233,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Snapshot Payload</h5>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col items-center justify-center p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl space-y-3">
+                  <div className="flex flex-col items-center justify-center p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md space-y-3">
                     <span className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest text-center">ACCESS_LOGS</span>
                     <Toggle
                       checked={config.includeAccessLogs}
@@ -244,7 +244,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                     />
                   </div>
 
-                  <div className="flex flex-col items-center justify-center p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl space-y-3">
+                  <div className="flex flex-col items-center justify-center p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md space-y-3">
                     <span className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest text-center">USER_MANIFEST</span>
                     <Toggle
                       checked={config.includeUserData}
@@ -255,7 +255,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                     />
                   </div>
 
-                  <div className="flex flex-col items-center justify-center p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl space-y-3">
+                  <div className="flex flex-col items-center justify-center p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md space-y-3">
                     <span className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest text-center">SYSTEM_CONFIG</span>
                     <Toggle
                       checked={config.includeConfig}
@@ -271,7 +271,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
               <div className="space-y-4 mt-8">
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Automation</h5>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Autonomous Snapshot</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Automatically create backups on sequence</p>
@@ -285,7 +285,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Config-Triggered Backup</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Snapshot on configuration modification</p>
@@ -303,7 +303,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
               <div className="space-y-4 mt-8">
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Integrity & Restore</h5>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Automated Integrity Test</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Periodically verify restoration paths</p>
@@ -317,7 +317,7 @@ export const BackupRecoveryConfigModal: React.FC<BackupRecoveryConfigModalProps>
                   />
                 </div>
 
-                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                   <label htmlFor="restore-point-limit" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                     Restore Point Cap
                   </label>

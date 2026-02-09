@@ -149,13 +149,13 @@ const DataTable: React.FC<DataTableProps> = ({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg border shadow-sm ${className}`}>
+      <div className={`bg-slate-900/50 rounded-lg border border-white/5 ${className}`} role="status" aria-label="Loading table">
         <div className="p-4">
           <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-white/10 rounded w-1/4 mb-4" />
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                <div key={i} className="h-4 bg-white/10 rounded" />
               ))}
             </div>
           </div>
@@ -165,11 +165,11 @@ const DataTable: React.FC<DataTableProps> = ({
   }
 
   return (
-    <div className={`bg-white rounded-lg border shadow-sm ${className}`}>
+    <div className={`bg-slate-900/50 rounded-lg border border-white/5 ${className}`}>
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b border-white/5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-white">
             {safeData.length} {safeData.length === 1 ? 'record' : 'records'}
           </h3>
           {actions && <div>{actions}</div>}
@@ -192,7 +192,7 @@ const DataTable: React.FC<DataTableProps> = ({
                 .filter(col => col.filterable)
                 .map(column => (
                   <div key={column.key} className="relative">
-                    <i className="fas fa-filter absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <i className="fas fa-filter absolute left-2 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" aria-hidden />
                     <input
                       type="text"
                       placeholder={
@@ -204,16 +204,8 @@ const DataTable: React.FC<DataTableProps> = ({
                       }
                       value={filters[column.key] || ''}
                       onChange={e => handleFilterChange(column.key, e.target.value)}
-                      style={{
-                        minWidth: 80,
-                        maxWidth: 110,
-                        fontSize: 13,
-                        padding: '4px 8px 4px 28px',
-                        border: '1.5px solid #dbeafe',
-                        borderRadius: 7,
-                        marginRight: 2
-                      }}
-                      className="pl-8 pr-2 py-1"
+                      className="pl-8 pr-2 py-1 min-w-[80px] max-w-[110px] mr-0.5 text-sm bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/50 focus:outline-none"
+                      aria-label={`Filter by ${column.label}`}
                     />
                   </div>
                 ))}
@@ -225,7 +217,7 @@ const DataTable: React.FC<DataTableProps> = ({
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-white/5 border-b border-white/5">
             <tr>
               {selectable && (
                 <th className="px-4 py-3 text-left">
@@ -233,35 +225,37 @@ const DataTable: React.FC<DataTableProps> = ({
                     type="checkbox"
                     checked={selectedRows.length === paginatedData.length && paginatedData.length > 0}
                     onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-white/5 text-blue-600 focus:ring-blue-500/60 bg-white/5"
+                    aria-label="Select all rows"
                   />
                 </th>
               )}
               {columns.map(column => (
                 <th
                   key={column.key}
-                  className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                    column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                  className={`px-4 py-3 text-left text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] ${
+                    column.sortable ? 'cursor-pointer hover:bg-white/10' : ''
                   }`}
                   style={{ width: column.width }}
                   onClick={() => column.sortable && handleSort(column.key)}
+                  aria-sort={column.sortable && sortColumn === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined}
                 >
                   <div className="flex items-center gap-1">
                     {column.label}
                     {column.sortable && sortColumn === column.key && (
-                      sortDirection === 'asc' ? <i className="fas fa-chevron-up w-4 h-4" /> : <i className="fas fa-chevron-down w-4 h-4" />
+                      sortDirection === 'asc' ? <i className="fas fa-chevron-up w-4 h-4" aria-hidden /> : <i className="fas fa-chevron-down w-4 h-4" aria-hidden />
                     )}
                   </div>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/5">
             {paginatedData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (selectable ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-500"
+                  className="px-4 py-8 text-center text-slate-400"
                 >
                   {emptyMessage}
                 </td>
@@ -270,7 +264,7 @@ const DataTable: React.FC<DataTableProps> = ({
               paginatedData.map((row, index) => (
                 <tr
                   key={row.id || index}
-                  className={`hover:bg-gray-50 ${onRowClick ? 'cursor-pointer' : ''}`}
+                  className={`hover:bg-white/5 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                   onClick={() => onRowClick?.(row)}
                 >
                   {selectable && (
@@ -279,13 +273,14 @@ const DataTable: React.FC<DataTableProps> = ({
                         type="checkbox"
                         checked={selectedRows.some(selectedRow => selectedRow.id === row.id)}
                         onChange={() => handleRowSelect(row)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-white/5 text-blue-600 focus:ring-blue-500/60 bg-white/5"
                         onClick={(e) => e.stopPropagation()}
+                        aria-label={`Select row ${index + 1}`}
                       />
                     </td>
                   )}
                   {columns.map(column => (
-                    <td key={column.key} className="px-4 py-3 text-sm text-gray-900">
+                    <td key={column.key} className="px-4 py-3 text-sm text-white">
                       {column.render ? column.render(row[column.key], row) : row[column.key]}
                     </td>
                   ))}
@@ -298,18 +293,19 @@ const DataTable: React.FC<DataTableProps> = ({
 
       {/* Pagination */}
       {pagination && totalPages > 1 && (
-        <div className="px-4 py-3 border-t bg-gray-50">
+        <div className="px-4 py-3 border-t border-white/5 bg-white/5" aria-label="Table pagination">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-slate-300" aria-live="polite">
               Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} results
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-white/5 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300 hover:text-white focus:ring-2 focus:ring-blue-500/60 focus:outline-none"
+                aria-label="Previous page"
               >
-                <i className="fas fa-chevron-left w-4 h-4" />
+                <i className="fas fa-chevron-left w-4 h-4" aria-hidden />
               </button>
               
               {[...Array(totalPages)].map((_, i) => {
@@ -322,19 +318,21 @@ const DataTable: React.FC<DataTableProps> = ({
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 text-sm border rounded-md ${
+                      className={`px-3 py-1 text-sm border rounded-md focus:ring-2 focus:ring-blue-500/60 focus:outline-none ${
                         isCurrentPage
                           ? 'bg-blue-600 text-white border-blue-600'
-                          : 'border-gray-300 hover:bg-gray-50'
+                          : 'border-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
                       }`}
+                      aria-label={isCurrentPage ? `Page ${page}, current page` : `Go to page ${page}`}
+                      aria-current={isCurrentPage ? 'page' : undefined}
                     >
                       {page}
                     </button>
                   );
                 } else if (page === 2 && currentPage > 4) {
-                  return <span key={page} className="px-2">...</span>;
+                  return <span key={page} className="px-2 text-[color:var(--text-sub)]">...</span>;
                 } else if (page === totalPages - 1 && currentPage < totalPages - 3) {
-                  return <span key={page} className="px-2">...</span>;
+                  return <span key={page} className="px-2 text-[color:var(--text-sub)]">...</span>;
                 }
                 return null;
               })}
@@ -342,9 +340,10 @@ const DataTable: React.FC<DataTableProps> = ({
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-white/5 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 text-slate-300 hover:text-white focus:ring-2 focus:ring-blue-500/60 focus:outline-none"
+                aria-label="Next page"
               >
-                <i className="fas fa-chevron-right w-4 h-4" />
+                <i className="fas fa-chevron-right w-4 h-4" aria-hidden />
               </button>
             </div>
           </div>

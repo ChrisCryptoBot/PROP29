@@ -264,16 +264,6 @@ class TestDigitalHandoverEndpoints:
         data = response.json()
         assert isinstance(data, list)
 
-            "data_type": "access_logs",
-            "format": "csv",
-            "date_range": "last_7_days"
-        }
-        
-        response = client.post("/reports/export", json=export_config, headers=auth_headers)
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert data["status"] == "exported"
-
 class TestEventLogEndpoints:
     """Test Event Log API endpoints."""
     

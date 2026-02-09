@@ -3,16 +3,19 @@
  * Displays storage locations, capacity, and item organization
  */
 
-import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { Progress } from '../../../../components/UI/Progress';
+import { Modal } from '../../../../components/UI/Modal';
 import { useLostFoundContext } from '../../context/LostFoundContext';
 import { cn } from '../../../../utils/cn';
-import { showSuccess } from '../../../../utils/toast';
+import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../../utils/toast';
 import { LostFoundStatus } from '../../types/lost-and-found.types';
 import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
 import { EmptyState } from '../../../../components/UI/EmptyState';
+
+const STORAGE_OPTIONS = ['Storage Room A - Pending', 'Storage Room B - Pending', 'Storage Room C - Pending', 'Storage Room D - Pending'];
 
 export const StorageTab: React.FC = React.memo(() => {
     const {
@@ -20,7 +23,8 @@ export const StorageTab: React.FC = React.memo(() => {
         loading,
         setSelectedItem,
         setShowDetailsModal,
-        refreshItems
+        refreshItems,
+        updateItem
     } = useLostFoundContext();
     
     const { lastRefreshedAt } = useGlobalRefresh();
@@ -87,11 +91,11 @@ export const StorageTab: React.FC = React.memo(() => {
 
     const getStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'found': return 'text-blue-800 bg-blue-100';
-            case 'claimed': return 'text-green-800 bg-green-100';
-            case 'expired': return 'text-yellow-800 bg-yellow-100';
-            case 'donated': return 'text-slate-800 bg-slate-100';
-            default: return 'text-slate-800 bg-slate-100';
+            case 'found': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
+            case 'claimed': return 'text-green-300 bg-green-500/20 border border-green-500/30';
+            case 'expired': return 'text-amber-300 bg-amber-500/20 border border-amber-500/30';
+            case 'donated': return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
+            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
         }
     };
 
@@ -120,13 +124,47 @@ export const StorageTab: React.FC = React.memo(() => {
         ? storageLocations
         : ['Storage Room A - Pending', 'Storage Room B - Pending', 'Storage Room C - Pending', 'Storage Room D - Pending'];
 
+    const locationSectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+    const [transferSource, setTransferSource] = useState<string | null>(null);
+    const [transferTarget, setTransferTarget] = useState('');
+
+    const handleViewAll = useCallback((location: string) => {
+        const el = locationSectionRefs.current[location];
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, []);
+
+    const handleTransferOpen = useCallback((location: string) => {
+        setTransferSource(location);
+        setTransferTarget(displayLocations.filter(l => l !== location)[0] || STORAGE_OPTIONS[0]);
+    }, [displayLocations]);
+
+    const handleTransferConfirm = useCallback(async () => {
+        if (!transferSource || !transferTarget || transferSource === transferTarget || !updateItem) return;
+        const toMove = items.filter(item => (item.storageLocation || 'Storage Room A - Pending') === transferSource);
+        if (toMove.length === 0) {
+            setTransferSource(null);
+            return;
+        }
+        const toastId = showLoading('Transferring items...');
+        try {
+            for (const item of toMove) {
+                await updateItem(item.item_id, { storageLocation: transferTarget });
+            }
+            await refreshItems();
+            dismissLoadingAndShowSuccess(toastId, `Moved ${toMove.length} item(s) to ${transferTarget.split(' - ')[0]}.`);
+            setTransferSource(null);
+        } catch (e) {
+            dismissLoadingAndShowError(toastId, 'Transfer failed. Please try again.');
+        }
+    }, [transferSource, transferTarget, updateItem, refreshItems, items]);
+
     return (
         <div className="space-y-6">
             {/* Gold Standard Page Header */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Storage Management</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Storage Management</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Storage locations, capacity, and item organization
                     </p>
                 </div>
@@ -167,10 +205,10 @@ export const StorageTab: React.FC = React.memo(() => {
                     }).length;
 
                     return (
-                        <Card key={location} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl hover:bg-slate-900/70 transition-colors group">
+                        <Card key={location} className="bg-slate-900/50 border border-white/5 hover:bg-white/5 transition-colors group">
                             <CardContent className="p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                    <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                         <i className="fas fa-warehouse text-white text-lg" />
                                     </div>
                                     <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded text-slate-300 bg-white/5 border border-white/5">
@@ -194,9 +232,14 @@ export const StorageTab: React.FC = React.memo(() => {
             </div>
 
             {/* Storage Location Details */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-white">Storage Location Details</CardTitle>
+                    <CardTitle className="flex items-center">
+                    <div className="card-title-icon-box" aria-hidden="true">
+                      <i className="fas fa-warehouse text-white" />
+                    </div>
+                    <span className="card-title-text">Storage Location Details</span>
+                  </CardTitle>
                     <p className="text-sm text-slate-400 mt-1">Manage items by storage location</p>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -205,10 +248,14 @@ export const StorageTab: React.FC = React.memo(() => {
                             const locationItems = getItemsForLocation(location);
 
                             return (
-                                <div key={location} className="border border-white/5 rounded-lg p-4 bg-white/5">
+                                <div
+                                    key={location}
+                                    ref={(el) => { locationSectionRefs.current[location] = el; }}
+                                    className="border border-white/5 rounded-md p-4 bg-white/5"
+                                >
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center space-x-3">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5">
+                                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                                 <i className="fas fa-warehouse text-white text-lg" />
                                             </div>
                                             <div>
@@ -219,8 +266,9 @@ export const StorageTab: React.FC = React.memo(() => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => showSuccess(`Viewing ${getLocationDisplayName(location)}`)}
+                                            onClick={() => handleViewAll(location)}
                                             className="border-white/5 text-slate-300 hover:bg-white/5 uppercase tracking-wider font-bold"
+                                            aria-label={`View all items in ${getLocationDisplayName(location)}`}
                                         >
                                             <i className="fas fa-eye mr-2" />
                                             View All
@@ -235,10 +283,10 @@ export const StorageTab: React.FC = React.memo(() => {
                                                 return (
                                                     <div
                                                         key={item.item_id}
-                                                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-white/10 transition-colors cursor-pointer bg-slate-900/40 border border-white/5"
+                                                        className="flex items-center space-x-3 p-3 rounded-md hover:bg-white/10 transition-colors cursor-pointer bg-slate-900/40 border border-white/5"
                                                         onClick={() => handleViewDetails(item)}
                                                     >
-                                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center border border-white/5 flex-shrink-0">
+                                                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 flex-shrink-0">
                                                             <i className={cn("text-white text-sm", getCategoryIcon(category))} />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
@@ -279,10 +327,15 @@ export const StorageTab: React.FC = React.memo(() => {
             </Card>
 
             {/* Capacity Alerts */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Capacity Alerts</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-amber-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-exclamation-triangle text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">Capacity Alerts</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Storage locations approaching capacity limits
                     </p>
                 </CardHeader>
@@ -297,7 +350,7 @@ export const StorageTab: React.FC = React.memo(() => {
                             if (percentage < 80) return null;
 
                             return (
-                                <div key={location} className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                                <div key={location} className="flex items-center justify-between p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
                                     <div className="flex items-center space-x-3">
                                         <i className="fas fa-exclamation-triangle text-amber-500" />
                                         <div>
@@ -310,8 +363,9 @@ export const StorageTab: React.FC = React.memo(() => {
                                     <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => showSuccess('Transferring items...')}
+                                        onClick={() => handleTransferOpen(location)}
                                         className="text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                                        aria-label={`Transfer items from ${getLocationDisplayName(location)}`}
                                     >
                                         Transfer Items
                                     </Button>
@@ -327,6 +381,46 @@ export const StorageTab: React.FC = React.memo(() => {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Transfer Items Modal */}
+            <Modal
+                isOpen={!!transferSource}
+                onClose={() => setTransferSource(null)}
+                title="Transfer Items"
+                size="sm"
+                footer={
+                    <>
+                        <Button variant="subtle" onClick={() => setTransferSource(null)}>Cancel</Button>
+                        <Button
+                            variant="primary"
+                            onClick={handleTransferConfirm}
+                            disabled={!transferTarget || transferSource === transferTarget || loading.items}
+                        >
+                            Transfer
+                        </Button>
+                    </>
+                }
+            >
+                {transferSource && (
+                    <div className="space-y-4">
+                        <p className="text-sm text-slate-300">
+                            Move all items from <strong>{getLocationDisplayName(transferSource)}</strong> to:
+                        </p>
+                        <select
+                            value={transferTarget}
+                            onChange={(e) => setTransferTarget(e.target.value)}
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 font-mono [&>option]:bg-slate-900"
+                        >
+                            {displayLocations.filter(l => l !== transferSource).map(loc => (
+                                <option key={loc} value={loc}>{getLocationDisplayName(loc)}</option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-slate-500">
+                            {getItemsForLocation(transferSource).length} item(s) will be moved.
+                        </p>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 });

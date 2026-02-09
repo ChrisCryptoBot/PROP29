@@ -111,6 +111,26 @@ export interface MonthlyHandoverData {
 }
 
 /**
+ * Staff member (from handover config/staff API)
+ */
+export interface StaffMember {
+  id: string;
+  name: string;
+  role?: string;
+  status?: string;
+}
+
+/**
+ * Shift timeline entry (from handover analytics/timeline API)
+ */
+export interface ShiftTimelineEntry {
+  shift: string;
+  time: string;
+  staff: string;
+  status: string;
+}
+
+/**
  * Request types for API operations
  */
 export interface CreateHandoverRequest {

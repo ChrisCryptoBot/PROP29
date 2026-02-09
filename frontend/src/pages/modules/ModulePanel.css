@@ -500,8 +500,6 @@ button.add-btn {
 
 .btn-primary:hover {
   background: #1d4ed8 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* Add Button Styles */
@@ -522,8 +520,6 @@ button.add-btn {
 
 .add-btn:hover {
   background: #1d4ed8 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .btn-secondary {
@@ -708,9 +704,9 @@ button.add-btn {
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  outline: none;
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
   border-color: var(--module-accent);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Cards and Containers */
@@ -980,6 +976,4 @@ button.add-btn:hover,
 input.add-btn:hover,
 a.add-btn:hover {
   background: #1d4ed8 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
 } 

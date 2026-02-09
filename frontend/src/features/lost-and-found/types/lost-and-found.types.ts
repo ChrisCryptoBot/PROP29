@@ -108,6 +108,10 @@ export interface LostFoundItemUpdate {
   category?: string;
   storageLocation?: string;
   guestInfo?: Partial<GuestInfo>;
+  // Weapon manager confirmation (manager confirms they were notified)
+  managerApproved?: boolean;
+  managerApprovedBy?: string;
+  managerApprovedDate?: string;
 }
 
 export interface LostFoundItemFilters {

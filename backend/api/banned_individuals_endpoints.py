@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from schemas import BannedIndividualCreate, BannedIndividualResponse
@@ -7,6 +8,10 @@ from services.banned_individuals_service import BannedIndividualsService
 from api.auth_dependencies import get_current_user, require_admin_role, check_user_has_property_access
 from models import User
 import logging
+
+
+class BannedCheckRequest(BaseModel):
+    name: str
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +74,26 @@ async def add_banned_individual(
     except Exception as e:
         logger.error(f"Error adding banned individual: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/check")
+async def check_banned_individual(
+    body: BannedCheckRequest = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Check if a name matches any banned individual (e.g. before visitor registration)."""
+    try:
+        service = BannedIndividualsService(db)
+        result = service.check_individual(name=body.name.strip() or None)
+        return {
+            "is_banned": result.get("is_banned", False),
+            "matches": result.get("individuals", []),
+            "individuals": result.get("individuals", []),
+        }
+    except Exception as e:
+        logger.error(f"Error checking banned individual: {e}")
+        return {"is_banned": False, "matches": [], "individuals": []}
+
 
 @router.get("/stats")
 async def get_stats(

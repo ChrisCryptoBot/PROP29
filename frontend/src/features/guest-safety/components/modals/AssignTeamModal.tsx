@@ -3,7 +3,7 @@
  * Assign a response team to an incident
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { useGuestSafetyContext } from '../../context/GuestSafetyContext';
@@ -13,12 +13,18 @@ export const AssignTeamModal: React.FC = () => {
     selectedIncident,
     teams,
     assignTeam,
+    refreshTeams,
     showAssignTeamModal,
     setShowAssignTeamModal,
     loading,
   } = useGuestSafetyContext();
 
   const [selectedTeamId, setSelectedTeamId] = useState<string>('');
+
+  // Refresh teams when modal opens so list is up to date
+  useEffect(() => {
+    if (showAssignTeamModal) refreshTeams();
+  }, [showAssignTeamModal, refreshTeams]);
 
   if (!showAssignTeamModal || !selectedIncident) return null;
 
@@ -48,8 +54,18 @@ export const AssignTeamModal: React.FC = () => {
       onClose={handleClose}
       title={`Assign Team - ${selectedIncident.guestName}`}
       size="md"
+      footer={
+        <>
+          <Button type="button" variant="subtle" onClick={handleClose} disabled={loading.actions} className="px-8 font-black uppercase tracking-widest text-[10px]">
+            Cancel
+          </Button>
+          <Button type="submit" form="assign-team-form" variant="primary" disabled={!selectedTeamId || loading.actions} className="px-8 font-black uppercase tracking-widest text-[10px]">
+            {loading.actions ? 'Assigning...' : 'Assign Team'}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="assign-team-form" onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
             Select Team
@@ -74,25 +90,6 @@ export const AssignTeamModal: React.FC = () => {
               No teams available
             </div>
           )}
-        </div>
-
-        <div className="flex justify-end gap-4 pt-4 border-t border-white/5">
-          <Button
-            type="button"
-            variant="outline"
-            className="px-8 font-black uppercase tracking-widest text-[10px] border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
-            onClick={handleClose}
-            disabled={loading.actions}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="px-8 font-black uppercase tracking-widest text-[10px] bg-blue-600 hover:bg-blue-700 text-white border-none"
-            disabled={!selectedTeamId || loading.actions}
-          >
-            {loading.actions ? 'Assigning...' : 'Assign Team'}
-          </Button>
         </div>
       </form>
     </Modal>

@@ -5,14 +5,18 @@
  * Uses the HandoverContext for data management.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
 import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useHandoverContext } from '../../context/HandoverContext';
-import { showSuccess } from '../../../../utils/toast';
+import { showSuccess, showError } from '../../../../utils/toast';
 import { EmptyState } from '../../../../components/UI/EmptyState';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
+import { AddEquipmentModal } from '../modals/AddEquipmentModal';
+import { CreateMaintenanceRequestModal } from '../modals/CreateMaintenanceRequestModal';
+import type { CreateEquipmentRequest, CreateMaintenanceRequestRequest } from '../../types';
 
 export interface EquipmentTabProps {
   // Add any additional props if needed
@@ -21,21 +25,92 @@ export interface EquipmentTabProps {
 /**
  * Equipment Tab Component
  */
-export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
-  const { equipment, maintenanceRequests, loading, createMaintenanceRequest } = useHandoverContext();
+const STANDARD_CHECKLIST_ITEMS = [
+  { item: 'Security patrol completed', category: 'Security' },
+  { item: 'All cameras functional', category: 'Equipment' },
+  { item: 'Communication devices charged', category: 'Equipment' },
+  { item: 'Access control systems verified', category: 'Security' },
+  { item: 'Fire alarm system tested', category: 'Safety' },
+  { item: 'Emergency exits clear', category: 'Safety' },
+  { item: 'Incident reports filed', category: 'Documentation' },
+  { item: 'Equipment logs updated', category: 'Documentation' },
+];
 
-  const handleCompleteTask = (task: string) => {
-    showSuccess(`${task} marked as completed`);
-    // TODO: Implement task completion logic via backend when available
+export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
+  const {
+    equipment,
+    maintenanceRequests,
+    loading,
+    createEquipment,
+    createMaintenanceRequest,
+    updateMaintenanceRequest,
+    refreshEquipment,
+  } = useHandoverContext();
+
+  const [showAddEquipment, setShowAddEquipment] = useState(false);
+  const [showAddMaintenance, setShowAddMaintenance] = useState(false);
+
+  const [standardChecklistCompleted, setStandardChecklistCompleted] = useState<Set<string>>(() => {
+    try {
+      const raw = sessionStorage.getItem('digital-handover-equipment-checklist');
+      if (raw) {
+        const arr = JSON.parse(raw) as string[];
+        return new Set(arr);
+      }
+    } catch {
+      // ignore
+    }
+    return new Set<string>();
+  });
+
+  const persistChecklist = useCallback((next: Set<string>) => {
+    setStandardChecklistCompleted(next);
+    sessionStorage.setItem('digital-handover-equipment-checklist', JSON.stringify([...next]));
+  }, []);
+
+  const handleCompleteTask = async (task: { id: string; description: string }) => {
+    try {
+      await updateMaintenanceRequest(task.id, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+      });
+      showSuccess(`Task completed: ${task.description}`);
+    } catch (err) {
+      ErrorHandlerService.logError(err instanceof Error ? err : new Error(String(err)), 'DigitalHandover:handleCompleteTask');
+      showError('Failed to complete task');
+    }
   };
 
-  const handleNotifyMaintenance = async (requestId: string) => {
+  const handleNotifyMaintenance = async (requestId: string, existingNotes?: string) => {
     try {
-      // TODO: Implement notification logic via backend when available
+      const note = `[Maintenance team notified at ${new Date().toISOString()}]`;
+      await updateMaintenanceRequest(requestId, {
+        notes: (existingNotes || '').trim() ? `${existingNotes}\n${note}` : note,
+      });
       showSuccess('Maintenance team notified');
-    } catch (error) {
-      console.error('Failed to notify maintenance:', error);
+    } catch (err) {
+      ErrorHandlerService.logError(err instanceof Error ? err : new Error(String(err)), 'DigitalHandover:handleNotifyMaintenance');
+      showError('Failed to send notification');
     }
+  };
+
+  const handleChecklistItemComplete = (itemLabel: string) => {
+    persistChecklist(new Set([...standardChecklistCompleted, itemLabel]));
+    showSuccess(`"${itemLabel}" marked complete`);
+  };
+
+  const handleAddEquipmentSubmit = async (data: CreateEquipmentRequest) => {
+    await createEquipment(data);
+    showSuccess('Equipment added');
+    await refreshEquipment();
+    setShowAddEquipment(false);
+  };
+
+  const handleCreateMaintenanceSubmit = async (data: CreateMaintenanceRequestRequest) => {
+    await createMaintenanceRequest(data);
+    showSuccess('Maintenance request created');
+    await refreshEquipment();
+    setShowAddMaintenance(false);
   };
 
   // Calculate equipment status overview from equipment data
@@ -65,13 +140,19 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
 
   const getCategoryIcon = (category: string): string => {
     const iconMap: Record<string, string> = {
-      'Security Cameras': 'fa-video',
-      'Access Control': 'fa-door-closed',
-      'Fire Alarms': 'fa-fire-extinguisher',
-      'Communication': 'fa-walkie-talkie',
-      default: 'fa-cog',
+      security: 'fa-shield-alt',
+      communication: 'fa-walkie-talkie',
+      surveillance: 'fa-video',
+      access_control: 'fa-door-closed',
+      safety: 'fa-fire-extinguisher',
+      maintenance: 'fa-wrench',
+      other: 'fa-cog',
+      Security: 'fa-shield-alt',
+      Equipment: 'fa-cog',
+      Safety: 'fa-fire-extinguisher',
+      Documentation: 'fa-file-alt',
     };
-    return iconMap[category] || iconMap.default;
+    return iconMap[category] || iconMap.other || 'fa-cog';
   };
 
   // Get pending tasks from maintenance requests
@@ -89,30 +170,69 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+        <div>
+          <h2 className="page-title">Equipment & Tasks</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
+            Equipment status and maintenance
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-black uppercase tracking-widest text-[10px] border-white/5"
+            onClick={() => setShowAddEquipment(true)}
+          >
+            <i className="fas fa-plus mr-2" aria-hidden />
+            Add Equipment
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            className="font-black uppercase tracking-widest text-[10px]"
+            onClick={() => setShowAddMaintenance(true)}
+          >
+            <i className="fas fa-wrench mr-2" aria-hidden />
+            Create Maintenance Request
+          </Button>
+        </div>
+      </div>
+
+      {/* Compact metrics bar */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Equipment metrics">
+        <span>Equipment <strong className="font-black text-white">{equipment.length}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Pending tasks <strong className="font-black text-white">{pendingTasks.length}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Maintenance <strong className="font-black text-white">{maintenanceRequests.length}</strong></span>
+      </div>
+
       {/* Equipment Status Overview */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-700 to-cyan-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-clipboard-check text-white text-sm" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-clipboard-check text-white" />
             </div>
-            Equipment Status Overview
+            <span className="card-title-text">Equipment Status Overview</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6">
           {loading.equipment ? (
-            <div className="text-center py-12">
-              <i className="fas fa-spinner fa-spin text-3xl text-[color:var(--text-sub)] mb-4" />
-              <p className="text-[color:var(--text-sub)]">Loading equipment status...</p>
+            <div className="flex flex-col items-center justify-center py-12 space-y-4" role="status" aria-label="Loading equipment">
+              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading equipment status...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {equipmentOverview.length > 0 ? (
                 equipmentOverview.map((equip, index) => (
-                  <div key={index} className="p-4 border border-[color:var(--border-subtle)]/30 rounded-lg bg-[color:var(--background-base)]/50">
+                  <div key={index} className="p-4 border border-white/5 rounded-lg bg-white/5">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 bg-[color:var(--surface-highlight)] rounded-lg flex items-center justify-center border border-white/5">
-                        <i className={`fas ${equip.icon} text-[color:var(--text-sub)]`} />
+                      <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                        <i className={`fas ${equip.icon} text-white`} />
                       </div>
                       <span
                         className={cn(
@@ -125,7 +245,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                         {equip.operational}/{equip.count}
                       </span>
                     </div>
-                    <h4 className="font-bold text-[color:var(--text-main)] text-sm">{equip.name}</h4>
+                    <h4 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-widest">{equip.name}</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] mt-1 uppercase tracking-wide opacity-80">
                       {equip.operational === equip.count
                         ? 'All Operational'
@@ -149,16 +269,16 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
       </Card>
 
       {/* Pending Tasks */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-                <i className="fas fa-tasks text-white text-sm" />
+            <div className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-tasks text-white" />
               </div>
-              Pending Tasks
+              <span className="card-title-text">Pending Tasks</span>
             </div>
-            <span className="px-3 py-1 text-xs font-black uppercase tracking-wider rounded text-amber-400 bg-amber-500/10 border border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]">
+            <span className="px-3 py-1 text-xs font-black uppercase tracking-wider rounded text-amber-400 bg-amber-500/10 border border-amber-500/20 ">
               {pendingTasks.length} Open
             </span>
           </CardTitle>
@@ -187,9 +307,10 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                       size="sm"
                       variant="outline"
                       className="border-amber-500/30 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 uppercase tracking-wider text-[10px] font-bold"
-                      onClick={() => handleCompleteTask(task.description)}
+                      onClick={() => handleCompleteTask({ id: task.id, description: task.description })}
+                      aria-label={`Complete task: ${task.description}`}
                     >
-                      <i className="fas fa-check mr-2" />
+                      <i className="fas fa-check mr-2" aria-hidden />
                       Complete
                     </Button>
                   </div>
@@ -201,79 +322,70 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
       </Card>
 
       {/* Equipment Checklist */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-list-check text-white text-sm" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-list-check text-white" />
             </div>
-            Standard Equipment Checklist
+            <span className="card-title-text">Standard Equipment Checklist</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6">
           <div className="space-y-3">
-            {[
-              { item: 'Security patrol completed', category: 'Security', completed: true },
-              { item: 'All cameras functional', category: 'Equipment', completed: true },
-              { item: 'Communication devices charged', category: 'Equipment', completed: true },
-              { item: 'Access control systems verified', category: 'Security', completed: true },
-              { item: 'Fire alarm system tested', category: 'Safety', completed: false },
-              { item: 'Emergency exits clear', category: 'Safety', completed: true },
-              { item: 'Incident reports filed', category: 'Documentation', completed: true },
-              { item: 'Equipment logs updated', category: 'Documentation', completed: false },
-            ].map((item, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "p-3 rounded-lg border flex items-center justify-between transition-all",
-                  item.completed
-                    ? 'border-green-500/20 bg-green-500/5'
-                    : 'border-[color:var(--border-subtle)]/30 bg-[color:var(--background-base)]/30'
-                )}
-              >
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center border",
-                      item.completed
-                        ? 'bg-green-500/20 border-green-500/50 text-green-400'
-                        : 'bg-slate-500/10 border-slate-500/30 text-transparent'
-                    )}
-                  >
-                    {item.completed && <i className="fas fa-check text-[10px]" />}
+            {STANDARD_CHECKLIST_ITEMS.map((row, index) => {
+              const completed = standardChecklistCompleted.has(row.item);
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    "p-3 rounded-lg border flex items-center justify-between transition-colors",
+                    completed ? 'border-green-500/20 bg-green-500/5' : 'border-white/5 bg-white/5'
+                  )}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center border",
+                        completed ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-slate-500/10 border-slate-500/30 text-transparent'
+                      )}
+                    >
+                      {completed && <i className="fas fa-check text-[10px]" aria-hidden />}
+                    </div>
+                    <div>
+                      <h5 className={cn(
+                        "font-black text-sm uppercase tracking-wider",
+                        completed ? "text-green-400/80 line-through" : "text-[color:var(--text-main)]"
+                      )}>{row.item}</h5>
+                      <p className="text-[10px] text-[color:var(--text-sub)] uppercase tracking-wider opacity-60">{row.category}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className={cn(
-                      "font-medium text-sm transition-colors",
-                      item.completed ? "text-green-400/80 line-through" : "text-[color:var(--text-main)]"
-                    )}>{item.item}</h5>
-                    <p className="text-[10px] text-[color:var(--text-sub)] uppercase tracking-wider opacity-60">{item.category}</p>
-                  </div>
+                  {!completed && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-[10px] font-bold uppercase tracking-wider"
+                      onClick={() => handleChecklistItemComplete(row.item)}
+                      aria-label={`Mark ${row.item} complete`}
+                    >
+                      Mark Complete
+                    </Button>
+                  )}
                 </div>
-                {!item.completed && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 text-[10px] font-bold uppercase tracking-wider"
-                    onClick={() => handleCompleteTask(item.item)}
-                  >
-                    Mark Complete
-                  </Button>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
 
       {/* Maintenance Requests */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-700 to-red-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-wrench text-white text-sm" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-wrench text-white" />
             </div>
-            Maintenance Requests
+            <span className="card-title-text">Maintenance Requests</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6">
@@ -289,7 +401,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
               </div>
             ) : (
               maintenanceRequests.slice(0, 6).map((request) => (
-                <div key={request.id} className="p-4 border border-[color:var(--border-subtle)]/30 rounded-lg bg-[color:var(--background-base)]/50">
+                <div key={request.id} className="p-4 border border-white/5 rounded-lg bg-white/5">
                   <div className="flex items-center justify-between mb-2">
                     <span
                       className={cn(
@@ -314,7 +426,7 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                       {request.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
-                  <h4 className="font-bold text-[color:var(--text-main)] text-sm">{request.title || request.description}</h4>
+                  <h4 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-widest">{request.title || request.description}</h4>
                   {request.location && (
                     <p className="text-xs text-[color:var(--text-sub)] mt-1">
                       <i className="fas fa-map-marker-alt mr-1" />
@@ -325,9 +437,10 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
                     size="sm"
                     variant="outline"
                     className="w-full mt-3 text-[10px] font-bold uppercase tracking-wider"
-                    onClick={() => handleNotifyMaintenance(request.id)}
+                    onClick={() => handleNotifyMaintenance(request.id, request.notes)}
+                    aria-label="Notify maintenance team"
                   >
-                    <i className="fas fa-bell mr-2" />
+                    <i className="fas fa-bell mr-2" aria-hidden />
                     Notify Maintenance
                   </Button>
                 </div>
@@ -336,6 +449,17 @@ export const EquipmentTab: React.FC<EquipmentTabProps> = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AddEquipmentModal
+        isOpen={showAddEquipment}
+        onClose={() => setShowAddEquipment(false)}
+        onSubmit={handleAddEquipmentSubmit}
+      />
+      <CreateMaintenanceRequestModal
+        isOpen={showAddMaintenance}
+        onClose={() => setShowAddMaintenance(false)}
+        onSubmit={handleCreateMaintenanceSubmit}
+      />
     </div>
   );
 };

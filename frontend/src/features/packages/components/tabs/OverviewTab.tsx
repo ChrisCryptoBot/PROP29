@@ -5,7 +5,6 @@
  */
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { usePackageContext } from '../../context/PackageContext';
 import { cn } from '../../../../utils/cn';
@@ -13,7 +12,12 @@ import { PackageStatus } from '../../types/package.types';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
 
-export const OverviewTab: React.FC = React.memo(() => {
+export interface OverviewTabProps {
+    /** When true, hide the page header (Packages + subtitle); use when embedded in Property Items Overview. */
+    embedded?: boolean;
+}
+
+export const OverviewTab: React.FC<OverviewTabProps> = React.memo(({ embedded = false }) => {
     const {
         packages,
         loading,
@@ -23,6 +27,10 @@ export const OverviewTab: React.FC = React.memo(() => {
         pickupPackage,
         refreshPackages
     } = usePackageContext();
+
+    const handleRefreshList = useCallback(() => {
+        refreshPackages();
+    }, [refreshPackages]);
 
     const [filter, setFilter] = useState<'all' | PackageStatus>('all');
 
@@ -77,100 +85,26 @@ export const OverviewTab: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
-            {/* Gold Standard Page Header */}
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Packages</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
-                        Package delivery and tracking management
-                    </p>
+            {/* Same format as Lost & Found: title + subtitle when not embedded; section title when embedded */}
+            {!embedded ? (
+                <div className="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 className="page-title">Packages and Deliveries</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
+                            Package delivery and tracking management
+                        </p>
+                    </div>
                 </div>
-            </div>
-            {/* Key Metrics - Gold Standard Pattern */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">TOTAL</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-box text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Packages</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.total}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">RECEIVED</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-inbox text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Received Packages</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.received}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded uppercase">NOTIFIED</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-bell text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Notified Guests</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.notified}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">DELIVERED</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-check-circle text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Delivered Today</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.delivered}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
+            ) : (
+                <h3 className="text-sm font-black uppercase tracking-widest text-white mb-4">Packages and Deliveries</h3>
+            )}
+            {/* Compact metrics bar (gold standard — uniform with other modules) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Packages metrics">
+                <span>Total <strong className="font-black text-white">{metrics.total}</strong> · Received <strong className="font-black text-white">{metrics.received}</strong> · Notified <strong className="font-black text-white">{metrics.notified}</strong> · Delivered <strong className="font-black text-white">{metrics.delivered}</strong> · Expired <strong className="font-black text-white">{metrics.expired}</strong></span>
             </div>
 
-            {/* Package Management */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl mb-8">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                            <i className="fas fa-box-open text-white text-lg" />
-                        </div>
-                        Package Management
-                    </CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
-                        Filter and manage package deliveries
-                    </p>
-                </CardHeader>
-                <CardContent className="pt-6 px-6 pb-6">
+            {/* Package list — no card wrapper */}
+            <section className="mb-8">
                     <div className="flex flex-wrap gap-2 mb-8">
                         {['all', PackageStatus.PENDING, PackageStatus.RECEIVED, PackageStatus.NOTIFIED, PackageStatus.DELIVERED, PackageStatus.EXPIRED].map(filterType => (
                             <Button
@@ -202,23 +136,25 @@ export const OverviewTab: React.FC = React.memo(() => {
                             className="bg-black/20 border-dashed border-2 border-white/5"
                             action={{
                                 label: "REFRESH LIST",
-                                onClick: () => console.log('Refresh package list'), // Placeholder logic
+                                onClick: handleRefreshList,
                                 variant: "outline"
                             }}
                         />
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {filteredPackages.map(pkg => (
-                                <Card
+                                <div
                                     key={pkg.package_id}
-                                    className="bg-white/5 border-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer group"
+                                    className="rounded-md border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer group p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
                                     onClick={() => handleViewDetails(pkg)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewDetails(pkg); } }}
                                 >
-                                    <CardContent className="pt-6 px-6 pb-6">
                                         {/* Header with Status */}
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 flex-shrink-0">
                                                     <i className="fas fa-box text-white text-lg" />
                                                 </div>
                                                 <div>
@@ -234,8 +170,8 @@ export const OverviewTab: React.FC = React.memo(() => {
                                             </span>
                                         </div>
 
-                                        {/* Package Details */}
-                                        <div className="space-y-2 mb-4 bg-black/20 rounded-lg p-3 border border-white/5">
+                                        {/* Package Details — flat, no inner box; spacing only */}
+                                        <div className="space-y-2 mb-4">
                                             {pkg.description && (
                                                 <div className="text-sm">
                                                     <span className="text-slate-500 block text-[10px] uppercase tracking-wider mb-0.5">Description</span>
@@ -289,13 +225,11 @@ export const OverviewTab: React.FC = React.memo(() => {
                                                 View
                                             </Button>
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                </div>
                             ))}
                         </div>
                     )}
-                </CardContent>
-            </Card>
+            </section>
         </div>
     );
 });

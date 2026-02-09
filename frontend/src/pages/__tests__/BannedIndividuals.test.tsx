@@ -433,7 +433,7 @@ describe('BannedIndividuals Component', () => {
     });
   });
 
-  it('displays risk analysis or analytics content', () => {
+  it('displays module title', () => {
     renderWithRouter(<BannedIndividuals />);
     
     expect(screen.getByText('Banned Individuals')).toBeInTheDocument();

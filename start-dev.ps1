@@ -95,9 +95,21 @@ Write-Host ""
 # Start backend in a new window
 Write-Host "Starting Backend Server (port 8000)..." -ForegroundColor Yellow
 
+# Ensure backend can find FFmpeg for RTSP camera streams (Security Operations Center)
+$FfmpegBins = @(
+    "C:\ffmpeg\ffmpeg-8.0.1-essentials_build\bin",
+    "C:\ffmpeg\ffmpeg-7.1.1-essentials_build\bin"
+)
+$FfmpegPath = ""
+foreach ($b in $FfmpegBins) {
+    if (Test-Path (Join-Path $b "ffmpeg.exe")) { $FfmpegPath = $b; break }
+}
+
 $BackendScript = @"
 `$ErrorActionPreference = 'Stop'
 Set-Location '$BackendDir'
+# Prepend FFmpeg to PATH so backend can start RTSP->HLS streams (Security Operations cameras)
+if ('$FfmpegPath' -ne '') { `$env:Path = '$FfmpegPath' + ';' + `$env:Path }
 `$env:SECRET_KEY = 'dev-secret-key-change-in-production-1234567890abcdef'
 `$env:DATABASE_URL = 'sqlite:///./proper29.db'
 `$env:ENVIRONMENT = 'development'

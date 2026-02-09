@@ -8,10 +8,6 @@ import React, { Suspense } from 'react';
 import { BannedIndividualsProvider, useBannedIndividualsContext } from '../../../banned-individuals/context/BannedIndividualsContext';
 import { OverviewTab } from '../../../banned-individuals/components/tabs/OverviewTab';
 import { ManagementTab } from '../../../banned-individuals/components/tabs/ManagementTab';
-import { DetectionsTab } from '../../../banned-individuals/components/tabs/DetectionsTab';
-import { AnalyticsTab } from '../../../banned-individuals/components/tabs/AnalyticsTab';
-import { AIAnalyticsTab } from '../../../banned-individuals/components/tabs/AIAnalyticsTab';
-import { SettingsTab } from '../../../banned-individuals/components/tabs/SettingsTab';
 import { CreateIndividualModal } from '../../../banned-individuals/components/modals/CreateIndividualModal';
 import { DetailsModal } from '../../../banned-individuals/components/modals/DetailsModal';
 import { BulkImportModal } from '../../../banned-individuals/components/modals/BulkImportModal';
@@ -26,20 +22,16 @@ const BannedIndividualsTabContent: React.FC = () => {
   const subtabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'management', label: 'Records' },
-    { id: 'detections', label: 'Detections' },
-    { id: 'ai-analytics', label: 'Risk Analysis' },
-    { id: 'analytics', label: 'Analytics' },
-    { id: 'settings', label: 'Settings' },
   ];
 
   const renderSubtab = () => {
     switch (activeTab) {
       case 'overview': return <OverviewTab />;
       case 'management': return <ManagementTab />;
-      case 'detections': return <DetectionsTab />;
-      case 'ai-analytics': return <AIAnalyticsTab />;
-      case 'analytics': return <AnalyticsTab />;
-      case 'settings': return <SettingsTab />;
+      case 'settings':
+      case 'detections':
+      case 'analytics':
+      case 'ai-analytics': return <OverviewTab />; /* removed tabs; show Overview if stale */
       default: return <OverviewTab />;
     }
   };
@@ -48,7 +40,7 @@ const BannedIndividualsTabContent: React.FC = () => {
     <div className="space-y-6">
       {/* Sub-tab Navigation */}
       <div className="flex items-center justify-between border-b border-white/5 pb-4">
-        <div className="flex space-x-1 bg-slate-900/50 rounded-lg p-1 border border-white/5">
+        <div className="flex space-x-1 bg-slate-900/50 rounded-md p-1 border border-white/5">
           {subtabs.map((tab) => (
             <button
               key={tab.id}
@@ -56,7 +48,7 @@ const BannedIndividualsTabContent: React.FC = () => {
               className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded transition-all ${
                 activeTab === tab.id
                   ? 'bg-red-600 text-white border border-red-500/30'
-                  : 'text-white/40 hover:text-white/60'
+                  : 'text-[color:var(--text-sub)] hover:text-[color:var(--text-main)]'
               }`}
             >
               {tab.label}
@@ -65,7 +57,7 @@ const BannedIndividualsTabContent: React.FC = () => {
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
-          variant="destructive"
+          variant="primary"
           className="font-black uppercase tracking-widest px-6"
         >
           <i className="fas fa-plus mr-2" />
@@ -75,8 +67,8 @@ const BannedIndividualsTabContent: React.FC = () => {
 
       {/* Content */}
       <Suspense fallback={
-        <div className="h-96 flex items-center justify-center">
-          <div className="w-12 h-12 border-4 border-white/5 border-t-red-600 rounded-full animate-spin" />
+        <div className="h-96 flex items-center justify-center" role="status" aria-label="Loading banned individuals">
+          <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
         </div>
       }>
         {renderSubtab()}

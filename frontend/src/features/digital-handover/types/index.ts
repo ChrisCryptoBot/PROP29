@@ -19,6 +19,8 @@ export type {
   AttachmentType,
   HandoverMetrics,
   MonthlyHandoverData,
+  StaffMember,
+  ShiftTimelineEntry,
   CreateHandoverRequest,
   UpdateHandoverRequest,
   HandoverFilters,

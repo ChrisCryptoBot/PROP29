@@ -2,20 +2,95 @@
 
 This document defines the visual and interaction standards for the platform's high-contrast "Security Console" aesthetic. It is the **universal reference for auditing every module** in the application.
 
-## Reference implementations (gold-standard modules)
+## Professional Flat Design (Current Standard)
 
-The following modules have been audited and aligned to this document. Use them as the source of truth when auditing other modules:
+The UI uses a **professional, flat, Windows-esque** design. **Do not use glassmorphism, glows, or decorative effects.**
 
-- **Patrol Command Center** — `frontend/src/features/patrol-command-center`
-- **Access Control** — `frontend/src/features/access-control`
-- **Security Operations Center** — `frontend/src/features/security-operations-center`
-- **Incident Log** — `frontend/src/features/incident-log`
+**REMOVE everywhere:**
+- All `backdrop-filter: blur()` and `saturate()` effects
+- All box-shadow glow patterns (`0 0 Xpx rgba(...)`)
+- All `linear-gradient()` backgrounds on buttons/cards (use solid colors)
+- All hover `transform` effects (`translateY`, `scale`)
+- Decorative `::before`/`::after` pseudo-elements with gradients
+- Border-radius > 6px (use 4px or 6px max)
+- Semi-transparent `rgba()` backgrounds where solid colors are appropriate
 
-When in doubt, match patterns (modals, page headers, buttons, cards, borders) to these four modules.
+**USE instead:**
+- Solid background colors (e.g. `#0f172a`, `#1e293b`, `#334155`)
+- Simple `1px solid` borders with solid colors
+- Minimal box-shadow: `0 1px 3px rgba(0,0,0,0.12)` or `none`
+- Simple `:hover` background color changes only (no transforms)
+- Border-radius **4px** maximum for cards/panels
+- Standard focus: `outline: 2px solid #3b82f6; outline-offset: 1px;` (no glowing rings)
+
+**Design tokens (flat):** `--glass-soft-bg` → `#1e293b`; `--glass-card-bg` → `#0f172a`; `--glass-strong-bg` → `#020617`; borders → `#334155` / `#475569`. No glow variables.
+
+## Gold standard reference: Patrol Command Center
+
+**Primary reference for the entire UI:** **Patrol Command Center** — `frontend/src/features/patrol-command-center`.
+
+Use Patrol as the **single source of truth** for:
+- **Module layout:** ModuleShell header + sticky tabs + main content.
+- **Tab bar:** Flat sticky bar, left-aligned tabs, active = white text + 2px blue bottom border (no pill, no glow).
+- **Tab content:** Page header (title + subtitle) → compact metrics bar → Cards/sections with **card header pattern** (icon + title).
+- **Card headers:** Every card section uses an **icon box + title**: `w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5` + Font Awesome icon + `<span className="text-sm font-black uppercase tracking-widest">Section Title</span>`.
+- **Cards:** `bg-slate-900/50 border border-white/5`; no backdrop-blur, no shadow-2xl, no gradients.
+- **Metrics:** Compact metrics bar only at top of Overview/dashboard tabs (no KPI card grids).
+- **Buttons:** Solid colors, no glow shadows, no hover transform.
+- **Modals:** Plain, uniform design app-wide. **Reference:** Patrol Command Center modals (e.g. CreateOfficerModal, CreateTemplateModal). Flat content only — no section divider lines (no `border-b` on headings, no `border-l` on nested blocks). See **§4 Modal (Global Standard)**.
+
+When auditing any module or tab, compare against **Patrol Command Center** (OverviewTab, PatrolManagementTab, DeploymentTab, etc.) and this document.
+
+- **Page-level title:** One main title + subtitle per tab. Section content uses section headings in the same style — no stacked page-style titles.
+- **Metrics bar (canonical):** **Reference:** Patrol Command Center Overview. **Container:** `flex flex-wrap items-center gap-6 py-3 border-b border-white/5 text-sm mb-6` (or `gap-x-4 gap-y-2`). **Items:** label (e.g. `text-slate-400 font-medium`) then `<strong className="text-white ml-1">{value}</strong>`; separate with spacing or ` · `.
+- **Lists and tables:** Use **`<section>` + heading + filters + list/grid**. List items = **bordered divs** (`rounded-lg border p-4` or `rounded-md`), not cards, unless the item is a distinct focus block (see §16).
+- **Cards:** Use cards **only when necessary** (see §16). Default to sections, metrics bars, and bordered blocks.
+
+## Reference implementations (aligned modules)
+
+The following modules are aligned to this document. **Overview and dashboard tops** use a compact metrics bar only (no KPI card grids at top).
+
+- **Patrol Command Center** — `frontend/src/features/patrol-command-center` — **primary reference** for layout, tabs, card headers, metrics bar, and flat styling.
+- **Access Control** — `frontend/src/features/access-control` — Overview: metrics bar; sections.
+- **Security Operations Center** — `frontend/src/features/security-operations-center` — Live View: metrics bar; Card with filters; grid tiles.
+- **Incident Log** — `frontend/src/features/incident-log` — Overview: metrics bar; sections.
+- **Visitor Security** — `frontend/src/features/visitor-security` — Overview: metrics bar; sections.
+- **Guest Safety** — `frontend/src/features/guest-safety` — Incidents tab: metrics bar; Incidents list Card.
+- **Property Items** — `frontend/src/features/property-items` — Overview: metrics bar; section-based content.
+- **Smart Lockers, Smart Parking, IoT Monitoring, Banned Individuals** — Overview: metrics bar; sections/Cards as applicable.
+
+When in doubt, match **Patrol Command Center** and this document.
 
 **Tab names and order:** Canonical tab labels and order for all modules are defined in `docs/MODULE_TABS_NAMES_AND_ORDER.md`. Use that document when auditing tab naming (e.g. Overview, Settings, Analytics) and tab order.
 
-**How to audit a module:** Use the **Universal Module Audit Checklist** (at the end of this document) to audit every module. Work through each section; mark items N/A only where **§32 When patterns apply (optionality)** states the pattern does not apply (e.g. WebSocket N/A for static config modules).
+**Module audit order (sidebar, top to bottom):** When applying gold-standard and UI enhancements across the app, process modules in this order: 1) Patrol Command Center, 2) Access Control, 3) Security Operations Center, 4) Incident Log, 5) Visitor Security, 6) Guest Safety, 7) Property Items, 8) Smart Lockers, 9) Smart Parking, 10) Digital Handover, 11) Team Chat, 12) IoT Monitoring, 13) System Administration.
+
+---
+
+### Auditing a module for gold standard
+
+When you prompt to audit a **specific module** (e.g. “audit Access Control for gold standard” or “ensure Incident Log is gold standard”), use:
+
+1. **This document** — Sections 1–21 and the **Universal Module Audit Checklist** at the end. Work through each checklist section for that module; mark N/A only where **§32 When patterns apply (optionality)** says the pattern does not apply (e.g. WebSocket N/A for static config modules).
+2. **§6A Tab Content Gold Standard** — For **each tab** in the module, compare against **Patrol Command Center** tabs (e.g. OverviewTab, PatrolManagementTab): page header → metrics bar → content (section/Card with icon+title header) → filters/controls → list/grid → empty state. Use the **Tab Audit Checklist (per tab)** in §6A.
+3. **`docs/audits/CARD_GOLDSTANDARD_AUDIT.md`** — Look up that module’s tabs in the “By module — tab-by-tab” table. For each tab marked Overdesigned or Mixed: apply metrics bar where there are KPI card grids; use `<section>` + heading instead of Card section wrappers; use bordered divs for list items unless a card is justified (modals, distinct focus blocks, visual grid tiles).
+4. **`docs/audits/FRONTEND_OVERDESIGN_INEFFICIENCY_AUDIT.md`** — Use the categories that apply to that module (metric card duplication, badge helpers, loading spinners, visual effects, confirm modals, etc.). Fix over-design and redundancy per the recommendations; tie card/metrics bar work to the card audit.
+
+**Sleek minimalism:** Patrol Command Center is the reference for layout, tab structure, card headers, and content flow. Per module, ensure: one page title + subtitle per tab where appropriate; compact metrics bar instead of KPI card grids; card headers with icon + title (§3); sections with headings where cards are not needed; list/table items as bordered divs; cards only where necessary (§16). No backdrop-blur, glow shadows, or gradients; use flat borders and solid icon boxes.
+
+### Common inconsistencies (audit against Patrol)
+
+When comparing other modules to Patrol Command Center, check and fix:
+
+| Area | Patrol gold standard | Avoid |
+|------|------------------------|--------|
+| **Card** | `bg-slate-900/50 border border-white/5` | `bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50`; mixed border tokens |
+| **CardHeader** | `border-b border-white/5 pb-4 px-6 pt-6` | Bare `<CardHeader>`; `border-[color:var(--border-subtle)]/10`; `py-4` only (missing px/pt) |
+| **Card/section title** | `card-title-text`; icon box `card-title-icon-box` or `w-10 h-10 bg-blue-600 rounded-md ... border border-white/5` | `text-xl` / `text-lg`; `font-bold`; `tracking-tight`; gradient/shadow/scale on icon box |
+| **Page title** | `page-title` (tab content) | Inline `text-3xl font-black ...` or `text-white` instead of `var(--text-main)` |
+| **Border radius** | `rounded-md` (4px) or `rounded-lg` for list blocks; max 6px per §1 | `rounded-xl`, `rounded-2xl` on cards/list items |
+| **Effects** | Flat only; `transition-colors` | `backdrop-blur`; `shadow-lg` / `shadow-2xl`; `transition-all` with transform/scale |
+| **List item blocks** | `rounded-md` or `rounded-lg`; `border border-white/5` | `rounded-2xl`; `border-[color:var(--border-subtle)]/30` |
 
 ---
 
@@ -26,19 +101,20 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Surface Card**: `var(--surface-card)` (Dark Surface)
 - **Text Main**: `var(--text-main)` (High-Contrast White)
 - **Text Sub**: `var(--text-sub)` (Muted Slate-500)
-- **Accent Primary**: Blue-500/600 (Glow)
-- **Accent success**: Emerald-500 (Glow)
+- **Accent Primary**: Blue-500/600 (solid, no glow)
+- **Accent success**: Emerald-500 (solid)
 
-### Borders & Effects
-- **Standard Border**: `border-white/5` (The "Precision Edge" standard for all cards and containers)
-- **Glass Card**: `glass-card`, `backdrop-blur-xl`, `bg-slate-900/50`
-- **Inner Rim Glow**: `shadow-[0_0_20px_rgba(255,255,255,0.02)]`
-- **Sunk-In Surface**: `bg-white/[0.03] border border-white/5`
+### Borders & Effects (Flat)
+- **Standard Border**: `border-white/5` or `border-[color:var(--glass-card-border)]` (1px solid)
+- **Card**: `glass-card` or `bg-[color:var(--surface-card)]` with solid background; **no** `backdrop-blur`
+- **Shadow**: `0 1px 3px rgba(0,0,0,0.12)` or `none`; **no** glow box-shadows
+- **Sunk-In Surface**: `bg-[color:var(--glass-soft-bg)] border border-white/5`
 
 ## 2. Typography & Terminology
 
-### Header Hierarchy
-- **Module Title**: `text-3xl font-black uppercase tracking-tighter text-white`
+### Header Hierarchy (global classes)
+- **Module Title** (shell header): use class **`module-header-title`** — defined in `frontend/src/styles/tokens.css` (gold standard: 3xl, font-black, uppercase, tracking-tighter, white).
+- **Page/container title** (tab content): use class **`page-title`** — defined in `frontend/src/styles/tokens.css` (gold standard: 3xl, font-black, uppercase, tracking-tighter, `var(--text-main)`). Use on every tab’s main `<h2>`.
 - **Technical Subtitles**: `text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400`
 - **Navigation/Tab Label**: `font-black uppercase tracking-widest text-[10px]`
 
@@ -57,8 +133,38 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 
 ### Data Typography
 - **Primary Metrics**: `text-3xl font-black text-white` (Always white, never semantic)
+- **All metric numbers**: Use `text-white` for KPI values, counts, percentages, and secondary metric text (e.g. "X active", "X online", "24h period"). Do not use semantic colors (blue, green, yellow, orange) for numeric metrics; reserve those for status badges and alerts only.
 - **Technical Values (IDs, Plates, Currency)**: `font-mono text-white`
-- **Metadata Labels**: `text-slate-500 uppercase font-black tracking-widest text-[9px]`
+- **Metadata Labels**: `text-slate-500 uppercase font-black tracking-widest text-[9px]` (or `text-[10px]` for slightly larger labels)
+
+### Patrol Command Center — Fonts for Containers & Controls (canonical)
+
+Use these typography classes so every module matches Patrol. **Reference:** `frontend/src/features/patrol-command-center`.
+
+| Element | Class (canonical) |
+|--------|----------------------------------------|
+| **Page title (tab)** | **`page-title`** (global class in `styles/tokens.css`) — 3xl, font-black, uppercase, tracking-tighter, `var(--text-main)` |
+| **Page subtitle** | `text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70` |
+| **Section / card title** (icon + title in header) | **`card-title-text`** (global class in `styles/tokens.css`); icon box: **`card-title-icon-box`** or `w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5` |
+| **Metrics bar container** | `flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)]` |
+| **Metrics bar value** | `<strong className="font-black text-white">{value}</strong>` |
+| **Filter pill / small button** | `text-[10px] font-black uppercase tracking-widest`; border `border-white/5` or `border-white/10` |
+| **Primary button** | `variant="primary"` — solid `bg-blue-600`, no glow; text inherits |
+| **Outline / secondary button** | `variant="outline"`; optional `border-white/10 text-slate-300 hover:bg-white/10 hover:text-white` |
+| **FAB (Floating Action Button)** | Circular (`rounded-full`), solid `bg-blue-600` (primary) or `bg-red-600` (destructive); `border-0`; **no** hover scale or pulse |
+| **Modal title** | `text-xl font-black uppercase tracking-tighter text-white mb-6` |
+| **Modal section label** | `text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4` (no border-b) |
+| **Form label** | `block text-xs font-bold text-white mb-2 uppercase tracking-wider` (or `text-[10px] font-black ... tracking-widest` for compact) |
+| **Table header cell** | `text-[9px] font-black uppercase tracking-widest text-slate-500` |
+| **List/grid item title** | `font-black text-white` (or `text-[color:var(--text-main)]`) with `text-sm uppercase tracking-widest` where appropriate |
+| **List/grid item description** | `text-sm text-[color:var(--text-sub)]` or `text-slate-500` |
+| **Status badge** | `text-[10px] font-black uppercase tracking-widest`; border + semantic bg (e.g. `bg-emerald-500/10 text-emerald-400 border-emerald-500/20`) |
+| **KPI label** | `text-[9px] font-black uppercase tracking-widest text-slate-500` |
+| **KPI value** | `text-2xl font-black text-white` (or `text-3xl` for hero metrics) |
+
+**Tab content spacing:** Use `pt-8` or `pt-12` on the top-level tab content wrapper when more space is needed between the tab bar and the page title (e.g. Analytics & Reports).
+
+**Metrics-to-white audit (applied):** Property Items (L&F + Packages OverviewTab); Access Control OverviewTab (metrics bar); Incident Log (OverviewTab status pills, Agent/Hardware metric text, Trust Level Distribution, Top Performers %, Device Health numbers; PredictionsTab Confidence %); Patrol Command Center (RoutesCheckpointsTab + OverviewTab metrics); Security Operations Center (Live View + Analytics metrics bar); Visitor Security OverviewTab (metrics bar); Guest Safety IncidentsTab (metrics bar); Smart Lockers OverviewTab (metrics bar); Smart Parking OverviewTab (metrics bar); IoT Monitoring Overview (combined metrics bar); IoT Environmental OverviewTab (metric count hover); Banned Individuals OverviewTab (Expiring Bans count, days-until-expiration).
 
 ### Terminology "No-Jargon" Rule
 > [!IMPORTANT]
@@ -66,50 +172,47 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Incorrect**: "Initialize Space Asset", "Execute Yield Audit", "Advanced Telemetry"
 - **Correct**: "Add Space", "Revenue Report", "Performance Analytics"
 
-## 3. High-Density Components
+## 3. High-Density Components (Patrol gold standard)
 
-### Integrated Glass Icons
-- **Container**: `w-12 h-12 bg-gradient-to-br from-{color}-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center`
-- **Animation**: `group-hover:scale-110 transition-transform duration-300`
-- **No colored drop shadows**: avoid `shadow-blue-500/20`, `shadow-red-500/20` on icon containers.
+### Card Header Icon (canonical)
+Every card section must use a **flat icon box + title**. **Reference:** Patrol Command Center (OverviewTab, PatrolManagementTab, DeploymentTab, etc.). For a full list of Patrol fonts (containers, buttons, modals), see the table **Patrol Command Center — Fonts for Containers & Controls** in §2 Typography.
+- **Icon box**: `w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5`
+- **Icon**: Font Awesome, e.g. `<i className="fas fa-[icon-name] text-white"></i>`. Use semantic solid colors for variety (e.g. `bg-indigo-600` for deployment, `bg-amber-600` for queue).
+- **Title**: `<span className="text-sm font-black uppercase tracking-widest">Section Title</span>`
+- **No gradients, no shadow, no scale on hover.** Solid background only.
 
-### Patrol Command Center Metric Cards (Canonical)
-- **Card Base**: `bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group`
-- **Icon Tile**: use Integrated Glass Icons (section above), `text-lg` icon size.
-- **Status Capsule (optional)**: `px-2 py-0.5 text-[9px] font-black tracking-widest rounded uppercase` + semantic color class
-- **Label**: `text-[9px] font-black uppercase tracking-widest text-slate-500`
-- **Metric Value**: `text-3xl font-black text-white`
-- **Subtext**: `text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400`
+### Cards (flat)
+- **Card base**: `bg-slate-900/50 border border-white/5` — no `backdrop-blur`, no `shadow-2xl`, no gradients.
+- **Card header**: `CardHeader` with `border-b border-white/5 pb-4 px-6 pt-6`; `CardTitle` with icon box + title (see above). Optional right-side actions (e.g. button) in same row.
+- **Card content**: `CardContent` with `px-6 py-6` or `pt-6`.
 
-### Patrol Command Center KPI Cards (Canonical)
-- **KPI Container**: `p-4 rounded-xl bg-slate-900/30 border border-white/5`
-- **KPI Label**: `text-[9px] font-black uppercase tracking-widest text-slate-500`
-- **KPI Value**: `text-2xl font-black text-white` (use semantic color only for emphasis)
-
-### Glowing Status Badges
-- **Base**: `px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-500`
-- **Success**: `bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]`
-- **Critical/Warning**: `bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]`
+### Status badges (flat)
+- **Base**: `px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border` (or `rounded` for pills)
+- **Success**: `bg-emerald-500/10 text-emerald-400 border-emerald-500/20` — **no** glow box-shadow
+- **Warning/Critical**: `bg-amber-500/10 text-amber-400 border-amber-500/20` — **no** glow box-shadow
+- **Info**: `bg-blue-500/10 text-blue-400 border-blue-500/20`
 
 ## 4. Interaction Patterns
 
-### Muted Glass Buttons (Premium Standard)
-- **Base (Default)**: `bg-white/5 border border-white/5 text-slate-500 font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-md transition-all active:scale-[0.98]`
-- **Hover**: `bg-white/10 text-white border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]`
-- **Semantic Hints**: Use `hover:bg-{color}-500/10 hover:border-{color}-500/20 hover:text-{color}-400` for specific actions (e.g. Save, Delete).
-- **No colored CTA shadows**: remove `shadow-blue-500/20` or `shadow-red-500/30` on header CTAs to match Smart Parking.
+### Secondary / glass-style buttons (flat)
+- **Base**: `bg-white/5 border border-white/5 text-slate-500 font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-md transition-colors`
+- **Hover**: `hover:bg-white/10 hover:text-white hover:border-white/20` — **no** shadow, **no** transform/scale
+- **Semantic hints**: `hover:bg-{color}-500/10 hover:border-{color}-500/20 hover:text-{color}-400` for actions (e.g. Save, Delete). **No** colored drop shadows anywhere.
 
 ### Integrated Card Toggles
 - **Pattern**: A standard `Toggle` component nested inside a `bg-white/5 border-white/5` rounded container.
 - **Layout**: `flex items-center justify-between p-4 hover:bg-white/10 transition-colors`
 
-### Modal (Global Standard) — Patrol-style canonical
+### Modal (Global Standard) — Universal plain design
+
+**This is the single, universal modal design for the entire application.** All modules must use it. **Canonical reference:** Patrol Command Center — `frontend/src/features/patrol-command-center/components/modals/` (e.g. CreateOfficerModal, CreateTemplateModal, AddCheckpointModal). Modals are **plain and uniform**: flat content, spacing-only grouping, no decorative dividing lines.
+
 - **Use the global component**: `components/UI/Modal` only. No custom modal wrappers.
-- **Overlay**: `fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4` — **z-index must exceed the sticky tabs bar** (e.g. `z-[70]`) so modals are never hidden by module chrome.
-- **Container**: `bg-slate-900/70 rounded-lg p-6 border border-white/5 shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto`
+- **Overlay**: `fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4` — **z-index must exceed the sticky tabs bar** (e.g. `z-[70]`) so modals are never hidden by module chrome.
+- **Container**: `bg-slate-900 rounded-md p-6 border border-white/5 max-h-[90vh] overflow-y-auto` — **no** backdrop-blur, **no** shadow-2xl; flat styling only.
 - **Title**: `text-xl font-black uppercase tracking-tighter text-white mb-6`
-- **Content**: Flat layout only. Use `space-y-4` or `space-y-6`. No inner card wrappers (no `p-4 bg-... rounded-xl` per field). Labels (view): `text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1`. Form labels: `block text-xs font-bold text-white mb-2 uppercase tracking-wider`. Values: `text-white font-bold` or `text-white font-mono text-sm` or `text-slate-300 text-sm`.
-- **Inputs**: use the **Standard Input** pattern from section 5. Same for `select`. Buttons: `text-xs font-black uppercase tracking-widest`.
+- **Content — plain, no dividing lines:** Flat layout only. Use `space-y-4` or `space-y-6` for the main content wrapper. **No section divider lines:** Do **not** use `border-b` on section headings or `border-l` / `border-l-2` on nested sections; use **spacing only** (e.g. section label `text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4` with no underline; optional `pl-6` for indented subsections **without** a vertical line). No inner card wrappers (no `p-4 bg-... rounded-xl` per field). Labels (view): `text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1`. Form labels: `block text-xs font-bold text-white mb-2 uppercase tracking-wider`. Values: `text-white font-bold` or `text-white font-mono text-sm` or `text-slate-300 text-sm`.
+- **Inputs**: Use the **Standard Input** pattern from section 5. Same for `select`. Buttons: `text-xs font-black uppercase tracking-widest`.
 - **Actions**: Use the Modal component's **`footer`** prop for all action buttons. Right-aligned row: **Cancel first** (`variant="subtle"`), then primary action (`variant="primary"` for Save/Create, `variant="destructive"` for Delete). Do not place action buttons inside modal content.
 - **No close icon**: Do not render an “X” close button; Cancel is the only close control.
 - **Draggable**: All modals (and the **Global Clock**) are **draggable** for repositioning. Use the same pattern as `components/UI/GlobalClock`: **drag handle** = title bar (modals) or time display (Global Clock); `cursor-move` on the handle; `mousedown` → `mousemove` / `mouseup` to update position; clamp to viewport. Custom modals (e.g. Camera Live) must also support drag via a header/handle. `Modal` supports `draggable` (default `true`); set `draggable={false}` only when needed.
@@ -132,21 +235,23 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
   - `onTabChange`: Tab change handler
   - `actions`: Optional right-side actions (e.g., property selector, refresh button)
 
-### Module Header Structure
-- **Header Container**: `glass-strong border-b border-white/10 shadow-2xl`
-- **Max Width**: `max-w-[1800px] mx-auto px-8 py-8`
-- **Icon Container**: `w-16 h-16 rounded-2xl glass-card flex items-center justify-center`
-- **Icon Size**: `text-2xl text-white`
-- **Title**: `text-3xl font-black uppercase tracking-tighter text-white`
+### Module Header Structure (flat)
+- **Header container**: `glass-strong border-b border-white/10` — **no** shadow-2xl
+- **Max width**: `max-w-[1800px] mx-auto px-8 py-8`
+- **Icon container**: `w-16 h-16 rounded-md glass-card flex items-center justify-center` — **rounded-md** (4–6px), not rounded-2xl
+- **Icon size**: `text-2xl text-white`
+- **Title**: use class **`module-header-title`** (see §2 Header Hierarchy)
 - **Subtitle**: `text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mt-2`
 
-### Tab Navigation Bar
-- **Container**: `sticky top-0 z-[70] bg-[color:var(--console-dark)]/95 backdrop-blur-xl border-b border-white/10 shadow-2xl`
-- **Tab Container**: `flex space-x-1 bg-white/5 p-1 rounded-lg border border-white/10`
-- **Active Tab**: `bg-[rgba(37,99,235,0.3)] text-white border border-[rgba(37,99,235,0.5)] shadow-[0_0_14px_rgba(37,99,235,0.5)]`
-- **Inactive Tab**: `text-slate-300 hover:text-white hover:bg-white/10`
-- **Tab Button**: `px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-md transition-all duration-200`
-- **Focus State**: `focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2`
+### Tab Navigation Bar (gold standard — flat, sticky)
+**Reference:** `components/Layout/ModuleShell.tsx`. Tabs bar is **sticky** (`sticky top-0 z-[70]`) so it stays visible when scrolling.
+- **Bar container**: `sticky top-0 z-[70] shrink-0 border-b border-white/10 bg-[color:var(--console-dark)]` — **no** backdrop-blur, **no** shadow; same background as page.
+- **Inner**: `max-w-[1800px] mx-auto px-6`; **nav**: `flex items-stretch gap-0 -mb-px` (left-aligned, no pill wrapper).
+- **Tab button**: `px-5 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors duration-150`
+- **Active tab**: `text-white border-blue-500` (2px blue bottom border = underline; no background fill, no glow).
+- **Inactive tab**: `text-slate-400 border-transparent hover:text-white hover:bg-white/5 hover:border-white/10`
+- **Focus**: `focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-[-2px]` — standard outline, no ring glow.
+- **Accessibility**: `role="tablist"`, `role="tab"`, `aria-selected={isActive}` on each button.
 
 ### Main Content Container
 - **Container**: `max-w-[1800px] mx-auto px-6 py-8`
@@ -154,19 +259,22 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 
 ## 6. Tab Page Headers (Required on Every Tab)
 
+- **Page-level only:** The **big** title + subtitle format (below) is for the **page** (the tab) only. Do not stack multiple page-style titles (e.g. "Overview" then "Lost & Found" with another big title). When content is integrated (e.g. Overview with two sections), use **one** page title; sections use **section headings** in the same style as each other (e.g. "Lost & Found Items", "Packages and Deliveries").
+- **Section headings:** Use `text-sm font-black uppercase tracking-widest text-white` (or `text-[color:var(--text-main)]`) with `mb-4` where needed. **Reference:** Patrol Command Center (e.g. "Patrol Routes", "Checkpoint Management", "Lost & Found Items"). No subtitle under section headings unless the design explicitly needs it.
+
 ### Standard Page Header Layout
 - **Container**: `flex justify-between items-end mb-8`
-- **Left Side**: Title and subtitle
+- **Left Side**: Title and subtitle (page only)
 - **Right Side**: Optional metadata (last refreshed time, status indicators)
 
 ### Page Title (design tokens)
-- **Title**: `text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter` — use `var(--text-main)` (not raw `text-white`) for consistency across themes.
+- **Title**: use global class **`page-title`** (defined in `styles/tokens.css`) — 3xl, font-black, uppercase, tracking-tighter, `var(--text-main)`.
 - **Subtitle**: `text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70` — use `var(--text-sub)` (not raw `text-slate-400`).
 - **Example**:
   ```tsx
   <div className="flex justify-between items-end mb-8">
     <div>
-      <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Dashboard</h2>
+      <h2 className="page-title">Dashboard</h2>
       <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
         Live system overview and emergency status
       </p>
@@ -179,6 +287,56 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Container**: `text-[10px] font-mono text-slate-500 uppercase tracking-widest`
 - **Format**: "Data as of [time] · Refreshed [relative time]"
 - **Accessibility**: Include `aria-live="polite"` for screen readers
+
+---
+
+## 6A. Patrol Command Center — Tab Content Gold Standard
+
+> **Purpose**: Use **Patrol Command Center** (`frontend/src/features/patrol-command-center`) as the **canonical reference when auditing each tab in each module**. Compare tab layout, structure, and patterns against Patrol tabs (e.g. OverviewTab, PatrolManagementTab, DeploymentTab).
+
+### Tab Structure (Top to Bottom)
+
+1. **Page header** — `flex justify-between items-end mb-8`
+   - **Title**: class **`page-title`** (global)
+   - **Subtitle**: `text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70`
+   - **Right side (optional)**: Last refreshed indicator — `text-[10px] font-mono text-slate-500 uppercase tracking-widest`
+
+2. **Compact metrics bar** — No KPI cards. Inline stats only.
+   - **Container**: `flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)]` with `role="group"` and `aria-label`
+   - **Items**: label + space + `<strong className="font-black text-white">{value}</strong>`
+   - **Separators**: `<span className="text-white/30" aria-hidden="true">|</span>` between items
+
+3. **Content area** — Either `<section>` + heading + list/grid **or** `Card` when justified (see §16)
+   - **When Card**: Use for distinct focus blocks (e.g. visual grid of camera tiles, single table/list container)
+   - **Card structure**: `CardHeader` (border-b, icon + title + optional action) → `CardContent` (filters, controls, grid/list)
+
+4. **Filter / control row**
+   - **Filter pills**: `flex flex-wrap gap-2`; each button `font-black uppercase tracking-widest text-[10px] px-6 h-9`
+   - **Active**: `bg-white/10 border-white/20 text-white`
+   - **Inactive**: `border-white/5 text-slate-400 hover:bg-white/5 hover:text-white`
+   - **Layout controls**: Label `text-[10px] font-black uppercase tracking-widest text-slate-500`; controls inline
+
+5. **Grid or list**
+   - **Grid tiles**: `rounded border border-white/5 p-4` or similar; status badges `px-1.5 py-0.5 text-[9px] font-black rounded uppercase tracking-widest` with semantic colors
+   - **Empty state**: Use `EmptyState` component (no custom empty blocks)
+
+6. **Pagination / footer** (when applicable)
+   - Simple text: `Showing X–Y of Z [items]` — `text-[10px] font-bold text-slate-500 uppercase tracking-widest`
+
+### Tab Audit Checklist (per tab)
+
+When auditing a tab against the Patrol Command Center gold standard:
+
+- [ ] Page header present (title + subtitle)
+- [ ] Metrics bar (no KPI card grid at top)
+- [ ] Section or Card content structure correct per §16
+- [ ] Filter/control styling matches (pills, labels, buttons)
+- [ ] List/grid items use bordered divs unless Card justified
+- [ ] Empty state uses EmptyState component
+- [ ] Loading uses standard spinner pattern (§17)
+- [ ] Typography and colors use design tokens
+
+---
 
 ## 7. Technical Form Standards
 
@@ -240,7 +398,7 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Use**: `components/UI/SearchBar` component
 - **Props**: `value`, `onChange`, `placeholder`, `debounceMs` (default 300ms), `variant` ('default' | 'dark')
 - **Default Variant**: `w-full pl-10 pr-10 py-2 border border-white/20 rounded-lg bg-white/5 text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/60`
-- **Dark Variant**: `w-full pl-10 pr-10 py-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-slate-200 focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/60 shadow-[0_0_18px_rgba(37,99,235,0.2)]`
+- **Dark Variant**: `w-full pl-10 pr-10 py-3 border border-white/20 rounded-lg bg-white/10 text-white placeholder-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50` — **no** glow shadow
 - **Search Icon**: `fas fa-search absolute left-3 top-1/2 -translate-y-1/2`
 - **Clear Button**: Show when `value.length > 0`, `aria-label="Clear search"`
 
@@ -276,14 +434,15 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Sizes**: `sm`, `md`, `lg`
 - **Base Classes**: `inline-flex items-center rounded-full border font-semibold transition-colors`
 
-### Badge Variants
-- **Default**: `border-transparent text-blue-300 bg-white/5 shadow-[0_0_12px_rgba(37,99,235,0.35)]`
-- **Secondary**: `border-transparent text-slate-300 bg-white/5 shadow-[0_0_10px_rgba(148,163,184,0.25)]`
-- **Destructive**: `border-transparent text-red-300 bg-red-500/10 shadow-[0_0_12px_rgba(239,68,68,0.4)]`
+### Badge Variants (flat — no glow)
+- **Default**: `border-transparent text-blue-300 bg-white/5` or `border-blue-500/20 bg-blue-500/10`
+- **Secondary**: `border-transparent text-slate-300 bg-white/5`
+- **Destructive**: `border-transparent text-red-300 bg-red-500/10 border-red-500/20`
 - **Outline**: `text-slate-200 border-white/20 bg-white/5`
-- **Success**: `border-transparent text-green-300 bg-green-500/10 shadow-[0_0_12px_rgba(34,197,94,0.4)]`
-- **Warning**: `border-transparent text-amber-300 bg-amber-500/10 shadow-[0_0_12px_rgba(245,158,11,0.4)]`
-- **Info**: `border-transparent text-cyan-300 bg-cyan-500/10 shadow-[0_0_12px_rgba(34,211,238,0.35)]`
+- **Success**: `border-transparent text-green-300 bg-green-500/10 border-green-500/20`
+- **Warning**: `border-transparent text-amber-300 bg-amber-500/10 border-amber-500/20`
+- **Info**: `border-transparent text-cyan-300 bg-cyan-500/10 border-cyan-500/20`
+- **No** `shadow-[0_0_...]` on any badge.
 
 ### Badge Sizes
 - **sm**: `px-2 py-0.5 text-xs`
@@ -295,10 +454,10 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Position**: Absolute top-right of metric card
 - **Colors**: Use semantic colors (blue, emerald, amber, indigo, purple)
 
-### Glowing Status Badges (Emergency/Critical)
-- **Base**: `px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all duration-500`
-- **Success**: `bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]`
-- **Critical/Warning**: `bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]`
+### Status Badges (Emergency/Critical) — flat
+- **Base**: `px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border`
+- **Success**: `bg-emerald-500/10 text-emerald-400 border-emerald-500/20` — no glow
+- **Critical/Warning**: `bg-amber-500/10 text-amber-400 border-amber-500/20` — no glow
 
 ## 11. Toast/Notification System
 
@@ -370,19 +529,19 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Container**: `p-20` or appropriate padding
 - **Use**: Same EmptyState component with table-appropriate messaging
 
-### Empty State Styling
-- **Container**: `text-center py-20 px-8 rounded-2xl border border-dashed border-[color:var(--border-subtle)]/30 bg-[color:var(--console-dark)]/30 backdrop-blur-sm`
-- **Icon**: `text-5xl text-[color:var(--text-sub)] opacity-20 group-hover:opacity-40 transition-all duration-500 transform group-hover:scale-110`
+### Empty State Styling (flat)
+- **Container**: `text-center py-20 px-8 rounded-md border border-dashed border-[color:var(--border-subtle)]/30 bg-[color:var(--console-dark)]/30` — **no** backdrop-blur
+- **Icon**: `text-5xl text-[color:var(--text-sub)] opacity-20 group-hover:opacity-40 transition-opacity` — **no** scale-110 or transform
 - **Title**: `text-xl font-black text-white mb-2 uppercase tracking-tighter`
 - **Description**: `text-sm text-[color:var(--text-sub)] max-w-xs mx-auto leading-relaxed mb-8 font-medium`
-- **Action Button**: Use `variant="outline"` with standard button styling
+- **Action Button**: Use `variant="outline"` with standard button styling; **no** shadow-lg or glow
 
 ## 14. Data Tables & Lists
 
 ### Table Structure
-- **Container**: Use `Card` component with `CardContent`
+- **Container**: Use `<section>` with a heading, or a single `Card` only when the table is a distinct focus block (see §16 When cards are necessary). Prefer section + table for most list/table content.
 - **Table**: Standard HTML `<table>` with proper semantic structure
-- **Header**: `CardHeader` with `CardTitle` for table title
+- **Header**: Section heading (`<h3>`) or `CardHeader` with `CardTitle` when a card is used
 
 ### Table Styling
 - **Table Base**: `w-full` with proper border styling
@@ -399,10 +558,30 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Empty State**: Show EmptyState component when `data.length === 0`
 
 ### List View (Alternative to Tables)
-- **Container**: `space-y-3` for vertical list
-- **List Item**: Use `Card` component for each item
-- **Item Layout**: Flex or grid layout within card
+- **Container**: `<section>` + heading + filters + grid/list. Use `space-y-3` for vertical list or a grid for item tiles.
+- **List Item**: Use **bordered div** (`rounded-lg border border-white/5 p-4`) for each item unless the item is a distinct focus block (e.g. camera tile, locker tile). Use `Card` only when §16 "When cards are necessary" applies.
+- **Item Layout**: Flex or grid layout within the block
 - **Empty State**: Same EmptyState component
+
+## 14A. DataTable Component (Dark Console)
+
+**Critical:** The shared `components/UI/DataTable.tsx` must use dark console colors only. Light-mode classes break the Security Console aesthetic.
+
+### Required Color Mappings (DataTable)
+- **Container**: `bg-white` → `bg-slate-900/50` or `bg-[color:var(--surface-card)]`; use `border border-white/5`
+- **Skeleton / loading**: `bg-gray-200` → `bg-white/10`; avoid `bg-gray-50`
+- **Header row**: `bg-gray-50` → `bg-white/5`; cell text `text-[9px] font-black text-slate-500 uppercase tracking-widest`
+- **Body**: `bg-white` → transparent or `bg-white/[0.02]`; `divide-gray-200` → `divide-white/5`
+- **Text**: `text-gray-900` → `text-white`; `text-gray-500` → `text-slate-400`; `text-gray-700` → `text-slate-300`
+- **Borders**: `border-gray-200` → `border-white/5`; `border-gray-300` → `border-white/10`
+- **Row hover**: `hover:bg-gray-50` → `hover:bg-white/5`; `hover:bg-gray-100` → `hover:bg-white/10`
+- **Focus**: `focus:ring-blue-500` → `focus:ring-blue-500/60`
+- **Pagination area**: `bg-gray-50 border-t` → `bg-white/5 border-t border-white/5`; page info `text-[10px] font-mono text-slate-500 uppercase tracking-widest` or `text-sm text-slate-300`
+
+### DataTable Accessibility
+- **Sortable headers**: Add `aria-sort={sortColumn === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}` to `<th>`.
+- **Icon-only buttons**: Prev/Next pagination, filter icons, and any action icons must have `aria-label` (e.g. "Previous page", "Next page", "Filter by {column}") and `aria-hidden="true"` on the icon element.
+- **Live regions**: Optional `aria-live="polite"` on the "Showing X–Y of Z" pagination text so updates are announced.
 
 ## 15. Button Variants (Complete System)
 
@@ -411,16 +590,16 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Variants**: `default`, `primary`, `outline`, `ghost`, `destructive`, `subtle`, `link`, `warning`, `glass`
 - **Sizes**: `default`, `sm`, `lg`, `icon`
 
-### Button Variants
+### Button Variants (flat — no glow, no transform)
 - **Default**: `bg-white/5 border border-white/5 text-slate-400 hover:bg-white/10 hover:text-white hover:border-white/10`
-- **Primary**: `bg-[rgba(37,99,235,0.2)] text-white border border-[rgba(37,99,235,0.3)] shadow-[0_0_10px_rgba(37,99,235,0.2)] hover:bg-[rgba(37,99,235,0.3)] hover:shadow-[0_0_15px_rgba(37,99,235,0.4)]`
+- **Primary**: `bg-blue-600 text-white border border-blue-500/50 hover:bg-blue-500` — **no** shadow, **no** glow; solid color only
 - **Outline**: `border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white`
 - **Ghost**: `text-slate-400 hover:bg-white/5 hover:text-white`
 - **Destructive**: `bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300`
 - **Subtle**: `bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white`
 - **Link**: `text-blue-400 hover:text-blue-300 underline-offset-4 hover:underline`
 - **Warning**: `bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300`
-- **Glass**: `bg-white/5 backdrop-blur-sm border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white hover:border-white/20`
+- **Glass**: `bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white hover:border-white/20` — **no** backdrop-blur
 
 ### Button Sizes
 - **default**: `h-10 py-2 px-4 text-sm`
@@ -436,28 +615,44 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 
 ## 16. Card Component Variations
 
-### Card Component (Standard)
-- **Use**: `components/UI/Card` with `CardHeader`, `CardTitle`, `CardContent`
-- **Base**: `bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl`
+> **Cards: use only when necessary.** We **can** keep cards when the design clearly benefits, but **only** then. Default to sections, metrics bars, and bordered blocks; add cards only when one of the cases below applies.
 
-### Metric Card (Canonical)
-- **Container**: `bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group`
-- **Content**: `pt-6 px-6 pb-6 relative`
-- **Status Capsule**: Absolute positioned top-right
-- **Icon Tile**: Integrated Glass Icon pattern
-- **Label**: `text-[9px] font-black uppercase tracking-widest text-slate-500`
-- **Metric Value**: `text-3xl font-black text-white`
-- **Subtext**: `text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400`
+**Card rule audit:** Audit all modules against this section (§16). See **`docs/audits/CARD_GOLDSTANDARD_AUDIT.md`** for a tab-by-tab audit of every feature: which tabs are overdesigned (KPI card grids, section Cards, list items as Cards) vs applicable (modals, distinct focus blocks, visual grid tiles, single table/list container). Apply simplifications **only where applicable** — overview/dashboard KPIs and list wrappers should move to metrics bar + section + bordered divs; keep cards in modals, distinct panels, and visual grids.
 
-### KPI Card
-- **Container**: `p-4 rounded-xl bg-slate-900/30 border border-white/5`
-- **Label**: `text-[9px] font-black uppercase tracking-widest text-slate-500`
-- **Value**: `text-2xl font-black text-white` (semantic color for emphasis only)
+### When cards are necessary
 
-### Card with Header
+Use a **Card** (or card-like bordered block) when:
+
+1. **A distinct focus block** — One-off panels that must stand out (e.g. "Manager notified" in item details, approval status, a single critical alert). The block is a **single conceptual thing**, not one of many list rows.
+2. **Modals and form grouping** — Grouping related fields inside a modal (e.g. "Contact details", "Legal compliance") where a card clearly improves scan-ability. Modal content can still be flat; use cards only for distinct subsections.
+3. **Visual/layout grids** — Tiles in a **visual** grid where each tile is a distinct unit (e.g. camera wall tile, locker tile, handover card in a grid). Here the card is the layout primitive.
+4. **Tables or list containers** — Wrapping a **single** table or list in a card when the whole block needs a clear boundary and optional header (e.g. "Access points" table). Prefer one card per logical block, not per row.
+
+### When cards are not necessary
+
+Do **not** use cards for:
+
+- **KPI/metric grids** — Use a **compact metrics bar** (e.g. "Total **12** · Found **8** · Claimed **3**") instead of 4–6 KPI cards.
+- **Section wrappers** — Use `<section>` + `<h3>` + content. No card around "Item Management", "Package list", etc.
+- **List items in a grid** — Use **bordered divs** (`rounded-lg border p-4`) for each item unless the item is a distinct focus block (e.g. camera tile).
+- **Every block on the page** — Avoid card-after-card; it dilutes emphasis and feels over-designed.
+
+### Card Component (Standard) — flat
+- **Use**: `components/UI/Card` with `CardHeader`, `CardTitle`, `CardContent` **only when one of "When cards are necessary" applies**.
+- **Base**: `bg-slate-900/50 border border-white/5` — **no** backdrop-blur, **no** shadow-2xl. **Reference:** Patrol Command Center cards.
+
+### Card with Header (canonical)
 - **Header**: `CardHeader` with `border-b border-white/5 pb-4 px-6 pt-6`
-- **Title**: `CardTitle` with icon and text
-- **Content**: `CardContent` with `px-6 py-6`
+- **Title**: `CardTitle` with **icon box + title** per §3 (e.g. `w-10 h-10 bg-blue-600 rounded-md ...` + `<span className="text-sm font-black uppercase tracking-widest">Section Title</span>`). Optional right-side actions in same row.
+- **Content**: `CardContent` with `px-6 py-6` or `pt-6`
+- **Prefer:** Metrics bar for overview/dashboard tops; use cards for distinct blocks (tables, lists, panels).
+
+### KPI / stat block (when needed)
+- **Container**: `p-4 rounded-md bg-slate-900/30 border border-white/5`
+- **Label**: `text-[9px] font-black uppercase tracking-widest text-slate-500`
+- **Value**: `text-2xl font-black text-white`
+- **Prefer instead:** Metrics bar unless a specific KPI must stand out.
+- **Use when:** Wrapping a single table, list, or form subsection that benefits from a clear bordered container and icon+title header.
 
 ## 17. Loading States & Spinners (Gold Standard)
 
@@ -551,6 +746,17 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Status**: `role="status"` for loading spinners, `aria-live="polite"` for dynamic updates
 - **Alerts**: `role="alert"` for critical error messages
 
+### Icon-Only Buttons (Required)
+All icon-only buttons must be accessible. Apply everywhere: DataTable action buttons, modal close/cancel triggers, filter toggles, sidebar collapse, tab icons, card action icons.
+- **Pattern**: `<button onClick={...} aria-label="Edit record"><i className="fas fa-edit" aria-hidden="true" /></button>`
+- **Wrong**: `<button><i className="fas fa-edit" /></button>` (screen reader announces nothing useful)
+- Use a short, action-oriented label (e.g. "Edit record", "Delete item", "Previous page", "Filter by status").
+
+### Sortable Table Headers
+For sortable columns in DataTable or any table, announce sort state to screen readers:
+- **Attribute**: `aria-sort={sortColumn === column.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}` on `<th>`.
+- Keep visible sort indicator (chevron) in addition to aria-sort.
+
 ### Semantic HTML
 - **Use Proper Elements**: `<nav>`, `<main>`, `<section>`, `<article>`, `<header>`, `<footer>`
 - **Headings**: Proper hierarchy (h1 → h2 → h3), no skipping levels
@@ -613,10 +819,10 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 - **Hover**: `transition-all duration-200`
 - **Scale**: `transition-transform duration-300`
 
-### Hover Transitions
-- **Buttons**: `transition-all active:scale-[0.98]`
-- **Cards**: `group-hover:scale-110 transition-transform duration-300`
-- **Icons**: `group-hover:opacity-100 transition-opacity`
+### Hover Transitions (flat — no transform)
+- **Buttons**: `transition-colors` only; **no** active:scale or translateY
+- **Cards**: **no** group-hover:scale-110; use `transition-colors` or `hover:bg-white/5` only if needed
+- **Icons**: `group-hover:opacity-100 transition-opacity` is fine; **no** scale on hover
 
 ### Reduced Motion Support
 - **Respect**: Always respect `prefers-reduced-motion`
@@ -674,12 +880,12 @@ When in doubt, match patterns (modals, page headers, buttons, cards, borders) to
 
 ## 23. Pagination Patterns
 
-### Pagination Controls
-- **Container**: `flex items-center justify-between px-4 py-3 border-t bg-gray-50`
-- **Page Info**: `text-sm text-gray-700` (e.g., "Showing 1-10 of 50")
-- **Navigation Buttons**: Use Button component with `variant="outline"` and `size="sm"`
-- **Page Numbers**: Show current page, ellipsis for ranges
-- **Active Page**: Highlight with primary color
+### Pagination Controls (Dark Console)
+- **Container**: `flex items-center justify-between px-4 py-3 border-t border-white/5 bg-white/5`
+- **Page Info**: `text-[10px] font-mono text-slate-500 uppercase tracking-widest` or `text-sm text-slate-300` (e.g., "Showing 1–10 of 50")
+- **Navigation Buttons**: Use Button component `variant="outline"` and `size="sm"`; icon-only prev/next must have `aria-label="Previous page"` / `aria-label="Next page"`
+- **Page Numbers**: Show current page, ellipsis for ranges; active page: primary (e.g. `bg-blue-600 text-white` or design-system primary)
+- **Disabled**: `disabled:opacity-50 disabled:cursor-not-allowed`; avoid light gray backgrounds
 
 ### Page Size Selector
 - **Select**: Use Select component
@@ -1054,9 +1260,9 @@ ErrorHandlerService.handle(error, 'operationName', {
 - [ ] **METRIC COLOR**: Are metric numeric values `text-white`? (Check for semantic text colors)
 - [ ] **TYPE MONO**: Do license plates/prices use `font-mono`?
 - [ ] **TERMINOLOGY**: Is there any forensic jargon? (e.g. "Asset Location Matrix")
-- [ ] **GLASS CTAs**: Do all primary header buttons use `variant="glass"`?
-- [ ] **ICON GLASS**: Do icon tiles use the Integrated Glass Icon pattern with no colored drop shadows?
-- [ ] **CTA SHADOWS**: Are CTA buttons free of colored drop shadows (Smart Parking standard)?
+- [ ] **FLAT CTAs**: Do primary header buttons use flat styling (no glow/shadow)?
+- [ ] **ICON TILES**: Do icon tiles use flat styling with no colored drop shadows or blur?
+- [ ] **CTA SHADOWS**: Are CTA buttons free of colored drop shadows and glow?
 - [ ] **SPINNER CONSISTENCY**: Are all spinners using the standard pattern (`border-blue-500/20 border-t-blue-500`)? (Check for colored glows, mixed opacities, custom sizes)
 - [ ] **WEBSOCKET**: Is WebSocket integration implemented for real-time updates?
 - [ ] **TELEMETRY**: Are telemetry hooks implemented and tracking user actions?
@@ -1070,36 +1276,39 @@ ErrorHandlerService.handle(error, 'operationName', {
 Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patrol-command-center`
 
 ### Dashboard Tab
-- Replace colored icon shadows with the Integrated Glass Icon pattern (alert banner, status card, metric tiles).
-- Remove colored CTA shadows on alert actions (Dispatch/Acknowledge) to match Smart Parking.
-- Normalize card borders to `border-white/5` where `border-[color:var(--border-subtle)]/50` is used.
+- Card/section headers: flat icon box + title per §3 (no gradient, no shadow).
+- Remove colored CTA shadows on alert actions (Dispatch/Acknowledge).
+- Card borders: `border-white/5`.
 
 ### Access Points Tab
 - Remove colored CTA shadows on header buttons (Add Access Point).
-- Replace card glow `shadow-[0_0_30px_rgba(...)]` with neutral shadow (`shadow-2xl`) + `border-white/5`.
-- Align any icon tiles inside cards (location/device/info) to Integrated Glass Icon standard.
+- Cards: flat only — `bg-slate-900/50 border border-white/5`; no glow, no shadow-2xl.
+- Card section headers: use flat icon box + title per §3 (e.g. `w-10 h-10 bg-blue-600 rounded-md` + title).
 
 ### Users Tab
 - Remove colored CTA shadows on header buttons (Add User, Bulk Actions).
-- Update Visitor Management card icons to Integrated Glass Icon pattern.
-- Replace primary button glow (`shadow-blue-500/20`) with gold-standard glass/outline styling.### Events Tab
+- Card headers: icon box + title per §3 (flat, no gradient/shadow).
+
+### Events Tab
 - Remove colored CTA shadows on Export Logs button.
-- Align event list icons to Integrated Glass Icon pattern (no colored drop shadows).
+- Card/list headers: flat icon + title per §3.
 
 ### AI Analytics Tab
-- Update icon tiles inside `BehaviorAnalysisPanel` to Integrated Glass Icon pattern (no colored drop shadows).
-- Ensure CTA buttons inside AI panel follow glass/outline styling (no colored shadows).
+- Icon tiles: flat solid bg, rounded-md, no shadow/glow; match §3.
+- CTA buttons: flat (no colored shadows).
 
 ### Reports Tab
 - Remove colored CTA shadows on Export buttons.
-- Update report card header icons to Integrated Glass Icon pattern (no colored drop shadows).
+- Report card headers: icon box + title per §3.
 
 ### Configuration Tab
-- Replace icon tile shadows/rings (`shadow-blue-500/20`, `ring-1`) with Integrated Glass Icon pattern.
+- Icon tiles: flat (no shadow/ring); card headers per §3.
 - Remove colored CTA shadows on Save Changes.
-- Normalize card borders to `border-white/5` (avoid mixed border tokens).### Lockdown Facility Tab
-- Replace icon tile shadows/rings on Lockdown + Hardware cards with Integrated Glass Icon pattern.
-- Remove colored CTA shadows on Lockdown actions (Initiate/Cancel/Test).
+- Card borders: `border-white/5`.
+
+### Lockdown Facility Tab
+- Lockdown + Hardware card headers: flat icon box + title per §3.
+- Remove colored CTA shadows on Lockdown actions.
 
 ---
 
@@ -1122,12 +1331,12 @@ Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patr
 - [ ] All required props provided: `icon`, `title`, `subtitle`, `tabs`, `activeTab`, `onTabChange`
 - [ ] Module header has correct styling (`glass-strong border-b border-white/10`)
 - [ ] Module icon is 16x16 (`w-16 h-16`) with proper styling
-- [ ] Module title uses `text-3xl font-black uppercase tracking-tighter text-white`
+- [ ] Module title uses class **`module-header-title`** (global)
 - [ ] Subtitle uses `text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400`
 
 #### Tab Navigation
 - [ ] Tabs bar is sticky (`sticky top-0 z-[70]`)
-- [ ] Active tab has correct styling (blue background with glow)
+- [ ] Active tab: white text + 2px blue bottom border (no pill, no glow); see §5 Tab Navigation Bar
 - [ ] Inactive tabs have hover states
 - [ ] Tab buttons have focus indicators
 - [ ] Tabs use `text-[10px] font-black uppercase tracking-widest`
@@ -1140,10 +1349,12 @@ Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patr
 
 ### 2. Tab Page Headers ⚠️
 
+> **Per-tab audit:** For each tab in the module, compare against **§6A Patrol Command Center — Tab Content Gold Standard** (e.g. OverviewTab, PatrolManagementTab). Use the Tab Audit Checklist (per tab) in §6A.
+
 #### Required Header Structure
 - [ ] Every tab has a page header with title and subtitle
 - [ ] Header uses `flex justify-between items-end mb-8` layout
-- [ ] Page title uses `text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter`
+- [ ] Page title uses class **`page-title`** (global)
 - [ ] Page subtitle uses `text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70`
 - [ ] Optional right-side metadata (last refreshed time) uses proper styling
 
@@ -1160,23 +1371,23 @@ Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patr
 - [ ] License plates, IDs, prices use `font-mono`
 - [ ] Text colors follow hierarchy: `text-white` (main), `text-slate-500` (sub), `text-slate-400` (muted)
 
-#### Glass Effects
-- [ ] Cards use `bg-slate-900/50 backdrop-blur-xl` for glass effect
-- [ ] No colored drop shadows on icon containers
-- [ ] No colored shadows on CTA buttons (Smart Parking standard)
+#### Flat Effects (no glassmorphism)
+- [ ] Cards use solid backgrounds (e.g. `bg-slate-900/50` or `var(--glass-card-bg)`); **no** `backdrop-blur`
+- [ ] No colored drop shadows or glow box-shadows on icon containers or CTAs
+- [ ] Shadows are minimal: `0 1px 3px rgba(0,0,0,0.12)` or none
 
 ---
 
 ### 4. High-Density Components
 
-#### Integrated Glass Icons
-- [ ] Icon containers use: `w-12 h-12 bg-gradient-to-br from-{color}-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl`
-- [ ] Icons have hover animation: `group-hover:scale-110 transition-transform duration-300`
-- [ ] No colored drop shadows on icon containers
+#### Card header icon (flat) — §3
+- [ ] Card section headers use icon box + title: `w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5` + title span
+- [ ] No gradient, no shadow, no hover scale on icon boxes
+- [ ] No colored drop shadows on any icons or buttons
 - [ ] Icon size is `text-lg` inside container
 
-#### Metric Cards
-- [ ] Metric cards use: `bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group`
+#### Metric Cards (flat)
+- [ ] Metric cards use: `bg-slate-900/50 border border-white/5` (no backdrop-blur, no heavy shadow)
 - [ ] Status capsules (if used) positioned absolute top-right
 - [ ] Labels use: `text-[9px] font-black uppercase tracking-widest text-slate-500`
 - [ ] Metric values use: `text-3xl font-black text-white`
@@ -1219,6 +1430,7 @@ Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patr
 - [ ] Modal title uses: `text-xl font-black uppercase tracking-tighter text-white mb-6`
 - [ ] Modal content uses flat layout (`space-y-4` or `space-y-6`)
 - [ ] No inner card wrappers in modal content
+- [ ] **No section divider lines:** no `border-b` on section headings, no `border-l` / `border-l-2` on nested sections (spacing only; match Patrol Command Center modals)
 - [ ] Modal actions are right-aligned
 - [ ] No close "X" button (Cancel button only)
 
@@ -1318,33 +1530,37 @@ Reference: `frontend/src/features/smart-parking` and `frontend/src/features/patr
 
 ---
 
-### 12. Cards
+### 12. Cards (use only when necessary)
 
-#### Card Component
+#### Card Usage
+- [ ] Cards used **only** when necessary (distinct focus block, modal/form grouping, visual grid tile, single table/list container). See §16 When cards are necessary.
+- [ ] KPI/metric grids replaced with **compact metrics bar** where appropriate (Property Items pattern).
+- [ ] Section content uses `<section>` + heading + list/grid; list items use bordered divs unless card is justified.
+
+#### Card Component (when used)
 - [ ] Uses `components/UI/Card` with `CardHeader`, `CardTitle`, `CardContent`
-- [ ] Card base: `bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl`
+- [ ] Card base: `bg-slate-900/50 border border-white/5` (flat; no backdrop-blur, minimal or no shadow)
 - [ ] Card headers have proper border: `border-b border-white/5`
 - [ ] Card content has proper padding: `px-6 py-6`
 
 #### Card Variations
-- [ ] Metric cards follow canonical pattern
-- [ ] KPI cards use correct styling
-- [ ] Interactive cards have hover states
+- [ ] Metric/KPI cards used only when a specific metric must stand out; otherwise metrics bar.
+- [ ] Interactive cards have hover states when used.
 
 ---
 
 ### 13. Data Tables & Lists
 
 #### Table Structure
-- [ ] Tables wrapped in Card component
+- [ ] Tables live in `<section>` with heading; **single** Card wrapper optional per §16 (when a clear boundary is needed).
 - [ ] Table headers use: `text-[9px] font-black uppercase tracking-widest text-slate-500`
 - [ ] Table cells use: `text-sm text-white`
 - [ ] Rows have hover states: `hover:bg-white/5`
 - [ ] Empty tables show EmptyState component
 
 #### List View
-- [ ] Lists use `space-y-3` for spacing
-- [ ] List items use Card component
+- [ ] Lists use `space-y-3` (or grid) for spacing.
+- [ ] List items use **bordered divs** (`rounded-lg border border-white/5 p-4`) unless a card is justified per §16 (e.g. visual grid tile).
 - [ ] Empty lists show EmptyState component
 
 ---

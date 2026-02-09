@@ -18,7 +18,8 @@ import {
   EventsTab,
   SecurityRequestsTab,
   BadgesAccessTab,
-  MobileAppConfigTab
+  MobileAppConfigTab,
+  SettingsTab
 } from './components/tabs';
 import { BannedIndividualsTab } from './components/tabs/BannedIndividualsTab';
 import {
@@ -48,7 +49,8 @@ const tabs = [
   { id: 'security-requests', label: 'Security Requests' },
   { id: 'banned-individuals', label: 'Banned Individuals' },
   { id: 'badges-access', label: 'Badges & Access' },
-  { id: 'mobile-app', label: 'Mobile Config' }
+  { id: 'mobile-app', label: 'Mobile Config' },
+  { id: 'settings', label: 'Settings' }
 ];
 
 const VisitorSecurityGlobalRefresh: React.FC = () => {
@@ -266,6 +268,12 @@ const VisitorSecurityContent: React.FC = () => {
             <MobileAppConfigTab />
           </ErrorBoundary>
         );
+      case 'settings':
+        return (
+          <ErrorBoundary moduleName="VisitorSecuritySettingsTab">
+            <SettingsTab />
+          </ErrorBoundary>
+        );
       default:
         return (
           <ErrorBoundary moduleName="VisitorSecurityOverviewTab">
@@ -307,13 +315,13 @@ const VisitorSecurityContent: React.FC = () => {
           />
         )}
 
-        {/* Quick Action FAB - Gold Standard: glass/outline, reduced shadow */}
+        {/* Quick Action FAB - Gold Standard: solid blue, circular */}
         <div className="fixed bottom-8 right-8 z-50">
           <Button
             onClick={() => setShowRegisterModal(true)}
-            variant="outline"
+            variant="primary"
             size="icon"
-            className="w-14 h-14 rounded-full border-white/20 bg-slate-900/80 backdrop-blur-xl shadow-lg hover:scale-105 transition-transform"
+            className="w-14 h-14 rounded-full border-0"
             title="Register New Visitor"
             aria-label="Register New Visitor"
           >

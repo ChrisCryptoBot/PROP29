@@ -40,7 +40,7 @@ Visitor registration, event coordination, security requests, banned-individual c
 | Visitors | Registry, filters (all / registered / checked_in / checked_out / overdue / cancelled), check-in/out, QR |
 | Events | Event list, create/delete, badge types |
 | Security Requests | Requests + agent submissions; assign to current user via API |
-| Banned Individuals | Wraps Banned Individuals feature (Overview, Records, Detections, Risk Analysis, Analytics, Settings) |
+| Banned Individuals | Wraps Banned Individuals feature (Overview, Records) |
 | Badges & Access | Checked-in visitors, hardware status, badge print |
 | Mobile Config | Mobile agents, registration, submissions, sync |
 

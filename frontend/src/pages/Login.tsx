@@ -93,7 +93,7 @@ const Login: React.FC = () => {
             >
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div
-                  className={`relative rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl p-6 shadow-2xl ${loading ? 'ring-2 ring-blue-500/50 shadow-[0_0_35px_rgba(59,130,246,0.35)] animate-pulse' : ''
+                  className={`relative rounded-md border border-white/20 bg-white/10 p-6 ${loading ? 'ring-2 ring-blue-500/50 animate-pulse' : ''
                     }`}
                 >
                   <div className="space-y-4">
@@ -109,7 +109,7 @@ const Login: React.FC = () => {
                         autoComplete="email"
                         required
                         disabled={loading}
-                        className="w-full rounded-lg bg-white/5 border border-white/10 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/60 shadow-[0_0_0_1px_rgba(59,130,246,0.15)] placeholder:text-slate-500"
+                        className="w-full rounded-lg bg-white/5 border border-white/10 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/60 placeholder:text-slate-500"
                         placeholder="security@proper.com"
                         value={credentials.email}
                         onChange={handleChange}
@@ -127,7 +127,7 @@ const Login: React.FC = () => {
                           autoComplete="current-password"
                           required
                           disabled={loading}
-                          className="w-full rounded-lg bg-white/5 border border-white/10 text-white px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/60 shadow-[0_0_0_1px_rgba(59,130,246,0.15)] placeholder:text-slate-500"
+                          className="w-full rounded-lg bg-white/5 border border-white/10 text-white px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/60 placeholder:text-slate-500"
                           placeholder="••••••••••"
                           value={credentials.password}
                           onChange={handleChange}

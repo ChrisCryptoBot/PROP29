@@ -277,8 +277,8 @@ export const LockdownFacilityTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Lockdown Facility">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Lockdown Facility</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Lockdown Facility</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Emergency lockdown controls and device status. Uses facility lockdown API (/lockdown).
           </p>
           <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">
@@ -323,7 +323,7 @@ export const LockdownFacilityTab: React.FC = () => {
         </div>
       </div>
       {latestEvent && (
-        <div className="p-4 bg-slate-900/30 border border-white/5 rounded-xl">
+        <div className="p-4 bg-slate-900/30 border border-white/5 rounded-md">
           <p className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">
             Last Action: {latestEvent.type.toUpperCase()} • {latestEvent.status.toUpperCase()}
           </p>
@@ -337,7 +337,7 @@ export const LockdownFacilityTab: React.FC = () => {
           )}
         </div>
       )}
-      <Card className="glass-card border border-white/5 bg-transparent ">
+      <Card className="bg-slate-900/50 border border-white/5">
         <CardContent className="pt-6">
           {isStale && (
             <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-4">
@@ -345,7 +345,7 @@ export const LockdownFacilityTab: React.FC = () => {
             </p>
           )}
           {offlineHardwareCount > 0 && (
-            <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl mb-4">
+            <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-md mb-4">
               <p className="text-[9px] font-black text-amber-400 uppercase tracking-widest">
                 {offlineHardwareCount} device(s) offline or stale. Acknowledge risk to proceed.
               </p>
@@ -415,13 +415,13 @@ export const LockdownFacilityTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border border-white/5 bg-transparent ">
-        <CardHeader className="border-b border-white/5 pb-4">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <CardTitle className="flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+            <div className="card-title-icon-box" aria-hidden="true">
               <i className="fas fa-microchip text-white" />
             </div>
-            <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Hardware Devices</span>
+            <span className="card-title-text">Hardware Devices</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -468,13 +468,13 @@ export const LockdownFacilityTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="glass-card border border-white/5 bg-transparent ">
-        <CardHeader className="border-b border-white/5 pb-4">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <CardTitle className="flex items-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-slate-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
+            <div className="card-title-icon-box" aria-hidden="true">
               <i className="fas fa-history text-white" />
             </div>
-            <span className="font-bold tracking-tight uppercase text-[color:var(--text-main)]">Lockdown History</span>
+            <span className="card-title-text">Lockdown History</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -525,7 +525,7 @@ export const LockdownFacilityTab: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-500">
             {confirmAction === 'cancel' ? 'Confirm cancellation of the active lockdown.' : 'Reason required for audit logging.'}
           </p>
           {confirmAction !== 'cancel' && (

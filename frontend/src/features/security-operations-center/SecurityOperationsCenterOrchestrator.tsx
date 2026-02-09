@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SecurityOperationsProvider, useSecurityOperationsContext } from './context/SecurityOperationsContext';
-import { CameraModalManagerProvider } from './context/CameraModalManagerContext';
+import { CameraModalManagerProvider, useCameraModalManager } from './context/CameraModalManagerContext';
 import { CameraWallLayoutProvider } from './context/CameraWallLayoutContext';
 import { LiveViewTab } from './components/tabs/LiveViewTab';
 import { RecordingsTab } from './components/tabs/RecordingsTab';
@@ -73,8 +74,28 @@ const SecurityOperationsGlobalRefresh: React.FC = () => {
 
 const OrchestratorContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('live');
+  const [searchParams, setSearchParams] = useSearchParams();
   const { triggerGlobalRefresh } = useGlobalRefresh();
-  const { refreshCameras, refreshEvidence, refreshRecordings } = useSecurityOperationsContext();
+  const { cameras, refreshCameras, refreshEvidence, refreshRecordings, emergencyStopAllRecording } = useSecurityOperationsContext();
+  const { openModal: openCameraModal } = useCameraModalManager();
+  const deepLinkHandled = useRef(false);
+
+  // Deep link: ?cameraId=xxx from e.g. IoT module — switch to Live View and open camera modal
+  useEffect(() => {
+    const cameraId = searchParams.get('cameraId');
+    if (!cameraId || deepLinkHandled.current || cameras.length === 0) return;
+    const camera = cameras.find((c) => c.id === cameraId);
+    if (camera) {
+      setActiveTab('live');
+      openCameraModal(camera);
+      deepLinkHandled.current = true;
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('cameraId');
+        return next;
+      }, { replace: true });
+    }
+  }, [cameras, searchParams, setSearchParams, openCameraModal]);
 
   useEffect(() => {
     // Setup desktop integration
@@ -85,9 +106,15 @@ const OrchestratorContent: React.FC = () => {
         // Setup application menu and shortcuts
         electronBridge.setupApplicationMenu();
         electronBridge.setupSecurityShortcuts();
-        
-        // Show desktop mode notification
-        showInfo('Desktop mode active - Enhanced features available');
+        // Show desktop mode notification at most once per session
+        try {
+          if (!sessionStorage.getItem('soc-desktop-mode-shown')) {
+            showInfo('Desktop mode active - Enhanced features available');
+            sessionStorage.setItem('soc-desktop-mode-shown', '1');
+          }
+        } catch {
+          showInfo('Desktop mode active - Enhanced features available');
+        }
         
         // Setup event listeners
         electronBridge.on('global-refresh', () => {
@@ -95,8 +122,8 @@ const OrchestratorContent: React.FC = () => {
           showSuccess('All data refreshed');
         });
         
-        electronBridge.on('emergency-stop', () => {
-          showError('Emergency stop activated - All recording stopped');
+        electronBridge.on('emergency-stop', async () => {
+          await emergencyStopAllRecording();
         });
         
         electronBridge.on('show-alerts', () => {
@@ -107,16 +134,16 @@ const OrchestratorContent: React.FC = () => {
         electronBridge.on('import-evidence', async () => {
           const filePath = await electronBridge.selectEvidenceFile();
           if (filePath) {
-            showSuccess(`Evidence file selected: ${filePath}`);
             refreshEvidence();
+            showSuccess(`Evidence folder selected; list refreshed.`);
           }
         });
-        
+
         electronBridge.on('export-recordings', async () => {
           const directory = await electronBridge.selectExportDirectory();
           if (directory) {
-            showSuccess(`Export directory selected: ${directory}`);
             refreshRecordings();
+            showSuccess(`Export directory selected: ${directory}. Use Recordings tab to export files.`);
           }
         });
       }
@@ -140,7 +167,7 @@ const OrchestratorContent: React.FC = () => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [triggerGlobalRefresh, refreshCameras, refreshEvidence, refreshRecordings]);
+  }, [triggerGlobalRefresh, refreshCameras, refreshEvidence, refreshRecordings, emergencyStopAllRecording]);
 
   const renderTab = () => {
     switch (activeTab) {

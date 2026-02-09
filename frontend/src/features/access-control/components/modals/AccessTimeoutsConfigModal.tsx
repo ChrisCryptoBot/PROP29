@@ -86,7 +86,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
     >
       <div className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
             <div>
               <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Enable Access Timeouts</h4>
               <p className="text-[10px] text-[color:var(--text-sub)] font-medium italic opacity-60 uppercase tracking-tight">Automatically expire access sessions after configured cycles</p>
@@ -101,8 +101,8 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
           </div>
 
           {config.enabled && (
-            <div className="space-y-4 pl-6 border-l-2 border-white/5">
-              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+            <div className="space-y-4 pl-6">
+              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                 <label htmlFor="default-timeout" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                   Baseline Timeout (Minutes)
                 </label>
@@ -121,7 +121,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Standard session duration (1-1440 minutes)</p>
               </div>
 
-              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                 <label htmlFor="temp-timeout" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                   Temporary Access (Minutes)
                 </label>
@@ -140,7 +140,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Temporary access window (5-1440 minutes)</p>
               </div>
 
-              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                 <label htmlFor="emergency-timeout" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                   Emergency Timeout (Minutes)
                 </label>
@@ -159,7 +159,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                 <p className="text-[9px] text-[color:var(--text-sub)] font-black uppercase tracking-tight mt-2 italic opacity-40 ml-1">Auto relock after emergency (1-1440 minutes)</p>
               </div>
 
-              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                 <label htmlFor="visitor-timeout" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                   Visitor Access (Hours)
                 </label>
@@ -179,7 +179,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
               </div>
 
               <div className="space-y-4 mt-8">
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Allow Extensions</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Allow users to extend access time</p>
@@ -193,7 +193,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Pre-Expiry Alert</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Notify before access expires</p>
@@ -208,7 +208,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                 </div>
 
                 {config.warningBeforeExpiry && (
-                  <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl ml-6">
+                  <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md ml-6">
                     <label htmlFor="warning-duration" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                       Alert Lead (Minutes)
                     </label>
@@ -227,7 +227,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Auto Revoke on Expiry</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Automatically revoke on expiry</p>
@@ -241,7 +241,7 @@ export const AccessTimeoutsConfigModal: React.FC<AccessTimeoutsConfigModalProps>
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Expiry Notification</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Notify when access expires</p>

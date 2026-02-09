@@ -1,9 +1,9 @@
-from sqlalchemy import Column, String, Integer, DateTime, Boolean, Text, JSON, ForeignKey, Enum, Float
+from sqlalchemy import Column, String, Integer, DateTime, Boolean, Text, JSON, ForeignKey, Enum, Float, Index
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 
 class UserStatus(str, enum.Enum):
@@ -171,6 +171,7 @@ class User(Base):
     profile_image_url = Column(String(500), nullable=True)
     preferred_language = Column(String(5), default="en")
     timezone = Column(String(50), default="UTC")
+    preferences = Column(JSON, default={}) # Notification settings, theme, etc.
     
     # Relationships
     user_roles = relationship("UserRole", foreign_keys="UserRole.user_id", back_populates="user", cascade="all, delete-orphan")
@@ -1257,3 +1258,277 @@ class EvacuationAssistance(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     session = relationship("EvacuationSession")
+
+
+# ========== Mobile Agent Data Persistence ==========
+
+class PatrolSubmission(Base):
+    """Mobile agent patrol data submissions."""
+    __tablename__ = "patrol_submissions"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    submission_id = Column(String(36), unique=True, nullable=False, index=True)
+    agent_id = Column(String(36), nullable=False, index=True)
+    patrol_id = Column(String(36), nullable=False, index=True)
+    timestamp = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    location_latitude = Column(Float, nullable=True)
+    location_longitude = Column(Float, nullable=True)
+    location_accuracy = Column(Float, nullable=True)
+    location_address = Column(String(500), nullable=True)
+    observations = Column(Text, nullable=True)  # JSON string
+    photo_count = Column(Integer, default=0)
+    photo_files = Column(Text, nullable=True)  # JSON array of file records
+    status = Column(String(50), default="received")
+    processed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+
+
+class MobileIncidentReport(Base):
+    """Mobile agent incident reports."""
+    __tablename__ = "mobile_incident_reports"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    incident_id = Column(String(36), unique=True, nullable=False, index=True)
+    agent_id = Column(String(36), nullable=False, index=True)
+    incident_type = Column(String(100), nullable=False)
+    severity = Column(String(20), nullable=False)
+    description = Column(Text, nullable=True)
+    location_latitude = Column(Float, nullable=True)
+    location_longitude = Column(Float, nullable=True)
+    location_address = Column(String(500), nullable=True)
+    location_room = Column(String(100), nullable=True)
+    timestamp = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    status = Column(String(50), default="open")
+    evidence_files = Column(Text, nullable=True)  # JSON array of evidence records
+    follow_up_required = Column(Boolean, default=False)
+    guest_safety_incident_id = Column(String(36), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+
+
+class AgentLocation(Base):
+    """Mobile agent location tracking."""
+    __tablename__ = "agent_locations"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    agent_id = Column(String(36), nullable=False, index=True)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    accuracy = Column(Float, nullable=True)
+    altitude = Column(Float, nullable=True)
+    speed = Column(Float, nullable=True)
+    heading = Column(Float, nullable=True)
+    timestamp = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_agent_locations_agent_timestamp", "agent_id", "timestamp"),
+    )
+
+
+class AgentStatus(Base):
+    """Mobile agent status tracking."""
+    __tablename__ = "agent_status"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    agent_id = Column(String(36), unique=True, nullable=False, index=True)
+    last_seen = Column(DateTime(timezone=True), nullable=False)
+    current_latitude = Column(Float, nullable=True)
+    current_longitude = Column(Float, nullable=True)
+    status = Column(String(50), default="active")  # active, idle, offline
+    battery_level = Column(Integer, nullable=True)
+    app_version = Column(String(50), nullable=True)
+    device_info = Column(Text, nullable=True)  # JSON
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class APIKey(Base):
+    __tablename__ = "api_keys"
+    
+    key_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    key_hash = Column(String(64), nullable=False, unique=True, index=True)
+    prefix = Column(String(10), nullable=False) # Store first few chars for display
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    scopes = Column(JSON, default=[]) # List of permissions/scopes
+    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    
+    property = relationship("Property")
+    creator = relationship("User", foreign_keys=[created_by])
+
+
+class ChatChannel(Base):
+    __tablename__ = "chat_channels"
+    
+    channel_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    type = Column(String(20), default="public") # public, private, direct
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    is_active = Column(Boolean, default=True)
+    
+    property = relationship("Property")
+    messages = relationship("ChatMessage", back_populates="channel", cascade="all, delete-orphan")
+    memberships = relationship("ChannelMembership", back_populates="channel", cascade="all, delete-orphan")
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+    
+    message_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    channel_id = Column(String(36), ForeignKey("chat_channels.channel_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False)
+    content = Column(Text, nullable=False)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    message_type = Column(String(20), default="text") # text, image, file, alert
+    message_metadata = Column("metadata", JSON, nullable=True)
+    
+    channel = relationship("ChatChannel", back_populates="messages")
+    sender = relationship("User")
+    attachments = relationship("ChatAttachment", back_populates="message", cascade="all, delete-orphan")
+    read_receipts = relationship("MessageReadReceipt", back_populates="message", cascade="all, delete-orphan")
+
+class ChannelMembership(Base):
+    __tablename__ = "chat_channel_memberships"
+    
+    membership_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    channel_id = Column(String(36), ForeignKey("chat_channels.channel_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    role = Column(String(20), default="member") # owner, admin, member
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_read_at = Column(DateTime(timezone=True), nullable=True)
+    
+    channel = relationship("ChatChannel", back_populates="memberships")
+    user = relationship("User")
+
+class MessageReadReceipt(Base):
+    __tablename__ = "chat_message_read_receipts"
+    
+    receipt_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    message_id = Column(String(36), ForeignKey("chat_messages.message_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    read_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    message = relationship("ChatMessage", back_populates="read_receipts")
+    user = relationship("User")
+
+class ChatAttachment(Base):
+    __tablename__ = "chat_attachments"
+    
+    attachment_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    message_id = Column(String(36), ForeignKey("chat_messages.message_id", ondelete="CASCADE"), nullable=False)
+    file_name = Column(String(255), nullable=False)
+    file_type = Column(String(100), nullable=False)
+    file_size = Column(Integer, nullable=False) # bytes
+    file_path = Column(String(500), nullable=False) # Storage path or URL
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    message = relationship("ChatMessage", back_populates="attachments")
+
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    
+    notification_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(String(36), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    channel = Column(String(20), nullable=False) # email, sms, push, in_app
+    priority = Column(String(20), default="normal") # low, normal, high, critical
+    title = Column(String(255), nullable=False)
+    content = Column(Text, nullable=False)
+    status = Column(String(20), default="sent") # pending, sent, failed, delivered, read
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    read_at = Column(DateTime(timezone=True), nullable=True)
+    data = Column(JSON, nullable=True)
+    
+    property = relationship("Property")
+    user = relationship("User")
+
+
+class SoundAlertType(str, enum.Enum):
+    GUNSHOT = "gunshot"
+    SCREAM = "scream"
+    GLASS_BREAK = "glass_break"
+    AGGRESSION = "aggression"
+    EXPLOSION = "explosion"
+    OTHER = "other"
+
+class SoundSensor(Base):
+    __tablename__ = "sound_sensors"
+    
+    sensor_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    location = Column(JSON, nullable=True) # {lat, lng, floor, room}
+    status = Column(String(20), default="active") # active, offline, maintenance
+    sensitivity = Column(Integer, default=50) # 0-100
+    last_heartbeat = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    property = relationship("Property")
+    alerts = relationship("SoundAlert", back_populates="sensor")
+
+class MonitoringZone(Base):
+    __tablename__ = "monitoring_zones"
+    
+    zone_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(String(255), nullable=True)
+    boundary_points = Column(JSON, nullable=True) # List of coords
+    alert_threshold = Column(Integer, default=70) # dB or confidence
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    property = relationship("Property")
+
+class SoundAlert(Base):
+    __tablename__ = "sound_alerts"
+    
+    alert_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    sensor_id = Column(String(36), ForeignKey("sound_sensors.sensor_id", ondelete="SET NULL"), nullable=True)
+    zone_id = Column(String(36), ForeignKey("monitoring_zones.zone_id", ondelete="SET NULL"), nullable=True)
+    alert_type = Column(Enum(SoundAlertType), default=SoundAlertType.OTHER)
+    confidence = Column(Float, nullable=False) # 0.0 - 1.0
+    audio_clip_url = Column(String(500), nullable=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    is_verified = Column(Boolean, default=False)
+    verified_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)
+    incident_id = Column(String(36), ForeignKey("incidents.incident_id"), nullable=True)
+    
+    property = relationship("Property")
+    sensor = relationship("SoundSensor", back_populates="alerts")
+    zone = relationship("MonitoringZone")
+
+
+class Integration(Base):
+    __tablename__ = "integrations"
+    
+    integration_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    property_id = Column(String(36), ForeignKey("properties.property_id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False) # e.g. "Main Opera PMS"
+    provider = Column(String(50), nullable=False) # e.g. "opera", "salto", "hid"
+    configuration = Column(JSON, default={}) # Encrypted credentials, endpoints
+    status = Column(String(20), default="active") # active, error, disabled
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    property = relationship("Property")
+
+
+class SystemSetting(Base):
+    __tablename__ = "system_settings"
+    
+    setting_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    key = Column(String(100), unique=True, nullable=False, index=True)
+    value = Column(JSON, nullable=False) # Flexible value storage
+    description = Column(String(255), nullable=True)
+    is_encrypted = Column(Boolean, default=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_by = Column(String(36), ForeignKey("users.user_id"), nullable=True)

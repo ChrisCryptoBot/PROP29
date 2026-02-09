@@ -6,6 +6,7 @@ import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { cn } from '../../../../utils/cn';
 import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { IncidentStatus } from '../../types/incident-log.types';
+import { getSeverityBadgeClass, getStatusBadgeClass, getTypeIcon } from '../../utils/badgeHelpers';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 
 export const IncidentsTab: React.FC = () => {
@@ -68,45 +69,6 @@ export const IncidentsTab: React.FC = () => {
         setCurrentPage(1);
     }, [filter, sourceFilter]);
 
-    const getSeverityBadgeClass = (severity: string) => {
-        switch (severity.toLowerCase()) {
-            case 'critical': return 'text-red-300 bg-red-500/20 border border-red-500/30';
-            case 'high': return 'text-orange-300 bg-orange-500/20 border border-orange-500/30';
-            case 'medium': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/30';
-            case 'low': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
-            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
-        }
-    };
-
-    const getStatusBadgeClass = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'pending_review': return 'text-amber-300 bg-amber-500/20 border border-amber-500/30';
-            case 'open':
-            case 'active': return 'text-red-300 bg-red-500/20 border border-red-500/30';
-            case 'investigating': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
-            case 'resolved': return 'text-green-300 bg-green-500/20 border border-green-500/30';
-            case 'closed':
-            case 'escalated': return 'text-orange-300 bg-orange-500/20 border border-orange-500/30';
-            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
-        }
-    };
-
-    const getTypeIcon = (type: string) => {
-        switch (type.toLowerCase()) {
-            case 'theft':
-            case 'security breach': return 'fas fa-shield-alt';
-            case 'fire':
-            case 'fire safety': return 'fas fa-fire';
-            case 'medical':
-            case 'guest safety': return 'fas fa-user-shield';
-            case 'flood':
-            case 'facility maintenance': return 'fas fa-tools';
-            case 'guest_complaint':
-            case 'guest relations': return 'fas fa-comments';
-            default: return 'fas fa-exclamation-triangle';
-        }
-    };
-
     const handleSelectAll = () => {
         if (selectedIds.length === filteredIncidents.length) {
             setSelectedIds([]);
@@ -129,8 +91,8 @@ export const IncidentsTab: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Incident Management</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Incident Management</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Review, filter, and act on live incidents
                     </p>
                 </div>
@@ -205,14 +167,14 @@ export const IncidentsTab: React.FC = () => {
             </div>
 
             {/* SCREEN LAYOUT */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl no-print">
-                <CardHeader>
+            <Card className="bg-slate-900/50 border border-white/5 no-print">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center text-xl text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-tasks text-white" />
                             </div>
-                            <span className="uppercase tracking-tight">Incident Management</span>
+                            <span className="card-title-text">Incident Management</span>
                         </CardTitle>
                         <div className="flex space-x-2">
                             <Button
@@ -403,12 +365,19 @@ export const IncidentsTab: React.FC = () => {
             </Card>
 
             {/* Incident List */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl mb-8 no-print">
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-white uppercase tracking-tight">All Incidents ({filteredIncidents.length})</CardTitle>
-                    <Button variant="outline" size="sm" onClick={handleSelectAll} className="border-white/5 text-slate-300 hover:bg-white/5 hover:text-white">
-                        {selectedIds.length === paginatedIncidents.length ? 'Deselect All' : 'Select All'}
-                    </Button>
+            <Card className="bg-slate-900/50 border border-white/5 mb-8 no-print">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center justify-between">
+                        <span className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                                <i className="fas fa-list-alt text-white" aria-hidden />
+                            </div>
+                            <span className="card-title-text">All Incidents ({filteredIncidents.length})</span>
+                        </span>
+                        <Button variant="outline" size="sm" onClick={handleSelectAll} className="border-white/5 text-slate-300 hover:bg-white/5 hover:text-white">
+                            {selectedIds.length === paginatedIncidents.length ? 'Deselect All' : 'Select All'}
+                        </Button>
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -443,7 +412,7 @@ export const IncidentsTab: React.FC = () => {
                                     <div
                                         key={id}
                                         className={cn(
-                                            "p-4 border rounded-lg transition-all cursor-pointer",
+                                            "p-4 border rounded-md transition-all cursor-pointer",
                                             isSelected
                                                 ? "border-white/30 bg-white/10"
                                                 : "border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20"
@@ -503,6 +472,7 @@ export const IncidentsTab: React.FC = () => {
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
                                     className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                                    aria-label="Previous page"
                                 >
                                     <i className="fas fa-chevron-left mr-1" />
                                     Previous
@@ -538,6 +508,7 @@ export const IncidentsTab: React.FC = () => {
                                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                     disabled={currentPage === totalPages}
                                     className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                                    aria-label="Next page"
                                 >
                                     Next
                                     <i className="fas fa-chevron-right ml-1" />

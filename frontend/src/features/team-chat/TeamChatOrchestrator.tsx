@@ -1,45 +1,70 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TeamChatProvider, useTeamChatContext } from './context/TeamChatContext';
-import { Sidebar } from './components/Sidebar/Sidebar';
-import { ChatArea } from './components/ChatArea/ChatArea';
+import { ChatTab } from './components/tabs/ChatTab';
+import { ChannelsTab } from './components/tabs/ChannelsTab';
+import { AnalyticsTab } from './components/tabs/AnalyticsTab';
+import { SettingsTab } from './components/tabs/SettingsTab';
 import { NewMessageModal } from './components/modals/NewMessageModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import ModuleShell from '../../components/Layout/ModuleShell';
 import { Button } from '../../components/UI/Button';
 
+type TabId = 'chat' | 'channels' | 'analytics' | 'settings';
+
+interface Tab {
+    id: TabId;
+    label: string;
+}
+
 const TeamChatContent: React.FC = () => {
-    const { setShowNewMessage, setShowSettings } = useTeamChatContext();
+    const { setShowNewMessage } = useTeamChatContext();
+    const [activeTab, setActiveTab] = useState<TabId>('chat');
+
+    const tabs: Tab[] = [
+        { id: 'chat', label: 'Messages' },
+        { id: 'channels', label: 'Channels' },
+        { id: 'analytics', label: 'Analytics' },
+        { id: 'settings', label: 'Settings' },
+    ];
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'chat':
+                return <ChatTab />;
+            case 'channels':
+                return <ChannelsTab />;
+            case 'analytics':
+                return <AnalyticsTab />;
+            case 'settings':
+                return <SettingsTab />;
+            default:
+                return <ChatTab />;
+        }
+    };
 
     return (
         <ModuleShell
             icon={<i className="fas fa-comments" />}
             title="Team Chat"
-            subtitle="Secure real-time communication platform for emergency responders"
+            subtitle="Secure real-time communication platform for security personnel"
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as TabId)}
             actions={
-                <div className="flex space-x-3">
+                <div className="flex items-center gap-2">
                     <Button
-                        onClick={() => setShowSettings(true)}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/5 font-black uppercase tracking-widest text-[10px]"
-                        aria-label="Chat Settings"
-                    >
-                        <i className="fas fa-cog mr-2" />
-                        Settings
-                    </Button>
-                    <Button
+                        variant="primary"
                         onClick={() => setShowNewMessage(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 font-black uppercase tracking-widest text-[10px]"
+                        className="h-10 text-[10px] font-black uppercase tracking-widest px-6 shadow-none"
                         aria-label="New Message"
                     >
-                        <i className="fas fa-plus mr-2" />
+                        <i className="fas fa-plus mr-2" aria-hidden />
                         New Message
                     </Button>
                 </div>
             }
         >
-            <div className="h-[75vh] flex overflow-hidden glass-card rounded-2xl border border-white/5 relative">
-                <Sidebar />
-                <ChatArea />
-            </div>
+            {renderTabContent()}
 
             {/* Global Modals */}
             <NewMessageModal />

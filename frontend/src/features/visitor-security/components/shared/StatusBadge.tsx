@@ -18,7 +18,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = React.memo(({ status, cla
       case 'checked_in':
         return 'text-green-400 bg-green-500/10 border-green-500/20';
       case 'checked_out':
-        return 'text-[color:var(--text-sub)] bg-[color:var(--border-subtle)]/10 border-[color:var(--border-subtle)]/30';
+        return 'text-[color:var(--text-sub)] bg-white/5 border-white/5';
       case 'overdue':
         return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
       case 'cancelled':

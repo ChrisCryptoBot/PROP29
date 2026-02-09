@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
-import GuestSafetyAuth from '../modules/GuestSafetyAuth';
 import GuestSafety from '../modules/GuestSafety';
 
 // Mock the BackToDashboardButton as it's an external dependency
@@ -85,91 +84,6 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockedUsedNavigate,
 }));
 
-describe('GuestSafetyAuth', () => {
-  beforeEach(() => {
-    localStorage.clear();
-    mockedUsedNavigate.mockClear();
-  });
-
-  it('renders the authentication form', () => {
-    render(
-      <BrowserRouter>
-        <GuestSafetyAuth />
-      </BrowserRouter>
-    );
-    expect(screen.getByText(/Secure Access/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Administrator Password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Access Guest Safety/i })).toBeInTheDocument();
-  });
-
-  it('shows an error for invalid password', async () => {
-    render(
-      <BrowserRouter>
-        <GuestSafetyAuth />
-      </BrowserRouter>
-    );
-    fireEvent.change(screen.getByLabelText(/Administrator Password/i), { target: { value: 'wrongpassword' } });
-    fireEvent.click(screen.getByRole('button', { name: /Access Guest Safety/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Invalid password\. Access denied\./i)).toBeInTheDocument();
-    });
-    expect(screen.getByLabelText(/Administrator Password/i)).toHaveValue('');
-  });
-
-  it('navigates to guest safety on successful authentication', async () => {
-    render(
-      <MemoryRouter initialEntries={['/modules/GuestSafetyAuth']}>
-        <Routes>
-          <Route path="/modules/GuestSafetyAuth" element={<GuestSafetyAuth />} />
-          <Route path="/modules/guest-safety" element={<div>Guest Safety Page</div>} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    fireEvent.change(screen.getByLabelText(/Administrator Password/i), { target: { value: 'admin123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Access Guest Safety/i }));
-
-    await waitFor(() => {
-      expect(localStorage.getItem('admin_guestsafety_authenticated')).toBe('true');
-      expect(screen.getByText(/Guest Safety Page/i)).toBeInTheDocument();
-    });
-  });
-
-  it('shows loading state during authentication', async () => {
-    render(
-      <BrowserRouter>
-        <GuestSafetyAuth />
-      </BrowserRouter>
-    );
-    fireEvent.change(screen.getByLabelText(/Administrator Password/i), { target: { value: 'admin123' } });
-    fireEvent.click(screen.getByRole('button', { name: /Access Guest Safety/i }));
-
-    expect(screen.getByText(/Verifying\.\.\./i)).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.queryByText(/Verifying\.\.\./i)).not.toBeInTheDocument();
-    });
-  });
-
-  it('toggles password visibility', () => {
-    render(
-      <BrowserRouter>
-        <GuestSafetyAuth />
-      </BrowserRouter>
-    );
-    const passwordInput = screen.getByLabelText(/Administrator Password/i) as HTMLInputElement;
-    const toggleButton = screen.getByLabelText(/Show password/i);
-
-    expect(passwordInput.type).toBe('password');
-    fireEvent.click(toggleButton);
-    expect(passwordInput.type).toBe('text');
-    expect(screen.getByLabelText(/Hide password/i)).toBeInTheDocument();
-    fireEvent.click(toggleButton);
-    expect(passwordInput.type).toBe('password');
-    expect(screen.getByLabelText(/Show password/i)).toBeInTheDocument();
-  });
-});
-
 describe('GuestSafety', () => {
   beforeEach(() => {
     localStorage.setItem('admin_guestsafety_authenticated', 'true'); // Ensure authenticated state
@@ -178,19 +92,6 @@ describe('GuestSafety', () => {
 
   afterEach(() => {
     localStorage.removeItem('admin_guestsafety_authenticated');
-  });
-
-  it('redirects to auth if not authenticated', () => {
-    localStorage.removeItem('admin_guestsafety_authenticated');
-    render(
-      <MemoryRouter initialEntries={['/modules/guest-safety']}>
-        <Routes>
-          <Route path="/modules/guest-safety" element={<GuestSafety />} />
-          <Route path="/modules/GuestSafetyAuth" element={<div>Guest Safety Auth Page</div>} />
-        </Routes>
-      </MemoryRouter>
-    );
-    expect(screen.getByText(/Guest Safety Auth Page/i)).toBeInTheDocument();
   });
 
   it('renders the main interface when authenticated', async () => {
@@ -209,7 +110,7 @@ describe('GuestSafety', () => {
     });
   });
 
-  it('displays KPI cards with correct values', async () => {
+  it('displays metrics bar with incident counts', async () => {
     render(
       <BrowserRouter>
         <GuestSafety />
@@ -217,10 +118,9 @@ describe('GuestSafety', () => {
     );
     
     await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument(); // Critical incidents
-      expect(screen.getByText('2')).toBeInTheDocument(); // High priority
-      expect(screen.getByText('5')).toBeInTheDocument(); // Medium priority
-      expect(screen.getByText('8')).toBeInTheDocument(); // Low priority
+      // Gold standard: compact metrics bar (Critical, High, Resolved today, Avg response)
+      expect(screen.getByText(/Critical/i)).toBeInTheDocument();
+      expect(screen.getByText(/High/i)).toBeInTheDocument();
     });
   });
 

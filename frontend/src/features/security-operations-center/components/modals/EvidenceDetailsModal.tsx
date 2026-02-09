@@ -85,7 +85,7 @@ export const EvidenceDetailsModal: React.FC = () => {
               <p className="text-white font-mono text-sm">{selectedEvidence.size}</p>
             </div>
             {selectedEvidence.incidentId && (
-              <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-lg">
+              <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-md">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Linked incident</p>
                 <p className="text-blue-400 font-mono text-sm">{selectedEvidence.incidentId}</p>
               </div>
@@ -98,7 +98,7 @@ export const EvidenceDetailsModal: React.FC = () => {
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as EvidenceStatus)}
-                  className="w-full bg-white/5 border border-white/5 rounded-lg px-3 py-2 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer"
+                  className="w-full bg-white/5 border border-white/5 rounded-md px-3 py-2 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none cursor-pointer"
                 >
                   <option value="pending" className="bg-[#1a1c1e] text-white">Pending</option>
                   <option value="reviewed" className="bg-[#1a1c1e] text-white">Reviewed</option>
@@ -107,7 +107,7 @@ export const EvidenceDetailsModal: React.FC = () => {
               ) : (
                 <div
                   className={cn(
-                    'px-3 py-2 rounded-lg border text-sm font-bold uppercase tracking-wider',
+                    'px-3 py-2 rounded-md border text-sm font-bold uppercase tracking-wider',
                     selectedEvidence.status === 'pending'
                       ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
                       : selectedEvidence.status === 'reviewed'
@@ -140,7 +140,7 @@ export const EvidenceDetailsModal: React.FC = () => {
             {selectedEvidence.chainOfCustody.map((entry, index) => (
               <div
                 key={`${entry.timestamp}-${index}`}
-                className="p-4 bg-white/5 border border-white/5 rounded-lg space-y-1"
+                className="p-4 bg-white/5 border border-white/5 rounded-md space-y-1"
               >
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">{entry.timestamp}</p>
                 <p className="text-white font-bold">{entry.handler}</p>

@@ -32,56 +32,77 @@ const ModuleShell = <T extends string,>({
   return (
     <div className="min-h-screen console-theme">
       {/* Header: scrolls with page. Tabs below stick to viewport on scroll (see Module Layout in UI-GOLDSTANDARD). */}
-      <header className="glass-strong border-b border-white/10 shadow-2xl relative shrink-0">
+      <header className="glass-strong border-b border-white/10 relative shrink-0">
         <div className="max-w-[1800px] mx-auto px-8 py-8 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {icon && (
-              <div className="w-16 h-16 rounded-2xl glass-card flex items-center justify-center">
+              <div className="w-16 h-16 rounded-md glass-card flex items-center justify-center">
                 <div className="text-2xl text-white">{icon}</div>
               </div>
             )}
             <div>
               <div className="flex items-center space-x-3">
-                <h1 className="text-3xl font-black uppercase tracking-tighter text-white">{title}</h1>
+                <h1 className="module-header-title">{title}</h1>
                 {statusLabel && (
-                  <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]">
+                  <span className="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     {statusLabel}
                   </span>
                 )}
               </div>
-              {subtitle && <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mt-2">{subtitle}</p>}
+              {subtitle && <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] mt-2">{subtitle}</p>}
             </div>
           </div>
           {actions && <div className="flex items-center space-x-3">{actions}</div>}
         </div>
       </header>
 
+      {/* Tab bar: UI-GOLDSTANDARD §5 — flat, sticky, left-aligned; active = white + 2px blue bottom border (no pill, no glow) */}
       {tabs.length > 0 && onTabChange && activeTab && (
-        <div className="sticky top-0 z-[70] bg-[color:var(--console-dark)]/95 backdrop-blur-xl border-b border-white/10 shadow-2xl shrink-0">
-          <div className="max-w-[1800px] mx-auto px-6 py-4">
-            <div className="flex justify-center">
-              <nav role="tablist" aria-label="Module tabs" className="flex space-x-1 bg-white/5 p-1 rounded-lg border border-white/10">
-                {tabs.map((tab) => (
+        <div
+          className="sticky top-0 z-[70] shrink-0 border-b border-white/10 bg-[color:var(--console-dark)]"
+          style={{ minHeight: '48px' }}
+        >
+          <div className="max-w-[1800px] mx-auto px-6">
+            <nav
+              role="tablist"
+              aria-label="Module tabs"
+              className="flex items-stretch gap-0 -mb-px"
+            >
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
                   <button
                     key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`panel-${tab.id}`}
+                    id={`tab-${tab.id}`}
+                    tabIndex={isActive ? 0 : -1}
                     onClick={() => onTabChange(tab.id)}
                     className={cn(
-                      'px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:ring-offset-2 focus:ring-offset-[color:var(--console-dark)]',
-                      activeTab === tab.id
-                        ? 'bg-[rgba(37,99,235,0.3)] text-white border border-[rgba(37,99,235,0.5)] shadow-[0_0_14px_rgba(37,99,235,0.5)]'
-                        : 'text-slate-300 hover:text-white hover:bg-white/10'
+                      'px-5 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors duration-150',
+                      'focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-[-2px]',
+                      isActive
+                        ? 'text-white border-blue-500'
+                        : 'text-slate-400 border-transparent hover:text-white hover:bg-white/5 hover:border-white/10'
                     )}
                   >
                     {tab.label}
                   </button>
-                ))}
-              </nav>
-            </div>
+                );
+              })}
+            </nav>
           </div>
         </div>
       )}
 
-      <main className="relative max-w-[1800px] mx-auto px-6 py-8">
+      <main
+        className="relative max-w-[1800px] mx-auto px-6 py-8"
+        role={tabs.length > 0 && activeTab ? 'tabpanel' : undefined}
+        id={tabs.length > 0 && activeTab ? `panel-${activeTab}` : undefined}
+        aria-labelledby={tabs.length > 0 && activeTab ? `tab-${activeTab}` : undefined}
+      >
         {children}
       </main>
     </div>

@@ -15,6 +15,12 @@ import type {
 } from '../types/sound-monitoring.types';
 import { logger } from '../../../services/logger';
 
+/** Normalize alert id from API (may return string) to number for consistent frontend use. */
+function normalizeSoundAlert(raw: SoundAlert & { id?: number | string }): SoundAlert {
+  const id = raw.id != null ? Number(raw.id) : 0;
+  return { ...raw, id } as SoundAlert;
+}
+
 /**
  * Get all sound alerts with optional filtering
  * GET /sound-monitoring/alerts
@@ -37,14 +43,14 @@ export async function getAlerts(filters?: SoundMonitoringFilters): Promise<Sound
     if (!response.success || !response.data) {
       throw new Error('Failed to fetch sound alerts');
     }
-    return response.data;
+    return Array.isArray(response.data) ? response.data.map(normalizeSoundAlert) : [];
   } catch (error) {
     logger.error('Failed to fetch sound alerts', error instanceof Error ? error : new Error(String(error)), {
       module: 'SoundMonitoringService',
       action: 'getAlerts',
       filters
     });
-    // Return empty array on error (mock data for now)
+    // Return empty array on error
     return [];
   }
 }
@@ -59,7 +65,7 @@ export async function getAlert(alertId: number): Promise<SoundAlert | null> {
     if (!response.success || !response.data) {
       throw new Error(`Failed to fetch sound alert ${alertId}`);
     }
-    return response.data;
+    return normalizeSoundAlert(response.data as SoundAlert & { id?: number | string });
   } catch (error) {
     logger.error('Failed to fetch sound alert', error instanceof Error ? error : new Error(String(error)), {
       module: 'SoundMonitoringService',
@@ -80,7 +86,7 @@ export async function acknowledgeAlert(alertId: number): Promise<SoundAlert | nu
     if (!response.success || !response.data) {
       throw new Error('Failed to acknowledge sound alert');
     }
-    return response.data;
+    return normalizeSoundAlert(response.data as SoundAlert & { id?: number | string });
   } catch (error) {
     logger.error('Failed to acknowledge sound alert', error instanceof Error ? error : new Error(String(error)), {
       module: 'SoundMonitoringService',
@@ -101,7 +107,7 @@ export async function resolveAlert(alertId: number): Promise<SoundAlert | null> 
     if (!response.success || !response.data) {
       throw new Error('Failed to resolve sound alert');
     }
-    return response.data;
+    return normalizeSoundAlert(response.data as SoundAlert & { id?: number | string });
   } catch (error) {
     logger.error('Failed to resolve sound alert', error instanceof Error ? error : new Error(String(error)), {
       module: 'SoundMonitoringService',
@@ -128,7 +134,7 @@ export async function getZones(): Promise<SoundZone[]> {
       module: 'SoundMonitoringService',
       action: 'getZones'
     });
-    // Return empty array on error (mock data for now)
+    // Return empty array on error
     return [];
   }
 }
@@ -149,7 +155,7 @@ export async function getMetrics(): Promise<SoundMetrics | null> {
       module: 'SoundMonitoringService',
       action: 'getMetrics'
     });
-    // Return null on error (mock data for now)
+    // Return null on error
     return null;
   }
 }
@@ -170,7 +176,7 @@ export async function getAudioVisualization(): Promise<AudioVisualization | null
       module: 'SoundMonitoringService',
       action: 'getAudioVisualization'
     });
-    // Return null on error (mock data for now)
+    // Return null on error
     return null;
   }
 }

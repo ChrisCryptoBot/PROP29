@@ -55,7 +55,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-4 rounded-xl border transition-all group",
+        "flex items-center justify-between p-4 rounded-md border transition-colors group",
         onSelect ? 'cursor-pointer' : '',
         isOverdue
           ? "bg-red-500/5 border-red-500/30 hover:bg-red-500/10 relative overflow-hidden"
@@ -73,7 +73,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
             "border",
             isOverdue
               ? "bg-red-900/50 border-red-500/50 ring-2 ring-red-500/20"
-              : "bg-gradient-to-br from-blue-700 to-indigo-900 border-white/5"
+              : "bg-blue-600 border-white/5"
           )}>
             {visitor.first_name[0]}{visitor.last_name[0]}
           </Avatar>
@@ -127,7 +127,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
                 "text-[10px] font-black uppercase tracking-widest px-4 hover:text-white",
                 isOverdue
                   ? "border-red-500/30 text-red-400 hover:bg-red-500 hover:border-red-500"
-                  : "text-[color:var(--text-sub)] border-[color:var(--border-subtle)]"
+                  : "text-[color:var(--text-sub)] border-white/5"
               )}
             >
               Check Out
@@ -138,7 +138,7 @@ export const VisitorListItem: React.FC<VisitorListItemProps> = React.memo(({
               size="sm"
               variant="outline"
               onClick={handleGenerateQR}
-              className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-[color:var(--border-subtle)] hover:text-[color:var(--text-main)]"
+              className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-white/5 hover:text-[color:var(--text-main)]"
             >
               <i className="fas fa-qrcode" />
             </Button>

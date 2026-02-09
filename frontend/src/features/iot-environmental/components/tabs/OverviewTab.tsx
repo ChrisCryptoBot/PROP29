@@ -1,7 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
-import { Button } from '../../../../components/UI/Button';
 import { cn } from '../../../../utils/cn';
 import { formatLocationDisplay } from '../../../../utils/formatLocation';
 import { useIoTEnvironmentalContext } from '../../context/IoTEnvironmentalContext';
@@ -21,96 +19,42 @@ const OverviewTab: React.FC = () => {
   const sensorSnapshot = environmentalData.slice(0, 6);
 
   return (
-    <div className="space-y-6">
-      {/* Current Environmental Readings */}
-      <div className="bg-black/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
-        <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-          <h2 className="text-lg font-black text-white uppercase tracking-tighter flex items-center">
-            <i className="fas fa-chart-line mr-3 text-blue-500" />
-            LIVE TELEMETRY FEED
-          </h2>
-          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest italic opacity-70">Sector-Wide Environmental Monitoring</p>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { label: 'Temperature', value: analytics.average_temperature.toFixed(1) + '°C', type: 'temperature', color: 'red' },
-              { label: 'Humidity', value: analytics.average_humidity.toFixed(1) + '%', type: 'humidity', color: 'blue' },
-              { label: 'Air Quality', value: analytics.average_air_quality.toFixed(0) + ' PPM', type: 'air_quality', color: 'green' }
-            ].map((stat, idx) => (
-              <div key={idx} className="group relative p-6 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all duration-500 overflow-hidden">
-                <div className={cn(
-                  "absolute -right-4 -top-4 w-24 h-24 blur-3xl opacity-10 transition-opacity duration-500 group-hover:opacity-20",
-                  stat.color === 'red' ? 'bg-red-500' : stat.color === 'blue' ? 'bg-blue-500' : 'bg-green-500'
-                )} />
-                <div className="flex items-center justify-between mb-4 relative z-10">
-                  <div className={cn(
-                    "w-12 h-12 rounded flex items-center justify-center shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6",
-                    stat.color === 'red' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                      stat.color === 'blue' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                        'bg-green-500/10 text-green-500 border border-green-500/20'
-                  )}>
-                    {renderSensorIcon(stat.type as any, 24)}
-                  </div>
-                  <span className={cn(
-                    "px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded border",
-                    stat.color === 'red' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                      stat.color === 'blue' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        'bg-green-500/10 text-green-400 border-green-500/20'
-                  )}>{stat.label}</span>
-                </div>
-                <div className="text-center relative z-10">
-                  <h3 className="text-4xl font-black text-white mb-1 tracking-tighter">
-                    {stat.value}
-                  </h3>
-                  <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] group-hover:text-white/50 transition-colors">Avg Telemetry Data</p>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="space-y-6" role="main" aria-label="IoT Environmental Overview">
+      {/* Page header */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="page-title">Overview</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
+            Sector-wide environmental monitoring and sensor status
+          </p>
         </div>
       </div>
 
-      {/* Sensor Status Distribution */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { label: 'Normal Status', count: analytics.normalSensors, icon: 'fa-check', color: 'green' },
-          { label: 'Warning Status', count: analytics.warningSensors, icon: 'fa-exclamation-triangle', color: 'yellow' },
-          { label: 'Critical Status', count: analytics.criticalSensors, icon: 'fa-bolt', color: 'red' }
-        ].map((dist, idx) => (
-          <div key={idx} className={cn(
-            "p-6 bg-black/40 border rounded-2xl backdrop-blur-md text-center group transition-all duration-300 hover:-translate-y-1 hover:bg-black/60",
-            dist.color === 'green' ? 'border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.05)]' :
-              dist.color === 'yellow' ? 'border-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.05)]' :
-                'border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.05)]'
-          )}>
-            <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3",
-              dist.color === 'green' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
-                dist.color === 'yellow' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                  'bg-red-500/10 text-red-500 border border-red-500/20'
-            )}>
-              <i className={cn("fas", dist.icon, "text-xl")} />
-            </div>
-            <h3 className="text-4xl font-black mb-1 text-white tracking-tighter group-hover:text-blue-400 transition-colors">{dist.count}</h3>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">{dist.label}</p>
-          </div>
-        ))}
+      {/* Compact metrics bar (gold standard) */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 border-b border-white/5 text-sm mb-6 font-bold uppercase tracking-widest text-[color:var(--text-sub)]" role="group" aria-label="Environmental metrics">
+        <span>Temperature <strong className="font-black text-white">{analytics.average_temperature.toFixed(1)}°C</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Humidity <strong className="font-black text-white">{analytics.average_humidity.toFixed(1)}%</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Air quality <strong className="font-black text-white">{analytics.average_air_quality.toFixed(0)} PPM</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Normal <strong className="font-black text-white">{analytics.normalSensors}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Warning <strong className="font-black text-white">{analytics.warningSensors}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span>Critical <strong className="font-black text-white">{analytics.criticalSensors}</strong></span>
       </div>
 
-      {/* Sensor Snapshots Grid */}
+      {/* Sensor Status (section per gold standard) */}
       {sensorSnapshot.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3 px-1">
-            <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">SENSOR STATUS</h3>
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
+        <section aria-labelledby="iot-env-sensor-status-heading" className="space-y-4">
+          <h3 id="iot-env-sensor-status-heading" className="text-sm font-black uppercase tracking-widest text-[color:var(--text-main)] mb-4">Sensor Status</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sensorSnapshot.map((sensor) => (
-              <div key={sensor.id} className="group p-5 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all duration-300 backdrop-blur-sm">
+              <div key={sensor.id} className="p-4 rounded-md border border-white/5 bg-slate-900/50 hover:bg-white/5 transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white/5 border border-white/5 rounded flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
+                    <div className="w-10 h-10 bg-blue-600 border border-white/5 rounded-md flex items-center justify-center text-white">
                       {renderSensorIcon(sensor.sensor_type, 18)}
                     </div>
                     <div>
@@ -147,26 +91,26 @@ const OverviewTab: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Recent Active Alerts */}
+      {/* Priority Alerts (section per gold standard) */}
       {activeAlerts.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em] flex items-center">
-              <i className="fas fa-exclamation-circle mr-2" />
-              PRIORITY ALERTS
-            </h2>
+        <section aria-labelledby="iot-env-priority-alerts-heading" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 id="iot-env-priority-alerts-heading" className="text-sm font-black uppercase tracking-widest text-[color:var(--text-main)] flex items-center">
+              <i className="fas fa-exclamation-circle mr-2 text-red-500" aria-hidden />
+              Priority Alerts
+            </h3>
             <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 text-[9px] font-black uppercase tracking-widest rounded-full">
-              {activeAlerts.length} ACTIVE INCIDENTS
+              {activeAlerts.length} active
             </span>
           </div>
           <div className="grid grid-cols-1 gap-3">
             {activeAlerts.slice(0, 5).map((alert) => (
-              <div key={alert.id} className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl flex items-start gap-4 hover:bg-red-500/10 transition-all group overflow-hidden relative">
-                <div className="absolute -left-1 top-0 bottom-0 w-1 bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]" />
-                <div className="w-10 h-10 shrink-0 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+              <div key={alert.id} className="p-4 bg-red-500/5 border border-red-500/20 rounded-md flex items-start gap-4 hover:bg-red-500/10 transition-colors overflow-hidden relative">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-600" aria-hidden />
+                <div className="w-10 h-10 shrink-0 bg-red-500/10 border border-red-500/20 rounded-md flex items-center justify-center text-red-500">
                   <i className="fas fa-exclamation-triangle" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -195,7 +139,7 @@ const OverviewTab: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

@@ -15,7 +15,6 @@ import { GuestSafetyProvider, useGuestSafetyContext } from './context/GuestSafet
 import {
   IncidentsTab,
   MassNotificationTab,
-  ResponseTeamsTab,
   EvacuationTab,
   AnalyticsTab,
   SettingsTab,
@@ -30,6 +29,7 @@ import {
 import ModuleShell from '../../components/Layout/ModuleShell';
 import { Button } from '../../components/UI/Button';
 import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
+import { useGuestSafetyTelemetry } from './hooks/useGuestSafetyTelemetry';
 import type { TabId } from './types/guest-safety.types';
 
 interface Tab {
@@ -41,7 +41,7 @@ const tabs: Tab[] = [
   { id: 'incidents', label: 'Incidents' },
   { id: 'messages', label: 'Messages' },
   { id: 'mass-notification', label: 'Mass Notification' },
-  { id: 'response-teams', label: 'Response Teams' },
+  { id: 'evacuation', label: 'Evacuation' },
   { id: 'analytics', label: 'Analytics' },
   { id: 'settings', label: 'Settings' },
 ];
@@ -73,10 +73,15 @@ const GuestSafetyGlobalRefresh: React.FC = () => {
   return null;
 };
 
-const OrchestratorContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('incidents');
-  const { setShowCreateIncidentModal } = useGuestSafetyContext();
+interface OrchestratorContentProps {
+  activeTab: TabId;
+  onTabChange: (tabId: TabId) => void;
+}
+
+const OrchestratorContent: React.FC<OrchestratorContentProps> = ({ activeTab, onTabChange }) => {
+  const { setShowCreateIncidentModal, isOffline } = useGuestSafetyContext();
   const { triggerGlobalRefresh } = useGlobalRefresh();
+  const { trackAction } = useGuestSafetyTelemetry();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -90,7 +95,8 @@ const OrchestratorContent: React.FC = () => {
   }, [triggerGlobalRefresh]);
 
   const handleTabChange = (tabId: TabId) => {
-    setActiveTab(tabId);
+    trackAction('tab_changed', 'tab', { tabId });
+    onTabChange(tabId);
   };
 
   const renderTab = () => {
@@ -101,8 +107,6 @@ const OrchestratorContent: React.FC = () => {
         return <MessagesTab />;
       case 'mass-notification':
         return <MassNotificationTab />;
-      case 'response-teams':
-        return <ResponseTeamsTab />;
       case 'evacuation':
         return <EvacuationTab />;
       case 'analytics':
@@ -125,6 +129,13 @@ const OrchestratorContent: React.FC = () => {
         activeTab={activeTab}
         onTabChange={handleTabChange}
       >
+      {isOffline && (
+        <div className="bg-amber-500/20 border-b border-amber-500/50 px-4 py-2" role="alert">
+          <p className="text-amber-400 text-xs font-black uppercase tracking-wider">
+            You are offline. Data shown is last known state. Actions may fail until connection is restored.
+          </p>
+        </div>
+      )}
       <main className="relative max-w-[1800px] mx-auto px-6 py-8" role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
         {renderTab()}
       </main>
@@ -139,9 +150,9 @@ const OrchestratorContent: React.FC = () => {
       <div className="fixed bottom-8 right-8 z-50">
         <Button
           onClick={() => setShowCreateIncidentModal(true)}
-          variant="destructive"
+          variant="primary"
           size="icon"
-          className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
+          className="w-14 h-14 rounded-full border-0"
           title="Create Incident"
           aria-label="Create Incident"
         >
@@ -154,9 +165,10 @@ const OrchestratorContent: React.FC = () => {
 };
 
 export const GuestSafetyOrchestrator: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabId>('incidents');
   return (
-    <GuestSafetyProvider>
-      <OrchestratorContent />
+    <GuestSafetyProvider setActiveTab={setActiveTab}>
+      <OrchestratorContent activeTab={activeTab} onTabChange={setActiveTab} />
     </GuestSafetyProvider>
   );
 };

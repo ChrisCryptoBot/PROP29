@@ -40,7 +40,7 @@ const tabs: Tab[] = [
 ];
 
 const OrchestratorContent: React.FC = () => {
-  const { canCreateLocker, setShowCreateModal, setSelectedLocker } = useSmartLockersContext();
+  const { canCreateLocker, setShowCreateModal } = useSmartLockersContext();
   const [activeTab, setActiveTab] = useState<string>('overview');
 
   const handleTabChange = (tabId: string) => {
@@ -72,20 +72,6 @@ const OrchestratorContent: React.FC = () => {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabChange}
-      actions={
-        canCreateLocker ? (
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            variant="primary"
-            className="font-black uppercase tracking-widest px-8 shadow-lg shadow-blue-500/20"
-            title="Create New Locker"
-            aria-label="Create New Locker"
-          >
-            <i className="fas fa-plus mr-2" />
-            New Locker
-          </Button>
-        ) : null
-      }
     >
       <main className="relative max-w-[1800px] mx-auto px-6 py-6" role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
         {renderTab()}
@@ -103,7 +89,7 @@ const OrchestratorContent: React.FC = () => {
             onClick={() => setShowCreateModal(true)}
             variant="primary"
             size="icon"
-            className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
+            className="w-14 h-14 rounded-full border-0"
             title="Create New Locker"
             aria-label="Create New Locker"
           >

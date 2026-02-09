@@ -3,18 +3,20 @@
  * Combines Lost & Found and Packages into a single module
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ModuleShell from '../../components/Layout/ModuleShell';
 import { ErrorBoundary } from '../../components/UI/ErrorBoundary';
 import { Button } from '../../components/UI/Button';
 import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
 import { propertyItemsExportService, ExportFormat, ExportPeriod } from './services/PropertyItemsExportService';
 import { Modal } from '../../components/UI/Modal';
-import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../utils/toast';
+import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showError } from '../../utils/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePropertyItemsOffline } from './hooks/usePropertyItemsOffline';
 import { usePropertyItemsWebSocket } from './hooks/usePropertyItemsWebSocket';
 import { usePropertyItemsTelemetry } from './hooks/usePropertyItemsTelemetry';
+import { ErrorHandlerService } from '../../services/ErrorHandlerService';
+import type { OfflineAction } from './services/PropertyItemsOfflineService';
 
 // Import both module providers and components
 import { LostFoundProvider, useLostFoundContext } from '../lost-and-found/context/LostFoundContext';
@@ -45,14 +47,21 @@ import {
   ScanPackageModal,
   PackageDetailsModal
 } from '../packages/components/modals';
+import { PackageStatus } from '../packages/types/package.types';
 
 type TabId = 'overview' | 'lost-found' | 'packages' | 'analytics' | 'settings';
 
 const LostFoundContent: React.FC<{ activeTab: TabId }> = ({ activeTab }) => {
-  const { selectedItem, setSelectedItem } = useLostFoundContext();
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const context = useLostFoundContext();
+  const { selectedItem, setSelectedItem } = context;
+  const [localShowRegister, setLocalShowRegister] = useState(false);
+  const [localShowReport, setLocalShowReport] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showReportModal, setShowReportModal] = useState(false);
+
+  const showRegisterModal = context.showRegisterModal !== undefined ? context.showRegisterModal : localShowRegister;
+  const setShowRegisterModal = context.setShowRegisterModal ?? setLocalShowRegister;
+  const showReportModal = context.showReportModal !== undefined ? context.showReportModal : localShowReport;
+  const setShowReportModal = context.setShowReportModal ?? setLocalShowReport;
 
   React.useEffect(() => {
     if (selectedItem && !showDetailsModal) {
@@ -111,11 +120,30 @@ const LostFoundContent: React.FC<{ activeTab: TabId }> = ({ activeTab }) => {
   );
 };
 
-const PackageContent: React.FC<{ activeTab: TabId }> = ({ activeTab }) => {
+interface PackageContentProps {
+  activeTab: TabId;
+  showRegisterModal?: boolean;
+  setShowRegisterModal?: (show: boolean) => void;
+  showScanModal?: boolean;
+  setShowScanModal?: (show: boolean) => void;
+}
+
+const PackageContent: React.FC<PackageContentProps> = ({
+  activeTab,
+  showRegisterModal: propShowRegister,
+  setShowRegisterModal: propSetShowRegister,
+  showScanModal: propShowScan,
+  setShowScanModal: propSetShowScan,
+}) => {
   const { selectedPackage, setSelectedPackage } = usePackageContext();
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [showScanModal, setShowScanModal] = useState(false);
+  const [localShowRegister, setLocalShowRegister] = useState(false);
+  const [localShowScan, setLocalShowScan] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  const showRegisterModal = propShowRegister !== undefined ? propShowRegister : localShowRegister;
+  const setShowRegisterModal = propSetShowRegister ?? setLocalShowRegister;
+  const showScanModal = propShowScan !== undefined ? propShowScan : localShowScan;
+  const setShowScanModal = propSetShowScan ?? setLocalShowScan;
 
   React.useEffect(() => {
     if (selectedPackage && !showDetailsModal) {
@@ -208,38 +236,35 @@ const UnifiedOverviewContent: React.FC = () => {
   return (
     <>
       <div className="space-y-8">
-        {/* Gold Standard Page Header */}
         <div className="flex justify-between items-end mb-8">
           <div>
-            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Overview</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <h2 className="page-title">Overview</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
               Unified view of Lost & Found items and Packages
             </p>
           </div>
         </div>
 
-        {/* Lost & Found Section */}
-        <div>
-          <ErrorBoundary moduleName="PropertyItemsLostFoundOverview">
-            <LostFoundProvider
-              modalControls={{
-                setShowRegisterModal: setShowLostFoundRegisterModal,
-                setShowEditModal: () => {},
-                setShowDetailsModal: setShowLostFoundDetailsModal,
-                setShowReportModal: () => {}
-              }}
-            >
-              <LostFoundOverviewTab />
-            </LostFoundProvider>
-          </ErrorBoundary>
-        </div>
+        {/* Single container: items (L&F) and packages integrated — no separate L&F or Packages headings */}
+        <ErrorBoundary moduleName="PropertyItemsLostFoundOverview">
+          <LostFoundProvider
+            modalControls={{
+              setShowRegisterModal: setShowLostFoundRegisterModal,
+              setShowEditModal: () => {},
+              setShowDetailsModal: setShowLostFoundDetailsModal,
+              setShowReportModal: () => {}
+            }}
+          >
+            <LostFoundOverviewTab embedded />
+          </LostFoundProvider>
+        </ErrorBoundary>
 
-        {/* Packages Section */}
-        <div>
-          <ErrorBoundary moduleName="PropertyItemsPackageOverview">
-            <PackageOverviewTab />
-          </ErrorBoundary>
-        </div>
+        {/* Subtle divider between sections — keeps minimal look while clarifying two distinct areas */}
+        <hr className="border-white/5" aria-hidden="true" />
+
+        <ErrorBoundary moduleName="PropertyItemsPackageOverview">
+          <PackageOverviewTab embedded />
+        </ErrorBoundary>
       </div>
 
       {/* Modals for Overview Tab */}
@@ -299,36 +324,89 @@ const OrchestratorContent: React.FC = () => {
   const { lastRefreshedAt } = useGlobalRefresh();
   const { user } = useAuth();
   const propertyId = user?.roles?.[0] || undefined;
-  const { isOffline, queueSize, hasUnsyncedChanges, saveLastKnownGoodState, syncOfflineQueue } = usePropertyItemsOffline(propertyId);
   const { trackAction, trackPerformance } = usePropertyItemsTelemetry();
 
-  // WebSocket integration for real-time updates
-  usePropertyItemsWebSocket({
-    onLostFoundItemCreated: (item) => {
+  const onSyncAction = useCallback(async (action: OfflineAction): Promise<boolean> => {
+    const d = action.data as Record<string, unknown>;
+    try {
+      if (action.entity === 'lost-found') {
+        if (action.type === 'create') {
+          await lostFoundContext.createItem(d as unknown as Parameters<typeof lostFoundContext.createItem>[0]);
+          return true;
+        }
+        if (action.type === 'update' && d?.item_id && d?.updates) {
+          await lostFoundContext.updateItem(String(d.item_id), d.updates as Parameters<typeof lostFoundContext.updateItem>[1]);
+          return true;
+        }
+        if (action.type === 'delete' && d?.item_id) {
+          await lostFoundContext.deleteItem(String(d.item_id));
+          return true;
+        }
+      }
+      if (action.entity === 'package') {
+        if (action.type === 'create') {
+          await packageContext.createPackage(d as unknown as Parameters<typeof packageContext.createPackage>[0]);
+          return true;
+        }
+        if (action.type === 'update' && d?.package_id && d?.updates) {
+          await packageContext.updatePackage(String(d.package_id), d.updates as Parameters<typeof packageContext.updatePackage>[1]);
+          return true;
+        }
+        if (action.type === 'delete' && d?.package_id) {
+          await packageContext.deletePackage(String(d.package_id));
+          return true;
+        }
+      }
+      return false;
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status && status >= 400 && status < 500) return false;
+      throw err;
+    }
+  }, [lostFoundContext.createItem, lostFoundContext.updateItem, lostFoundContext.deleteItem, packageContext.createPackage, packageContext.updatePackage, packageContext.deletePackage]);
+
+  const { isOffline, queueSize, hasUnsyncedChanges, saveLastKnownGoodState, syncOfflineQueue } = usePropertyItemsOffline(propertyId, { onSyncAction });
+
+  const webSocketOptions = useMemo(() => ({
+    onLostFoundItemCreated: (item: { item_id?: string }) => {
       lostFoundContext.refreshItems();
       trackAction('item_created', 'lost-found', { itemId: item.item_id });
     },
-    onLostFoundItemUpdated: (item) => {
+    onLostFoundItemUpdated: (item: { item_id?: string }) => {
       lostFoundContext.refreshItems();
       trackAction('item_updated', 'lost-found', { itemId: item.item_id });
     },
-    onLostFoundItemDeleted: (itemId) => {
+    onLostFoundItemDeleted: (itemId: string) => {
       lostFoundContext.refreshItems();
       trackAction('item_deleted', 'lost-found', { itemId });
     },
-    onPackageCreated: (pkg) => {
+    onPackageCreated: (pkg: { package_id?: string }) => {
       packageContext.refreshPackages();
       trackAction('package_created', 'package', { packageId: pkg.package_id });
     },
-    onPackageUpdated: (pkg) => {
+    onPackageUpdated: (pkg: { package_id?: string }) => {
       packageContext.refreshPackages();
       trackAction('package_updated', 'package', { packageId: pkg.package_id });
     },
-    onPackageDeleted: (packageId) => {
+    onPackageDeleted: (packageId: string) => {
       packageContext.refreshPackages();
       trackAction('package_deleted', 'package', { packageId });
     }
-  });
+  }), [lostFoundContext.refreshItems, packageContext.refreshPackages, trackAction]);
+
+  usePropertyItemsWebSocket(webSocketOptions);
+
+  // Persist Last Known Good when items or packages change (e.g. after create/update/delete)
+  const lfItems = lostFoundContext.items;
+  const pkgList = packageContext.packages;
+  useEffect(() => {
+    const items = Array.isArray(lfItems) ? lfItems : [];
+    const packages = Array.isArray(pkgList) ? pkgList : [];
+    const t = setTimeout(() => {
+      saveLastKnownGoodState(items, packages, propertyId);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [lfItems, pkgList, propertyId, saveLastKnownGoodState]);
 
   const tabs = [
     { id: 'overview' as TabId, label: 'Overview' },
@@ -338,14 +416,14 @@ const OrchestratorContent: React.FC = () => {
     { id: 'settings' as TabId, label: 'Settings' },
   ];
 
-  // Combined metrics with null safety
+  // Combined metrics with null safety (PackageStatus enum for packages)
   const combinedMetrics = {
     totalItems: (Array.isArray(lostFoundContext.items) ? lostFoundContext.items.length : 0) + 
                 (Array.isArray(packageContext.packages) ? packageContext.packages.length : 0),
     pendingItems: (Array.isArray(lostFoundContext.items) ? lostFoundContext.items.filter(i => i.status === 'found').length : 0) + 
-                  (Array.isArray(packageContext.packages) ? packageContext.packages.filter(p => p.status === 'pending').length : 0),
+                  (Array.isArray(packageContext.packages) ? packageContext.packages.filter(p => p.status === PackageStatus.RECEIVED || p.status === PackageStatus.NOTIFIED).length : 0),
     resolvedItems: (Array.isArray(lostFoundContext.items) ? lostFoundContext.items.filter(i => i.status === 'claimed').length : 0) + 
-                   (Array.isArray(packageContext.packages) ? packageContext.packages.filter(p => p.status === 'delivered').length : 0),
+                   (Array.isArray(packageContext.packages) ? packageContext.packages.filter(p => p.status === PackageStatus.DELIVERED).length : 0),
   };
 
   const handleRefresh = async () => {
@@ -368,9 +446,8 @@ const OrchestratorContent: React.FC = () => {
       // Check for partial failures
       const failures = results.filter(r => r.status === 'rejected');
       if (failures.length > 0 && failures.length < results.length) {
-        console.warn('Partial refresh failure:', failures);
+        showError('Some data could not be refreshed. Showing last known state.');
         trackAction('refresh_partial_failure', 'property-items', { failureCount: failures.length });
-        // Still update timestamp if at least one succeeded
       }
       
       // Save Last Known Good State after successful refresh
@@ -379,7 +456,8 @@ const OrchestratorContent: React.FC = () => {
         const packages = Array.isArray(packageContext.packages) ? packageContext.packages : [];
         saveLastKnownGoodState(items, packages, propertyId);
         trackAction('refresh_success', 'property-items');
-      } else {
+      } else if (failures.length > 0) {
+        showError('Failed to refresh. Showing last known state.');
         trackAction('refresh_failure', 'property-items');
       }
       
@@ -387,26 +465,34 @@ const OrchestratorContent: React.FC = () => {
     } catch (error) {
       const duration = Date.now() - startTime;
       trackPerformance('refresh', duration, { success: false });
-      console.error('Failed to refresh property items:', error);
-      // Don't update timestamp on complete failure
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'PropertyItems:refresh');
+      showError('Failed to refresh property items.');
     }
   };
 
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat>('csv');
   const [exportPeriod, setExportPeriod] = useState<ExportPeriod>('monthly');
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
+  const [showRegisterPackageModal, setShowRegisterPackageModal] = useState(false);
+  const [showScanModal, setShowScanModal] = useState(false);
+  const lfContext = useLostFoundContext();
 
   const handleExport = async () => {
     const startTime = Date.now();
+    const startDate = exportPeriod === 'custom' && exportStartDate ? exportStartDate : undefined;
+    const endDate = exportPeriod === 'custom' && exportEndDate ? exportEndDate : undefined;
     trackAction('export_initiated', 'property-items', { format: exportFormat, period: exportPeriod });
     const toastId = showLoading('Preparing export...');
     
     try {
-      // Export both Lost & Found and Packages
       const result = await propertyItemsExportService.exportUnifiedReport({
         format: exportFormat,
         period: exportPeriod,
         propertyId,
+        startDate,
+        endDate,
         includeLostFound: true,
         includePackages: true
       });
@@ -427,7 +513,7 @@ const OrchestratorContent: React.FC = () => {
       trackPerformance('export', duration, { success: false });
       trackAction('export_error', 'property-items', { error: error instanceof Error ? error.message : 'Unknown error' });
       dismissLoadingAndShowError(toastId, 'Failed to export property items');
-      console.error('Export error:', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'PropertyItems:export');
     }
   };
 
@@ -445,6 +531,22 @@ const OrchestratorContent: React.FC = () => {
         onTabChange={setActiveTab}
         actions={
           <>
+            <Button onClick={() => lfContext.setShowRegisterModal?.(true)} variant="outline" className="text-[10px] font-black uppercase tracking-widest" aria-label="Register new lost & found item">
+              <i className="fas fa-plus mr-2" />
+              New Item
+            </Button>
+            <Button onClick={() => lfContext.setShowReportModal?.(true)} variant="outline" className="text-[10px] font-black uppercase tracking-widest" aria-label="Export L&F report">
+              <i className="fas fa-file-export mr-2" />
+              Report
+            </Button>
+            <Button onClick={() => setShowRegisterPackageModal(true)} variant="outline" className="text-[10px] font-black uppercase tracking-widest" aria-label="Register new package">
+              <i className="fas fa-box mr-2" />
+              New Package
+            </Button>
+            <Button onClick={() => setShowScanModal(true)} variant="outline" className="text-[10px] font-black uppercase tracking-widest" aria-label="Scan package">
+              <i className="fas fa-qrcode mr-2" />
+              Scan
+            </Button>
             <Button onClick={() => setShowExportModal(true)} variant="outline" disabled={lostFoundContext.loading.items || packageContext.loading.packages}>
               <i className="fas fa-download mr-2" />
               Export
@@ -476,70 +578,105 @@ const OrchestratorContent: React.FC = () => {
           </>
         }
       >
+        {isOffline && (
+          <div className="bg-amber-500/20 border-b border-amber-500/50 px-4 py-2" role="alert">
+            <p className="text-amber-400 text-xs font-black uppercase tracking-wider">
+              You are offline. Data shown is last known state. Actions will be queued and synced when connection is restored.
+            </p>
+          </div>
+        )}
         <div className="p-6">
           {activeTab === 'overview' && <UnifiedOverviewContent />}
           <LostFoundContent activeTab={activeTab} />
-          <PackageContent activeTab={activeTab} />
+          <PackageContent
+            activeTab={activeTab}
+            showRegisterModal={showRegisterPackageModal}
+            setShowRegisterModal={setShowRegisterPackageModal}
+            showScanModal={showScanModal}
+            setShowScanModal={setShowScanModal}
+          />
         </div>
       </ModuleShell>
 
-      {/* Export Modal */}
+      {/* Export Modal — footer per Gold Standard */}
       <Modal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
         title="Export Property Items"
         size="sm"
+        footer={
+          <>
+            <Button variant="subtle" onClick={() => setShowExportModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleExport}
+              disabled={lostFoundContext.loading.items || packageContext.loading.packages || (exportPeriod === 'custom' && (!exportStartDate || !exportEndDate))}
+            >
+              <i className="fas fa-download mr-2" />
+              Export
+            </Button>
+          </>
+        }
       >
         <div className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                Export Format
-              </label>
-              <select
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
-              >
-                <option value="csv" className="bg-slate-900 text-white">CSV</option>
-                <option value="pdf" className="bg-slate-900 text-white">PDF</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                Time Period
-              </label>
-              <select
-                value={exportPeriod}
-                onChange={(e) => setExportPeriod(e.target.value as ExportPeriod)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
-              >
-                <option value="daily" className="bg-slate-900 text-white">Today</option>
-                <option value="weekly" className="bg-slate-900 text-white">Last 7 Days</option>
-                <option value="monthly" className="bg-slate-900 text-white">Last 30 Days</option>
-                <option value="custom" className="bg-slate-900 text-white">Custom Range</option>
-              </select>
-            </div>
-
-            <div className="pt-4 border-t border-white/5 flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowExportModal(false)}
-                className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleExport}
-                disabled={lostFoundContext.loading.items || packageContext.loading.packages}
-                className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
-              >
-                <i className="fas fa-download mr-2" />
-                Export
-              </Button>
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+              Export Format
+            </label>
+            <select
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+            >
+              <option value="csv" className="bg-slate-900 text-white">CSV</option>
+              <option value="pdf" className="bg-slate-900 text-white">PDF</option>
+            </select>
           </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+              Time Period
+            </label>
+            <select
+              value={exportPeriod}
+              onChange={(e) => setExportPeriod(e.target.value as ExportPeriod)}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
+            >
+              <option value="daily" className="bg-slate-900 text-white">Today</option>
+              <option value="weekly" className="bg-slate-900 text-white">Last 7 Days</option>
+              <option value="monthly" className="bg-slate-900 text-white">Last 30 Days</option>
+              <option value="custom" className="bg-slate-900 text-white">Custom Range</option>
+            </select>
+          </div>
+
+          {exportPeriod === 'custom' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={exportStartDate}
+                  onChange={(e) => setExportStartDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={exportEndDate}
+                  onChange={(e) => setExportEndDate(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:ring-2 focus:ring-blue-500/20 font-mono"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
     </>
@@ -547,8 +684,19 @@ const OrchestratorContent: React.FC = () => {
 };
 
 const PropertyItemsOrchestrator: React.FC = () => {
+  const [showRegisterItemModal, setShowRegisterItemModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   return (
-    <LostFoundProvider>
+    <LostFoundProvider
+      modalControls={{
+        showRegisterModal: showRegisterItemModal,
+        setShowRegisterModal: setShowRegisterItemModal,
+        showReportModal,
+        setShowReportModal,
+        setShowEditModal: () => {},
+        setShowDetailsModal: () => {},
+      }}
+    >
       <PackageProvider>
         <OrchestratorContent />
       </PackageProvider>

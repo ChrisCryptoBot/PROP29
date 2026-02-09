@@ -68,8 +68,9 @@ export const SettingsTab: React.FC = () => {
 
   if (loading.settings) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading settings">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Settings...</p>
       </div>
     );
   }
@@ -79,25 +80,25 @@ export const SettingsTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Settings</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Settings</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Configure guest safety system settings
           </p>
         </div>
       </div>
 
       {!canManageSettings && (
-        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center text-amber-400 text-sm font-bold uppercase tracking-widest">
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-md flex items-center text-amber-400 text-sm font-bold uppercase tracking-widest">
           <i className="fas fa-lock mr-3 text-amber-500" />
           Read-only access
         </div>
       )}
 
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-2xl" aria-hidden="true">
-              <i className="fas fa-cog text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+              <i className="fas fa-cog text-white" />
             </div>
             Settings
           </CardTitle>
@@ -106,7 +107,7 @@ export const SettingsTab: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400 ml-1">
                   Response Threshold (Minutes)
                 </label>
                 <input
@@ -135,7 +136,7 @@ export const SettingsTab: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400 ml-1">
                   Auto-Escalation
                 </label>
                 <select
@@ -157,15 +158,15 @@ export const SettingsTab: React.FC = () => {
 
             <div className="space-y-6">
               <div className="space-y-4">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400 ml-1">
                   Notification Channels
                 </label>
-                <div className="space-y-3 bg-slate-900/50 backdrop-blur-xl border border-white/5 p-5 rounded-xl">
+                <div className="space-y-3 bg-slate-900/30 border border-white/5 p-5 rounded-md">
                   <label className="flex items-center justify-between cursor-pointer group">
                     <span className="text-xs font-bold uppercase tracking-widest text-white group-hover:text-blue-400 transition-colors">In-App</span>
                     <input
                       type="checkbox"
-                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-lg checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none disabled:opacity-50"
+                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-md checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none disabled:opacity-50"
                       checked={localSettings.notificationChannels.inApp}
                       onChange={(e) => handleNotificationChannelChange('inApp', e.target.checked)}
                       disabled={!canManageSettings}
@@ -175,7 +176,7 @@ export const SettingsTab: React.FC = () => {
                     <span className="text-xs font-bold uppercase tracking-widest text-white group-hover:text-amber-400 transition-colors">SMS</span>
                     <input
                       type="checkbox"
-                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-lg checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none disabled:opacity-50"
+                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-md checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none disabled:opacity-50"
                       checked={localSettings.notificationChannels.sms}
                       onChange={(e) => handleNotificationChannelChange('sms', e.target.checked)}
                       disabled={!canManageSettings}
@@ -185,7 +186,7 @@ export const SettingsTab: React.FC = () => {
                     <span className="text-xs font-bold uppercase tracking-widest text-white group-hover:text-emerald-400 transition-colors">Email</span>
                     <input
                       type="checkbox"
-                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-lg checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none disabled:opacity-50"
+                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-md checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none disabled:opacity-50"
                       checked={localSettings.notificationChannels.email}
                       onChange={(e) => handleNotificationChannelChange('email', e.target.checked)}
                       disabled={!canManageSettings}
@@ -195,7 +196,7 @@ export const SettingsTab: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400 ml-1">
                   Team Assignment
                 </label>
                 <select
@@ -235,11 +236,11 @@ export const SettingsTab: React.FC = () => {
       {/* Hardware & Mobile Agent Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Hardware Devices Status */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+        <Card className="bg-slate-900/50 border border-white/5">
           <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-            <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-2xl" aria-hidden="true">
-                <i className="fas fa-microchip text-white text-lg" />
+            <CardTitle className="flex items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+                <i className="fas fa-microchip text-white" />
               </div>
               Hardware Devices
             </CardTitle>
@@ -253,18 +254,18 @@ export const SettingsTab: React.FC = () => {
               />
             ) : (
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Devices</span>
                   <span className="text-2xl font-black text-white">{hardwareDevices.length}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Online</span>
                   <span className="text-2xl font-black text-emerald-400">
                     {hardwareDevices.filter((d: any) => d.status === 'online').length}
                   </span>
                 </div>
                 {hardwareStatus.lastKnownGoodState && (
-                  <div className="p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                  <div className="p-3 bg-slate-900/30 rounded-md border border-white/5">
                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Last Known Good</span>
                     <p className="text-xs text-white font-mono mt-1">
                       {hardwareStatus.lastKnownGoodState.toLocaleString()}
@@ -277,11 +278,11 @@ export const SettingsTab: React.FC = () => {
         </Card>
 
         {/* Mobile Agent Metrics */}
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+        <Card className="bg-slate-900/50 border border-white/5">
           <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-            <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-2xl" aria-hidden="true">
-                <i className="fas fa-mobile-alt text-white text-lg" />
+            <CardTitle className="flex items-center">
+<div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+              <i className="fas fa-mobile-alt text-white" />
               </div>
               Mobile Agents
             </CardTitle>
@@ -295,24 +296,24 @@ export const SettingsTab: React.FC = () => {
               />
             ) : (
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Agents</span>
                   <span className="text-2xl font-black text-white">{agentMetrics[0].totalAgents || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active</span>
                   <span className="text-2xl font-black text-emerald-400">{agentMetrics[0].activeAgents || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Submissions Today</span>
                   <span className="text-2xl font-black text-white">{agentMetrics[0].submissionsToday || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Response Time</span>
                   <span className="text-2xl font-black text-white">{agentMetrics[0].averageResponseTime || 0} min</span>
                 </div>
                 {agentMetrics[0].trustScoreAverage && (
-                  <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-lg border border-white/5">
+                  <div className="flex items-center justify-between p-3 bg-slate-900/30 rounded-md border border-white/5">
                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Trust Score</span>
                     <span className={cn(
                       "text-2xl font-black",

@@ -93,8 +93,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                 items,
             });
             onClose();
-        } catch (error) {
-            console.error('Failed to save template:', error);
+        } catch {
             showError('Failed to save template');
         } finally {
             setSubmitting(false);
@@ -118,7 +117,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-4 py-3 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded-lg text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/5 rounded-md text-[color:var(--text-main)] focus:outline focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="e.g., Morning Shift Checklist"
                     />
                 </div>
@@ -131,7 +130,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                     <select
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        className="w-full px-4 py-3 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded-lg text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/5 rounded-md text-[color:var(--text-main)] focus:outline focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="general">General</option>
                         <option value="security">Security</option>
@@ -155,7 +154,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
 
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                         {items.length === 0 ? (
-                            <div className="text-center py-8 text-[color:var(--text-sub)] bg-[color:var(--background-base)]/30 rounded-lg border-2 border-dashed border-[color:var(--border-subtle)]/20">
+                            <div className="text-center py-8 text-[color:var(--text-sub)] bg-slate-900/30 rounded-lg border-2 border-dashed border-white/5">
                                 <i className="fas fa-clipboard-list text-3xl mb-2 opacity-50" />
                                 <p>No items added yet</p>
                             </div>
@@ -163,7 +162,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                             items.map((item, index) => (
                                 <div
                                     key={index}
-                                    className="p-4 bg-[color:var(--background-base)]/50 border border-[color:var(--border-subtle)]/30 rounded-lg space-y-3"
+                                    className="p-4 bg-white/5 border border-white/5 rounded-md space-y-3"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1 space-y-3">
@@ -171,13 +170,13 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                                                 type="text"
                                                 value={item.title}
                                                 onChange={(e) => handleItemChange(index, 'title', e.target.value)}
-                                                className="w-full px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded text-[color:var(--text-main)] text-sm focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded text-[color:var(--text-main)] text-sm focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Item title"
                                             />
                                             <textarea
                                                 value={item.description}
                                                 onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                                                className="w-full px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded text-[color:var(--text-main)] text-sm focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded text-[color:var(--text-main)] text-sm focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Description (optional)"
                                                 rows={2}
                                             />
@@ -185,7 +184,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                                                 <select
                                                     value={item.category}
                                                     onChange={(e) => handleItemChange(index, 'category', e.target.value)}
-                                                    className="px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded text-[color:var(--text-main)] text-xs focus:ring-2 focus:ring-blue-500"
+                                                    className="px-3 py-2 bg-white/5 border border-white/5 rounded-md text-[color:var(--text-main)] text-xs focus:outline focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="general">General</option>
                                                     <option value="security">Security</option>
@@ -195,13 +194,13 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                                                 <select
                                                     value={item.priority}
                                                     onChange={(e) => handleItemChange(index, 'priority', e.target.value as 'low' | 'medium' | 'high')}
-                                                    className="px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded text-[color:var(--text-main)] text-xs focus:ring-2 focus:ring-blue-500"
+                                                    className="px-3 py-2 bg-white/5 border border-white/5 rounded-md text-[color:var(--text-main)] text-xs focus:outline focus:ring-2 focus:ring-blue-500"
                                                 >
                                                     <option value="low">Low</option>
                                                     <option value="medium">Medium</option>
                                                     <option value="high">High</option>
                                                 </select>
-                                                <label className="flex items-center px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded text-[color:var(--text-main)] text-xs cursor-pointer">
+                                                <label className="flex items-center px-3 py-2 bg-white/5 border border-white/5 rounded text-[color:var(--text-main)] text-xs cursor-pointer">
                                                     <input
                                                         type="checkbox"
                                                         checked={item.required}
@@ -228,7 +227,7 @@ export const ChecklistTemplateModal: React.FC<ChecklistTemplateModalProps> = ({
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-[color:var(--border-subtle)]/10">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-white/5">
                     <Button variant="ghost" onClick={onClose} disabled={submitting}>
                         Cancel
                     </Button>

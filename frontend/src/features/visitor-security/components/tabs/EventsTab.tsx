@@ -48,8 +48,8 @@ export const EventsTab: React.FC = React.memo(() => {
       {/* Page Header - Gold Standard */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Event Security Coordination</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Event Security Coordination</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Large-scale event management with mobile agent coordination and hardware-integrated access control.
           </p>
         </div>
@@ -64,14 +64,14 @@ export const EventsTab: React.FC = React.memo(() => {
         </Button>
       </div>
 
-      <Card className="glass-card border border-white/5 shadow-2xl">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
         <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center mr-3">
-                <i className="fas fa-calendar-alt text-white text-sm" />
+            <CardTitle className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-calendar-alt text-white" />
               </div>
-              Active Event Profiles
+              <span className="card-title-text">Active Event Profiles</span>
             </CardTitle>
           </div>
         </CardHeader>
@@ -94,7 +94,7 @@ export const EventsTab: React.FC = React.memo(() => {
               {paginatedEvents.map(event => (
               <Card
                 key={event.id}
-                className="bg-slate-900/30 border border-white/5 shadow-2xl hover:border-blue-500/30 transition-all cursor-pointer group relative overflow-hidden"
+                className="bg-[color:var(--console-dark)]/50 border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer group relative overflow-hidden"
                 onClick={() => {
                   setSelectedEvent(event);
                   setShowEventDetailsModal(true);
@@ -103,7 +103,7 @@ export const EventsTab: React.FC = React.memo(() => {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h4 className="font-black text-white text-xl group-hover:text-blue-400 transition-colors uppercase tracking-tight">{event.name}</h4>
+                      <h4 className="card-title-text">{event.name}</h4>
                       <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mt-1">{event.type}</p>
                     </div>
                     <span className="px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-widest text-green-400 bg-green-500/10 border border-green-500/20">
@@ -163,8 +163,9 @@ export const EventsTab: React.FC = React.memo(() => {
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
                     className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                    aria-label="Previous page"
                   >
-                    <i className="fas fa-chevron-left mr-1" />
+                    <i className="fas fa-chevron-left mr-1" aria-hidden />
                     Previous
                   </Button>
                   <div className="flex items-center gap-1">
@@ -198,9 +199,10 @@ export const EventsTab: React.FC = React.memo(() => {
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
                     className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                    aria-label="Next page"
                   >
                     Next
-                    <i className="fas fa-chevron-right ml-1" />
+                    <i className="fas fa-chevron-right ml-1" aria-hidden />
                   </Button>
                   <Select
                     id="items-per-page"

@@ -4,7 +4,6 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { useGuestSafetyContext } from '../../context/GuestSafetyContext';
@@ -20,7 +19,7 @@ function formatRefreshedAgo(d: Date | null): string {
 }
 
 export const AnalyticsTab: React.FC = () => {
-  const { metrics, loading, refreshIncidents } = useGuestSafetyContext();
+  const { metrics, loading, refreshIncidents, incidents } = useGuestSafetyContext();
   const { lastRefreshedAt } = useGlobalRefresh();
   
   const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
@@ -55,10 +54,11 @@ export const AnalyticsTab: React.FC = () => {
     };
   }, [refreshIncidents]);
 
-  if (loading.metrics) {
+  if (loading.incidents && incidents.length === 0) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading analytics">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Analytics...</p>
       </div>
     );
   }
@@ -68,8 +68,8 @@ export const AnalyticsTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Analytics</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Analytics</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Safety performance metrics and trends
           </p>
         </div>
@@ -105,45 +105,29 @@ export const AnalyticsTab: React.FC = () => {
         </div>
       </div>
 
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden" role="region" aria-label="Guest Safety Analytics Dashboard">
-        <CardHeader className="bg-white/5 border-b border-white/5 py-6">
-          <CardTitle className="flex items-center text-2xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-4 border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-300" aria-hidden="true">
-              <i className="fas fa-chart-line text-white text-xl" />
-            </div>
-            Analytics
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-8">
+      {/* Compact metrics bar (gold standard — no KPI cards) */}
+      {metrics.responseMetrics && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Guest safety analytics metrics">
+          <span>Response <strong className="font-black text-white">{metrics.responseMetrics.avgResponseTime}</strong></span>
+          <span className="text-white/30" aria-hidden="true">|</span>
+          <span>Resolution <strong className="font-black text-white">{metrics.responseMetrics.resolutionRate}</strong></span>
+          <span className="text-white/30" aria-hidden="true">|</span>
+          <span>Satisfaction <strong className="font-black text-white">{metrics.responseMetrics.guestSatisfaction}</strong></span>
+        </div>
+      )}
+
+      <section aria-labelledby="analytics-heading">
+        <h3 id="analytics-heading" className="text-sm font-black uppercase tracking-widest text-white mb-4 flex items-center">
+          <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+            <i className="fas fa-chart-line text-white text-lg" />
+          </div>
+          Analytics
+        </h3>
+        <div className="rounded-md border border-white/5 p-6">
           {metrics.responseMetrics ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center p-8 bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl transition-all hover:bg-slate-900/70 group rounded-xl">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                  <i className="fas fa-clock text-white text-3xl" />
-                </div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mb-2">Average Response Time</p>
-                <h3 className="text-4xl font-black tracking-tighter text-white">{metrics.responseMetrics.avgResponseTime}</h3>
-                <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400 mt-2 opacity-70">Response speed</p>
-              </div>
-
-              <div className="text-center p-8 bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl transition-all hover:bg-slate-900/70 group rounded-xl">
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                  <i className="fas fa-check-double text-white text-3xl" />
-                </div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mb-2">Resolution Rate</p>
-                <h3 className="text-4xl font-black tracking-tighter text-white">{metrics.responseMetrics.resolutionRate}</h3>
-                <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400 mt-2 opacity-70">Successfully resolved</p>
-              </div>
-
-              <div className="text-center p-8 bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl transition-all hover:bg-slate-900/70 group rounded-xl">
-                <div className="w-20 h-20 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                  <i className="fas fa-shield-heart text-white text-3xl" />
-                </div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mb-2">Guest Satisfaction</p>
-                <h3 className="text-4xl font-black tracking-tighter text-white">{metrics.responseMetrics.guestSatisfaction}</h3>
-                <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400 mt-2 opacity-70">Quality score</p>
-              </div>
-            </div>
+            <p className="text-sm text-[color:var(--text-sub)]">
+              Response time, resolution rate, and guest satisfaction metrics are displayed above. Additional analytics will appear as more incident data is collected.
+            </p>
           ) : (
             <EmptyState
               icon="fas fa-chart-line"
@@ -151,8 +135,8 @@ export const AnalyticsTab: React.FC = () => {
               description="Analytics metrics will appear here as incidents are resolved and data is collected"
             />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 };

@@ -42,22 +42,22 @@ export const RoutesCheckpointsTab: React.FC = () => {
         <div className="space-y-6" role="main" aria-label="Routes and Checkpoints">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Routes & Checkpoints</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Routes & Checkpoints</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Define patrol routes and checkpoints
                     </p>
                 </div>
             </div>
 
             {/* Route Management */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+                <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
-                                <i className="fas fa-route text-white"></i>
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                                <i className="fas fa-route text-white" aria-hidden />
                             </div>
-                            <span className="text-sm font-black uppercase tracking-widest">Patrol Routes</span>
+                            <span className="card-title-text">Patrol Routes</span>
                         </span>
                         <Button
                             variant="glass"
@@ -79,7 +79,7 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                         <div className="flex items-center justify-between mb-3">
                                             <div>
                                                 <div className="flex items-center gap-3">
-                                                    <h3 className="font-bold text-[color:var(--text-main)] text-lg">{route.name}</h3>
+                                                    <h3 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-widest">{route.name}</h3>
                                                     <Badge variant={route.isActive ? 'success' : 'secondary'} className="glass-card border-none">{route.isActive ? 'Active' : 'Inactive'}</Badge>
                                                 </div>
                                                 <p className="text-sm text-[color:var(--text-sub)] mt-1">{route.description}</p>
@@ -90,14 +90,14 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 text-sm bg-black/20 p-3 rounded-lg border border-white/5">
-                                            <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Duration:</span> <span className="font-mono text-blue-300">{route.estimatedDuration}</span></div>
-                                            <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Checkpoints:</span> <span className="font-mono text-blue-300">{route.checkpoints?.length || 0}</span></div>
-                                            <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Performance:</span> <span className="font-mono text-green-300">{route.performanceScore ?? 0}%</span></div>
+                                            <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Duration:</span> <span className="font-mono text-white">{route.estimatedDuration}</span></div>
+                                            <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Checkpoints:</span> <span className="font-mono text-white">{route.checkpoints?.length || 0}</span></div>
+                                            <div className="flex justify-between md:justify-start md:gap-2"><span className="text-slate-500">Performance:</span> <span className="font-mono text-white">{route.performanceScore ?? 0}%</span></div>
                                         </div>
                                         <div className="flex space-x-2 justify-end">
-                                            <Button size="sm" variant="glass" onClick={() => setViewingRoute(route)} className="border-white/5 text-slate-300"><i className="fas fa-eye mr-1"></i> View</Button>
-                                            <Button size="sm" variant="glass" onClick={() => { setEditingRoute(route); setShowCreateRoute(true); }} className="border-white/5 text-slate-300"><i className="fas fa-edit mr-1"></i> Edit</Button>
-                                            <Button size="sm" variant="glass" onClick={() => handleDeleteRoute(route.id)} className="border-red-500/20 text-red-400 hover:border-red-500/40"><i className="fas fa-trash mr-1"></i> Delete</Button>
+                                            <Button size="sm" variant="glass" onClick={() => setViewingRoute(route)} className="border-white/5 text-slate-300"><i className="fas fa-eye mr-1" aria-hidden /> View</Button>
+                                            <Button size="sm" variant="glass" onClick={() => { setEditingRoute(route); setShowCreateRoute(true); }} className="border-white/5 text-slate-300"><i className="fas fa-edit mr-1" aria-hidden /> Edit</Button>
+                                            <Button size="sm" variant="glass" onClick={() => handleDeleteRoute(route.id)} className="border-red-500/20 text-red-400 hover:border-red-500/40"><i className="fas fa-trash mr-1" aria-hidden /> Delete</Button>
                                             <Button
                                                 size="sm"
                                                 variant="glass"
@@ -159,21 +159,21 @@ export const RoutesCheckpointsTab: React.FC = () => {
             </Card>
 
             {/* Checkpoint Management */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+                <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
-                                <i className="fas fa-map-marker-alt text-white"></i>
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                                <i className="fas fa-map-marker-alt text-white" aria-hidden />
                             </div>
-                            <span className="text-sm font-black uppercase tracking-widest">Checkpoint Management</span>
+                            <span className="card-title-text">Checkpoint Management</span>
                         </span>
                         <Button
                             variant="glass"
                             onClick={() => { setEditingCheckpoint(null); setShowAddCheckpoint(true); }}
                             className="border-white/5 hover:border-blue-500/30 text-white h-10 px-6"
                         >
-                            <i className="fas fa-plus mr-2"></i>
+                            <i className="fas fa-plus mr-2" aria-hidden />
                             Add Checkpoint
                         </Button>
                     </CardTitle>
@@ -198,7 +198,7 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
                                                 {checkpoint.isCritical && <i className="fas fa-exclamation-triangle text-red-400 text-sm" title="Critical checkpoint" />}
-                                                <h3 className="font-bold text-[color:var(--text-main)]">{checkpoint.name}</h3>
+                                                <h3 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-widest">{checkpoint.name}</h3>
                                                 {checkpoint.isCritical && <Badge variant="destructive" className="text-[10px] uppercase">Critical</Badge>}
                                             </div>
                                             <p className="text-sm text-[color:var(--text-sub)] mt-0.5"><i className="fas fa-map-pin mr-1 text-slate-500"></i>{formatLocationDisplay(checkpoint.location) || '—'}</p>
@@ -208,9 +208,9 @@ export const RoutesCheckpointsTab: React.FC = () => {
                                             </div>
                                         </div>
                                         <div className="flex space-x-2">
-                                            <Button size="sm" variant="glass" onClick={() => setViewingCheckpoint(checkpoint)} className="border-white/5 text-slate-300"><i className="fas fa-map-marker-alt mr-1"></i> View</Button>
-                                            <Button size="sm" variant="glass" onClick={() => { setEditingCheckpoint(checkpoint); setShowAddCheckpoint(true); }} className="border-white/5 text-slate-300"><i className="fas fa-edit mr-1"></i> Edit</Button>
-                                            <Button size="sm" variant="glass" onClick={() => handleDeleteCheckpoint(checkpoint.id, checkpoint.routeId)} className="border-red-500/20 text-red-400 hover:border-red-500/40"><i className="fas fa-trash mr-1"></i> Delete</Button>
+                                            <Button size="sm" variant="glass" onClick={() => setViewingCheckpoint(checkpoint)} className="border-white/5 text-slate-300"><i className="fas fa-map-marker-alt mr-1" aria-hidden /> View</Button>
+                                            <Button size="sm" variant="glass" onClick={() => { setEditingCheckpoint(checkpoint); setShowAddCheckpoint(true); }} className="border-white/5 text-slate-300"><i className="fas fa-edit mr-1" aria-hidden /> Edit</Button>
+                                            <Button size="sm" variant="glass" onClick={() => handleDeleteCheckpoint(checkpoint.id, checkpoint.routeId)} className="border-red-500/20 text-red-400 hover:border-red-500/40"><i className="fas fa-trash mr-1" aria-hidden /> Delete</Button>
                                         </div>
                                     </div>
                                 ))

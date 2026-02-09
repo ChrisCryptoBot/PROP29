@@ -21,7 +21,6 @@ import {
   EmergencyAlertModal,
   ConflictResolutionModal
 } from './components';
-import PredictionsTab from './components/tabs/PredictionsTab';
 import { ConfirmDeleteModal } from './components/modals/ConfirmDeleteModal';
 import { BulkOperationConfirmModal } from './components/modals/BulkOperationConfirmModal';
 import ModuleShell from '../../components/Layout/ModuleShell';
@@ -388,11 +387,6 @@ const IncidentLogContent: React.FC<{
           <TrendsTab />
         </ErrorBoundary>
       )}
-      {currentTab === 'predictions' && (
-        <ErrorBoundary moduleName="Incident Log - Predictions">
-          <PredictionsTab />
-        </ErrorBoundary>
-      )}
       {currentTab === 'settings' && (
         <ErrorBoundary moduleName="Incident Log - Settings">
           <SettingsTab />
@@ -496,25 +490,23 @@ const IncidentLogContent: React.FC<{
         />
       )}
 
-      {/* Quick Action FABs - Gold Standard */}
+      {/* Quick Action FABs - Gold Standard: solid colors, circular */}
       <div className="fixed bottom-8 right-8 z-50 flex flex-col space-y-4">
-        {/* Emergency Alert FAB - Red, positioned above regular FAB */}
         <Button
           onClick={() => setShowEmergencyAlertModal(true)}
           variant="destructive"
           size="icon"
-          className="w-14 h-14 rounded-full  hover:scale-110 transition-transform animate-pulse"
+          className="w-14 h-14 rounded-full border-0"
           title="Send Emergency Alert"
           aria-label="Send Emergency Alert"
         >
           <i className="fas fa-exclamation-triangle text-xl" />
         </Button>
-        {/* Regular Create Incident FAB - Blue */}
         <Button
           onClick={() => setShowCreateModal(true)}
           variant="primary"
           size="icon"
-          className="w-14 h-14 rounded-full  hover:scale-110 transition-transform"
+          className="w-14 h-14 rounded-full border-0"
           title="Create New Incident"
           aria-label="Create New Incident"
         >

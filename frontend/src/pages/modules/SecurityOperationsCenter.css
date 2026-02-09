@@ -14,13 +14,13 @@
   overflow: hidden;
 }
 
-/* Glassmorphism effect for main content area */
+/* Flat main content area */
 .camera-monitoring-glass-card {
-  background: rgba(255, 255, 255, 0.08); /* Semi-transparent white */
-  backdrop-filter: blur(15px); /* Glassmorphism blur */
-  border: 1px solid rgba(255, 255, 255, 0.15); /* Light border */
-  border-radius: 20px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); /* Deep shadow */
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   padding: 2rem;
   max-width: 1400px;
   width: 100%;
@@ -58,7 +58,7 @@
   margin-right: 1rem;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); /* White glow */
+  box-shadow: none;
 }
 
 .camera-monitoring-header-title {
@@ -96,22 +96,21 @@
 
 .back-to-dashboard-button-wrapper button {
   background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 0.75rem 1.25rem;
   color: #e2e8f0;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .back-to-dashboard-button-wrapper button:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-50%) scale(1.03);
   color: #fff;
 }
 
@@ -119,76 +118,18 @@
   color: #93c5fd; /* Light blue icon */
 }
 
-/* KPI Cards */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.kpi-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.kpi-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-}
-
-.kpi-label {
-  color: #a0aec0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-.kpi-value {
-  color: #fff;
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: 0.25rem;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.kpi-description {
-  color: #cbd5e0;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
 /* Controls Section */
 .controls-section {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  border-radius: 6px;
   padding: 1.5rem;
   margin-bottom: 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .controls-left {
@@ -209,9 +150,9 @@
 }
 
 .filter-dropdown:focus {
-  outline: none;
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
 }
 
 .search-box {
@@ -230,9 +171,9 @@
 }
 
 .search-box:focus {
-  outline: none;
+  outline: 2px solid #3b82f6;
+  outline-offset: 1px;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
 }
 
 .view-toggle {
@@ -265,23 +206,22 @@
 }
 
 .add-camera-btn {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: #3b82f6;
   color: white;
-  border: none;
+  border: 1px solid #1d4ed8;
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: background-color 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .add-camera-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  background: #1d4ed8;
 }
 
 /* Camera Grid */
@@ -293,19 +233,18 @@
 
 .camera-card {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
   cursor: pointer;
   overflow: hidden;
 }
 
 .camera-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  border-color: rgba(59, 130, 246, 0.5);
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .camera-preview {
@@ -491,18 +430,18 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: none;
 }
 
 .modal-content {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  background: var(--glass-strong-bg);
+  backdrop-filter: none;
+  border: 1px solid var(--glass-strong-border);
+  border-radius: 6px;
   padding: 2rem;
   max-width: 90vw;
   max-height: 90vh;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   position: relative;
   overflow-y: auto;
 }
@@ -663,12 +602,12 @@
 /* Tab Content */
 .tab-content {
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  border-radius: 6px;
   padding: 2rem;
   margin-top: 2rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .tab-title {

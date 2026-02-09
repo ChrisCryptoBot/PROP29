@@ -68,8 +68,8 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
       {/* Page Header - Gold Standard */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Badges & Access Control</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Badges & Access Control</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Physical credential management, hardware integration, and sector access control.
           </p>
         </div>
@@ -99,21 +99,21 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
 
       {/* Hardware Device Status Overview */}
       {hardwareDevices.length > 0 && (
-        <Card className="glass-card border border-white/5 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl text-white">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+        <Card className="bg-[color:var(--console-dark)] border border-white/5">
+          <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+            <CardTitle className="flex items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                 <i className="fas fa-microchip text-white" />
               </div>
-              <span className="uppercase tracking-tight">Hardware Device Status</span>
+              <span className="card-title-text">Hardware Device Status</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Badge Printers */}
-              <div className="p-4 bg-orange-500/5 rounded-lg border border-orange-500/20">
+              <div className="p-4 bg-orange-500/5 rounded-md border border-orange-500/20">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-orange-300 uppercase tracking-wide">Badge Printers</h3>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-orange-300">Badge Printers</h3>
                   <span className="px-2 py-1 text-[8px] font-bold uppercase tracking-wider rounded bg-orange-500/20 text-orange-300 border border-orange-500/30">
                     {hardwareStatus.printers.length} Total
                   </span>
@@ -138,9 +138,9 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
               </div>
 
               {/* Card Readers */}
-              <div className="p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
+              <div className="p-4 bg-blue-500/5 rounded-md border border-blue-500/20">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-blue-300 uppercase tracking-wide">Card Readers</h3>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-blue-300">Card Readers</h3>
                   <span className="px-2 py-1 text-[8px] font-bold uppercase tracking-wider rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
                     {hardwareStatus.cardReaders.length} Total
                   </span>
@@ -165,9 +165,9 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
               </div>
 
               {/* Cameras */}
-              <div className="p-4 bg-purple-500/5 rounded-lg border border-purple-500/20">
+              <div className="p-4 bg-purple-500/5 rounded-md border border-purple-500/20">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-purple-300 uppercase tracking-wide">Photo Cameras</h3>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-purple-300">Photo Cameras</h3>
                   <span className="px-2 py-1 text-[8px] font-bold uppercase tracking-wider rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     {hardwareStatus.cameras.length} Total
                   </span>
@@ -196,11 +196,11 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
       )}
 
       {/* Active Visitor Credentials */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-emerald-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
-              <i className="fas fa-id-badge text-white text-sm" />
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+              <i className="fas fa-id-badge text-white" aria-hidden />
             </div>
             Active Credentials & Sector Access ({checkedInVisitors.length})
           </CardTitle>
@@ -218,11 +218,11 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
               {checkedInVisitors.map(visitor => (
                 <div
                   key={visitor.id}
-                  className="p-5 rounded-xl border border-[color:var(--border-subtle)]/20 bg-[color:var(--console-dark)]/20 group hover:border-blue-500/30 transition-all"
+                  className="p-5 rounded-md border border-white/5 bg-[color:var(--console-dark)]/20 group hover:border-blue-500/30 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="font-bold text-[color:var(--text-main)] group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+                      <h4 className="card-title-text">
                         {visitor.first_name} {visitor.last_name}
                       </h4>
                       <p className="text-[10px] font-mono text-[color:var(--text-sub)]/60 mt-1 uppercase tracking-widest">
@@ -242,7 +242,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
                           setSelectedVisitor(visitor);
                           setShowQRModal(true);
                         }}
-                        className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-[color:var(--border-subtle)] hover:text-[color:var(--text-main)]"
+                        className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-white/5 hover:text-[color:var(--text-main)]"
                       >
                         <i className="fas fa-qrcode mr-2" />
                         View QR
@@ -252,7 +252,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
                         variant="outline"
                         onClick={() => handlePrintBadge(visitor.id)}
                         disabled={hardwareStatus.printersAvailable === 0 || loading.hardwareDevices}
-                        className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-[color:var(--border-subtle)] hover:text-[color:var(--text-main)] disabled:opacity-50"
+                        className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-white/5 hover:text-[color:var(--text-main)] disabled:opacity-50"
                       >
                         <i className="fas fa-print mr-2" />
                         {hardwareStatus.printersAvailable > 0 ? 'Print Badge' : 'No Printer'}
@@ -264,7 +264,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
                           setSelectedVisitor(visitor);
                           setShowBadgeModal(true);
                         }}
-                        className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-[color:var(--border-subtle)] hover:text-[color:var(--text-main)]"
+                        className="text-[10px] font-black uppercase tracking-widest px-3 text-[color:var(--text-sub)] border-white/5 hover:text-[color:var(--text-main)]"
                       >
                         <i className="fas fa-id-card mr-2" />
                         Badge Preview
@@ -272,7 +272,7 @@ export const BadgesAccessTab: React.FC = React.memo(() => {
                     </div>
                   </div>
                   {visitor.access_points && visitor.access_points.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-[color:var(--border-subtle)]/10">
+                    <div className="mt-4 pt-4 border-t border-white/5">
                       <p className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-3">Authorized Security Sectors</p>
                       <div className="flex flex-wrap gap-2">
                         {visitor.access_points.map(apId => (

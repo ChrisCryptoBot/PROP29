@@ -12,8 +12,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Modal } from '../../../../components/UI/Modal';
 import { useVisitorContext } from '../../context/VisitorContext';
 import { EmptyState } from '../../../../components/UI/EmptyState';
+import { showInfo } from '../../../../utils/toast';
 import { cn } from '../../../../utils/cn';
 
 export const MobileAppConfigTab: React.FC = React.memo(() => {
@@ -77,8 +79,8 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       {/* Page Header - Gold Standard */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Mobile Agent Configuration</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Mobile Agent Configuration</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Manage mobile patrol agent devices and configure system integration settings.
           </p>
         </div>
@@ -105,13 +107,13 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       </div>
 
       {/* API Configuration */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-network-wired text-white" />
             </div>
-            <span className="uppercase tracking-tight">API Integration Configuration</span>
+            <span className="card-title-text">API Integration Configuration</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -155,13 +157,15 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => showInfo('API key rotation will be available when the backend supports it.')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-6 px-2 text-[8px] border-green-500/30 text-green-300 hover:bg-green-500/10"
+                    aria-label="Rotate API key"
                   >
                     Rotate
                   </Button>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5">
                 <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Encryption Enabled</span>
                 <div className="px-2 py-1 bg-green-500/20 border border-green-500/30 rounded text-[8px] font-black text-green-300">
                   <i className="fas fa-shield-check mr-1" />
@@ -174,13 +178,13 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       </Card>
 
       {/* Mobile Agent Devices Management */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-mobile-alt text-white" />
             </div>
-            <span className="uppercase tracking-tight">Registered Mobile Agents ({mobileAgentDevices.length})</span>
+            <span className="card-title-text">Registered Mobile Agents ({mobileAgentDevices.length})</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -201,15 +205,15 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
               {mobileAgentDevices.map((agent) => (
                 <div 
                   key={agent.agent_id}
-                  className="p-4 border border-white/5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                  className="p-4 border border-white/5 rounded-md bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5">
+                      <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                         <i className="fas fa-user-shield text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-white uppercase tracking-wide">
+                        <h3 className="font-black text-white uppercase tracking-tighter">
                           {agent.agent_name || `Agent ${agent.agent_id.slice(0, 8)}`}
                         </h3>
                         <p className="text-sm text-slate-400">
@@ -253,7 +257,9 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
                         <Button
                           size="sm"
                           variant="outline"
+                          onClick={() => showInfo(`Agent ${agent.agent_name || agent.agent_id.slice(0, 8)}: Last sync ${agent.last_sync ? new Date(agent.last_sync).toLocaleString() : 'Never'}. Check device network and restart the mobile app.`)}
                           className="text-[9px] font-black uppercase tracking-widest border-red-500/30 text-red-300 hover:bg-red-500/10"
+                          aria-label="Diagnose agent"
                         >
                           <i className="fas fa-exclamation-triangle mr-1" />
                           Diagnose
@@ -269,106 +275,77 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
       </Card>
 
       {/* Register Mobile Agent Form Modal */}
-      {showRegisterForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-          <div className="bg-slate-900/90 rounded-lg p-6 border border-white/5 shadow-2xl backdrop-blur-xl max-w-md w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black uppercase tracking-tight text-white">Register Mobile Agent</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowRegisterForm(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <i className="fas fa-times" />
-              </Button>
+      <Modal
+        isOpen={showRegisterForm}
+        onClose={() => setShowRegisterForm(false)}
+        title="Register mobile agent"
+        size="sm"
+        footer={
+          <>
+            <Button variant="subtle" onClick={() => setShowRegisterForm(false)}>Cancel</Button>
+            <Button
+              variant="primary"
+              onClick={handleRegisterAgent}
+              disabled={!newAgentForm.agent_name.trim() || !newAgentForm.device_id.trim()}
+            >
+              Register agent
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Agent name</label>
+            <input
+              type="text"
+              value={newAgentForm.agent_name}
+              onChange={(e) => setNewAgentForm({ ...newAgentForm, agent_name: e.target.value })}
+              placeholder="e.g. Security Guard Alpha"
+              className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 placeholder-slate-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Device ID</label>
+            <input
+              type="text"
+              value={newAgentForm.device_id}
+              onChange={(e) => setNewAgentForm({ ...newAgentForm, device_id: e.target.value })}
+              placeholder="e.g. DEVICE_001_ALPHA"
+              className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 placeholder-slate-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Device model</label>
+              <input
+                type="text"
+                value={newAgentForm.device_model}
+                onChange={(e) => setNewAgentForm({ ...newAgentForm, device_model: e.target.value })}
+                placeholder="e.g. iPhone 14"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 placeholder-slate-500"
+              />
             </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                  Agent Name
-                </label>
-                <input
-                  type="text"
-                  value={newAgentForm.agent_name}
-                  onChange={(e) => setNewAgentForm({...newAgentForm, agent_name: e.target.value})}
-                  placeholder="e.g., Security Guard Alpha"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                  Device ID
-                </label>
-                <input
-                  type="text"
-                  value={newAgentForm.device_id}
-                  onChange={(e) => setNewAgentForm({...newAgentForm, device_id: e.target.value})}
-                  placeholder="e.g., DEVICE_001_ALPHA"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                    Device Model
-                  </label>
-                  <input
-                    type="text"
-                    value={newAgentForm.device_model}
-                    onChange={(e) => setNewAgentForm({...newAgentForm, device_model: e.target.value})}
-                    placeholder="e.g., iPhone 14"
-                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 text-sm focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
-                    App Version
-                  </label>
-                  <input
-                    type="text"
-                    value={newAgentForm.app_version}
-                    onChange={(e) => setNewAgentForm({...newAgentForm, app_version: e.target.value})}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-white text-sm font-mono focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-end space-x-3 mt-6">
-              <Button
-                variant="subtle"
-                onClick={() => setShowRegisterForm(false)}
-                className="text-[9px] font-black uppercase tracking-widest"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="glass"
-                onClick={handleRegisterAgent}
-                disabled={!newAgentForm.agent_name.trim() || !newAgentForm.device_id.trim()}
-                className="text-[9px] font-black uppercase tracking-widest"
-              >
-                <i className="fas fa-plus mr-2" />
-                Register Agent
-              </Button>
+            <div>
+              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">App version</label>
+              <input
+                type="text"
+                value={newAgentForm.app_version}
+                onChange={(e) => setNewAgentForm({ ...newAgentForm, app_version: e.target.value })}
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 placeholder-slate-500"
+              />
             </div>
           </div>
         </div>
-      )}
+      </Modal>
 
       {/* System Capabilities Overview */}
-      <Card className="glass-card border border-white/5 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center text-xl text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-shield-virus text-white" />
             </div>
-            <span className="uppercase tracking-tight">Mobile Agent Capabilities</span>
+            <span className="card-title-text">Mobile Agent Capabilities</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -414,7 +391,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
               <div 
                 key={i} 
                 className={cn(
-                  "p-4 rounded-lg border transition-all",
+                  "p-4 rounded-md border transition-all",
                   feature.status === 'active' 
                     ? "bg-green-500/10 border-green-500/20 hover:border-green-500/30" 
                     : "bg-orange-500/10 border-orange-500/20 hover:border-orange-500/30"
@@ -422,7 +399,7 @@ export const MobileAppConfigTab: React.FC = React.memo(() => {
               >
                 <div className="flex items-center space-x-3 mb-2">
                   <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    "w-8 h-8 rounded-md flex items-center justify-center",
                     feature.status === 'active' 
                       ? "bg-green-500/20 text-green-400" 
                       : "bg-orange-500/20 text-orange-400"

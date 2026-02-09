@@ -97,7 +97,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
     >
       <div className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
             <div>
               <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Emergency Overrides</h4>
               <p className="text-[10px] text-[color:var(--text-sub)] font-medium italic opacity-60 uppercase tracking-tight">Enable emergency lockdown and unlock actions</p>
@@ -112,8 +112,8 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
           </div>
 
           {config.enabled && (
-            <div className="space-y-4 pl-6 border-l-2 border-white/5">
-              <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+            <div className="space-y-4 pl-6">
+              <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                 <div>
                   <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Require Authorization</h4>
                   <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Limit emergency actions to authorized roles</p>
@@ -128,7 +128,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
               </div>
 
               {config.requireAuthorization && (
-                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                   <label className="block text-[10px] font-black text-[color:var(--text-sub)] mb-4 uppercase tracking-widest ml-1">
                     Authorized Roles
                   </label>
@@ -150,7 +150,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                   <label htmlFor="lockdown-duration" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                     Lockdown Window (Minutes)
                   </label>
@@ -168,7 +168,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                   />
                 </div>
 
-                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                   <label htmlFor="unlock-duration" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                     Emergency Release (Minutes)
                   </label>
@@ -188,7 +188,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
               </div>
 
               <div className="space-y-4 mt-8">
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Baseline Auto-Restore</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Automatically restore standard mode after timeout</p>
@@ -202,7 +202,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Audit Log Requirement</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Log all emergency actions to forensic trail</p>
@@ -216,7 +216,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Signal Confirmation</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Show confirmation dialog before emergency actions</p>
@@ -246,7 +246,7 @@ export const EmergencyOverrideConfigModal: React.FC<EmergencyOverrideConfigModal
                   <option value="critical">LEVEL_4: OMEGA PROTOCOL</option>
                 </Select>
 
-                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+                <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                   <label htmlFor="notification-recipients" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                     Emergency Dispatch (Recipients)
                   </label>

@@ -1,0 +1,86 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-7.4.3, pluggy-1.6.0 -- C:\Users\14698\AppData\Local\Programs\Python\Python310\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\proper-29\backend
+plugins: anyio-3.7.1, dash-2.16.1, Faker-20.1.0, asyncio-0.21.1, cov-4.1.0, mock-3.12.0
+asyncio: mode=strict
+collecting ... collected 4 items / 3 deselected / 1 selected
+
+tests/test_notification_service.py::TestNotificationService::test_history_and_read FAILED
+
+================================== FAILURES ===================================
+________________ TestNotificationService.test_history_and_read ________________
+
+self = <tests.test_notification_service.TestNotificationService object at 0x000001C66B79A470>
+service = <services.notification_service.NotificationService object at 0x000001C66B79AB00>
+notif_user = <models.User object at 0x000001C66BDD18D0>
+property_id = '563b7f83-04ac-4cfc-bdc8-a94064f66861'
+
+    def test_history_and_read(self, service, notif_user, property_id):
+        # Send one
+        service.send_notification(
+            NotificationCreate(
+                user_id=notif_user.user_id,
+                property_id=property_id,
+                channel="email",
+                title="History Test",
+                content="Content"
+            )
+        )
+    
+        # Get history
+>       history = service.get_user_notifications(notif_user.user_id)
+
+tests\test_notification_service.py:113: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <services.notification_service.NotificationService object at 0x000001C66B79AB00>
+user_id = '2a934e5d-6936-4e51-96f3-cefa5d5b590f', limit = 50, skip = 0
+
+    def get_user_notifications(self, user_id: str, limit: int = 50, skip: int = 0) -> List[Notification]:
+        return self.db.query(Notification)\
+            .filter(Notification.user_id == user_id)\
+>           .order_by(desc(Notification.created_at))\
+            .offset(skip)\
+            .limit(limit)\
+            .all()
+E       NameError: name 'desc' is not defined
+
+services\notification_service.py:148: NameError
+----------------------------- Captured log setup ------------------------------
+INFO     services.notification_service:notification_service.py:40 Twilio credentials not configured - using mock SMS provider
+WARNING  passlib.handlers.bcrypt:bcrypt.py:622 (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+INFO     services.event_log_service:event_log_service.py:60 Event logged: USER_CREATED - Created user notif_user
+------------------------------ Captured log call ------------------------------
+INFO     services.notification_service:notification_service.py:113 [EMAIL] To: notif@example.com | Subject: History Test | Body: Content
+============================== warnings summary ===============================
+database.py:57
+  C:\dev\proper-29\backend\database.py:57: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+..\..\..\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_config.py:272: 24 warnings
+  C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_config.py:272: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.6/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+..\..\..\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_generate_schema.py:262: 15 warnings
+  C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_generate_schema.py:262: PydanticDeprecatedSince20: `json_encoders` is deprecated. See https://docs.pydantic.dev/2.6/concepts/serialization/#custom-serializers for alternatives. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.6/migration/
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_notification_service.py::TestNotificationService::test_history_and_read
+================ 1 failed, 3 deselected, 40 warnings in 1.17s =================
+2026-02-08 19:48:01,755 - main - WARNING - Using development SECRET_KEY - NOT FOR PRODUCTION
+2026-02-08 19:48:02,344 - main - INFO - CORS allow_origins: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://127.0.0.1:5173']
+2026-02-08 19:48:03,495 - services.notification_service - INFO - Twilio credentials not configured - using mock SMS provider
+2026-02-08 19:48:03,702 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-02-08 19:48:03,961 - services.event_log_service - INFO - Event logged: USER_CREATED - Created user notif_user
+2026-02-08 19:48:03,981 - services.notification_service - INFO - [EMAIL] To: notif@example.com | Subject: History Test | Body: Content

@@ -25,41 +25,41 @@ export const SoundAlertsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="glass-card border-glass bg-transparent shadow-console overflow-hidden">
-        <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10" aria-hidden="true">
-              <i className="fas fa-exclamation-triangle text-white text-lg" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-red-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden>
+              <i className="fas fa-exclamation-triangle text-white" />
             </div>
-            Sound Alerts Registry
+            <span className="text-sm font-black uppercase tracking-widest text-white">Sound alerts</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 py-6">
           {loading.alerts && soundAlerts.length === 0 ? (
             <div className="text-center py-12">
-              <i className="fas fa-spinner fa-spin text-3xl text-slate-400 mb-4" />
-              <p className="text-slate-600">Loading alerts...</p>
+              <i className="fas fa-spinner fa-spin text-3xl text-slate-400 mb-4" aria-hidden />
+              <p className="text-slate-500">Loading alerts...</p>
             </div>
           ) : soundAlerts.length === 0 ? (
             <EmptyState
               icon="fas fa-exclamation-triangle"
-              title="No sound alerts found"
-              description="Acoustic monitoring active. No anomalies detected in the current registry. Environmental decibel levels within normal range."
+              title="No sound alerts"
+              description="No sound alerts in the current registry. Connect hardware or enable ingestion to see live data."
             />
           ) : (
             <div className="space-y-2">
               {soundAlerts.map((alert) => (
                 <div
                   key={alert.id}
-                  className="flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/[0.08] transition-all cursor-pointer group shadow-inner"
+                  className="flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-md hover:bg-white/10 transition-colors cursor-pointer"
                   onClick={() => viewAlert(alert)}
                 >
                   <div className="flex items-center space-x-5">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                      <i className="fas fa-volume-up text-white text-xl" />
+                    <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                      <i className="fas fa-volume-up text-white" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-white uppercase tracking-tighter group-hover:text-blue-400 transition-colors">{alert.type}</h3>
+                      <h3 className="text-sm font-black text-white uppercase tracking-widest">{alert.type}</h3>
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-[color:var(--text-sub)]">{formatLocationDisplay(alert.location as string | { lat?: number; lng?: number } | null) || '—'}</p>
                       <div className="flex items-center gap-4 mt-2">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center">
@@ -110,7 +110,7 @@ export const SoundAlertsTab: React.FC = () => {
                         </Button>
                       )}
                     </div>
-                    <i className="fas fa-chevron-right text-slate-700 group-hover:text-white transition-colors ml-4" />
+                    <i className="fas fa-chevron-right text-slate-500 ml-4" aria-hidden />
                   </div>
                 </div>
               ))}

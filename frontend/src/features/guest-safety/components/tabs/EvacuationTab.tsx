@@ -28,6 +28,10 @@ const EvacuationTab: React.FC = () => {
     sendMassNotification, 
     canSendNotification,
     loading,
+    isOffline,
+    createIncident,
+    resolveIncident,
+    refreshIncidents,
     refreshEvacuationHeadcount,
     refreshEvacuationCheckIns,
     evacuationHeadcount,
@@ -38,15 +42,17 @@ const EvacuationTab: React.FC = () => {
   const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
   const [isEvacuationActive, setIsEvacuationActive] = useState(false);
 
-  // Find active evacuation incident and refresh data
+  const activeEvacuationIncident = Array.isArray(incidents)
+    ? incidents.find(inc => inc.type === 'evacuation' && inc.status !== 'resolved') ?? null
+    : null;
+
+  // Sync active state and refresh headcount when we have an active evacuation incident
   useEffect(() => {
-    const evacuationIncident = Array.isArray(incidents) 
+    const active = Array.isArray(incidents)
       ? incidents.find(inc => inc.type === 'evacuation' && inc.status !== 'resolved')
       : null;
-    
-    setIsEvacuationActive(!!evacuationIncident);
-    
-    if (evacuationIncident) {
+    setIsEvacuationActive(!!active);
+    if (active) {
       refreshEvacuationHeadcount();
       refreshEvacuationCheckIns();
     }
@@ -113,13 +119,39 @@ const EvacuationTab: React.FC = () => {
         priority: 'normal',
         channels: ['in_app', 'sms'],
       });
-      
+      if (activeEvacuationIncident) {
+        await resolveIncident(activeEvacuationIncident.id);
+        await refreshIncidents();
+      }
       dismissLoadingAndShowSuccess(toastId, 'Evacuation protocol ended. All clear notification sent.');
       setIsEvacuationActive(false);
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Failed to end evacuation protocol');
     }
-  }, [canSendNotification, sendMassNotification]);
+  }, [canSendNotification, sendMassNotification, activeEvacuationIncident, resolveIncident, refreshIncidents]);
+
+  /** Stand down: false alarm — no evacuation required. Reassures guests to disregard the previous message. */
+  const handleStandDown = useCallback(async () => {
+    if (!canSendNotification) return;
+    
+    const toastId = showLoading('Sending stand-down message...');
+    try {
+      await sendMassNotification({
+        message: 'ALL CLEAR — NO EVACUATION REQUIRED. Please disregard any previous evacuation message. There is no emergency. Thank you for your patience.',
+        recipients: 'all',
+        priority: 'normal',
+        channels: ['in_app', 'sms'],
+      });
+      if (activeEvacuationIncident) {
+        await resolveIncident(activeEvacuationIncident.id);
+        await refreshIncidents();
+      }
+      dismissLoadingAndShowSuccess(toastId, 'Stand-down message sent. Guests notified there is no evacuation.');
+      setIsEvacuationActive(false);
+    } catch (error) {
+      dismissLoadingAndShowError(toastId, 'Failed to send stand-down message');
+    }
+  }, [canSendNotification, sendMassNotification, activeEvacuationIncident, resolveIncident, refreshIncidents]);
 
   const isStale = !lastRefreshAt || Date.now() - lastRefreshAt.getTime() > 30000;
 
@@ -128,8 +160,8 @@ const EvacuationTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Evacuation</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Evacuation</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Emergency headcount tracking and guest safety verification
           </p>
         </div>
@@ -156,13 +188,13 @@ const EvacuationTab: React.FC = () => {
       </div>
 
       {/* Evacuation Control */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+      <Card className="bg-slate-900/50 border border-white/5">
         <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
-          <CardTitle className="flex items-center text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
               <i className="fas fa-exclamation-triangle text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest">Evacuation Protocol</span>
+            <span className="card-title-text">Evacuation Protocol</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 py-6">
@@ -171,8 +203,9 @@ const EvacuationTab: React.FC = () => {
               <p className="text-white/60 text-sm mb-6">No active evacuation. Start evacuation protocol to begin headcount tracking.</p>
               <Button
                 onClick={handleStartEvacuation}
-                disabled={!canSendNotification || (typeof loading === 'object' ? loading.actions : false)}
+                disabled={!canSendNotification || isOffline || (typeof loading === 'object' ? loading.actions : false)}
                 className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-[10px] h-12 px-8"
+                title={isOffline ? 'Connect to the internet to start evacuation' : undefined}
               >
                 <i className="fas fa-exclamation-triangle mr-3" />
                 START EVACUATION PROTOCOL
@@ -180,20 +213,33 @@ const EvacuationTab: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-white font-bold text-sm mb-1">Evacuation Active</p>
                   <p className="text-white/40 text-[10px] uppercase tracking-widest">Mass notifications sent to all guests</p>
                 </div>
-                <Button
-                  onClick={handleEndEvacuation}
-                  disabled={!canSendNotification || (typeof loading === 'object' ? loading.actions : false)}
-                  variant="outline"
-                  className="border-green-500/30 text-green-400 hover:bg-green-500/10 font-black uppercase tracking-widest text-[10px] h-10 px-6"
-                >
-                  <i className="fas fa-check-circle mr-2" />
-                  END EVACUATION
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleStandDown}
+                    disabled={!canSendNotification || isOffline || (typeof loading === 'object' ? loading.actions : false)}
+                    variant="outline"
+                    className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10 font-black uppercase tracking-widest text-[10px] h-10 px-6"
+                    title={isOffline ? 'Connect to the internet' : 'False alarm — tell guests no evacuation is required'}
+                  >
+                    <i className="fas fa-times-circle mr-2" />
+                    ALL CLEAR — FALSE ALARM
+                  </Button>
+                  <Button
+                    onClick={handleEndEvacuation}
+                    disabled={!canSendNotification || isOffline || (typeof loading === 'object' ? loading.actions : false)}
+                    variant="outline"
+                    className="border-green-500/30 text-green-400 hover:bg-green-500/10 font-black uppercase tracking-widest text-[10px] h-10 px-6"
+                    title={isOffline ? 'Connect to the internet' : undefined}
+                  >
+                    <i className="fas fa-check-circle mr-2" />
+                    END EVACUATION
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -204,77 +250,77 @@ const EvacuationTab: React.FC = () => {
       {isEvacuationActive && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Guests */}
-          <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+          <Card className="bg-slate-900/50 border border-white/5 group">
             <CardContent className="pt-6 px-6 pb-6 relative">
               <div className="absolute top-4 right-4">
                 <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded uppercase">TOTAL</span>
               </div>
               <div className="flex items-center justify-between mb-4 mt-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                   <i className="fas fa-users text-white text-lg" />
                 </div>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Guests</p>
                 <h3 className="text-3xl font-black text-white tracking-tighter">{headcount.totalGuests}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">On property</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400">On property</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Safe */}
-          <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+          <Card className="bg-slate-900/50 border border-white/5 group">
             <CardContent className="pt-6 px-6 pb-6 relative">
               <div className="absolute top-4 right-4">
                 <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-green-400 bg-green-500/10 border border-green-500/20 rounded uppercase">SAFE</span>
               </div>
               <div className="flex items-center justify-between mb-4 mt-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                   <i className="fas fa-check-circle text-white text-lg" />
                 </div>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Safe</p>
                 <h3 className="text-3xl font-black text-white tracking-tighter">{headcount.safe}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Checked in safe</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400">Checked in safe</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Unaccounted */}
-          <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+          <Card className="bg-slate-900/50 border border-white/5 group">
             <CardContent className="pt-6 px-6 pb-6 relative">
               <div className="absolute top-4 right-4">
                 <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded uppercase">PRIORITY</span>
               </div>
               <div className="flex items-center justify-between mb-4 mt-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                   <i className="fas fa-exclamation-triangle text-white text-lg" />
                 </div>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Unaccounted</p>
                 <h3 className="text-3xl font-black text-white tracking-tighter">{headcount.unaccounted}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">No check-in received</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400">No check-in received</p>
               </div>
             </CardContent>
           </Card>
 
           {/* In Progress */}
-          <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+          <Card className="bg-slate-900/50 border border-white/5 group">
             <CardContent className="pt-6 px-6 pb-6 relative">
               <div className="absolute top-4 right-4">
                 <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded uppercase">ACTIVE</span>
               </div>
               <div className="flex items-center justify-between mb-4 mt-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                   <i className="fas fa-sync-alt text-white text-lg animate-spin-slow" />
                 </div>
               </div>
               <div className="space-y-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">In Progress</p>
                 <h3 className="text-3xl font-black text-white tracking-tighter">{headcount.inProgress}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Evacuating now</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400">Evacuating now</p>
               </div>
             </CardContent>
           </Card>
@@ -283,13 +329,13 @@ const EvacuationTab: React.FC = () => {
 
       {/* Check-In List */}
       {isEvacuationActive && (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+        <Card className="bg-slate-900/50 border border-white/5">
           <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
-            <CardTitle className="flex items-center text-white">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+            <CardTitle className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
                 <i className="fas fa-clipboard-check text-white" />
               </div>
-              <span className="text-sm font-black uppercase tracking-widest">Guest Check-Ins</span>
+              <span className="card-title-text">Guest Check-Ins</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="px-6 py-6">
@@ -305,7 +351,7 @@ const EvacuationTab: React.FC = () => {
                   <div
                     key={checkIn.id}
                     className={cn(
-                      'flex items-center justify-between p-4 rounded-xl border transition-all',
+                      'flex items-center justify-between p-4 rounded-md border transition-colors',
                       checkIn.status === 'safe' 
                         ? 'bg-green-500/10 border-green-500/20'
                         : checkIn.status === 'in_progress'
@@ -315,7 +361,7 @@ const EvacuationTab: React.FC = () => {
                   >
                     <div className="flex items-center space-x-4">
                       <div className={cn(
-                        'w-10 h-10 rounded-xl flex items-center justify-center border',
+                        'w-10 h-10 rounded-md flex items-center justify-center border',
                         checkIn.status === 'safe' 
                           ? 'bg-green-500/20 border-green-500/30 text-green-400'
                           : checkIn.status === 'in_progress'

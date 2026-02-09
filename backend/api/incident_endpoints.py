@@ -392,7 +392,7 @@ async def export_report(
 # =======================================================
 # PRODUCTION READINESS STUBS
 # These endpoints are called by the frontend but not yet fully implemented
-# Returning 501 (Not Implemented) or mock data to prevent 404s
+# Returning 501 (Not Implemented) or stub responses to prevent 404s
 # =======================================================
 
 @router.post("/bulk/approve", response_model=BulkOperationResult)

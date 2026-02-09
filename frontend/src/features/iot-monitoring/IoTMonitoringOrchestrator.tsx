@@ -3,8 +3,9 @@
  * Combines Environmental and Sound Monitoring into a single module
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ModuleShell from '../../components/Layout/ModuleShell';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/UI/Card';
 import { ErrorBoundary } from '../../components/UI/ErrorBoundary';
 import { Button } from '../../components/UI/Button';
 
@@ -37,19 +38,29 @@ type TabId = 'overview' | 'environmental' | 'sound' | 'alerts' | 'analytics' | '
 const EnvironmentalContent: React.FC<{ activeTab: TabId }> = ({ activeTab }) => {
   const {
     loading,
-    analytics,
-    handleExportData,
+    loadError,
     loadData,
+    handleExportData,
     showAddModal,
     showEditModal,
     viewingSensor,
   } = useIoTEnvironmentalContext();
 
-  if (loading) {
+  if (loading && !loadError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading environmental data">
         <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
         <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading environmental data...</p>
+      </div>
+    );
+  }
+  if (loadError) {
+    return (
+      <div className="rounded-md border border-red-500/20 bg-red-500/10 p-6 text-center space-y-4" role="alert">
+        <p className="text-sm font-bold text-red-400">{loadError}</p>
+        <Button variant="outline" size="sm" onClick={loadData} className="border-red-500/30 text-red-400 hover:bg-red-500/10">
+          Retry
+        </Button>
       </div>
     );
   }
@@ -136,22 +147,69 @@ const UnifiedOverviewContent: React.FC = () => {
   const soundContext = useSoundMonitoringContext();
 
   return (
-    <div className="space-y-8">
-      {/* Environmental Section */}
-      <div>
-        <h3 className="text-xl font-black text-white mb-4 uppercase tracking-tighter">Environmental Sensors</h3>
-        <ErrorBoundary moduleName="IoTMonitoringEnvironmentalOverview">
-          <EnvironmentalOverviewTab />
-        </ErrorBoundary>
-      </div>
+    <div className="space-y-6">
+      {/* Environmental Section — Card with icon + title (gold standard §3) */}
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+              <i className="fas fa-thermometer-half text-white" aria-hidden />
+            </div>
+            <span className="text-sm font-black uppercase tracking-widest text-white">Environmental sensors</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-6 py-6">
+          <ErrorBoundary moduleName="IoTMonitoringEnvironmentalOverview">
+            <EnvironmentalOverviewTab />
+          </ErrorBoundary>
+        </CardContent>
+      </Card>
 
-      {/* Sound Section */}
-      <div>
-        <h3 className="text-xl font-black text-white mb-4 uppercase tracking-tighter">Sound Monitoring</h3>
-        <ErrorBoundary moduleName="IoTMonitoringSoundOverview">
-          <SoundOverviewTab onViewAlert={soundContext.viewAlert} />
-        </ErrorBoundary>
-      </div>
+      {/* Sound Section — Card with icon + title (gold standard §3) */}
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-indigo-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+              <i className="fas fa-volume-up text-white" aria-hidden />
+            </div>
+            <span className="text-sm font-black uppercase tracking-widest text-white">Sound monitoring</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-6 py-6">
+          <ErrorBoundary moduleName="IoTMonitoringSoundOverview">
+            <SoundOverviewTab onViewAlert={soundContext.viewAlert} />
+          </ErrorBoundary>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+/** Offline banner: shows when navigator.onLine is false so users know data may be stale. */
+const OfflineBanner: React.FC = () => {
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  useEffect(() => {
+    if (typeof navigator === 'undefined') return;
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
+  if (isOnline) return null;
+  return (
+    <div
+      className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-2 flex items-center gap-2 text-sm font-bold text-amber-400"
+      role="status"
+      aria-live="polite"
+    >
+      <i className="fas fa-wifi fa-rotate-90 text-amber-400" aria-hidden />
+      <span>You&apos;re offline. Data may be stale. Reconnect to refresh.</span>
     </div>
   );
 };
@@ -187,66 +245,105 @@ const OrchestratorContent: React.FC = () => {
       onTabChange={setActiveTab}
       actions={
         <>
-          <Button onClick={envContext.handleExportData} variant="outline">
-            <i className="fas fa-download mr-2" />
+          <Button onClick={envContext.handleExportData} variant="outline" className="border-white/5 text-slate-400 hover:text-white">
+            <i className="fas fa-download mr-2 text-slate-400" aria-hidden />
             Export
           </Button>
-          <Button onClick={envContext.loadData} variant="outline">
-            <i className="fas fa-sync-alt mr-2" />
+          <Button onClick={envContext.loadData} variant="outline" className="border-white/5 text-slate-400 hover:text-white" disabled={envContext.loading}>
+            <i className="fas fa-sync-alt mr-2 text-slate-400" aria-hidden />
             Refresh
           </Button>
+          {envContext.lastSyncTimestamp && (
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
+              Last sync: {envContext.lastSyncTimestamp.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+          )}
           {soundContext.audioVisualization.isRecording && (
-            <div className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg animate-pulse border border-red-500/20">
-              <span className="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            <div className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-md border border-red-500/20">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full " />
               <span className="text-[10px] font-black uppercase tracking-widest">Live Audio</span>
             </div>
           )}
         </>
       }
     >
-      {/* Content-first: no extra wrapper; ModuleShell main already has px-6 py-8. Use space-y for rhythm. */}
-      <div className="space-y-8">
-        {/* Combined Metrics (overview only) */}
-        {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="group" aria-label="IoT metrics">
-            {[
-              { label: 'Total Sensors', value: combinedMetrics.totalSensors, icon: 'fa-server', color: 'blue' as const },
-              { label: 'Active Sensors', value: combinedMetrics.activeSensors, icon: 'fa-wifi', color: 'green' as const },
-              { label: 'Total Alerts', value: combinedMetrics.totalAlerts, icon: 'fa-bell', color: 'blue' as const },
-              { label: 'Critical Alerts', value: combinedMetrics.criticalAlerts, icon: 'fa-exclamation-triangle', color: 'red' as const },
-            ].map((metric, i) => (
-              <div
-                key={i}
-                className="group bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl rounded-xl p-6 relative overflow-hidden"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className={metric.color === 'red'
-                    ? 'w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center'
-                    : metric.color === 'green'
-                    ? 'w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center'
-                    : 'w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center'
-                  }>
-                    <i className={`fas ${metric.icon} text-xl ${metric.color === 'red' ? 'text-red-400' : metric.color === 'green' ? 'text-emerald-400' : 'text-blue-400'}`} />
-                  </div>
-                  <span className={metric.color === 'red'
-                    ? 'px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-red-500/10 text-red-400 border border-red-500/20'
-                    : metric.color === 'green'
-                    ? 'px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                    : 'px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                  }>
-                    {metric.color === 'red' ? 'CRITICAL' : metric.color === 'green' ? 'ONLINE' : 'SYSTEM'}
-                  </span>
-                </div>
-                <h3 className="text-3xl font-black text-white tracking-tighter mb-1">{metric.value}</h3>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">{metric.label}</p>
-              </div>
-            ))}
+      <div className="space-y-6">
+        <OfflineBanner />
+        {envContext.mutationError && (
+          <div className="rounded-md border border-red-500/20 bg-red-500/10 p-4 flex items-center justify-between" role="alert">
+            <div className="flex items-center gap-3">
+              <i className="fas fa-exclamation-circle text-red-400" aria-hidden />
+              <p className="text-sm font-bold text-red-400">{envContext.mutationError}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={envContext.clearMutationError}
+              className="text-red-400 hover:text-red-300 text-[10px] font-black uppercase tracking-widest"
+            >
+              Dismiss
+            </Button>
           </div>
         )}
-
-        {activeTab === 'overview' && <UnifiedOverviewContent />}
-        <EnvironmentalContent activeTab={activeTab} />
-        <SoundContent activeTab={activeTab} />
+        {/* Overview tab: page header + metrics bar (gold standard §6) */}
+        {activeTab === 'overview' && (
+          <>
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="page-title">Overview</h2>
+                <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
+                  Unified environmental and sound sensor status
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 border-b border-white/5 text-sm mb-6 font-bold uppercase tracking-widest text-[color:var(--text-sub)]" role="group" aria-label="IoT metrics">
+              <span>Total sensors <strong className="font-black text-white ml-1">{combinedMetrics.totalSensors}</strong></span>
+              <span className="text-white/30" aria-hidden>·</span>
+              <span>Active <strong className="font-black text-white ml-1">{combinedMetrics.activeSensors}</strong></span>
+              <span className="text-white/30" aria-hidden>·</span>
+              <span>Total alerts <strong className="font-black text-white ml-1">{combinedMetrics.totalAlerts}</strong></span>
+              <span className="text-white/30" aria-hidden>·</span>
+              <span>Critical <strong className="font-black text-white ml-1">{combinedMetrics.criticalAlerts}</strong></span>
+            </div>
+            <UnifiedOverviewContent />
+          </>
+        )}
+        {activeTab === 'alerts' && (
+          <>
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="page-title">Alerts</h2>
+                <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
+                  Environmental and sound alerts
+                </p>
+              </div>
+            </div>
+            <section aria-labelledby="iot-env-alerts-heading" className="mb-10">
+              <h3 id="iot-env-alerts-heading" className="text-sm font-black uppercase tracking-widest text-white mb-4 flex items-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mr-3" aria-hidden>
+                  <i className="fas fa-thermometer-half text-white" />
+                </div>
+                Environmental
+              </h3>
+              <ErrorBoundary moduleName="IoTMonitoringEnvironmentalAlertsTab">
+                <EnvironmentalAlertsTab embedded />
+              </ErrorBoundary>
+            </section>
+            <section aria-labelledby="iot-sound-alerts-heading">
+              <h3 id="iot-sound-alerts-heading" className="text-sm font-black uppercase tracking-widest text-white mb-4 flex items-center">
+                <div className="w-10 h-10 bg-indigo-600 rounded-md flex items-center justify-center border border-white/5 mr-3" aria-hidden>
+                  <i className="fas fa-volume-up text-white" />
+                </div>
+                Sound
+              </h3>
+              <ErrorBoundary moduleName="IoTMonitoringSoundAlertsTab">
+                <SoundAlertsTab />
+              </ErrorBoundary>
+            </section>
+          </>
+        )}
+        {activeTab !== 'alerts' && <EnvironmentalContent activeTab={activeTab} />}
+        {activeTab !== 'alerts' && <SoundContent activeTab={activeTab} />}
       </div>
     </ModuleShell>
   );

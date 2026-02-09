@@ -11,5 +11,4 @@ export * from './tabs/OverviewTab';
 export * from './tabs/IncidentsTab';
 export * from './tabs/ReviewQueueTab';
 export * from './tabs/TrendsTab';
-export * from './tabs/PredictionsTab';
 export * from './tabs/SettingsTab';

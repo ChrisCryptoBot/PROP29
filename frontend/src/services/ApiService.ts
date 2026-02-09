@@ -8,6 +8,8 @@ export interface ApiResponse<T = unknown> {
   error?: string;
   message?: string;
   success?: boolean;
+  /** HTTP status code when success is false (e.g. 403, 404). Used by offline queue to avoid retrying 4xx. */
+  statusCode?: number;
 }
 
 export interface BannedIndividual {
@@ -497,7 +499,8 @@ class ApiService {
       return {
         error: (axiosError.response?.data as { message?: string })?.message || axiosError.message || 'Request failed',
         success: false,
-        data: undefined
+        data: undefined,
+        statusCode: axiosError.response?.status
       };
     }
   }
@@ -943,6 +946,99 @@ class ApiService {
   // Fix method name - should be getSecurityAlerts, not getSecurityMetrics
   async getSecurityMetrics(): Promise<ApiResponse<SecurityThreat[]>> {
     return this.getSecurityAlerts();
+  }
+
+  // ============= SYSTEM ADMINISTRATION =============
+  async getSystemAdminUsers(): Promise<ApiResponse<unknown[]>> {
+    return this.handleRequest(() => this.api.get<unknown[]>('/system-admin/users'));
+  }
+
+  async getSystemAdminRoles(): Promise<ApiResponse<unknown[]>> {
+    return this.handleRequest(() => this.api.get<unknown[]>('/system-admin/roles'));
+  }
+
+  async getSystemAdminProperties(): Promise<ApiResponse<unknown[]>> {
+    return this.handleRequest(() => this.api.get<unknown[]>('/system-admin/properties'));
+  }
+
+  async getSystemAdminIntegrations(): Promise<ApiResponse<unknown[]>> {
+    return this.handleRequest(() => this.api.get<unknown[]>('/system-admin/integrations'));
+  }
+
+  async getSystemAdminSettings(): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.get<Record<string, unknown>>('/system-admin/settings'));
+  }
+
+  async getSystemAdminSecurityPolicies(): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.get<Record<string, unknown>>('/system-admin/security-policies'));
+  }
+
+  async getSystemAdminAudit(params?: { date_range?: string; category?: string; search?: string }): Promise<ApiResponse<unknown[]>> {
+    return this.handleRequest(() => this.api.get<unknown[]>('/system-admin/audit', { params }));
+  }
+
+  async getIntegrationHealth(integrationId: string): Promise<ApiResponse<{ id: string; status: string; message?: string }>> {
+    return this.handleRequest(() => this.api.get(`/system-admin/integrations/${integrationId}/health`));
+  }
+
+  async syncIntegration(integrationId: string): Promise<ApiResponse<{ id: string; synced: boolean; message?: string }>> {
+    return this.handleRequest(() => this.api.post(`/system-admin/integrations/${integrationId}/sync`));
+  }
+
+  async createSystemAdminUser(user: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.post<Record<string, unknown>>('/system-admin/users', user));
+  }
+
+  async updateSystemAdminUser(userId: string, user: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.put<Record<string, unknown>>(`/system-admin/users/${userId}`, user));
+  }
+
+  async deleteSystemAdminUser(userId: string): Promise<ApiResponse<{ deleted: boolean; id: string }>> {
+    return this.handleRequest(() => this.api.delete<{ deleted: boolean; id: string }>(`/system-admin/users/${userId}`));
+  }
+
+  async createSystemAdminRole(role: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.post<Record<string, unknown>>('/system-admin/roles', role));
+  }
+
+  async updateSystemAdminRole(roleId: string, role: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.put<Record<string, unknown>>(`/system-admin/roles/${roleId}`, role));
+  }
+
+  async deleteSystemAdminRole(roleId: string): Promise<ApiResponse<{ deleted: boolean; id: string }>> {
+    return this.handleRequest(() => this.api.delete<{ deleted: boolean; id: string }>(`/system-admin/roles/${roleId}`));
+  }
+
+  async createSystemAdminProperty(property: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.post<Record<string, unknown>>('/system-admin/properties', property));
+  }
+
+  async updateSystemAdminProperty(propertyId: string, property: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.put<Record<string, unknown>>(`/system-admin/properties/${propertyId}`, property));
+  }
+
+  async deleteSystemAdminProperty(propertyId: string): Promise<ApiResponse<{ deleted: boolean; id: string }>> {
+    return this.handleRequest(() => this.api.delete<{ deleted: boolean; id: string }>(`/system-admin/properties/${propertyId}`));
+  }
+
+  async updateSystemAdminSettings(settings: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.put<Record<string, unknown>>('/system-admin/settings', settings));
+  }
+
+  async updateSystemAdminSecurityPolicies(policies: Record<string, unknown>): Promise<ApiResponse<Record<string, unknown>>> {
+    return this.handleRequest(() => this.api.put<Record<string, unknown>>('/system-admin/security-policies', policies));
+  }
+
+  async postSystemAdminRestartServices(): Promise<ApiResponse<{ ok: boolean; message?: string }>> {
+    return this.handleRequest(() => this.api.post<{ ok: boolean; message?: string }>('/system-admin/restart-services'));
+  }
+
+  async getSystemAdminDiagnostics(): Promise<ApiResponse<{ status: string; checks?: unknown[]; timestamp?: string }>> {
+    return this.handleRequest(() => this.api.get<{ status: string; checks?: unknown[]; timestamp?: string }>('/system-admin/diagnostics'));
+  }
+
+  async postSystemAdminSecurityScan(): Promise<ApiResponse<{ passed: boolean; issues?: unknown[]; summary?: string; timestamp?: string }>> {
+    return this.handleRequest(() => this.api.post<{ passed: boolean; issues?: unknown[]; summary?: string; timestamp?: string }>('/system-admin/security/scan'));
   }
 }
 

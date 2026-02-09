@@ -71,11 +71,11 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
   const getMatchQuality = (score: number) => patrolAI.getMatchQuality(score);
 
   return (
-    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+    <Card className="bg-slate-900/50 border border-white/5">
       <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
+            <div className="w-10 h-10 bg-indigo-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-microchip text-white"></i>
             </div>
             <span className="text-sm font-black uppercase tracking-widest">Logic Deployment Engine</span>
@@ -93,7 +93,7 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
       </CardHeader>
       <CardContent className="px-6 py-6">
         {selectedPatrol && (
-          <div className="mb-6 p-4 bg-slate-900/30 rounded-xl border border-white/5 shadow-inner">
+          <div className="mb-6 p-4 bg-slate-900/30 rounded-md border border-white/5">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Target Vector</p>
             <p className="text-sm font-black text-white">{selectedPatrol.name}</p>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 italic">{formatLocationDisplay(selectedPatrol.location) || '—'}</p>
@@ -107,11 +107,11 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
               {matches.map((match, index) => {
                 const quality = getMatchQuality(match.matchScore);
                 return (
-                  <div key={match.officerId} className="p-4 bg-slate-900/30 rounded-2xl border border-white/5 hover:border-indigo-500/20 transition-all duration-300 group shadow-2xl">
+                  <div key={match.officerId} className="p-4 bg-slate-900/30 rounded-md border border-white/5 hover:border-indigo-500/20 transition-all duration-300 group">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${index === 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]' : 'bg-white/5 text-slate-400 border-white/5'}`}>
+                          <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${index === 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 ' : 'bg-white/5 text-slate-400 border-white/5'}`}>
                             #{index + 1} RECOMMENDED
                           </div>
                         </div>
@@ -183,7 +183,7 @@ export const OfficerMatchingPanel: React.FC<Props> = ({ selectedPatrol, officers
         )}
 
         {!selectedPatrol && (
-          <div className="text-center py-12 px-6 bg-slate-900/20 rounded-2xl border border-dashed border-white/5">
+          <div className="text-center py-12 px-6 bg-slate-900/20 rounded-md border border-dashed border-white/5">
             <div className="w-16 h-16 bg-slate-900/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
               <i className="fas fa-hand-pointer text-3xl text-slate-700"></i>
             </div>

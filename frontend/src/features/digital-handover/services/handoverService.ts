@@ -14,6 +14,8 @@ import type {
   UpdateHandoverRequest,
   HandoverFilters,
   HandoverSortOptions,
+  StaffMember,
+  ShiftTimelineEntry,
 } from '../types';
 
 /**
@@ -169,9 +171,9 @@ export const handoverService = {
   /**
    * Get staff members for a property
    */
-  async getStaff(propertyId: string): Promise<any[]> {
+  async getStaff(propertyId: string): Promise<StaffMember[]> {
     try {
-      const response = await apiService.get<any[]>('/handovers/staff', {
+      const response = await apiService.get<StaffMember[]>('/handovers/config/staff', {
         params: { property_id: propertyId }
       });
       if (!response.success || !response.data) {
@@ -187,9 +189,9 @@ export const handoverService = {
   /**
    * Get today's shift timeline
    */
-  async getShiftTimeline(propertyId: string): Promise<any[]> {
+  async getShiftTimeline(propertyId: string): Promise<ShiftTimelineEntry[]> {
     try {
-      const response = await apiService.get<any[]>('/handovers/timeline', {
+      const response = await apiService.get<ShiftTimelineEntry[]>('/handovers/analytics/timeline', {
         params: { property_id: propertyId }
       });
       if (!response.success || !response.data) {

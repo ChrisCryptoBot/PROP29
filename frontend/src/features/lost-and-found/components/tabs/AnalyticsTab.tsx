@@ -9,7 +9,7 @@ import { Button } from '../../../../components/UI/Button';
 import { useLostFoundContext } from '../../context/LostFoundContext';
 import { LostFoundStatus } from '../../types/lost-and-found.types';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { showSuccess } from '../../../../utils/toast';
+import { showSuccess, showError } from '../../../../utils/toast';
 
 export const AnalyticsTab: React.FC = React.memo(() => {
     const {
@@ -24,36 +24,35 @@ export const AnalyticsTab: React.FC = React.memo(() => {
         refreshMetrics();
     }, [refreshMetrics]);
 
-    // Use real metrics data from backend, fallback to calculated from items if not available
+    // Use real metrics data from backend, fallback to calculated from items (ownership/deliverability focus, no value)
     const analyticsData = useMemo(() => {
-        if (metrics) {
-            // Use backend metrics (backend uses snake_case, frontend uses camelCase)
-            const categoryCounts = metrics.items_by_category || {};
-            return {
-                recoveryRate: metrics.recovery_rate || 0,
-                totalValue: metrics.total_value_recovered || 0,
-                categoryCounts,
-                recoveryTrend: metrics.recovery_trend || []
-            };
-        }
-
-        // Fallback to client-side calculation
-        const claimedCount = items.filter(i => i.status === LostFoundStatus.CLAIMED).length;
-        const totalValue = items.reduce((sum, item) => sum + (item.value_estimate || 0), 0);
-        const recoveryRate = items.length > 0 ? Math.round((claimedCount / items.length) * 100) : 0;
-
-        // Category breakdown
         const categoryCounts: Record<string, number> = {};
         items.forEach(item => {
             const category = item.category || item.item_type || 'Other';
             categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         });
+        const claimedCount = items.filter(i => i.status === LostFoundStatus.CLAIMED).length;
+        const recoveryRate = items.length > 0 ? Math.round((claimedCount / items.length) * 100) : 0;
+        const recoveryTrend = metrics?.recovery_trend || [];
+        const itemsByCategory = metrics?.items_by_category || categoryCounts;
+
+        const claimedWithDates = items.filter(i => i.status === LostFoundStatus.CLAIMED && i.found_date && i.claimed_at);
+        const avgDaysToClaim = claimedWithDates.length > 0
+            ? Math.round(
+                claimedWithDates.reduce((sum, i) => {
+                    const found = new Date(i.found_date!).getTime();
+                    const claimed = new Date(i.claimed_at!).getTime();
+                    return sum + (claimed - found) / (24 * 60 * 60 * 1000);
+                }, 0) / claimedWithDates.length
+            )
+            : (metrics?.avg_days_to_claim ?? 0);
 
         return {
             recoveryRate,
-            totalValue,
-            categoryCounts,
-            recoveryTrend: []
+            itemsReturnedToOwner: claimedCount,
+            avgDaysToClaim,
+            categoryCounts: itemsByCategory,
+            recoveryTrend
         };
     }, [items, metrics]);
 
@@ -76,11 +75,17 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                 monthAgo.setMonth(monthAgo.getMonth() - 1);
                 startDate = monthAgo.toISOString();
                 endDate = new Date().toISOString();
+            } else if (period === 'custom') {
+                const end = new Date();
+                const start = new Date();
+                start.setDate(start.getDate() - 30);
+                startDate = start.toISOString();
+                endDate = end.toISOString();
             }
 
             await exportReport(format, undefined, startDate, endDate);
         } catch (error) {
-            showSuccess(`${format.toUpperCase()} report generated`);
+            showError('Failed to generate report. Please try again.');
         }
     };
 
@@ -107,91 +112,43 @@ export const AnalyticsTab: React.FC = React.memo(() => {
     const chartColors = ['#2563eb', '#10b981', '#f59e0b', '#6366f1'];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-12">
             {/* Gold Standard Page Header */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Analytics & Reports</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Analytics & Reports</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Lost & Found performance metrics and insights
                     </p>
                 </div>
             </div>
 
-            {/* Key Performance Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-percentage text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Recovery Rate</p>
-                            <h3 className="text-3xl font-black text-white">{analyticsData.recoveryRate}%</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-clock text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Days to Claim</p>
-                            <h3 className="text-3xl font-black text-white">2.3</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-dollar-sign text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Value Recovered</p>
-                            <h3 className="text-3xl font-black text-white">${analyticsData.totalValue.toLocaleString()}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-box text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Items This Month</p>
-                            <h3 className="text-3xl font-black text-white">{items.length}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Compact metrics bar (gold standard — no KPI cards) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Lost & Found analytics metrics">
+                <span>Recovery <strong className="font-black text-white">{analyticsData.recoveryRate}%</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Avg Days <strong className="font-black text-white">{analyticsData.avgDaysToClaim}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Returned <strong className="font-black text-white">{analyticsData.itemsReturnedToOwner}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Total Items <strong className="font-black text-white">{items.length}</strong></span>
             </div>
 
             {/* Charts Row 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Recovery Rate Trend - Real data from backend */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <Card className="bg-slate-900/50 border border-white/5">
                     <CardHeader className="border-b border-white/5 pb-4">
-                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                                <i className="fas fa-chart-line text-white text-lg" />
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mr-3">
+                                <i className="fas fa-chart-line text-white" />
                             </div>
                             Recovery Rate Trend
                             {loading.metrics && (
                                 <i className="fas fa-spinner fa-spin ml-2 text-blue-400" />
                             )}
                         </CardTitle>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                             Monthly recovery performance trends
                         </p>
                     </CardHeader>
@@ -225,15 +182,15 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                 </Card>
 
                 {/* Common Items */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <Card className="bg-slate-900/50 border border-white/5">
                     <CardHeader className="border-b border-white/5 pb-4">
-                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                                <i className="fas fa-chart-bar text-white text-lg" />
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mr-3">
+                                <i className="fas fa-chart-bar text-white" />
                             </div>
                             Most Common Items
                         </CardTitle>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                             Items by category frequency
                         </p>
                     </CardHeader>
@@ -266,15 +223,15 @@ export const AnalyticsTab: React.FC = React.memo(() => {
             {/* Charts Row 2 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Status Distribution */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                <Card className="bg-slate-900/50 border border-white/5">
                     <CardHeader className="border-b border-white/5 pb-4">
-                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                                <i className="fas fa-chart-pie text-white text-lg" />
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mr-3">
+                                <i className="fas fa-chart-pie text-white" />
                             </div>
                             Status Distribution
                         </CardTitle>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                             Item status breakdown by percentage
                         </p>
                     </CardHeader>
@@ -308,33 +265,37 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                     </CardContent>
                 </Card>
 
-                {/* Value Recovered Over Time */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+                {/* Items Returned to Owner Over Time (claimed by month) */}
+                <Card className="bg-slate-900/50 border border-white/5">
                     <CardHeader className="border-b border-white/5 pb-4">
-                        <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                                <i className="fas fa-dollar-sign text-white text-lg" />
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mr-3">
+                                <i className="fas fa-user-check text-white" />
                             </div>
-                            Value Recovered Over Time
+                            Items Returned to Owner Over Time
                         </CardTitle>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
-                            Monthly value recovery trends
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
+                            Monthly claimed (returned to owner) trend
                         </p>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={[
-                                { month: 'Jul', value: 12500 },
-                                { month: 'Aug', value: 15200 },
-                                { month: 'Sep', value: 18900 },
-                                { month: 'Oct', value: 22400 },
-                                { month: 'Nov', value: 28100 },
-                                { month: 'Dec', value: 31800 }
-                            ]}>
+                            <AreaChart data={(() => {
+                                const byMonth: Record<string, number> = {};
+                                items.filter(i => i.status === LostFoundStatus.CLAIMED && i.claimed_at).forEach(i => {
+                                    const d = new Date(i.claimed_at!);
+                                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                                    byMonth[key] = (byMonth[key] || 0) + 1;
+                                });
+                                const sorted = Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).slice(-6);
+                                return sorted.length > 0
+                                    ? sorted.map(([month, claimed]) => ({ month: month.slice(5) + '/' + month.slice(2, 4), claimed }))
+                                    : [{ month: '—', claimed: 0 }];
+                            })()}>
                                 <defs>
-                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                    <linearGradient id="colorClaimed" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -347,12 +308,8 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                                         borderRadius: '8px',
                                         color: '#cbd5e1'
                                     }}
-                                    formatter={(value: number | undefined) => {
-                                        if (value === undefined || value === null) return '$0';
-                                        return `$${value.toLocaleString()}`;
-                                    }}
                                 />
-                                <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorValue)" />
+                                <Area type="monotone" dataKey="claimed" stroke="#10b981" fillOpacity={1} fill="url(#colorClaimed)" name="Returned" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -360,10 +317,15 @@ export const AnalyticsTab: React.FC = React.memo(() => {
             </div>
 
             {/* Export Reports */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">Export Reports</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-file-export text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">Export Reports</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Generate and download analytics reports
                     </p>
                 </CardHeader>
@@ -371,7 +333,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <Button
                             variant="outline"
-                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
+                            className="border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
                             onClick={() => handleExportReport('pdf', 'daily')}
                         >
                             <i className="fas fa-file-pdf mr-2" />
@@ -379,7 +341,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
+                            className="border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
                             onClick={() => handleExportReport('csv', 'weekly')}
                         >
                             <i className="fas fa-file-excel mr-2" />
@@ -387,7 +349,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
+                            className="border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
                             onClick={() => handleExportReport('pdf', 'monthly')}
                         >
                             <i className="fas fa-file-alt mr-2" />
@@ -395,7 +357,7 @@ export const AnalyticsTab: React.FC = React.memo(() => {
                         </Button>
                         <Button
                             variant="outline"
-                            className="text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
+                            className="border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
                             onClick={() => handleExportReport('csv', 'custom')}
                         >
                             <i className="fas fa-cog mr-2" />

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Modal } from '../../../../components/UI/Modal';
 import { useBannedIndividualsContext } from '../../context/BannedIndividualsContext';
 import { toast } from 'react-hot-toast';
 
@@ -87,28 +87,29 @@ export const CreateIndividualModal: React.FC = () => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/5 flex flex-row items-center justify-between pb-4 mb-2">
-                    <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-                        <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                            <i className="fas fa-user-plus text-white text-lg" />
-                        </div>
-                        Add Record
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    <form onSubmit={onSubmit} className="space-y-6">
+        <Modal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            title="Add banned individual"
+            size="md"
+            footer={
+                <>
+                    <Button type="button" variant="subtle" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                    <Button type="submit" form="create-individual-form" variant="primary">Add individual</Button>
+                </>
+            }
+        >
+            <form id="create-individual-form" onSubmit={onSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label htmlFor="firstName" className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                                <label htmlFor="firstName" className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-widest px-1">
                                     First Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     id="firstName"
                                     name="firstName"
-                                    className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.firstName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
+                                    className={`w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all font-medium border ${errors.firstName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
                                     placeholder="e.g. John"
                                 />
                                 {errors.firstName && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.firstName}</p>}
@@ -121,7 +122,7 @@ export const CreateIndividualModal: React.FC = () => {
                                     type="text"
                                     id="lastName"
                                     name="lastName"
-                                    className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.lastName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
+                                    className={`w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all font-medium border ${errors.lastName ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
                                     placeholder="e.g. Doe"
                                 />
                                 {errors.lastName && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.lastName}</p>}
@@ -129,14 +130,14 @@ export const CreateIndividualModal: React.FC = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="reason" className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                            <label htmlFor="reason" className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-widest px-1">
                                 Official Incident Reason <span className="text-red-500">*</span>
                             </label>
                             <textarea
                                 id="reason"
                                 name="reason"
                                 rows={3}
-                                className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.reason ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
+                                className={`w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all font-medium border ${errors.reason ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white placeholder:text-slate-600'}`}
                                 placeholder="Describe the incident that led to this ban..."
                             />
                             {errors.reason && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.reason}</p>}
@@ -144,13 +145,13 @@ export const CreateIndividualModal: React.FC = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label htmlFor="banType" className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                                <label htmlFor="banType" className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-widest px-1">
                                     Ban Classification <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     id="banType"
                                     name="banType"
-                                    className="w-full px-4 py-3 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
+                                    className="w-full px-4 py-3 border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
                                 >
                                     <option value="TEMPORARY" className="bg-slate-900">Temporary</option>
                                     <option value="PERMANENT" className="bg-slate-900">Permanent</option>
@@ -158,13 +159,13 @@ export const CreateIndividualModal: React.FC = () => {
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label htmlFor="riskLevel" className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                                <label htmlFor="riskLevel" className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-widest px-1">
                                     Risk Intensity <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     id="riskLevel"
                                     name="riskLevel"
-                                    className="w-full px-4 py-3 border border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
+                                    className="w-full px-4 py-3 border border-white/5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/5 font-bold text-white cursor-pointer appearance-none"
                                 >
                                     <option value="LOW" className="bg-slate-900">Low</option>
                                     <option value="MEDIUM" className="bg-slate-900">Medium</option>
@@ -182,17 +183,17 @@ export const CreateIndividualModal: React.FC = () => {
                                 type="date"
                                 id="banStartDate"
                                 name="banStartDate"
-                                className={`w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all font-medium border ${errors.banStartDate ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white'}`}
+                                className={`w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all font-medium border ${errors.banStartDate ? 'border-red-500/50 bg-red-500/10 focus:ring-red-500/50 text-white' : 'border-white/5 focus:ring-blue-500/50 bg-white/5 text-white'}`}
                             />
                             {errors.banStartDate && <p className="text-[10px] font-bold text-red-400 mt-1 px-1">{errors.banStartDate}</p>}
                         </div>
 
                         {/* Photo Upload Section */}
                         <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                            <label className="block text-xs font-bold text-[color:var(--text-sub)] uppercase tracking-widest px-1">
                                 Reference photo <span className="text-blue-400">(Optional)</span>
                             </label>
-                            <div className="relative group border-2 border-dashed border-white/5 rounded-2xl p-6 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
+                            <div className="relative group border-2 border-dashed border-white/5 rounded-lg p-6 text-center hover:border-blue-500/40 hover:bg-white/[0.02] transition-all cursor-pointer">
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -202,7 +203,7 @@ export const CreateIndividualModal: React.FC = () => {
                                 />
                                 {photoPreview ? (
                                     <div className="space-y-3">
-                                        <div className="relative mx-auto w-32 h-32 rounded-xl overflow-hidden border-2 border-blue-500/30 shadow-xl">
+                                        <div className="relative mx-auto w-32 h-32 rounded-md overflow-hidden border-2 border-blue-500/30">
                                             <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                                             <button
                                                 type="button"
@@ -223,7 +224,7 @@ export const CreateIndividualModal: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        <div className="w-16 h-16 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                        <div className="w-16 h-16 bg-blue-600 rounded-md flex items-center justify-center mx-auto border border-white/5">
                                             <i className="fas fa-camera text-white text-xl" />
                                         </div>
                                         <div>
@@ -238,7 +239,7 @@ export const CreateIndividualModal: React.FC = () => {
                             </p>
                         </div>
 
-                        <div className="flex items-center space-x-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl group cursor-pointer transition-colors hover:bg-blue-500/10">
+                        <div className="flex items-center space-x-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg group cursor-pointer transition-colors hover:bg-blue-500/10">
                             <div className="relative flex items-center">
                                 <input
                                     type="checkbox"
@@ -256,26 +257,7 @@ export const CreateIndividualModal: React.FC = () => {
                             </label>
                         </div>
 
-                        <div className="flex justify-end space-x-4 pt-6 border-t border-white/5">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setShowCreateModal(false)}
-                                className="px-6 py-3 font-bold uppercase text-[10px] tracking-widest text-slate-400 hover:text-white"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="destructive"
-                                className="font-black uppercase tracking-widest px-8 py-3 shadow-lg"
-                            >
-                                Add Individual
-                            </Button>
-                        </div>
-                    </form>
-                </CardContent>
-            </Card>
-        </div>
+            </form>
+        </Modal>
     );
 };

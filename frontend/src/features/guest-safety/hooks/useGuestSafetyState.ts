@@ -10,6 +10,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../../hooks/useAuth';
 import { useWebSocket } from '../../../components/UI/WebSocketProvider';
 import { logger } from '../../../services/logger';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
+import { useGuestSafetyTelemetry } from './useGuestSafetyTelemetry';
 import { showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError, showError } from '../../../utils/toast';
 import * as guestSafetyService from '../services/guestSafetyService';
 import type {
@@ -170,11 +172,18 @@ export interface UseGuestSafetyStateReturn {
   refreshEvacuationCheckIns: () => Promise<void>;
   evacuationHeadcount: EvacuationHeadcount | null;
   evacuationCheckIns: EvacuationCheckIn[];
+
+  /** Optional: set by orchestrator so tabs can navigate (e.g. "Go to Incidents" from Mass Notification). */
+  setActiveTab?: (tabId: import('../types/guest-safety.types').TabId) => void;
+
+  /** True when navigator is offline; show offline banner and optionally disable/warn on actions. */
+  isOffline: boolean;
 }
 
 export function useGuestSafetyState(): UseGuestSafetyStateReturn {
   const { user } = useAuth();
   const { isConnected, subscribe } = useWebSocket();
+  const { trackAction, trackPerformance, trackError } = useGuestSafetyTelemetry();
   
   // ============================================
   // RBAC HELPER FUNCTIONS
@@ -222,7 +231,20 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
   const [messages, setMessages] = useState<GuestMessage[]>([]);
   const [evacuationHeadcount, setEvacuationHeadcount] = useState<EvacuationHeadcount | null>(null);
   const [evacuationCheckIns, setEvacuationCheckIns] = useState<EvacuationCheckIn[]>([]);
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const initialLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   const metrics = useMemo<SafetyMetrics>(() => ({
     ...defaultMetrics,
     critical: incidents.filter(i => i.priority === 'critical').length,
@@ -263,10 +285,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       setIncidents(mapped);
       logger.info('Incidents refreshed', { module: 'GuestSafety', count: mapped.length });
     } catch (error) {
-      logger.error('Failed to refresh incidents', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshIncidents'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshIncidents');
       showError('Failed to load incidents. Please try again.');
     } finally {
       setLoading(prev => ({ ...prev, incidents: false }));
@@ -283,10 +302,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       setTeams(data);
       logger.info('Teams refreshed', { module: 'GuestSafety', count: data.length });
     } catch (error) {
-      logger.error('Failed to refresh teams', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshTeams'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshTeams');
     } finally {
       setLoading(prev => ({ ...prev, teams: false }));
     }
@@ -303,10 +319,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       setSettings(data);
       logger.info('Settings refreshed', { module: 'GuestSafety' });
     } catch (error) {
-      logger.error('Failed to refresh settings', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshSettings'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshSettings');
       setSettings(DEFAULT_SETTINGS);
     } finally {
       setLoading(prev => ({ ...prev, settings: false }));
@@ -330,10 +343,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       
       logger.info('Hardware devices refreshed', { module: 'GuestSafety', count: devices.length });
     } catch (error) {
-      logger.error('Failed to refresh hardware devices', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshHardwareDevices'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshHardwareDevices');
     }
   }, []); // Remove dependency to prevent infinite loop
   
@@ -346,10 +356,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       setAgentMetrics([metrics]); // Store as array for consistency
       logger.info('Mobile agent metrics refreshed', { module: 'GuestSafety' });
     } catch (error) {
-      logger.error('Failed to refresh agent metrics', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshAgentMetrics'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshAgentMetrics');
     }
   }, []);
   
@@ -363,10 +370,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       setMessages(data);
       logger.info('Guest messages refreshed', { module: 'GuestSafety', count: data.length });
     } catch (error) {
-      logger.error('Failed to refresh messages', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshMessages'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshMessages');
       showError('Failed to load messages. Please try again.');
     } finally {
       setLoading(prev => ({ ...prev, messages: false }));
@@ -384,11 +388,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       ));
       logger.info('Message marked as read', { module: 'GuestSafety', messageId });
     } catch (error) {
-      logger.error('Failed to mark message as read', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'markMessageRead',
-        messageId
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:markMessageRead');
       throw error;
     }
   }, []);
@@ -409,10 +409,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       setEvacuationHeadcount(data);
       logger.info('Evacuation headcount refreshed', { module: 'GuestSafety' });
     } catch (error) {
-      logger.error('Failed to refresh evacuation headcount', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'refreshEvacuationHeadcount'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:refreshEvacuationHeadcount');
     }
   }, []);
 
@@ -498,13 +495,11 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       
       dismissLoadingAndShowSuccess(toastId, 'Incident created successfully');
       setShowCreateIncidentModal(false);
+      trackAction('incident_created', 'incident', { incidentId: newIncident.id });
       logger.info('Incident created', { module: 'GuestSafety', incidentId: newIncident.id });
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Failed to create incident. Please check your connection and try again.');
-      logger.error('Failed to create incident', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'createIncident'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:createIncident');
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, actions: false }));
@@ -548,6 +543,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       
       dismissLoadingAndShowSuccess(toastId, 'Team assigned successfully');
       setShowAssignTeamModal(false);
+      trackAction('team_assigned', 'team', { incidentId, teamId });
       logger.info('Team assigned to incident', { module: 'GuestSafety', incidentId, teamId });
     } catch (error) {
       // Revert optimistic update on error
@@ -558,12 +554,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       ));
       
       dismissLoadingAndShowError(toastId, 'Failed to assign team. The incident may have been updated by another user.');
-      logger.error('Failed to assign team', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'assignTeam',
-        incidentId,
-        teamId
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:assignTeam');
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, actions: false }));
@@ -593,14 +584,11 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       ));
       
       dismissLoadingAndShowSuccess(toastId, 'Incident resolved successfully');
+      trackAction('incident_resolved', 'incident', { incidentId });
       logger.info('Incident resolved', { module: 'GuestSafety', incidentId });
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Failed to resolve incident');
-      logger.error('Failed to resolve incident', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'resolveIncident',
-        incidentId
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:resolveIncident');
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, actions: false }));
@@ -658,13 +646,11 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       await guestSafetyService.sendMassNotification(data);
       
       dismissLoadingAndShowSuccess(toastId, 'Mass notification sent successfully');
+      trackAction('mass_notification_sent', 'mass_notification', {});
       logger.info('Mass notification sent', { module: 'GuestSafety' });
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Failed to send mass notification');
-      logger.error('Failed to send mass notification', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'sendMassNotification'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:sendMassNotification');
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, actions: false }));
@@ -694,10 +680,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       logger.info('Settings updated', { module: 'GuestSafety' });
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Failed to update settings');
-      logger.error('Failed to update settings', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'updateSettings'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:updateSettings');
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, settings: false }));
@@ -720,13 +703,11 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
       const updated = await guestSafetyService.updateSettings(DEFAULT_SETTINGS);
       setSettings(updated);
       dismissLoadingAndShowSuccess(toastId, 'Settings reset to defaults');
+      trackAction('settings_reset', 'settings', {});
       logger.info('Settings reset', { module: 'GuestSafety' });
     } catch (error) {
       dismissLoadingAndShowError(toastId, 'Failed to reset settings');
-      logger.error('Failed to reset settings', error instanceof Error ? error : new Error(String(error)), {
-        module: 'GuestSafety',
-        action: 'resetSettings'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'GuestSafety:resetSettings');
       throw error;
     } finally {
       setLoading(prev => ({ ...prev, settings: false }));
@@ -776,7 +757,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
             ));
             logger.info('Incident auto-escalated', { module: 'GuestSafety', incidentId: incident.id });
           }).catch(err => {
-            logger.error('Failed to escalate incident', err);
+            ErrorHandlerService.logError(err instanceof Error ? err : new Error(String(err)), 'GuestSafety:escalateIncident');
           });
         }
       }
@@ -881,7 +862,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
             lastKnownGoodState: onlineDevices.length > 0 ? new Date() : prev.lastKnownGoodState
           }));
         }).catch(err => {
-          logger.error('Failed to refresh hardware devices via WebSocket', err);
+          ErrorHandlerService.logError(err instanceof Error ? err : new Error(String(err)), 'GuestSafety:refreshHardwareViaWebSocket');
         });
       }
     });
@@ -893,7 +874,7 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
         guestSafetyService.getMobileAgentMetrics().then(metrics => {
           setAgentMetrics([metrics]);
         }).catch(err => {
-          logger.error('Failed to refresh agent metrics via WebSocket', err);
+          ErrorHandlerService.logError(err instanceof Error ? err : new Error(String(err)), 'GuestSafety:refreshAgentMetricsViaWebSocket');
         });
       }
     });
@@ -977,5 +958,6 @@ export function useGuestSafetyState(): UseGuestSafetyStateReturn {
     refreshEvacuationCheckIns,
     evacuationHeadcount,
     evacuationCheckIns,
+    isOffline,
   };
 }

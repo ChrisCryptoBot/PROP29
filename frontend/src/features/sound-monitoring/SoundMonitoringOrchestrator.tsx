@@ -56,8 +56,8 @@ const OrchestratorContent: React.FC = () => {
       onTabChange={setActiveTab}
       actions={
         audioVisualization.isRecording ? (
-          <div className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg animate-pulse border border-red-500/20 shadow-lg shadow-red-500/10 backdrop-blur-md">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+          <div className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg animate-pulse border border-red-500/20">
+            <span className="w-1.5 h-1.5 bg-red-500 rounded-full " />
             <span className="text-[10px] font-black uppercase tracking-widest leading-none">Live Audio Monitoring</span>
           </div>
         ) : null

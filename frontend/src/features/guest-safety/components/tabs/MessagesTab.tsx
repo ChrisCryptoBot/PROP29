@@ -139,8 +139,9 @@ export const MessagesTab: React.FC = () => {
 
   if (loading.messages && messages.length === 0 && !selectedMessage) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-12 h-12 border-4 border-white/5 border-t-blue-500 rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading messages">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading Messages...</p>
       </div>
     );
   }
@@ -150,8 +151,8 @@ export const MessagesTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Messages</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Messages</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Guest communications and requests
           </p>
         </div>
@@ -232,16 +233,26 @@ export const MessagesTab: React.FC = () => {
       </div>
 
       {/* Messages List */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-2xl" aria-hidden="true">
-              <i className="fas fa-envelope text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-envelope text-white" />
             </div>
-            Guest Messages
+            <span className="card-title-text">Guest Messages</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 px-6 pb-6">
+          {filteredMessages.length === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                icon="fas fa-envelope-open"
+                title={activeFilter === 'all' ? 'No messages' : 'No messages found'}
+                description={activeFilter === 'all' ? 'Guest messages will appear here.' : 'No messages match your current filter.'}
+                action={activeFilter !== 'all' ? { label: 'Clear filter', onClick: () => setActiveFilter('all'), variant: 'outline' } : undefined}
+              />
+            </div>
+          ) : (
           <div className="space-y-4">
             {filteredMessages.map((message) => {
               const typeBadge = getMessageTypeBadge(message.message_type);
@@ -252,7 +263,7 @@ export const MessagesTab: React.FC = () => {
                 <div
                   key={message.id}
                   className={cn(
-                    "bg-slate-900/50 backdrop-blur-xl border rounded-xl p-6 transition-all cursor-pointer group",
+                    "bg-slate-900/30 border rounded-md p-6 transition-colors cursor-pointer group",
                     isUnread ? "border-blue-500/30 bg-blue-500/5" : "border-white/5 hover:bg-slate-900/70",
                     selectedMessage?.id === message.id && "ring-2 ring-blue-500/50"
                   )}
@@ -266,7 +277,7 @@ export const MessagesTab: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="font-black text-white uppercase tracking-tighter text-lg group-hover:text-blue-400 transition-colors">
+                        <h4 className="card-title-text">
                           {message.guest_name || 'Guest'}
                         </h4>
                         {isUnread && (
@@ -311,7 +322,7 @@ export const MessagesTab: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/5 mb-4">
+                  <div className="bg-white/5 rounded-md p-4 border border-white/5 mb-4">
                     <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
                       {message.message_text}
                     </p>
@@ -349,21 +360,8 @@ export const MessagesTab: React.FC = () => {
                 </div>
               );
             })}
-
-            {filteredMessages.length === 0 && (
-              <EmptyState
-                icon="fas fa-envelope-open"
-                title={activeFilter === 'unread' ? "No unread messages" : activeFilter === 'emergency' ? "No emergency messages" : "No messages"}
-                description={
-                  activeFilter === 'unread'
-                    ? "All messages have been read"
-                    : activeFilter === 'emergency'
-                    ? "No emergency messages at this time"
-                    : "Guest messages will appear here when guests send communications"
-                }
-              />
-            )}
           </div>
+          )}
         </CardContent>
       </Card>
     </div>

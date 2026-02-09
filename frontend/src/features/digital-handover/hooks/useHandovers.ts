@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { handoverService } from '../services/handoverService';
 import { logger } from '../../../services/logger';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
 import type {
   Handover,
   CreateHandoverRequest,
@@ -72,7 +73,7 @@ export function useHandovers(options: UseHandoversOptions = {}): UseHandoversRet
       setLoading(true);
       setError(null);
       const activePropertyId = propertyId || localStorage.getItem('propertyId') || '';
-      const data = await handoverService.getHandovers(activePropertyId, filters, sort);
+      const data = await retryWithBackoff(() => handoverService.getHandovers(activePropertyId, filters, sort));
       setHandovers(data);
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
@@ -99,7 +100,7 @@ export function useHandovers(options: UseHandoversOptions = {}): UseHandoversRet
     try {
       setLoading(true);
       setError(null);
-      const newHandover = await handoverService.createHandover(data);
+      const newHandover = await retryWithBackoff(() => handoverService.createHandover(data));
       setHandovers(prev => [newHandover, ...prev]);
       return newHandover;
     } catch (err) {
@@ -119,7 +120,7 @@ export function useHandovers(options: UseHandoversOptions = {}): UseHandoversRet
     try {
       setLoading(true);
       setError(null);
-      const updated = await handoverService.updateHandover(id, data);
+      const updated = await retryWithBackoff(() => handoverService.updateHandover(id, data));
       setHandovers(prev => prev.map(h => h.id === id ? updated : h));
 
       // Update selected handover if it's the one being updated
@@ -145,7 +146,7 @@ export function useHandovers(options: UseHandoversOptions = {}): UseHandoversRet
     try {
       setLoading(true);
       setError(null);
-      await handoverService.deleteHandover(id);
+      await retryWithBackoff(() => handoverService.deleteHandover(id));
       setHandovers(prev => prev.filter(h => h.id !== id));
 
       // Clear selected handover if it's the one being deleted
@@ -169,7 +170,7 @@ export function useHandovers(options: UseHandoversOptions = {}): UseHandoversRet
     try {
       setLoading(true);
       setError(null);
-      const completed = await handoverService.completeHandover(id);
+      const completed = await retryWithBackoff(() => handoverService.completeHandover(id));
       setHandovers(prev => prev.map(h => h.id === id ? completed : h));
 
       // Update selected handover if it's the one being completed

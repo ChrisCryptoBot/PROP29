@@ -68,7 +68,7 @@ const PackageModuleContent: React.FC = () => {
                     </Button>
                     <Button
                         onClick={() => setShowRegisterModal(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
+                        className="bg-blue-600 hover:bg-blue-500 text-white"
                         aria-label="Register New Package"
                     >
                         <i className="fas fa-plus mr-2" />
@@ -99,25 +99,23 @@ const PackageModuleContent: React.FC = () => {
                 onClose={handleCloseDetails}
             />
 
-            {/* Quick Action FABs - Gold Standard */}
+            {/* Quick Action FABs - Gold Standard: solid blue, circular */}
             <div className="fixed bottom-8 right-8 z-50 flex flex-col space-y-4">
-                {/* Scan Package FAB - Green */}
                 <Button
                     onClick={() => setShowScanModal(true)}
                     variant="primary"
                     size="icon"
-                    className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform bg-green-600 hover:bg-green-700"
+                    className="w-14 h-14 rounded-full border-0"
                     title="Scan Package"
                     aria-label="Scan Package"
                 >
                     <i className="fas fa-qrcode text-xl" />
                 </Button>
-                {/* Register Package FAB - Blue */}
                 <Button
                     onClick={() => setShowRegisterModal(true)}
                     variant="primary"
                     size="icon"
-                    className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
+                    className="w-14 h-14 rounded-full border-0"
                     title="Register New Package"
                     aria-label="Register New Package"
                 >

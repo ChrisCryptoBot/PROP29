@@ -55,8 +55,8 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
         try {
             await onSubmit(formData);
             onClose();
-        } catch (error) {
-            console.error('Failed to register guest:', error);
+        } catch {
+            // Error surfaced via context/toast where applicable
         }
     };
 
@@ -66,6 +66,16 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
             onClose={onClose}
             title="Register Guest Parking"
             size="sm"
+            footer={
+                <div className="flex justify-end space-x-3">
+                    <Button onClick={onClose} variant="subtle" className="text-xs font-black uppercase tracking-widest">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSubmit} variant="primary" className="text-xs font-black uppercase tracking-widest">
+                        Register Guest
+                    </Button>
+                </div>
+            }
         >
             <div className="space-y-4">
                 <div>
@@ -147,14 +157,6 @@ export const RegisterGuestModal: React.FC<RegisterGuestModalProps> = ({
                         placeholder="Special requirements or notes"
                     />
                 </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-                <Button onClick={onClose} variant="subtle" className="text-xs font-black uppercase tracking-widest">
-                    Cancel
-                </Button>
-                <Button onClick={handleSubmit} variant="primary" className="text-xs font-black uppercase tracking-widest">
-                    Register Guest
-                </Button>
             </div>
         </Modal>
     );

@@ -12,7 +12,7 @@ from schemas import (
     GuestMessageUpdate,
 )
 from typing import Dict, Any
-from api.auth_dependencies import get_current_user_optional
+from api.auth_dependencies import get_current_user, get_current_user_optional
 from models import User
 from services.guest_safety_service import GuestSafetyService
 import logging
@@ -28,12 +28,12 @@ router = APIRouter(prefix="/guest-safety", tags=["Guest Safety"])
 # ============================================
 
 @router.get("/evacuation/headcount")
-def get_evacuation_headcount(current_user: User | None = Depends(get_current_user_optional)):
-    """Get evacuation headcount status"""
+def get_evacuation_headcount(current_user: User = Depends(get_current_user)):
+    """Get evacuation headcount status (requires authentication)."""
     try:
         # Get active evacuation incident
-        incidents = GuestSafetyService.get_incidents(user_id=str(current_user.user_id) if current_user else None)
-        evacuation_incident = next((inc for inc in incidents if inc.get('type') == 'evacuation' and inc.get('status') != 'resolved'), None)
+        incidents = GuestSafetyService.get_incidents(user_id=str(current_user.user_id))
+        evacuation_incident = next((inc for inc in incidents if getattr(inc, 'type', None) == 'evacuation' and getattr(inc, 'status', None) != 'resolved'), None)
         
         if not evacuation_incident:
             return {
@@ -45,7 +45,7 @@ def get_evacuation_headcount(current_user: User | None = Depends(get_current_use
             }
         
         # Get check-ins for this evacuation
-        check_ins = GuestSafetyService.get_evacuation_check_ins(evacuation_incident.get('id'))
+        check_ins = GuestSafetyService.get_evacuation_check_ins(evacuation_incident.id)
         safe_count = len([c for c in check_ins if c.get('status') == 'safe'])
         in_progress_count = len([c for c in check_ins if c.get('status') == 'in_progress'])
         
@@ -66,16 +66,16 @@ def get_evacuation_headcount(current_user: User | None = Depends(get_current_use
 
 
 @router.get("/evacuation/check-ins")
-def get_evacuation_check_ins(current_user: User | None = Depends(get_current_user_optional)):
-    """Get all evacuation check-ins"""
+def get_evacuation_check_ins(current_user: User = Depends(get_current_user)):
+    """Get all evacuation check-ins (requires authentication)."""
     try:
-        incidents = GuestSafetyService.get_incidents(user_id=str(current_user.user_id) if current_user else None)
-        evacuation_incident = next((inc for inc in incidents if inc.get('type') == 'evacuation' and inc.get('status') != 'resolved'), None)
+        incidents = GuestSafetyService.get_incidents(user_id=str(current_user.user_id))
+        evacuation_incident = next((inc for inc in incidents if getattr(inc, 'type', None) == 'evacuation' and getattr(inc, 'status', None) != 'resolved'), None)
         
         if not evacuation_incident:
             return []
         
-        return GuestSafetyService.get_evacuation_check_ins(evacuation_incident.get('id'))
+        return GuestSafetyService.get_evacuation_check_ins(evacuation_incident.id)
     except Exception as e:
         logger.error(f"Failed to get evacuation check-ins: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to get evacuation check-ins")
@@ -98,13 +98,13 @@ def submit_evacuation_check_in(
         
         # Get active evacuation incident
         incidents = GuestSafetyService.get_incidents(user_id=None)  # Public endpoint
-        evacuation_incident = next((inc for inc in incidents if inc.get('type') == 'evacuation' and inc.get('status') != 'resolved'), None)
+        evacuation_incident = next((inc for inc in incidents if getattr(inc, 'type', None) == 'evacuation' and getattr(inc, 'status', None) != 'resolved'), None)
         
         if not evacuation_incident:
             raise HTTPException(status_code=400, detail="No active evacuation")
         
         check_in = GuestSafetyService.submit_evacuation_check_in(
-            incident_id=evacuation_incident.get('id'),
+            incident_id=evacuation_incident.id,
             guest_id=guest_id,
             status=status,
             location=location,
@@ -389,32 +389,19 @@ def ingest_guest_panic_incident(
 def get_hardware_devices(current_user: User | None = Depends(get_current_user_optional)):
     """Get hardware device status and health"""
     # TODO: Implement actual hardware device tracking
-    # For now, return mock data structure
-    return [
-        {
-            "deviceId": "panic-btn-101",
-            "deviceName": "Panic Button - Room 101",
-            "deviceType": "panic_button",
-            "status": "online",
-            "lastSeen": datetime.utcnow().isoformat(),
-            "signalStrength": 95,
-            "batteryLevel": 87,
-            "location": "Room 101"
-        }
-    ]
+    return []
 
 
 @router.get("/mobile-agents/metrics", response_model=Dict[str, Any])
 def get_mobile_agent_metrics(current_user: User | None = Depends(get_current_user_optional)):
     """Get mobile agent performance metrics"""
     # TODO: Implement actual agent metrics tracking
-    # For now, return mock data structure
     return {
-        "totalAgents": 5,
-        "activeAgents": 3,
-        "submissionsToday": 12,
-        "averageResponseTime": 4.2,
-        "trustScoreAverage": 85.5
+        "totalAgents": 0,
+        "activeAgents": 0,
+        "submissionsToday": 0,
+        "averageResponseTime": 0.0,
+        "trustScoreAverage": 0.0
     }
 
 

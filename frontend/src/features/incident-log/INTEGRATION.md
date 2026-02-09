@@ -37,6 +37,11 @@ Subscribe (e.g. via `useIncidentLogWebSocket`) to:
 
 Incident scoping uses `propertyId`: from `user.property_id` when available, else `user.roles?.[0]`. Ensure auth/user provides the correct property for multi-property deployments.
 
+## Filters
+
+- **Date range (Advanced Filters)**: `start_date` and `end_date` are applied client-side after fetching incidents; the backend GET `/incidents` does not filter by date.
+- **Saved filters**: Stored in the browser only (localStorage key `incident-log-saved-filters`); not synced to the server or other devices.
+
 ## Third-Party Development
 
 - **State**: `useIncidentLogState` + `IncidentLogContext`; no business logic in UI components.

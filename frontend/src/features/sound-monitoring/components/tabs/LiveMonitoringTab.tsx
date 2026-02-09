@@ -13,33 +13,34 @@ import { EmptyState } from '../../../../components/UI/EmptyState';
 export const LiveMonitoringTab: React.FC = () => {
   const { audioVisualization, soundZones } = useSoundMonitoringContext();
 
+  const isEmpty = audioVisualization.waveform.length === 0 && soundZones.length === 0;
+
   return (
     <div className="space-y-6">
       {/* Live Audio Visualization */}
-      {/* Live Audio Visualization */}
-      <Card className="glass-card border-glass bg-transparent shadow-console">
-        <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10" aria-hidden="true">
-              <i className="fas fa-waveform-lines text-white text-lg" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden>
+              <i className="fas fa-waveform-lines text-white" />
             </div>
-            Live Audio Monitoring
+            <span className="text-sm font-black uppercase tracking-widest text-white">Live audio monitoring</span>
             {audioVisualization.isRecording && (
-              <div className="ml-3 w-3 h-3 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+              <div className="ml-3 w-3 h-3 bg-red-500 rounded-full animate-pulse" aria-hidden />
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 py-6">
           <div className="space-y-6">
             {/* Real-time Decibel Level */}
-            <div className="text-center p-8 bg-black/40 border border-white/5 rounded-2xl shadow-inner group">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] mb-3">Current Sound Level</h3>
-              <div className="text-5xl font-black text-white mb-6 uppercase tracking-tighter shadow-lg">
+            <div className="text-center p-8 bg-white/5 border border-white/5 rounded-md">
+              <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] mb-3">Current Sound Level</h3>
+              <div className="text-5xl font-black text-white mb-6 uppercase tracking-tighter">
                 {audioVisualization.realTimeLevel} <span className="text-xl text-slate-500 font-bold opacity-50">dB</span>
               </div>
               <div className="w-full bg-white/5 border border-white/5 rounded-full h-4 overflow-hidden shadow-inner">
                 <div
-                  className="bg-gradient-to-r from-blue-600 to-blue-400 h-4 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                  className="bg-blue-600 h-4 rounded-full transition-colors"
                   style={{ width: `${Math.min((audioVisualization.realTimeLevel / 120) * 100, 100)}%` }}
                 />
               </div>
@@ -47,14 +48,14 @@ export const LiveMonitoringTab: React.FC = () => {
             </div>
 
             {/* Waveform Visualization */}
-            <div className="bg-black/40 border border-white/5 rounded-2xl p-6 shadow-inner">
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] mb-6">Live Waveform</h4>
+            <div className="bg-white/5 border border-white/5 rounded-md p-6">
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] mb-6">Live Waveform</h4>
               <div className="flex items-end space-x-1 h-20 px-2 border-b border-white/5">
                 {audioVisualization.waveform.length > 0 ? (
                   audioVisualization.waveform.map((amplitude, index) => (
                     <div
                       key={index}
-                      className="bg-gradient-to-t from-blue-600 to-blue-400 rounded-sm transition-all duration-100 shadow-[0_0_5px_rgba(59,130,246,0.3)]"
+                      className="bg-blue-600 rounded-sm transition-colors"
                       style={{
                         height: `${amplitude * 100}%`,
                         width: '8px'
@@ -70,14 +71,14 @@ export const LiveMonitoringTab: React.FC = () => {
             </div>
 
             {/* Frequency Spectrum */}
-            <div className="bg-black/40 border border-white/5 rounded-2xl p-6 shadow-inner">
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] mb-6">Frequency Spectrum</h4>
+            <div className="bg-white/5 border border-white/5 rounded-md p-6">
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] mb-6">Frequency Spectrum</h4>
               <div className="flex items-end space-x-2 h-20 px-2 border-b border-white/5">
                 {audioVisualization.spectrum.length > 0 ? (
                   audioVisualization.spectrum.map((data, index) => (
                     <div
                       key={index}
-                      className="bg-gradient-to-t from-blue-700 to-blue-500 rounded-sm transition-all duration-100 shadow-[0_0_8px_rgba(29,78,216,0.3)]"
+                      className="bg-blue-600 rounded-sm transition-colors"
                       style={{
                         height: `${data.amplitude * 100}%`,
                         width: '12px'
@@ -96,24 +97,32 @@ export const LiveMonitoringTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Sound Zones Status */}
-      <Card className="glass-card border-glass bg-transparent shadow-console overflow-hidden">
-        <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10" aria-hidden="true">
-              <i className="fas fa-map text-white text-lg" />
+      {isEmpty ? (
+        <EmptyState
+          icon="fas fa-waveform-lines"
+          title="No live monitoring data"
+          description="No audio visualization or zones available. Connect hardware to see live data."
+        />
+      ) : (
+        <>
+          {/* Sound Zones Status */}
+          <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-indigo-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden>
+              <i className="fas fa-map text-white" />
             </div>
-            Sound Zones Status
+            <span className="text-sm font-black uppercase tracking-widest text-white">Sound zones</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-6 py-6">
           <div className="space-y-4">
             {soundZones.length > 0 ? (
               soundZones.map((zone) => (
-                <div key={zone.id} className="p-6 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/[0.08] transition-all group shadow-inner">
+                <div key={zone.id} className="p-6 bg-white/5 border border-white/5 rounded-md hover:bg-white/10 transition-colors">
                   <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h3 className="text-lg font-black text-white uppercase tracking-tighter group-hover:text-blue-400 transition-colors">{zone.name}</h3>
+                      <h3 className="text-sm font-black text-white uppercase tracking-widest">{zone.name}</h3>
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-[color:var(--text-sub)]">Zone Identification: {zone.id}</p>
                     </div>
                     <span className={cn("px-2.5 py-1 text-[10px] font-black rounded uppercase tracking-widest border", getZoneTypeBadgeClass(zone.type))}>
@@ -121,15 +130,15 @@ export const LiveMonitoringTab: React.FC = () => {
                     </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-black/40 p-4 rounded-xl border border-white/5 shadow-inner">
+                    <div className="bg-white/5 p-4 rounded-md border border-white/5">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Current Level</span>
                       <p className="text-xl font-black text-white tracking-tighter">{zone.currentDecibelLevel} <span className="text-[10px] opacity-30">dB</span></p>
                     </div>
-                    <div className="bg-black/40 p-4 rounded-xl border border-white/5 shadow-inner">
+                    <div className="bg-white/5 p-4 rounded-md border border-white/5">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Threshold</span>
                       <p className="text-xl font-black text-white tracking-tighter">{zone.threshold} <span className="text-[10px] opacity-30">dB</span></p>
                     </div>
-                    <div className="bg-black/40 p-4 rounded-xl border border-white/5 shadow-inner">
+                    <div className="bg-white/5 p-4 rounded-md border border-white/5">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1 block">Sensors</span>
                       <p className="text-xl font-black text-white tracking-tighter">{zone.sensorCount} <span className="text-[10px] opacity-30">Active</span></p>
                     </div>
@@ -137,17 +146,17 @@ export const LiveMonitoringTab: React.FC = () => {
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
                       <span>Sound Intensity</span>
-                      <span className="opacity-70">{zone.currentDecibelLevel} / {zone.threshold} dB</span>
+                      <span className="text-[color:var(--text-sub)]">{zone.currentDecibelLevel} / {zone.threshold} dB</span>
                     </div>
-                    <div className="w-full bg-black/40 border border-white/5 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div className="w-full bg-white/5 border border-white/5 rounded-full h-2 overflow-hidden">
                       <div
                         className={cn(
-                          "h-2 rounded-full transition-all duration-300 shadow-sm",
+                          "h-2 rounded-full transition-colors",
                           zone.currentDecibelLevel > zone.threshold
-                            ? 'bg-gradient-to-r from-red-600 to-red-400 shadow-red-500/50'
+                            ? 'bg-red-600'
                             : zone.currentDecibelLevel > zone.threshold * 0.8
-                              ? 'bg-gradient-to-r from-amber-500 to-amber-300 shadow-amber-500/50'
-                              : 'bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-emerald-500/50'
+                              ? 'bg-amber-500'
+                              : 'bg-emerald-500'
                         )}
                         style={{ width: `${Math.min((zone.currentDecibelLevel / zone.threshold) * 100, 100)}%` }}
                       />
@@ -165,6 +174,8 @@ export const LiveMonitoringTab: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+        </>
+      )}
     </div>
   );
 };

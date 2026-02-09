@@ -23,10 +23,16 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
             onClose={onClose}
             title="Scan Package"
             size="md"
+            footer={
+                <Button variant="subtle" onClick={onClose}>Close</Button>
+            }
         >
             <div className="space-y-4">
-                {/* Scanner Preview Area */}
-                <div className="relative bg-slate-900 rounded-lg overflow-hidden" style={{ height: '300px' }}>
+                <p className="text-sm text-slate-300 rounded-md p-4 bg-blue-500/10 border border-blue-500/20">
+                    Scanner integration will be available in a future release. Use <strong>Register Package</strong> to add packages manually.
+                </p>
+                {/* Scanner Preview Area (placeholder for future hardware) */}
+                <div className="relative bg-slate-900 rounded-md overflow-hidden" style={{ height: '300px' }}>
                     {/* Scanner Grid Overlay */}
                     <div className="absolute inset-0 opacity-20">
                         <div className="absolute inset-0" style={{
@@ -40,7 +46,7 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
 
                     {/* Scanning Line Animation */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-80"
+                        <div className="w-full h-1 bg-blue-500/80"
                             style={{
                                 animation: 'scanLine 2s ease-in-out infinite'
                             }} />
@@ -62,7 +68,7 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
 
                     {/* Center QR Code Icon */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                        <div className="w-24 h-24 bg-white/10 rounded-md flex items-center justify-center">
                             <i className="fas fa-qrcode text-white text-4xl opacity-50" />
                         </div>
                     </div>
@@ -74,7 +80,7 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
                 </div>
 
                 {/* Instructions */}
-                <div className="rounded-lg p-4 space-y-2 bg-white/5 border border-white/5">
+                <div className="rounded-md p-4 space-y-2 bg-white/5 border border-white/5">
                     <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-2">How to scan:</h4>
                     <ul className="space-y-1 text-sm text-slate-300">
                         <li className="flex items-start">
@@ -100,27 +106,10 @@ export const ScanPackageModal: React.FC<ScanPackageModalProps> = React.memo(({
                     <input
                         type="text"
                         placeholder="Enter tracking number"
-                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 hover:bg-white/10 transition-colors"
                     />
                 </div>
 
-                {/* Actions */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-white/5">
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                        className="border-white/5 text-slate-300 hover:bg-white/10 hover:text-white"
-                    >
-                        Close
-                    </Button>
-                    <Button
-                        variant="primary" className=""
-                        disabled
-                    >
-                        <i className="fas fa-search mr-2" />
-                        Scan (Coming Soon)
-                    </Button>
-                </div>
             </div>
 
             {/* CSS Animation Styles */}

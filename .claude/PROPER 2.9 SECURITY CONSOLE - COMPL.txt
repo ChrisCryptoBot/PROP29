@@ -1,0 +1,144 @@
+Critical Gaps (Would Block a Sale or Day-One Operations)
+1. Team Chat Has No Backend
+Messages live in React state only. Close the browser, they're gone. For a security team that needs persistent, auditable communication, this is a blocker. You need:
+
+Message persistence (database model + endpoints)
+Message history and search
+Read receipts
+File/image attachment storage
+Channel membership persistence
+2. System Administration Backend Is Entirely Stubs
+Every endpoint — user CRUD, role CRUD, property CRUD, integrations — returns fake success responses. Nothing persists. An admin can "create" a user and it vanishes on refresh. This is the backbone of multi-tenancy. Without it, you can't actually onboard a client.
+
+3. No Notification Delivery System
+The UI has notification preferences (email, SMS, push) and event triggers (access denied, door held open, offline device, etc.), but there's no backend to actually send anything. No email service (SendGrid, SES), no SMS provider (Twilio), no push notification service (Firebase). Right now, notifications are in-app only — and for a security platform, that's not enough. A guard away from the dashboard needs to get an SMS when a door is forced open.
+
+4. No PMS Integration (Property Management System)
+This is probably the single biggest gap for hotels specifically. Hotels run on systems like Opera (Oracle), Mews, Cloudbeds, or Maestro. These systems manage:
+
+Guest check-in/check-out (which should auto-provision/revoke access)
+Room assignments (which maps to access points)
+Guest profiles (which feed into Visitor Security and Guest Safety)
+Reservation data (which drives temporary access windows)
+Your Guest model exists with room_number, check_in_date, check_out_date — but there's no integration to keep it in sync with the PMS. Staff would have to manually enter every guest, which no hotel will do. You need at minimum a webhook listener or polling service that syncs guest records from their PMS.
+
+5. Sound Monitoring Backend Is Entirely Stubs
+Every endpoint returns empty or default data. The frontend exists, but there's no real data pipeline. For a hotel that buys sound sensors (NoiseAware, Minut), this module doesn't actually work yet.
+
+High Priority Gaps (A Client Would Ask About These During a Demo)
+6. Smart Lockers Missing Core Endpoints
+The frontend has settings, remote unlock, and maintenance request features — but the backend has no matching endpoints. The TODOs are explicit in the code. A property that installs smart lockers can't configure or control them through the system.
+
+7. AI Features Are Mostly Stubs or Removed
+Banned Individuals AI service was deleted
+Incident Predictions tab was removed
+AI trend analysis, behavior profiling, and anomaly detection endpoints return fallback/rule-based results
+Package AI (OCR, guest matching, delivery prediction) falls back to basic logic
+The system markets AI capabilities, but right now they're scaffolding. This isn't necessarily a blocker — the rule-based fallbacks work — but don't demo these as "AI-powered" until there's a real model behind them.
+
+8. No Shift Scheduling / Roster Management
+Digital Handover handles the transition between shifts, but there's no module for:
+
+Creating shift schedules (morning/afternoon/night rotations)
+Officer assignment to shifts
+Shift swaps and coverage requests
+Overtime tracking
+Availability management
+Every security operation runs on a schedule. Right now, that schedule lives outside the system.
+
+9. No Key Management
+Hotels have hundreds of physical keys — master keys, sub-master keys, section keys, emergency keys. There's no model for:
+
+Key inventory (which keys exist, what they open)
+Key issuance log (who has which key right now)
+Key return tracking
+Lost key protocol
+Key cutting/replacement records
+This applies to any business with physical keys, not just hotels.
+
+10. Digital Handover WebSocket Not Implemented
+The WebSocket hook is a complete no-op — isConnected: false always. Handovers can't update in real-time. If an outgoing shift supervisor is writing a handover while the incoming supervisor has the page open, they won't see updates until they manually refresh.
+
+Medium Priority Gaps (Would Come Up in the First 90 Days of Use)
+11. No Compliance / Regulatory Reporting
+Hotels in many jurisdictions must report certain incidents to authorities (OSHA for workplace injuries, local police for crimes, fire marshal for alarm events). There's no:
+
+Compliance report templates (OSHA 300 log, local incident reports)
+Regulatory deadline tracking
+Submission history
+Audit-ready export formats
+12. No Contractor / Vendor Management
+The Visitor module handles walk-in visitors, but contractors are different:
+
+They need recurring access over weeks/months
+They need background check verification
+They have insurance and credential requirements
+They work in specific zones on specific schedules
+Right now you'd shoehorn contractors into the visitor system, which doesn't fit.
+
+13. No Training / Certification Tracking
+The Profile Settings page has a certifications section, but there's no management layer:
+
+What certifications are required for each role?
+When do they expire?
+Who needs recertification?
+Training completion records
+Compliance with state/local guard licensing requirements
+14. GDPR / Privacy Consent Tracking
+The system stores facial_recognition_data on both Visitors and Banned Individuals, but there's no:
+
+Consent record (did the person agree to facial recognition?)
+Data retention enforcement (auto-delete after X days)
+Right-to-erasure workflow (GDPR Article 17)
+Consent revocation tracking
+For any property operating in the EU, UK, or increasingly US states with biometric laws (Illinois BIPA, Texas CUBI), this is a legal requirement.
+
+15. No Multi-Property Dashboard
+The Property model supports multiple properties, and System Admin has a properties tab, but there's no cross-property overview — a single screen where a hotel group can see incident counts, access events, patrol status, and alerts across all their properties at once. Each property is a silo right now.
+
+16. Telemetry / Analytics Not Connected
+Multiple modules have telemetry hooks that all end with // TODO: Send to analytics service. User behavior data, performance metrics, and error tracking are captured in the frontend but go nowhere. For understanding how your clients use the platform (and for supporting them), this needs a real destination — Sentry, Mixpanel, PostHog, or a custom analytics endpoint.
+
+Lower Priority (Nice-to-Have, Competitive Differentiators)
+17. No Body Camera Integration
+Security officers increasingly wear body cameras. There's no model for:
+
+Camera assignment to officers
+Footage upload and storage
+Automatic incident association
+Footage retention policies
+18. No Alarm Panel Integration
+IoT sensors exist, but there's no integration with traditional fire alarm panels (Simplex, Notifier, EST) or intrusion alarm panels (DSC, Honeywell, Bosch). Hotels have these already installed — they should feed events into your incident log automatically.
+
+19. No Dispatch / Radio Integration
+Team Chat covers messaging, but security operations often use radio dispatch (Motorola, Kenwood). Integration would mean:
+
+Radio channel monitoring
+Dispatch logging
+GPS location from radio
+Emergency button alerts from radios
+20. No Threat Intelligence Feed
+For high-profile properties (luxury hotels, casinos, venues), integration with external threat feeds (local crime alerts, BOLO lists, event-based threat assessments) would feed into the Banned Individuals and Guest Safety modules.
+
+Summary Table
+Gap	Priority	Effort	Impact
+Team Chat backend	Critical	Medium	Can't use the feature at all
+System Admin backend	Critical	Medium	Can't onboard clients
+Notification delivery (email/SMS/push)	Critical	Medium	Security alerts don't reach people
+PMS integration (Opera, Mews, etc.)	Critical	High	Hotels won't adopt without it
+Sound Monitoring backend	Critical	Medium	Module doesn't function
+Smart Lockers endpoints	High	Low	Feature half-broken
+AI features (real models)	High	High	Marketed but not delivered
+Shift scheduling	High	Medium	Core security operations
+Key management	High	Medium	Every hotel needs this
+Handover WebSocket	High	Low	Real-time broken
+Compliance reporting	Medium	Medium	Regulatory requirement
+Contractor management	Medium	Medium	Common use case
+Training/certifications	Medium	Low	Liability protection
+GDPR/consent tracking	Medium	Medium	Legal requirement (EU/some US)
+Multi-property dashboard	Medium	Medium	Hotel groups need this
+Telemetry connected	Medium	Low	Platform intelligence
+Body cameras	Lower	Medium	Competitive differentiator
+Alarm panel integration	Lower	High	Legacy hardware bridge
+Radio dispatch	Lower	High	Niche but valuable
+Threat intelligence	Lower	Medium	Premium feature

@@ -147,7 +147,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => 
                     </Button>
                 </div>
                 {showCustomRange && (
-                    <div className="space-y-4 p-4 bg-white/5 border border-white/5 rounded-lg">
+                    <div className="space-y-4 p-4 bg-white/5 border border-white/5 rounded-md">
                         <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Custom Date Range</p>
                         <div className="grid grid-cols-2 gap-4">
                             <div>

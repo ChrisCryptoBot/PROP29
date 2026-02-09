@@ -34,10 +34,8 @@ class RefreshRequest(BaseModel):
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest):
     """
-    Login endpoint - supports both mock (development) and real authentication
-    
-    For development: Accepts hardcoded credentials and returns mock token
-    For production: Should use proper AuthService.authenticate_user()
+    Login endpoint - supports development credentials and real authentication.
+    For production, use AuthService.authenticate_user() only.
     """
     # Accept either username or email
     identifier = request.username or request.email

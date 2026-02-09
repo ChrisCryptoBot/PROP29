@@ -16,6 +16,8 @@ export const MassNotificationTab: React.FC = () => {
     sendMassNotification,
     loading,
     canSendNotification,
+    isOffline,
+    setActiveTab,
   } = useGuestSafetyContext();
 
   const [formData, setFormData] = useState<MassNotificationData>({
@@ -57,6 +59,7 @@ export const MassNotificationTab: React.FC = () => {
         icon="fas fa-lock"
         title="Access Denied"
         description="Administrative privileges are required to send mass notifications."
+        action={setActiveTab ? { label: 'Go to Incidents', onClick: () => setActiveTab('incidents'), variant: 'outline' } : undefined}
       />
     );
   }
@@ -66,17 +69,17 @@ export const MassNotificationTab: React.FC = () => {
       {/* Page Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Mass Notification</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Mass Notification</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Broadcast messages to guests across multiple channels
           </p>
         </div>
       </div>
 
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3 group-hover:scale-110 transition-transform">
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className="fas fa-bullhorn text-white text-lg" />
             </div>
             Mass Notification
@@ -86,7 +89,7 @@ export const MassNotificationTab: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Quick Templates */}
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] ml-1">
                 Quick Templates
               </label>
               <div className="flex flex-wrap gap-2">
@@ -124,7 +127,7 @@ export const MassNotificationTab: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] ml-1">
                 Broadcast Message Content
               </label>
               <textarea
@@ -139,7 +142,7 @@ export const MassNotificationTab: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] ml-1">
                   Recipients
                 </label>
                 <select
@@ -156,7 +159,7 @@ export const MassNotificationTab: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
+                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] ml-1">
                   Priority
                 </label>
                 <select
@@ -173,15 +176,15 @@ export const MassNotificationTab: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-sub)] ml-1">
+              <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-sub)] ml-1">
                 Communication Channels
               </label>
-              <div className="flex flex-wrap gap-6 bg-white/5 p-6 rounded-2xl border border-white/5 shadow-inner">
+              <div className="flex flex-wrap gap-6 bg-white/5 p-6 rounded-md border border-white/5">
                 <label className="flex items-center space-x-3 cursor-pointer group">
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
-                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-lg checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none shadow-inner"
+                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-md checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none"
                       checked={formData.channels.includes('in_app')}
                       onChange={() => handleChannelToggle('in_app')}
                       disabled={loading.actions}
@@ -194,7 +197,7 @@ export const MassNotificationTab: React.FC = () => {
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
-                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-lg checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none shadow-inner"
+                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-md checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none"
                       checked={formData.channels.includes('sms')}
                       onChange={() => handleChannelToggle('sms')}
                       disabled={loading.actions}
@@ -207,7 +210,7 @@ export const MassNotificationTab: React.FC = () => {
                   <div className="relative flex items-center">
                     <input
                       type="checkbox"
-                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-lg checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none shadow-inner"
+                      className="w-5 h-5 bg-white/5 border border-white/20 rounded-md checked:bg-blue-600 checked:border-transparent transition-all cursor-pointer appearance-none"
                       checked={formData.channels.includes('email')}
                       onChange={() => handleChannelToggle('email')}
                       disabled={loading.actions}
@@ -221,8 +224,9 @@ export const MassNotificationTab: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full py-6 font-black uppercase tracking-[0.3em] text-[12px] bg-blue-600 hover:bg-blue-700 text-white border-none rounded-2xl transition-all active:scale-[0.98]"
-              disabled={!formData.message.trim() || loading.actions}
+              className="w-full py-6 font-black uppercase tracking-[0.3em] text-[12px] bg-blue-600 hover:bg-blue-700 text-white border-none rounded-md transition-colors"
+              disabled={!formData.message.trim() || loading.actions || isOffline}
+              title={isOffline ? 'Connect to the internet to send' : undefined}
             >
               {loading.actions ? (
                 <>

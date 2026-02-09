@@ -1,110 +1,109 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form, Body
-from fastapi.responses import Response
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timezone, timedelta
-import uuid
-import json
+"""
+Mobile Agent Integration Endpoints
+Handles data submission from mobile agent applications.
+All data is persisted to the database.
+"""
 
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form, Body
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
+import json
+import logging
+
+from sqlalchemy.orm import Session
+
+from database import get_db
 from api.auth_dependencies import get_current_user
+from models import User
 from services.evidence_file_service import evidence_file_service
 from services.analytics_engine_service import analytics_engine
-import logging
+from services.mobile_agent_service import MobileAgentService
+import uuid
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/mobile-agents", tags=["Mobile Agent Integration"])
 
-# In-memory storage for mobile agent data (in production, use database)
-_patrol_submissions: List[Dict[str, Any]] = []
-_incident_reports: List[Dict[str, Any]] = []
-_location_updates: Dict[str, List[Dict[str, Any]]] = {}  # agent_id -> location_history
-_agent_status: Dict[str, Dict[str, Any]] = {}  # agent_id -> status_info
 
 @router.post("/patrol-data")
 async def submit_patrol_data(
     agent_id: str = Form(...),
     patrol_id: str = Form(...),
-    location_data: str = Form(...),  # JSON string
-    observations: str = Form(...),   # JSON string
+    location_data: str = Form(...),
+    observations: str = Form(...),
     photos: Optional[List[UploadFile]] = File(None),
-    current_user=Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """Submit patrol data from mobile agent."""
     try:
-        # Parse JSON data
         location = json.loads(location_data)
         obs_data = json.loads(observations)
-        
-        submission_id = str(uuid.uuid4())
-        timestamp = datetime.now(timezone.utc)
-        
-        # Create patrol submission record
-        submission = {
-            "submission_id": submission_id,
-            "agent_id": agent_id,
-            "patrol_id": patrol_id,
-            "timestamp": timestamp.isoformat(),
-            "location": location,
-            "observations": obs_data,
-            "photo_count": len(photos) if photos else 0,
-            "photo_files": [],
-            "status": "received",
-            "processed_at": None
-        }
-        
-        # Process uploaded photos
-        if photos:
-            for i, photo in enumerate(photos):
-                try:
-                    # Create evidence ID for this photo
-                    evidence_id = f"patrol-{patrol_id}-photo-{i}"
-                    
-                    # Upload photo as evidence
-                    photo_data = await photo.read()
-                    file_record = await evidence_file_service.upload_evidence_file(
-                        file_data=photo_data,
-                        filename=photo.filename or f"patrol_photo_{i}.jpg",
-                        evidence_id=evidence_id,
-                        uploaded_by=agent_id,
-                        case_id=patrol_id
-                    )
-                    
-                    submission["photo_files"].append({
-                        "evidence_id": evidence_id,
-                        "file_id": file_record["file_id"],
-                        "filename": photo.filename,
-                        "file_url": evidence_file_service.get_file_url(file_record["file_id"]),
-                        "thumbnail_url": evidence_file_service.get_thumbnail_url(file_record["file_id"])
-                    })
-                    
-                except Exception as e:
-                    logger.error(f"Failed to process photo {i}: {e}")
-                    # Continue processing other photos
-        
-        # Store submission
-        _patrol_submissions.append(submission)
-        
-        # Update agent location if provided
-        if location.get("latitude") and location.get("longitude"):
-            await update_agent_location(agent_id, location)
-        
-        # Process observations for analytics
-        await process_patrol_observations(obs_data, location, agent_id)
-        
-        logger.info(f"Patrol data submitted: {submission_id} from agent {agent_id}")
-        
-        return {
-            "submission_id": submission_id,
-            "status": "received",
-            "photo_count": len(submission["photo_files"]),
-            "timestamp": timestamp.isoformat()
-        }
-        
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON data: {e}")
+
+    photo_files: List[Dict[str, Any]] = []
+    if photos:
+        for i, photo in enumerate(photos):
+            try:
+                evidence_id = f"patrol-{patrol_id}-photo-{i}"
+                photo_data = await photo.read()
+                file_record = await evidence_file_service.upload_evidence_file(
+                    file_data=photo_data,
+                    filename=photo.filename or f"patrol_photo_{i}.jpg",
+                    evidence_id=evidence_id,
+                    uploaded_by=agent_id,
+                    case_id=patrol_id,
+                )
+                photo_files.append({
+                    "evidence_id": evidence_id,
+                    "file_id": file_record["file_id"],
+                    "filename": photo.filename,
+                    "file_url": evidence_file_service.get_file_url(file_record["file_id"]),
+                    "thumbnail_url": evidence_file_service.get_thumbnail_url(file_record["file_id"]),
+                })
+            except Exception as e:
+                logger.error("Failed to process photo %s: %s", i, e)
+
+    loc_for_db = {
+        "latitude": location.get("latitude"),
+        "longitude": location.get("longitude"),
+        "accuracy": location.get("accuracy"),
+        "address": location.get("address"),
+    }
+    response = MobileAgentService.create_patrol_submission(
+        db=db,
+        agent_id=agent_id,
+        patrol_id=patrol_id,
+        location_data=loc_for_db,
+        observations=obs_data,
+        photo_files=photo_files,
+        user_id=str(current_user.user_id),
+    )
+
+    if location.get("latitude") is not None and location.get("longitude") is not None:
+        MobileAgentService.update_agent_location(
+            db=db,
+            agent_id=agent_id,
+            latitude=float(location["latitude"]),
+            longitude=float(location["longitude"]),
+            accuracy=location.get("accuracy"),
+            altitude=location.get("altitude"),
+            speed=location.get("speed"),
+            heading=location.get("heading"),
+        )
+
+    try:
+        await process_patrol_observations(obs_data, location, agent_id)
     except Exception as e:
-        logger.error(f"Patrol data submission failed: {e}")
-        raise HTTPException(status_code=500, detail="Submission failed")
+        logger.error("Failed to process patrol observations: %s", e)
+
+    return {
+        "submission_id": response.submission_id,
+        "status": response.status,
+        "photo_count": response.photo_count,
+        "timestamp": response.timestamp.isoformat(),
+    }
 
 
 @router.post("/incident-report")
@@ -113,210 +112,173 @@ async def submit_incident_report(
     incident_type: str = Form(...),
     severity: str = Form(...),
     description: str = Form(...),
-    location_data: str = Form(...),  # JSON string
+    location_data: str = Form(...),
     evidence_photos: Optional[List[UploadFile]] = File(None),
     evidence_videos: Optional[List[UploadFile]] = File(None),
-    current_user=Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """Submit incident report from mobile agent."""
     try:
-        # Parse location data
         location = json.loads(location_data)
-        
-        incident_id = str(uuid.uuid4())
-        timestamp = datetime.now(timezone.utc)
-        
-        # Create incident report
-        incident = {
-            "incident_id": incident_id,
-            "agent_id": agent_id,
-            "incident_type": incident_type,
-            "severity": severity,
-            "description": description,
-            "location": location,
-            "timestamp": timestamp.isoformat(),
-            "status": "open",
-            "evidence_files": [],
-            "follow_up_required": severity in ["high", "critical"]
-        }
-        
-        # Process evidence files
-        evidence_files = []
-        if evidence_photos:
-            evidence_files.extend([(f, "photo") for f in evidence_photos])
-        if evidence_videos:
-            evidence_files.extend([(f, "video") for f in evidence_videos])
-        
-        for i, (evidence_file, file_type) in enumerate(evidence_files):
-            try:
-                evidence_id = f"incident-{incident_id}-{file_type}-{i}"
-                
-                file_data = await evidence_file.read()
-                file_record = await evidence_file_service.upload_evidence_file(
-                    file_data=file_data,
-                    filename=evidence_file.filename or f"incident_{file_type}_{i}",
-                    evidence_id=evidence_id,
-                    uploaded_by=agent_id,
-                    case_id=incident_id
-                )
-                
-                # Create chain of custody entry
-                custody_entry = evidence_file_service.create_chain_of_custody_entry(
-                    evidence_id=evidence_id,
-                    action="Incident Evidence Collected",
-                    handler=f"Agent {agent_id}",
-                    details={
-                        "incident_type": incident_type,
-                        "severity": severity,
-                        "collection_method": "mobile_agent"
-                    }
-                )
-                
-                incident["evidence_files"].append({
-                    "evidence_id": evidence_id,
-                    "file_id": file_record["file_id"],
-                    "file_type": file_type,
-                    "filename": evidence_file.filename,
-                    "file_url": evidence_file_service.get_file_url(file_record["file_id"]),
-                    "thumbnail_url": evidence_file_service.get_thumbnail_url(file_record["file_id"])
-                })
-                
-            except Exception as e:
-                logger.error(f"Failed to process evidence file {i}: {e}")
-        
-        # Store incident report
-        _incident_reports.append(incident)
-        
-        # Create Guest Safety Incident from mobile agent report
-        try:
-            from services.guest_safety_service import GuestSafetyService
-            from schemas import GuestSafetyIncidentCreate
-            from models import GuestSafetySeverity
-            
-            severity_map = {
-                "low": GuestSafetySeverity.LOW,
-                "medium": GuestSafetySeverity.MEDIUM,
-                "high": GuestSafetySeverity.HIGH,
-                "critical": GuestSafetySeverity.CRITICAL
-            }
-            
-            location_str = location.get("address") or location.get("room") or location.get("location") or "Unknown"
-            
-            guest_safety_incident = GuestSafetyIncidentCreate(
-                title=incident_type or "Mobile Agent Report",
-                description=description,
-                location=location_str,
-                severity=severity_map.get(severity.lower(), GuestSafetySeverity.MEDIUM),
-                status="reported",
-                room_number=location.get("room"),
-                source="MOBILE_AGENT",
-                source_metadata={
-                    "agent_id": agent_id,
-                    "agent_name": current_user.username if current_user else None,
-                    "submission_timestamp": timestamp.isoformat(),
-                    "evidence_files": incident.get("evidence_files", [])
-                }
-            )
-            
-            # Create in guest safety system
-            guest_safety_incident_response = GuestSafetyService.create_incident(guest_safety_incident, user_id=str(current_user.user_id) if current_user else None)
-            logger.info(f"Mobile agent incident {incident_id} linked to guest safety incident {guest_safety_incident_response.id}")
-            
-            # Broadcast via WebSocket
-            try:
-                from main import manager
-                if manager and manager.active_connections:
-                    message = {
-                        "type": "guest_safety_incident",
-                        "incident": {
-                            "id": guest_safety_incident_response.id,
-                            "title": guest_safety_incident_response.title,
-                            "description": guest_safety_incident_response.description,
-                            "location": guest_safety_incident_response.location,
-                            "severity": guest_safety_incident_response.severity.value if hasattr(guest_safety_incident_response.severity, 'value') else str(guest_safety_incident_response.severity),
-                            "status": guest_safety_incident_response.status,
-                            "reported_at": guest_safety_incident_response.reported_at.isoformat() if hasattr(guest_safety_incident_response.reported_at, 'isoformat') else str(guest_safety_incident_response.reported_at),
-                            "source": getattr(guest_safety_incident_response, 'source', 'MOBILE_AGENT'),
-                            "source_metadata": getattr(guest_safety_incident_response, 'source_metadata', None),
-                        }
-                    }
-                    for user_id, connections in manager.active_connections.items():
-                        for ws in connections:
-                            try:
-                                await ws.send_json(message)
-                            except Exception as ws_err:
-                                logger.warning(f"Failed to send WebSocket message: {ws_err}")
-            except Exception as ws_error:
-                logger.warning(f"WebSocket broadcast failed: {ws_error}")
-        except Exception as e:
-            logger.error(f"Failed to create guest safety incident from mobile agent report: {e}")
-        
-        # Trigger alert if high severity
-        if severity in ["high", "critical"]:
-            await trigger_incident_alert(incident)
-        
-        logger.info(f"Incident report submitted: {incident_id} by agent {agent_id}")
-        
-        return {
-            "incident_id": incident_id,
-            "status": "received",
-            "evidence_count": len(incident["evidence_files"]),
-            "follow_up_required": incident["follow_up_required"],
-            "timestamp": timestamp.isoformat()
-        }
-        
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON data: {e}")
+
+    evidence_files: List[Dict[str, Any]] = []
+    evidence_inputs: List[tuple] = []
+    if evidence_photos:
+        evidence_inputs.extend([(f, "photo") for f in evidence_photos])
+    if evidence_videos:
+        evidence_inputs.extend([(f, "video") for f in evidence_videos])
+
+    incident_id = str(uuid.uuid4())
+    for i, (evidence_file, file_type) in enumerate(evidence_inputs):
+        try:
+            evidence_id = f"incident-{incident_id}-{file_type}-{i}"
+            file_data = await evidence_file.read()
+            file_record = await evidence_file_service.upload_evidence_file(
+                file_data=file_data,
+                filename=evidence_file.filename or f"incident_{file_type}_{i}",
+                evidence_id=evidence_id,
+                uploaded_by=agent_id,
+                case_id=incident_id,
+            )
+            evidence_file_service.create_chain_of_custody_entry(
+                evidence_id=evidence_id,
+                action="Incident Evidence Collected",
+                handler=f"Agent {agent_id}",
+                details={"incident_type": incident_type, "severity": severity, "collection_method": "mobile_agent"},
+            )
+            evidence_files.append({
+                "evidence_id": evidence_id,
+                "file_id": file_record["file_id"],
+                "file_type": file_type,
+                "filename": evidence_file.filename,
+                "file_url": evidence_file_service.get_file_url(file_record["file_id"]),
+                "thumbnail_url": evidence_file_service.get_thumbnail_url(file_record["file_id"]),
+            })
+        except Exception as e:
+            logger.error("Failed to process evidence file %s: %s", i, e)
+
+    loc_for_db = {
+        "latitude": location.get("latitude"),
+        "longitude": location.get("longitude"),
+        "address": location.get("address") or location.get("location"),
+        "room": location.get("room"),
+    }
+    report_response = MobileAgentService.create_incident_report(
+        db=db,
+        agent_id=agent_id,
+        incident_type=incident_type,
+        severity=severity,
+        description=description,
+        location_data=loc_for_db,
+        evidence_files=evidence_files,
+        user_id=str(current_user.user_id),
+    )
+
+    guest_safety_incident_id = None
+    try:
+        from services.guest_safety_service import GuestSafetyService
+        from schemas import GuestSafetyIncidentCreate
+        from models import GuestSafetySeverity
+
+        severity_map = {
+            "low": GuestSafetySeverity.LOW,
+            "medium": GuestSafetySeverity.MEDIUM,
+            "high": GuestSafetySeverity.HIGH,
+            "critical": GuestSafetySeverity.CRITICAL,
+        }
+        location_str = location.get("address") or location.get("room") or location.get("location") or "Unknown"
+        guest_safety_incident = GuestSafetyIncidentCreate(
+            title=incident_type or "Mobile Agent Report",
+            description=description,
+            location=location_str,
+            severity=severity_map.get(severity.lower(), GuestSafetySeverity.MEDIUM),
+            status="reported",
+            room_number=location.get("room"),
+            source="MOBILE_AGENT",
+            source_metadata={
+                "agent_id": agent_id,
+                "agent_name": current_user.username,
+                "submission_timestamp": report_response.timestamp.isoformat(),
+                "evidence_files": evidence_files,
+            },
+        )
+        guest_safety_response = GuestSafetyService.create_incident(
+            guest_safety_incident, user_id=str(current_user.user_id)
+        )
+        guest_safety_incident_id = str(guest_safety_response.id) if hasattr(guest_safety_response, "id") else None
+        logger.info("Mobile agent incident %s linked to guest safety incident", guest_safety_incident_id)
+
+        try:
+            from main import manager
+            if manager and getattr(manager, "active_connections", None):
+                message = {
+                    "type": "guest_safety_incident",
+                    "incident": {
+                        "id": getattr(guest_safety_response, "id", None),
+                        "title": getattr(guest_safety_response, "title", None),
+                        "description": getattr(guest_safety_response, "description", None),
+                        "location": getattr(guest_safety_response, "location", None),
+                        "severity": getattr(guest_safety_response.severity, "value", str(guest_safety_response.severity)) if hasattr(guest_safety_response, "severity") else None,
+                        "status": getattr(guest_safety_response, "status", None),
+                        "reported_at": getattr(guest_safety_response.reported_at, "isoformat", lambda: str(guest_safety_response.reported_at))() if hasattr(guest_safety_response, "reported_at") else None,
+                        "source": getattr(guest_safety_response, "source", "MOBILE_AGENT"),
+                        "source_metadata": getattr(guest_safety_response, "source_metadata", None),
+                    },
+                }
+                for user_id, connections in manager.active_connections.items():
+                    for ws in connections:
+                        try:
+                            await ws.send_json(message)
+                        except Exception as ws_err:
+                            logger.warning("Failed to send WebSocket message: %s", ws_err)
+        except Exception as ws_error:
+            logger.warning("WebSocket broadcast failed: %s", ws_error)
     except Exception as e:
-        logger.error(f"Incident report submission failed: {e}")
-        raise HTTPException(status_code=500, detail="Submission failed")
+        logger.error("Failed to create guest safety incident from mobile agent report: %s", e)
+
+    if severity in ["high", "critical"]:
+        await trigger_incident_alert({"incident_id": incident_id, "incident_type": incident_type, "severity": severity})
+
+    return {
+        "incident_id": report_response.incident_id,
+        "status": report_response.status,
+        "evidence_count": len(evidence_files),
+        "follow_up_required": report_response.follow_up_required,
+        "timestamp": report_response.timestamp.isoformat(),
+    }
 
 
 @router.post("/location-update")
-async def update_agent_location(
+def update_agent_location(
     agent_id: str,
     location: Dict[str, Any] = Body(...),
-    current_user=Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> Dict[str, str]:
     """Update agent location for tracking."""
     try:
-        timestamp = datetime.now(timezone.utc)
-        
-        location_update = {
-            "agent_id": agent_id,
-            "latitude": location.get("latitude"),
-            "longitude": location.get("longitude"),
-            "accuracy": location.get("accuracy", 0),
-            "altitude": location.get("altitude"),
-            "speed": location.get("speed"),
-            "heading": location.get("heading"),
-            "timestamp": timestamp.isoformat()
-        }
-        
-        # Store location update
-        if agent_id not in _location_updates:
-            _location_updates[agent_id] = []
-        
-        _location_updates[agent_id].append(location_update)
-        
-        # Keep only recent locations (last 24 hours)
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
-        _location_updates[agent_id] = [
-            loc for loc in _location_updates[agent_id]
-            if datetime.fromisoformat(loc["timestamp"].replace('Z', '+00:00')) > cutoff
-        ]
-        
-        # Update agent status
-        _agent_status[agent_id] = {
-            "last_seen": timestamp.isoformat(),
-            "current_location": location_update,
-            "status": "active"
-        }
-        
+        lat = location.get("latitude")
+        lng = location.get("longitude")
+        if lat is None or lng is None:
+            raise HTTPException(status_code=400, detail="latitude and longitude required")
+        MobileAgentService.update_agent_location(
+            db=db,
+            agent_id=agent_id,
+            latitude=float(lat),
+            longitude=float(lng),
+            accuracy=location.get("accuracy"),
+            altitude=location.get("altitude"),
+            speed=location.get("speed"),
+            heading=location.get("heading"),
+        )
         return {"status": "updated", "agent_id": agent_id}
-        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Location update failed: {e}")
+        logger.error("Location update failed: %s", e)
         raise HTTPException(status_code=500, detail="Location update failed")
 
 
@@ -325,23 +287,15 @@ def list_patrol_submissions(
     agent_id: Optional[str] = None,
     patrol_id: Optional[str] = None,
     limit: int = 50,
-    current_user=Depends(get_current_user)
-) -> Dict[str, List[Dict[str, Any]]]:
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
     """List patrol data submissions with optional filtering."""
-    submissions = _patrol_submissions.copy()
-    
-    # Apply filters
-    if agent_id:
-        submissions = [s for s in submissions if s["agent_id"] == agent_id]
-    
-    if patrol_id:
-        submissions = [s for s in submissions if s["patrol_id"] == patrol_id]
-    
-    # Sort by timestamp (newest first) and limit
-    submissions.sort(key=lambda x: x["timestamp"], reverse=True)
-    submissions = submissions[:limit]
-    
-    return {"data": submissions}
+    items = MobileAgentService.get_patrol_submissions(
+        db=db, agent_id=agent_id, patrol_id=patrol_id, limit=limit, offset=offset
+    )
+    return {"data": [r.model_dump() for r in items]}
 
 
 @router.get("/incident-reports")
@@ -350,65 +304,47 @@ def list_incident_reports(
     severity: Optional[str] = None,
     status: Optional[str] = None,
     limit: int = 50,
-    current_user=Depends(get_current_user)
-) -> Dict[str, List[Dict[str, Any]]]:
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
     """List incident reports with optional filtering."""
-    incidents = _incident_reports.copy()
-    
-    # Apply filters
-    if agent_id:
-        incidents = [i for i in incidents if i["agent_id"] == agent_id]
-    
-    if severity:
-        incidents = [i for i in incidents if i["severity"] == severity]
-    
-    if status:
-        incidents = [i for i in incidents if i["status"] == status]
-    
-    # Sort by timestamp (newest first) and limit
-    incidents.sort(key=lambda x: x["timestamp"], reverse=True)
-    incidents = incidents[:limit]
-    
-    return {"data": incidents}
+    items = MobileAgentService.get_incident_reports(
+        db=db, agent_id=agent_id, severity=severity, status=status, limit=limit, offset=offset
+    )
+    return {"data": [r.model_dump() for r in items]}
 
 
 @router.get("/agent-status")
 def get_agent_status(
-    current_user=Depends(get_current_user)
-) -> Dict[str, Dict[str, Any]]:
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Get status of all mobile agents."""
-    return {"data": _agent_status}
+    items = MobileAgentService.get_all_agent_status(db=db)
+    return {"data": [s.model_dump() for s in items]}
 
 
 @router.get("/agent-locations/{agent_id}")
 def get_agent_location_history(
     agent_id: str,
     hours: int = 24,
-    current_user=Depends(get_current_user)
-) -> Dict[str, List[Dict[str, Any]]]:
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
     """Get location history for a specific agent."""
-    if agent_id not in _location_updates:
-        return {"data": []}
-    
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-    recent_locations = [
-        loc for loc in _location_updates[agent_id]
-        if datetime.fromisoformat(loc["timestamp"].replace('Z', '+00:00')) > cutoff
-    ]
-    
-    return {"data": recent_locations}
+    items = MobileAgentService.get_agent_location_history(db=db, agent_id=agent_id, hours=hours)
+    return {"data": [loc.model_dump() for loc in items]}
 
 
 async def process_patrol_observations(
     observations: Dict[str, Any],
     location: Dict[str, Any],
-    agent_id: str
+    agent_id: str,
 ) -> None:
     """Process patrol observations for analytics."""
     try:
-        # Extract relevant data for analytics
         if observations.get("suspicious_activity"):
-            # Create motion event for analytics
             motion_event = {
                 "id": f"patrol-{uuid.uuid4()}",
                 "camera_id": f"mobile-agent-{agent_id}",
@@ -417,21 +353,20 @@ async def process_patrol_observations(
                 "confidence": 0.9,
                 "detection_zone": "Patrol Area",
                 "source": "mobile_agent",
-                "location": location
+                "location": location,
             }
             await analytics_engine.process_motion_event(motion_event)
-        
     except Exception as e:
-        logger.error(f"Failed to process patrol observations: {e}")
+        logger.error("Failed to process patrol observations: %s", e)
 
 
 async def trigger_incident_alert(incident: Dict[str, Any]) -> None:
     """Trigger alert for high-severity incidents."""
     try:
-        # In production, this would send notifications, alerts, etc.
-        logger.warning(f"High severity incident reported: {incident['incident_id']} - {incident['incident_type']}")
-        
-        # Could integrate with notification systems, dispatch protocols, etc.
-        
+        logger.warning(
+            "High severity incident reported: %s - %s",
+            incident.get("incident_id"),
+            incident.get("incident_type"),
+        )
     except Exception as e:
-        logger.error(f"Failed to trigger incident alert: {e}")
+        logger.error("Failed to trigger incident alert: %s", e)

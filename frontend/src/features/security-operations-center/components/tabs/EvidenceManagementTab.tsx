@@ -92,23 +92,15 @@ export const EvidenceManagementTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Evidence Management">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Evidence Management</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Evidence Management</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Review and archive video and photo evidence
           </p>
         </div>
       </div>
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-              <i className="fas fa-folder-open text-white text-lg" />
-            </div>
-            Evidence Registry
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6 px-6 pb-6">
-          <div className="flex flex-wrap items-center gap-3 mb-8">
+      <section aria-labelledby="soc-evidence-heading">
+        <h3 id="soc-evidence-heading" className="text-sm font-black uppercase tracking-widest text-white mb-4">Evidence Registry</h3>
+        <div className="flex flex-wrap items-center gap-3 mb-6">
             {/* Filter Buttons */}
             <div className="flex flex-wrap gap-2">
               {(['all', 'pending', 'reviewed', 'archived'] as const).map((status) => (
@@ -183,7 +175,7 @@ export const EvidenceManagementTab: React.FC = () => {
                 <Card
                   key={item.id}
                   className={cn(
-                    "bg-white/5 border shadow-inner hover:bg-white/[0.08] transition-all cursor-pointer group rounded-2xl overflow-hidden relative",
+                    "bg-white/5 border border-white/5 hover:bg-white/[0.08] transition-colors cursor-pointer group rounded-md overflow-hidden relative",
                     isSelected ? "border-blue-500/40 bg-blue-500/5" : "border-white/5"
                   )}
                   onClick={() => {
@@ -202,7 +194,7 @@ export const EvidenceManagementTab: React.FC = () => {
                           className="w-4 h-4 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500/20"
                           onClick={(e) => e.stopPropagation()}
                         />
-                        <h4 className="font-black text-white uppercase tracking-tighter text-lg group-hover:text-blue-400 transition-colors">{item.title}</h4>
+                        <h4 className="card-title-text">{item.title}</h4>
                       </div>
                       <span className={cn(
                         "px-2.5 py-1 text-[10px] font-black rounded uppercase tracking-widest border",
@@ -214,7 +206,7 @@ export const EvidenceManagementTab: React.FC = () => {
                       </span>
                     </div>
 
-                  <div className="space-y-2 bg-black/40 p-3 rounded-xl border border-white/5 shadow-inner">
+                  <div className="space-y-2 bg-black/40 p-3 rounded-md border border-white/5">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">
                       <span className="opacity-50 text-white italic">Camera:</span>
                       <span className="text-white">{item.camera}</span>
@@ -279,7 +271,7 @@ export const EvidenceManagementTab: React.FC = () => {
             
             {/* Bulk Operation Progress */}
             {bulkActionLoading && (
-              <div className="col-span-full bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
+              <div className="col-span-full bg-blue-500/10 border border-blue-500/20 rounded-md p-4 flex items-center gap-3">
                 <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
                 <span className="text-blue-400 font-bold text-sm">Processing bulk operations...</span>
               </div>
@@ -294,9 +286,8 @@ export const EvidenceManagementTab: React.FC = () => {
                 />
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     </div>
   );
 };

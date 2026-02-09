@@ -11,6 +11,7 @@ import { Button } from '../../../../components/UI/Button';
 import { Badge } from '../../../../components/UI/Badge';
 import { useHandoverSettings, useHandoverTemplates } from '../../hooks';
 import { showSuccess, showError } from '../../../../utils/toast';
+import { ErrorHandlerService } from '../../../../services/ErrorHandlerService';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { ChecklistTemplateModal, type CreateTemplateData } from '../modals/ChecklistTemplateModal';
 import type { ChecklistTemplate } from '../../types';
@@ -34,7 +35,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
       await updateSettings({ [key]: value } as any);
       showSuccess('Settings updated successfully');
     } catch (error) {
-      console.error('Failed to update settings:', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'DigitalHandover:handleSettingsChange');
+      showError('Failed to update settings');
     }
   };
 
@@ -73,7 +75,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
       await deleteTemplate(templateId);
       showSuccess('Template deleted successfully');
     } catch (error) {
-      console.error('Failed to delete template:', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'DigitalHandover:handleDeleteTemplate');
       showError('Failed to delete template');
     }
   };
@@ -95,33 +97,40 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
       }
       setShowTemplateModal(false);
       setEditingTemplate(undefined);
-    } catch (error) {
-      console.error('Failed to save template:', error);
-      throw error;
+    } catch (e) {
+      throw e;
     }
   };
 
   if (loading && !settings) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <i className="fas fa-spinner fa-spin text-4xl text-slate-400 mb-4" />
-          <p className="text-slate-600">Loading settings...</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4" role="status" aria-label="Loading settings">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading settings...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="page-title">Settings</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
+            Handover configuration and templates
+          </p>
+        </div>
+      </div>
+
       {/* Shift Configuration */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-clock text-white text-sm" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-clock text-white" />
             </div>
-            Shift Configuration
+            <span className="card-title-text">Shift Configuration</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6">
@@ -138,10 +147,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
                 };
 
               return (
-                <div key={config.shift} className="p-4 border border-[color:var(--border-subtle)]/30 rounded-lg bg-[color:var(--background-base)]/30">
+                <div key={config.shift} className="p-4 border border-white/5 rounded-md bg-white/5">
                   <div className="flex items-center space-x-2 mb-3">
                     <i className={`fas ${config.icon} text-[color:var(--text-sub)]`} />
-                    <h4 className="font-bold text-[color:var(--text-main)]">{config.label} Shift</h4>
+                    <h4 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-widest">{config.label} Shift</h4>
                   </div>
                   <div className="space-y-2">
                     <div>
@@ -150,7 +159,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
                         type="time"
                         value={shiftConfig.start || config.start}
                         onChange={(e) => handleShiftTimeChange(config.shift, 'start', e.target.value)}
-                        className="w-full mt-1 px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded-lg text-sm text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full mt-1 px-3 py-2 bg-[color:var(--background-base)] border border-white/10 rounded-md text-sm text-[color:var(--text-main)] focus:outline focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                     <div>
@@ -159,7 +168,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
                         type="time"
                         value={shiftConfig.end || config.end}
                         onChange={(e) => handleShiftTimeChange(config.shift, 'end', e.target.value)}
-                        className="w-full mt-1 px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded-lg text-sm text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full mt-1 px-3 py-2 bg-[color:var(--background-base)] border border-white/10 rounded-md text-sm text-[color:var(--text-main)] focus:outline focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -171,16 +180,16 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
       </Card>
 
       {/* Checklist Templates */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-700 to-purple-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-                <i className="fas fa-list-check text-white text-sm" />
+            <CardTitle className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-list-check text-white" />
               </div>
-              Checklist Templates
+              <span className="card-title-text">Checklist Templates</span>
             </CardTitle>
-            <Button size="sm" variant="outline" onClick={handleAddTemplate} className="border-purple-500/30 hover:bg-purple-500/10 text-purple-400">
+            <Button size="sm" variant="outline" onClick={handleAddTemplate} className="border-white/10 hover:bg-white/10 text-white">
               <i className="fas fa-plus mr-1" />
               Add Template
             </Button>
@@ -188,9 +197,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6">
           {templatesLoading ? (
-            <div className="text-center py-8 text-[color:var(--text-sub)]">
-              <i className="fas fa-spinner fa-spin text-2xl mb-3" />
-              <p>Loading templates...</p>
+            <div className="flex flex-col items-center justify-center py-12 space-y-4" role="status" aria-label="Loading templates">
+              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest animate-pulse">Loading templates...</p>
             </div>
           ) : templates.length === 0 ? (
             <EmptyState
@@ -208,7 +217,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="p-4 border border-[color:var(--border-subtle)]/30 rounded-lg flex items-center justify-between bg-[color:var(--background-base)]/30 hover:bg-[color:var(--background-base)]/50 transition-colors"
+                  className="p-4 border border-white/5 rounded-lg flex items-center justify-between bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   <div>
                     <h4 className="font-bold text-[color:var(--text-main)]">{template.name}</h4>
@@ -221,17 +230,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEditTemplate(template.id)}
-                      className="border-[color:var(--border-subtle)]/30 hover:bg-[color:var(--surface-highlight)] text-[color:var(--text-sub)]"
+                      className="border-white/5 hover:bg-white/5 text-[color:var(--text-sub)]"
+                      aria-label={`Edit template ${template.name}`}
                     >
-                      <i className="fas fa-edit" />
+                      <i className="fas fa-edit" aria-hidden />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleDeleteTemplate(template.id)}
                       className="border-red-500/30 hover:bg-red-500/10 text-red-500"
+                      aria-label={`Delete template ${template.name}`}
                     >
-                      <i className="fas fa-trash" />
+                      <i className="fas fa-trash" aria-hidden />
                     </Button>
                   </div>
                 </div>
@@ -242,13 +253,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
       </Card>
 
       {/* Notification Settings */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-700 to-amber-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-bell text-white text-sm" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-bell text-white" />
             </div>
-            Notification Settings
+            <span className="card-title-text">Notification Settings</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6 space-y-4">
@@ -264,8 +275,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
               false;
 
             return (
-              <div key={setting.key} className="flex items-center justify-between p-3 rounded-lg hover:bg-[color:var(--background-base)]/30 transition-colors">
-                <span className="text-[color:var(--text-main)] font-medium">{setting.label}</span>
+              <div key={setting.key} className="flex items-center justify-between p-3 rounded-md hover:bg-white/5 transition-colors">
+                <span className="text-[color:var(--text-main)] font-black text-sm uppercase tracking-wider">{setting.label}</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -282,23 +293,23 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
       </Card>
 
       {/* Auto-Handover Rules */}
-      <Card className="bg-[color:var(--surface-card)] border border-[color:var(--border-subtle)]/50 shadow-2xl">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-700 to-emerald-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-magic text-white text-sm" />
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-magic text-white" />
             </div>
-            Auto-Handover Rules
+            <span className="card-title-text">Auto-Handover Rules</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="px-6 pb-6 pt-6 space-y-4">
-          <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-md">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <i className="fas fa-robot text-blue-400" />
-                <h4 className="font-bold text-blue-100">Automatic Handover Creation</h4>
+                <h4 className="font-black text-blue-100 text-sm uppercase tracking-widest">Automatic Handover Creation</h4>
               </div>
-              <span className="px-2.5 py-1 text-xs font-black rounded text-blue-300 bg-blue-500/20 border border-blue-500/30 uppercase tracking-wider">Active</span>
+              <span className="px-2.5 py-1 text-xs font-black rounded-md text-blue-300 bg-blue-500/20 border border-blue-500/30 uppercase tracking-wider">Active</span>
             </div>
             <p className="text-sm text-[color:var(--text-sub)] mb-3">
               Automatically create handovers {settings?.notificationSettings?.reminderTime || 30} minutes before shift
@@ -309,7 +320,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
               <input
                 type="number"
                 defaultValue={settings?.notificationSettings?.reminderTime || '30'}
-                className="w-full px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded-lg text-sm text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-[color:var(--background-base)] border border-white/10 rounded-md text-sm text-[color:var(--text-main)] focus:outline focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onChange={(e) =>
                   handleSettingsChange('notificationSettings', {
                     ...settings?.notificationSettings,
@@ -320,11 +331,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
             </div>
           </div>
 
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-md">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <i className="fas fa-exclamation-triangle text-amber-400" />
-                <h4 className="font-bold text-amber-100">Overdue Reminders</h4>
+                <h4 className="font-black text-amber-100 text-sm uppercase tracking-widest">Overdue Reminders</h4>
               </div>
               <Badge variant="warning">Active</Badge>
             </div>
@@ -336,7 +347,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = () => {
               <input
                 type="number"
                 defaultValue={settings?.notificationSettings?.escalationTime || '2'}
-                className="w-full px-3 py-2 bg-[color:var(--background-base)] border border-[color:var(--border-subtle)]/50 rounded-lg text-sm text-[color:var(--text-main)] focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-[color:var(--background-base)] border border-white/10 rounded-md text-sm text-[color:var(--text-main)] focus:outline focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onChange={(e) =>
                   handleSettingsChange('notificationSettings', {
                     ...settings?.notificationSettings,

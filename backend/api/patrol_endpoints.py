@@ -36,16 +36,35 @@ router = APIRouter(
     responses={404: {"description": "Not found"}}
 )
 
+_DEFAULT_METRICS = {
+    "total_patrols": 0,
+    "completed_patrols": 0,
+    "average_efficiency_score": 0.0,
+    "patrols_by_type": {},
+    "average_duration": 0.0,
+    "incidents_found": 0,
+    "efficiency_trend": [],
+    "guard_performance": []
+}
+
+
 @router.get("/metrics", response_model=PatrolMetricsResponse)
 async def get_patrol_metrics(
     property_id: Optional[str] = None,
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get patrol KPI metrics"""
-    return await PatrolService.get_metrics(
-        user_id=str(current_user.user_id),
-        property_id=str(property_id) if property_id else None
-    )
+    """Get patrol KPI metrics. Returns zeroed metrics on error so response always has CORS headers."""
+    try:
+        out = await PatrolService.get_metrics(
+            user_id=str(current_user.user_id),
+            property_id=str(property_id) if property_id else None
+        )
+        return out if out else _DEFAULT_METRICS
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("get_patrol_metrics failed: %s", e)
+        return _DEFAULT_METRICS
 
 @router.get("/", response_model=List[PatrolResponse])
 async def get_patrols(
@@ -189,11 +208,15 @@ async def officers_health(
 async def get_patrol_weather(
     current_user: User = Depends(get_current_active_user),
 ):
-    """
-    Get weather data for patrol dashboard
-    """
-    weather_data = PatrolService._get_mock_weather()
-    return weather_data
+    """Get weather data for patrol dashboard (from weather API when implemented)."""
+    return {
+        "temperature": 0,
+        "condition": "Unknown",
+        "windSpeed": 0,
+        "visibility": "Unknown",
+        "humidity": 0,
+        "patrolRecommendation": "No data"
+    }
 
 @router.get("/dashboard-data")
 async def get_dashboard_data(
@@ -212,19 +235,21 @@ async def get_dashboard_data(
 async def get_patrol_alerts(
     current_user: User = Depends(get_current_active_user),
 ):
-    """
-    Get current patrol alerts
-    """
-    return {"alerts": PatrolService._get_mock_alerts()}
+    """Get current patrol alerts (from API when implemented)."""
+    return {"alerts": []}
 
 @router.get("/emergency-status")
 async def get_emergency_status(
     current_user: User = Depends(get_current_active_user),
 ):
-    """
-    Get current emergency status
-    """
-    return PatrolService._get_mock_emergency_status()
+    """Get current emergency status (from API when implemented)."""
+    return {
+        "level": "normal",
+        "message": "No data",
+        "activeAlerts": 0,
+        "lastIncident": None,
+        "escalationProtocols": "standard"
+    }
 
 
 # --- ROUTES ---

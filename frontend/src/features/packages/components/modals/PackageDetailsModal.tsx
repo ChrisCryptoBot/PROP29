@@ -3,7 +3,7 @@
  * Modal for viewing and editing package details
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { usePackageContext } from '../../context/PackageContext';
@@ -89,12 +89,18 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
         }
     };
 
-    const handleDelete = async () => {
-        if (selectedPackage && window.confirm('Are you sure you want to delete this package?')) {
-            const success = await deletePackage(selectedPackage.package_id);
-            if (success) {
-                onClose();
-            }
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const handleDeleteClick = () => {
+        if (selectedPackage) setShowDeleteConfirm(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!selectedPackage) return;
+        const success = await deletePackage(selectedPackage.package_id);
+        if (success) {
+            setShowDeleteConfirm(false);
+            onClose();
         }
     };
 
@@ -103,6 +109,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
     }
 
     return (
+        <>
         <Modal
             isOpen={isOpen}
             onClose={onClose}
@@ -113,7 +120,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                 {/* Header with Status */}
                 <div className="flex items-start justify-between pb-4 border-b border-white/5">
                     <div>
-                        <h3 className="text-xl font-bold text-white tracking-tight">
+                        <h3 className="text-xl font-black text-white uppercase tracking-tighter">
                             {selectedPackage.tracking_number || 'No Tracking Number'}
                         </h3>
                         <p className="text-sm text-slate-400 mt-1">
@@ -134,7 +141,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                             Tracking Number
                         </label>
-                        <p className="text-sm font-mono text-white bg-white/5 px-3 py-2 rounded-lg border border-white/5">
+                        <p className="text-sm font-mono text-white bg-white/5 px-3 py-2 rounded-md border border-white/5">
                             {selectedPackage.tracking_number || 'N/A'}
                         </p>
                     </div>
@@ -183,7 +190,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                             Location
                         </label>
-                        <p className="text-sm font-medium text-white bg-white/5 px-3 py-2 rounded-lg border border-white/5">
+                        <p className="text-sm font-medium text-white bg-white/5 px-3 py-2 rounded-md border border-white/5">
                             {getLocationDisplay(selectedPackage.location)}
                         </p>
                     </div>
@@ -230,7 +237,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                                 Description
                             </label>
-                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-lg border border-white/5">
+                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-md border border-white/5">
                                 {selectedPackage.description}
                             </p>
                         </div>
@@ -240,7 +247,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
                                 Notes
                             </label>
-                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-lg border border-white/5">
+                            <p className="text-sm text-slate-200 bg-white/5 px-3 py-2 rounded-md border border-white/5">
                                 {selectedPackage.notes}
                             </p>
                         </div>
@@ -281,7 +288,7 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                     )}
                     <Button
                         variant="outline"
-                        onClick={handleDelete}
+                        onClick={handleDeleteClick}
                         disabled={loading.packages}
                         className=""
                     >
@@ -297,7 +304,35 @@ export const PackageDetailsModal: React.FC<PackageDetailsModalProps> = React.mem
                     </Button>
                 </div>
             </div>
-        </Modal >
+        </Modal>
+
+        {/* Delete confirmation modal */}
+        <Modal
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            title="Delete package?"
+            size="sm"
+            footer={
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={handleDeleteConfirm}
+                        disabled={loading.packages}
+                        className="bg-red-600 hover:bg-red-700"
+                    >
+                        Delete
+                    </Button>
+                </div>
+            }
+        >
+            <p className="text-slate-300">
+                Are you sure you want to delete this package? This action cannot be undone.
+            </p>
+        </Modal>
+        </>
     );
 });
 

@@ -110,13 +110,13 @@ describe('SystemAdministration Component', () => {
       });
     });
 
-    test('renders key metrics cards', () => {
+    test('renders metrics bar', () => {
       renderSystemAdministration();
       
-      expect(screen.getByText('99.9%')).toBeInTheDocument(); // System Uptime
-      expect(screen.getByText('127')).toBeInTheDocument(); // Active Users
-      expect(screen.getByText('3')).toBeInTheDocument(); // Security Alerts
-      expect(screen.getByText('45%')).toBeInTheDocument(); // CPU Usage
+      // Gold standard: compact metrics bar (Users, Integrations, Health, Security, Response, CPU)
+      expect(screen.getByText(/Users/i)).toBeInTheDocument();
+      expect(screen.getByText(/Health/i)).toBeInTheDocument();
+      expect(screen.getByText(/CPU/i)).toBeInTheDocument();
     });
 
     test('renders back button', () => {

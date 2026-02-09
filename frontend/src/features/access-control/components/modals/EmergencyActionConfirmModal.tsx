@@ -63,7 +63,7 @@ export const EmergencyActionConfirmModal: React.FC<EmergencyActionConfirmModalPr
                 <p className="text-sm text-white whitespace-pre-line">
                     {labels.message}
                 </p>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-500">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-500">
                     Reason required for audit logging.
                 </p>
                 <div>

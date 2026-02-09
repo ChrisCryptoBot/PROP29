@@ -11,3 +11,4 @@ export { useHandoverTemplates, type UseHandoverTemplatesReturn } from './useHand
 export { useEquipment, type UseEquipmentReturn } from './useEquipment';
 export { useHandoverDraft, type UseHandoverDraftReturn, type DraftData } from './useHandoverDraft';
 export { useHandoverVerification, type UseHandoverVerificationReturn } from './useHandoverVerification';
+export { useHandoverTelemetry } from './useHandoverTelemetry';

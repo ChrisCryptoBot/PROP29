@@ -99,6 +99,14 @@ export const useBannedIndividualsState = () => {
     const [filterRiskLevel, setFilterRiskLevel] = useState<string>('ALL');
     const [filterBanType, setFilterBanType] = useState<string>('ALL');
     const [filterNationality, setFilterNationality] = useState<string>('ALL');
+    const [filterExpiringSoon, setFilterExpiringSoon] = useState<boolean>(false);
+    const [filterHasPhoto, setFilterHasPhoto] = useState<'ALL' | 'YES' | 'NO'>('ALL');
+    const [filterGender, setFilterGender] = useState<string>('ALL');
+    const [filterDistinguishingFeatures, setFilterDistinguishingFeatures] = useState<string>('');
+    const [filterSource, setFilterSource] = useState<string>('ALL');
+    const [filterBuild, setFilterBuild] = useState<string>('ALL');
+    const [filterHairColor, setFilterHairColor] = useState<string>('ALL');
+    const [filterHeightBand, setFilterHeightBand] = useState<string>('ALL');
     const [selectedIndividuals, setSelectedIndividuals] = useState<string[]>([]);
 
     // Data state
@@ -352,25 +360,56 @@ export const useBannedIndividualsState = () => {
         };
     }, [isConnected, subscribe, processAlertQueue]);
 
-    // Computed values
+    // Computed values: search over name, ID, reason, notes, distinguishing features, aliases
     const filteredIndividuals = useMemo(() => {
         return bannedIndividuals.filter(ind => {
             if (searchQuery) {
-                const query = searchQuery.toLowerCase();
+                const query = searchQuery.toLowerCase().trim();
+                const fullName = `${ind.firstName} ${ind.lastName}`.toLowerCase();
+                const notes = (ind.notes || '').toLowerCase();
+                const distinguishing = (ind.distinguishingFeatures || '').toLowerCase();
+                const aliasesStr = (ind.aliases || []).join(' ').toLowerCase();
                 const matchesQuery =
+                    fullName.includes(query) ||
                     ind.firstName.toLowerCase().includes(query) ||
                     ind.lastName.toLowerCase().includes(query) ||
-                    ind.identificationNumber.toLowerCase().includes(query) ||
-                    ind.reason.toLowerCase().includes(query);
+                    (ind.identificationNumber || '').toLowerCase().includes(query) ||
+                    (ind.reason || '').toLowerCase().includes(query) ||
+                    notes.includes(query) ||
+                    distinguishing.includes(query) ||
+                    aliasesStr.includes(query);
                 if (!matchesQuery) return false;
             }
             if (filterStatus !== 'ALL' && ind.status !== filterStatus) return false;
             if (filterRiskLevel !== 'ALL' && ind.riskLevel !== filterRiskLevel) return false;
             if (filterBanType !== 'ALL' && ind.banType !== filterBanType) return false;
             if (filterNationality !== 'ALL' && ind.nationality !== filterNationality) return false;
+            if (filterExpiringSoon) {
+                if (!ind.banEndDate || ind.status !== 'ACTIVE') return false;
+                const endDate = new Date(ind.banEndDate);
+                const daysUntil = (endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+                if (daysUntil > 30 || daysUntil <= 0) return false;
+            }
+            if (filterHasPhoto === 'YES' && !ind.photoUrl) return false;
+            if (filterHasPhoto === 'NO' && ind.photoUrl) return false;
+            if (filterGender !== 'ALL' && (ind.gender || 'UNKNOWN') !== filterGender) return false;
+            if (filterSource !== 'ALL' && (ind.source || 'MANAGER') !== filterSource) return false;
+            if (filterBuild !== 'ALL' && (ind.build || 'UNKNOWN') !== filterBuild) return false;
+            if (filterHairColor !== 'ALL' && (ind.hairColor || '').toLowerCase() !== filterHairColor.toLowerCase()) return false;
+            if (filterHeightBand !== 'ALL' && (ind.heightBand || 'UNKNOWN') !== filterHeightBand) return false;
+            if (filterDistinguishingFeatures.trim()) {
+                const term = filterDistinguishingFeatures.toLowerCase().trim();
+                const inNotes = (ind.notes || '').toLowerCase().includes(term);
+                const inFeatures = (ind.distinguishingFeatures || '').toLowerCase().includes(term);
+                if (!inNotes && !inFeatures) return false;
+            }
             return true;
         });
-    }, [bannedIndividuals, searchQuery, filterStatus, filterRiskLevel, filterBanType, filterNationality]);
+    }, [
+        bannedIndividuals, searchQuery, filterStatus, filterRiskLevel, filterBanType, filterNationality,
+        filterExpiringSoon, filterHasPhoto, filterGender, filterDistinguishingFeatures, filterSource,
+        filterBuild, filterHairColor, filterHeightBand
+    ]);
 
     const expiringBans = useMemo(() => {
         const now = new Date();
@@ -732,6 +771,14 @@ export const useBannedIndividualsState = () => {
         filterRiskLevel, setFilterRiskLevel,
         filterBanType, setFilterBanType,
         filterNationality, setFilterNationality,
+        filterExpiringSoon, setFilterExpiringSoon,
+        filterHasPhoto, setFilterHasPhoto,
+        filterGender, setFilterGender,
+        filterDistinguishingFeatures, setFilterDistinguishingFeatures,
+        filterSource, setFilterSource,
+        filterBuild, setFilterBuild,
+        filterHairColor, setFilterHairColor,
+        filterHeightBand, setFilterHeightBand,
         selectedIndividuals, setSelectedIndividuals,
         bannedIndividuals,
         detectionAlerts,

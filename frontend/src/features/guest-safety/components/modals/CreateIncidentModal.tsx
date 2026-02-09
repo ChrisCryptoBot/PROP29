@@ -75,8 +75,18 @@ export const CreateIncidentModal: React.FC = () => {
       onClose={handleClose}
       title="Create Incident"
       size="lg"
+      footer={
+        <>
+          <Button type="button" variant="subtle" onClick={handleClose} disabled={loading.actions} className="px-8 font-black uppercase tracking-widest text-[10px]">
+            Cancel
+          </Button>
+          <Button type="submit" form="create-incident-form" variant="primary" disabled={loading.actions || !formData.title.trim() || !formData.description.trim()} className="px-8 font-black uppercase tracking-widest text-[10px]">
+            {loading.actions ? 'Creating...' : 'Create Incident'}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="create-incident-form" onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
             Title
@@ -169,25 +179,6 @@ export const CreateIncidentModal: React.FC = () => {
               placeholder="Room number"
             />
           </div>
-        </div>
-
-        <div className="flex justify-end gap-4 pt-4 border-t border-white/5">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            disabled={loading.actions}
-            className="px-8 font-black uppercase tracking-widest text-[10px]"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading.actions || !formData.title.trim() || !formData.description.trim()}
-            className="px-8 font-black uppercase tracking-widest text-[10px] bg-blue-600 hover:bg-blue-700 text-white border-none"
-          >
-            {loading.actions ? 'Creating...' : 'Create Incident'}
-          </Button>
         </div>
       </form>
     </Modal>

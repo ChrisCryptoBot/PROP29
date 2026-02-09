@@ -42,6 +42,7 @@ export const AuditTrailTab: React.FC = () => {
       if (response?.data?.length) {
         setLogs(response.data.map(mapBackendEntryToLog));
       } else {
+        // Fallback: use local audit trail when backend returns empty or is offline
         setLogs(auditTrailService.getLogs());
       }
     } catch {
@@ -118,8 +119,8 @@ export const AuditTrailTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Audit Trail">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Audit Trail</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Audit Trail</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Security and compliance log
           </p>
         </div>
@@ -145,13 +146,13 @@ export const AuditTrailTab: React.FC = () => {
         </div>
       </div>
 
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-              <i className="fas fa-history text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-history text-white" />
             </div>
-            Audit Log Entries
+            <span className="card-title-text">Audit Log Entries</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 px-6 pb-6">

@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '../../../services/logger';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
 import { useAuth } from '../../../contexts/AuthContext';
 import {
     showLoading,
@@ -90,10 +91,9 @@ export function usePackageState(): UsePackageStateReturn {
                 setPackages(response.data);
             }
         } catch (error) {
-            logger.error('Failed to fetch packages', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'refreshPackages'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to fetch packages', err, { module: 'Package', action: 'refreshPackages' });
+            ErrorHandlerService.logError(err, 'Package:refreshPackages');
             showError('Failed to load packages');
         } finally {
             setLoading(prev => ({ ...prev, packages: false }));
@@ -137,10 +137,9 @@ export function usePackageState(): UsePackageStateReturn {
             dismissLoadingAndShowError(toastId, 'Failed to create package');
             return null;
         } catch (error) {
-            logger.error('Failed to create package', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'createPackage'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to create package', err, { module: 'Package', action: 'createPackage' });
+            ErrorHandlerService.logError(err, 'Package:createPackage');
             dismissLoadingAndShowError(toastId, 'Failed to create package');
             return null;
         } finally {
@@ -177,12 +176,8 @@ export function usePackageState(): UsePackageStateReturn {
         }
     }, [selectedPackage]);
 
-    // Delete Package
+    // Delete Package (caller must show confirmation modal before calling)
     const deletePackage = useCallback(async (packageId: string): Promise<boolean> => {
-        if (!window.confirm('Are you sure you want to delete this package? This action cannot be undone.')) {
-            return false;
-        }
-
         const toastId = showLoading('Deleting package...');
         setLoading(prev => ({ ...prev, packages: true }));
         try {
@@ -194,10 +189,9 @@ export function usePackageState(): UsePackageStateReturn {
             dismissLoadingAndShowSuccess(toastId, 'Package deleted successfully');
             return true;
         } catch (error) {
-            logger.error('Failed to delete package', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'deletePackage'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to delete package', err, { module: 'Package', action: 'deletePackage' });
+            ErrorHandlerService.logError(err, 'Package:deletePackage');
             dismissLoadingAndShowError(toastId, 'Failed to delete package');
             return false;
         } finally {
@@ -248,10 +242,9 @@ export function usePackageState(): UsePackageStateReturn {
             dismissLoadingAndShowError(toastId, 'Failed to deliver package');
             return false;
         } catch (error) {
-            logger.error('Failed to deliver package', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'deliverPackage'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to deliver package', err, { module: 'Package', action: 'deliverPackage' });
+            ErrorHandlerService.logError(err, 'Package:deliverPackage');
             dismissLoadingAndShowError(toastId, 'Failed to deliver package');
             return false;
         }
@@ -274,21 +267,16 @@ export function usePackageState(): UsePackageStateReturn {
             dismissLoadingAndShowError(toastId, 'Failed to process pickup');
             return false;
         } catch (error) {
-            logger.error('Failed to pickup package', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'pickupPackage'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to pickup package', err, { module: 'Package', action: 'pickupPackage' });
+            ErrorHandlerService.logError(err, 'Package:pickupPackage');
             dismissLoadingAndShowError(toastId, 'Failed to process pickup');
             return false;
         }
     }, [selectedPackage]);
 
-    // Bulk Delete
+    // Bulk Delete (caller must show confirmation modal before calling)
     const bulkDelete = useCallback(async (packageIds: string[]): Promise<boolean> => {
-        if (!window.confirm(`Are you sure you want to delete ${packageIds.length} package(s)? This action cannot be undone.`)) {
-            return false;
-        }
-
         const toastId = showLoading(`Deleting ${packageIds.length} package(s)...`);
         setLoading(prev => ({ ...prev, packages: true }));
         try {
@@ -322,10 +310,9 @@ export function usePackageState(): UsePackageStateReturn {
             dismissLoadingAndShowSuccess(toastId, `${packageIds.length} package(s) updated successfully`);
             return true;
         } catch (error) {
-            logger.error('Failed to update packages', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'bulkStatusChange'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to update packages', err, { module: 'Package', action: 'bulkStatusChange' });
+            ErrorHandlerService.logError(err, 'Package:bulkStatusChange');
             dismissLoadingAndShowError(toastId, 'Failed to update packages');
             return false;
         } finally {
@@ -366,10 +353,9 @@ export function usePackageState(): UsePackageStateReturn {
             dismissLoadingAndShowError(toastId, 'Failed to save package settings');
             return false;
         } catch (error) {
-            logger.error('Failed to update package settings', error instanceof Error ? error : new Error(String(error)), {
-                module: 'Package',
-                action: 'updateSettings'
-            });
+            const err = error instanceof Error ? error : new Error(String(error));
+            logger.error('Failed to update package settings', err, { module: 'Package', action: 'updateSettings' });
+            ErrorHandlerService.logError(err, 'Package:updateSettings');
             dismissLoadingAndShowError(toastId, 'Failed to save package settings');
             return false;
         } finally {

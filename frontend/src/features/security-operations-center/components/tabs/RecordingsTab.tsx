@@ -135,12 +135,17 @@ export const RecordingsTab: React.FC = () => {
       const batchResult = await securityOpsService.exportRecordingsBatch(recordingIds, 'mp4', 'high');
       
       if (batchResult) {
-        setActiveBatchExports(prev => {
-          const updated = new Map(prev);
-          updated.set(batchResult.batch_id, batchResult);
-          return updated;
-        });
-        dismissLoadingAndShowSuccess(toastId, `Export initiated for ${selectedRecordings.size} recordings. Download will start when ready.`);
+        if (batchResult.status === 'completed' && batchResult.download_url) {
+          window.open(securityOpsService.getBatchExportDownloadUrl(batchResult.batch_id), '_blank');
+          dismissLoadingAndShowSuccess(toastId, `Export complete. Download opened for ${selectedRecordings.size} recordings.`);
+        } else {
+          setActiveBatchExports(prev => {
+            const updated = new Map(prev);
+            updated.set(batchResult.batch_id, batchResult);
+            return updated;
+          });
+          dismissLoadingAndShowSuccess(toastId, `Export initiated for ${selectedRecordings.size} recordings. Download will start when ready.`);
+        }
         setSelectedRecordings(new Set());
       } else {
         throw new Error('Export initiation failed');
@@ -154,17 +159,22 @@ export const RecordingsTab: React.FC = () => {
 
   const handleSingleExport = async (recordingId: string, recordingName: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    
     trackAction('export', 'recording', { recordingId, recordingName });
     const toastId = showLoading(`Exporting ${recordingName}...`);
-    
     try {
-      // Simulate single export API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      dismissLoadingAndShowSuccess(toastId, `${recordingName} export ready for download.`);
-    } catch (error) {
-      showError('Export failed. Please try again.');
+      const job = await securityOpsService.exportRecording(recordingId, 'mp4', 'high');
+      if (!job) {
+        dismissLoadingAndShowError(toastId, 'Export failed. Please try again.');
+        return;
+      }
+      setActiveExports((prev) => {
+        const next = new Map(prev);
+        next.set(job.export_id, job);
+        return next;
+      });
+      dismissLoadingAndShowSuccess(toastId, `Export started for ${recordingName}. Download will open when ready.`);
+    } catch {
+      dismissLoadingAndShowError(toastId, 'Export failed. Please try again.');
     }
   };
 
@@ -184,26 +194,26 @@ export const RecordingsTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Recordings">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Recordings</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Recordings</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Browse and download recorded footage
           </p>
         </div>
       </div>
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-              <i className="fas fa-film text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-film text-white" />
             </div>
-            Recordings Library
+            <span className="card-title-text">Recordings Library</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 px-6 pb-6">
           <div className="flex items-center gap-4 mb-8">
             <div className="relative flex-1 group">
               <SearchBar
-                className="w-full bg-white/5 border-white/5 text-white placeholder:text-white/20 focus:border-blue-500/50 transition-all rounded-xl pl-10"
+                className="w-full bg-white/5 border-white/5 text-white placeholder:text-white/20 focus:border-blue-500/50 transition-all rounded-md pl-10"
                 placeholder="Search recordings by camera or date..."
                 value={search}
                 onChange={(value) => {
@@ -225,7 +235,7 @@ export const RecordingsTab: React.FC = () => {
 
           {/* Bulk Operations */}
           {filteredRecordings.length > 0 && (
-            <div className="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-xl border border-white/5">
+            <div className="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-md border border-white/5">
               {/* Select All Checkbox */}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -273,7 +283,7 @@ export const RecordingsTab: React.FC = () => {
                 <Card
                   key={recording.id}
                   className={cn(
-                    "bg-white/5 border shadow-inner hover:bg-white/[0.08] transition-all cursor-pointer group rounded-2xl overflow-hidden relative",
+                    "bg-white/5 border border-white/5 hover:bg-white/[0.08] transition-colors cursor-pointer group rounded-md overflow-hidden relative",
                     isSelected ? "border-blue-500/40 bg-blue-500/5" : "border-white/5"
                   )}
                   onClick={() => setSelectedRecording(recording)}
@@ -289,7 +299,7 @@ export const RecordingsTab: React.FC = () => {
                           className="w-4 h-4 rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500/20"
                           onClick={(e) => e.stopPropagation()}
                         />
-                        <h4 className="font-black text-white uppercase tracking-tighter text-lg group-hover:text-blue-400 transition-colors">{recording.cameraName}</h4>
+                        <h4 className="card-title-text">{recording.cameraName}</h4>
                       </div>
                       <Button
                         size="sm"
@@ -303,7 +313,7 @@ export const RecordingsTab: React.FC = () => {
                       </Button>
                     </div>
 
-                  <div className="space-y-2 bg-black/40 p-3 rounded-xl border border-white/5 shadow-inner">
+                  <div className="space-y-2 bg-black/40 p-3 rounded-md border border-white/5">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[color:var(--text-sub)]">
                       <span className="opacity-50 text-white italic">Date/Time:</span>
                       <span className="text-white">{recording.date} · {recording.time}</span>
@@ -333,7 +343,7 @@ export const RecordingsTab: React.FC = () => {
             {activeExports.size > 0 && (
               <div className="col-span-full space-y-2">
                 {Array.from(activeExports.values()).map(job => (
-                  <div key={job.export_id} className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between">
+                  <div key={job.export_id} className="bg-blue-500/10 border border-blue-500/20 rounded-md p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
                       <div>
@@ -366,7 +376,7 @@ export const RecordingsTab: React.FC = () => {
             {activeBatchExports.size > 0 && (
               <div className="col-span-full space-y-2">
                 {Array.from(activeBatchExports.values()).map(batch => (
-                  <div key={batch.batch_id} className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center justify-between">
+                  <div key={batch.batch_id} className="bg-blue-500/10 border border-blue-500/20 rounded-md p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
                       <div>
@@ -397,7 +407,7 @@ export const RecordingsTab: React.FC = () => {
 
             {/* Bulk Export Progress */}
             {bulkExportLoading && (
-              <div className="col-span-full bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
+              <div className="col-span-full bg-blue-500/10 border border-blue-500/20 rounded-md p-4 flex items-center gap-3">
                 <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
                 <span className="text-blue-400 font-bold text-sm">Initiating bulk export...</span>
               </div>

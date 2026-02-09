@@ -8,6 +8,7 @@ import { useIncidentLogContext } from '../../context/IncidentLogContext';
 import { IncidentStatus, AgentTrustLevel, BulkOperationResult } from '../../types/incident-log.types';
 import { cn } from '../../../../utils/cn';
 import { formatLocationDisplay } from '../../../../utils/formatLocation';
+import { getSeverityBadgeClass } from '../../utils/badgeHelpers';
 import { Modal } from '../../../../components/UI/Modal';
 import BulkOperationConfirmModal from '../modals/BulkOperationConfirmModal';
 
@@ -65,16 +66,6 @@ export const ReviewQueueTab: React.FC = () => {
             return 'rejection_reason' in incident.source_metadata && Boolean(incident.source_metadata.rejection_reason);
         });
     }, [incidents]);
-
-    const getSeverityBadgeClass = (severity: string) => {
-        switch (severity.toLowerCase()) {
-            case 'critical': return 'text-red-300 bg-red-500/20 border border-red-500/30';
-            case 'high': return 'text-orange-300 bg-orange-500/20 border border-orange-500/30';
-            case 'medium': return 'text-yellow-300 bg-yellow-500/20 border border-yellow-500/30';
-            case 'low': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
-            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
-        }
-    };
 
     // Get agent trust level and styling
     const getAgentTrustBadge = (incidentSourceAgentId?: string) => {
@@ -205,20 +196,20 @@ export const ReviewQueueTab: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Review Queue</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Review Queue</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Approve or reject incidents submitted by agents
                     </p>
                 </div>
             </div>
 
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-inbox text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Pending Review ({pendingIncidents.length})</span>
+                        <span className="card-title-text">Pending Review ({pendingIncidents.length})</span>
                     </CardTitle>
                     <div className="flex flex-wrap gap-2">
                         <Button
@@ -373,7 +364,7 @@ export const ReviewQueueTab: React.FC = () => {
                                     <div
                                         key={incident.incident_id}
                                         className={cn(
-                                            "p-4 border rounded-lg bg-white/5 hover:bg-white/10 transition-all",
+                                            "p-4 border rounded-md bg-white/5 hover:bg-white/10 transition-all",
                                             isSelected ? "border-blue-400/50 bg-blue-500/10" : "border-white/5"
                                         )}
                                     >
@@ -467,6 +458,7 @@ export const ReviewQueueTab: React.FC = () => {
                                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                             disabled={currentPage === 1}
                                             className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                                            aria-label="Previous page"
                                         >
                                             <i className="fas fa-chevron-left mr-1" />
                                             Previous
@@ -502,6 +494,7 @@ export const ReviewQueueTab: React.FC = () => {
                                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                             disabled={currentPage === totalPages}
                                             className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                                            aria-label="Next page"
                                         >
                                             Next
                                             <i className="fas fa-chevron-right ml-1" />
@@ -528,13 +521,13 @@ export const ReviewQueueTab: React.FC = () => {
                 </CardContent>
             </Card>
 
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-500/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-ban text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Review History ({rejectedIncidents.length})</span>
+                        <span className="card-title-text">Review History ({rejectedIncidents.length})</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -558,7 +551,7 @@ export const ReviewQueueTab: React.FC = () => {
                                 return (
                                     <div
                                         key={incident.incident_id}
-                                        className="p-4 border border-white/5 rounded-lg bg-white/5 hover:bg-white/10 transition-all"
+                                        className="p-4 border border-white/5 rounded-md bg-white/5 hover:bg-white/10 transition-all"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">

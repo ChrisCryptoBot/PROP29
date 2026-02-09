@@ -276,18 +276,29 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
             // Derive property_id from currentUser if not provided in filters
             const effectivePropertyId = filters?.property_id || propertyId;
             
+            // Backend GET /incidents does not support start_date/end_date; filter client-side when provided
             const response = await incidentService.getIncidents({
-                ...filters,
-                property_id: effectivePropertyId
+                property_id: effectivePropertyId,
+                status: filters?.status,
+                severity: filters?.severity
             });
 
             if (response.data) {
-                setIncidents(response.data);
+                let list = response.data;
+                if (filters?.start_date || filters?.end_date) {
+                    const start = filters.start_date ? new Date(filters.start_date).getTime() : 0;
+                    const end = filters.end_date ? new Date(filters.end_date).getTime() : Number.MAX_SAFE_INTEGER;
+                    list = list.filter((inc) => {
+                        const created = inc.created_at ? new Date(inc.created_at).getTime() : 0;
+                        return created >= start && created <= end;
+                    });
+                }
+                setIncidents(list);
                 setLastSynced(new Date()); // Update lastSynced on successful refresh
-                logger.info('Incidents refreshed', { module: 'IncidentLog', count: response.data.length });
+                logger.info('Incidents refreshed', { module: 'IncidentLog', count: list.length });
                 try {
                     localStorage.setItem('incident-log-cache', JSON.stringify({
-                        incidents: response.data,
+                        incidents: list,
                         last_sync: new Date().toISOString()
                     }));
                 } catch (e) {
@@ -648,23 +659,17 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
 
             const toastId = showLoading('Deleting incident...');
             try {
-                await retryWithBackoff(
-                    () => incidentService.deleteIncident(incidentId),
-                    {
-                        maxRetries: 3,
-                        baseDelay: 1000,
-                        maxDelay: 10000,
-                        shouldRetry: (error) => {
-                            // Don't retry on 4xx errors
-                            if (error && typeof error === 'object' && 'response' in error) {
-                                const axiosError = error as { response?: { status?: number } };
-                                return axiosError.response?.status ? axiosError.response.status >= 500 : true;
-                            }
-                            return true; // Retry network errors
-                        }
-                    }
-                );
-                // Refresh incidents to get latest state from server
+                const response = await incidentService.deleteIncident(incidentId);
+                if (!response.success) {
+                    dismissLoadingAndShowError(toastId, response.error || 'Failed to delete incident');
+                    operationLock.releaseLock('delete_incident', incidentId);
+                    setModals(prev => ({
+                        ...prev,
+                        showDeleteConfirmModal: false,
+                        deleteIncidentId: null
+                    }));
+                    return false;
+                }
                 await refreshIncidents();
                 if (selectedIncident?.incident_id === incidentId) {
                     setSelectedIncident(null);
@@ -678,39 +683,26 @@ export function useIncidentLogState(): UseIncidentLogStateReturn {
                 operationLock.releaseLock('delete_incident', incidentId);
                 return true;
             } catch (error) {
-                // If network error and not a 4xx, enqueue for retry
-                if (error && typeof error === 'object' && 'response' in error) {
-                    const axiosError = error as { response?: { status?: number } };
-                    if (!axiosError.response?.status || axiosError.response.status >= 500) {
-                        enqueue({
-                            type: 'delete_incident',
-                            payload: { incidentId },
-                            queuedAt: new Date().toISOString()
-                        });
-                        showSuccess('Delete queued for sync when connection is restored');
-                        // Optimistically remove from local state
-                        setIncidents(prev => prev.filter(i => i.incident_id !== incidentId));
-                        if (selectedIncident?.incident_id === incidentId) {
-                            setSelectedIncident(null);
-                        }
-                        setModals(prev => ({
-                            ...prev,
-                            showDeleteConfirmModal: false,
-                            deleteIncidentId: null
-                        }));
-                        operationLock.releaseLock('delete_incident', incidentId);
-                        return true;
-                    }
+                // Network/other error: enqueue for retry when back online
+                enqueue({
+                    type: 'delete_incident',
+                    payload: { incidentId },
+                    queuedAt: new Date().toISOString()
+                });
+                showSuccess('Delete queued for sync when connection is restored');
+                setIncidents(prev => prev.filter(i => i.incident_id !== incidentId));
+                if (selectedIncident?.incident_id === incidentId) {
+                    setSelectedIncident(null);
                 }
-                dismissLoadingAndShowError(toastId, 'Failed to delete incident');
-                ErrorHandlerService.logError(error, 'deleteIncident');
-                operationLock.releaseLock('delete_incident', incidentId);
+                dismissLoadingAndShowSuccess(toastId, 'Delete queued for sync');
                 setModals(prev => ({
                     ...prev,
                     showDeleteConfirmModal: false,
                     deleteIncidentId: null
                 }));
-                return false;
+                operationLock.releaseLock('delete_incident', incidentId);
+                ErrorHandlerService.logError(error, 'deleteIncident');
+                return true;
             }
         } catch (error) {
             // Fallback error handling for outer try

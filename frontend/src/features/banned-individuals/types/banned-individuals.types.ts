@@ -6,6 +6,13 @@ export type TrainingStatus = 'TRAINED' | 'TRAINING' | 'NEEDS_TRAINING';
 
 export type BanSource = 'MANAGER' | 'MOBILE_AGENT' | 'HARDWARE_DEVICE' | 'AUTO_APPROVED' | 'BULK_IMPORT';
 
+/** Physical/build for patrol quick filter */
+export type BuildType = 'SLIM' | 'MEDIUM' | 'HEAVY' | 'UNKNOWN';
+/** Gender for patrol quick filter */
+export type GenderType = 'MALE' | 'FEMALE' | 'OTHER' | 'UNKNOWN';
+/** Height band for patrol quick filter */
+export type HeightBand = 'UNDER_5_6' | '5_6_TO_5_10' | '5_10_TO_6_2' | 'OVER_6_2' | 'UNKNOWN';
+
 export interface BannedIndividual {
     id: string;
     firstName: string;
@@ -39,6 +46,15 @@ export interface BannedIndividual {
         autoApproved?: boolean;
         importBatchId?: string;
     };
+    // Optional physical/trait fields for patrol quick identification (hundreds of records)
+    gender?: GenderType;
+    height?: string;           // e.g. "5'10\"", "178cm"
+    heightBand?: HeightBand;
+    build?: BuildType;
+    hairColor?: string;        // e.g. "Black", "Brown", "Blonde", "Grey"
+    eyeColor?: string;         // e.g. "Brown", "Blue", "Green"
+    distinguishingFeatures?: string;  // e.g. "Beard, scar left cheek, tattoo right arm"
+    aliases?: string[];        // Known aliases / alternate names
 }
 
 export interface DetectionAlert {

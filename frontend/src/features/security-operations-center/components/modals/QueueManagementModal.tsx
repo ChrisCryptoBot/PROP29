@@ -79,7 +79,7 @@ export const QueueManagementModal: React.FC<QueueManagementModalProps> = ({ isOp
       <div className="space-y-6">
         {/* Summary */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-md">
             <div className="flex items-center justify-between mb-2">
               <i className="fas fa-clock text-amber-400 text-lg" />
               <Badge variant="warning" size="sm">{pending.length}</Badge>
@@ -87,7 +87,7 @@ export const QueueManagementModal: React.FC<QueueManagementModalProps> = ({ isOp
             <p className="text-2xl font-black text-white">{pending.length}</p>
             <p className="text-[9px] text-amber-400/70 font-bold uppercase tracking-widest mt-1">Pending</p>
           </div>
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-md">
             <div className="flex items-center justify-between mb-2">
               <i className="fas fa-exclamation-triangle text-red-400 text-lg" />
               <Badge variant="destructive" size="sm">{failed.length}</Badge>

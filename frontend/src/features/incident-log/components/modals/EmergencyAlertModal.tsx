@@ -161,7 +161,7 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
         >
             <div className="space-y-6">
                 <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center border border-white/5 ">
+                    <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                         <i className="fas fa-exclamation-triangle text-white" />
                     </div>
                     <div>
@@ -169,9 +169,9 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                     </div>
                 </div>
                     {/* Warning Banner */}
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                    <div className="bg-red-500/10 border border-red-500/20 rounded-md p-4">
                         <div className="flex items-start space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border border-white/5 ">
+                            <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 border border-white/5">
                                 <i className="fas fa-exclamation text-white text-sm" />
                             </div>
                             <div>
@@ -283,13 +283,13 @@ export const EmergencyAlertModal: React.FC<EmergencyAlertModalProps> = ({ isOpen
                         </div>
 
                         {/* Contact Emergency Services */}
-                        <div className="flex items-center space-x-3 p-4 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                        <div className="flex items-center space-x-3 p-4 rounded-md bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                             <input
                                 type="checkbox"
                                 id="contact-emergency-services"
                                 checked={formData.contact_emergency_services ?? true}
                                 onChange={handleChange}
-                                className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/30"
+                                className="h-5 w-5 text-red-400 bg-slate-900/50 border-white/5 rounded focus:ring-red-500/30"
                             />
                             <label htmlFor="contact-emergency-services" className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">
                                 Contact emergency services (police, fire, medical)

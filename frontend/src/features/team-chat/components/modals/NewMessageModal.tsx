@@ -2,7 +2,12 @@ import React from 'react';
 import { useTeamChatContext } from '../../context/TeamChatContext';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
+import { Badge } from '../../../../components/UI/Badge';
 import { cn } from '../../../../utils/cn';
+
+const getStatusBadgeVariant = (isOnline: boolean): 'success' | 'secondary' => {
+    return isOnline ? 'success' : 'secondary';
+};
 
 export const NewMessageModal: React.FC = () => {
     const {
@@ -21,15 +26,35 @@ export const NewMessageModal: React.FC = () => {
         <Modal
             isOpen={showNewMessage}
             onClose={() => setShowNewMessage(false)}
-            title="START DIRECT MESSAGE"
+            title="Start Direct Message"
             size="lg"
+            footer={
+                <div className="flex justify-end gap-3">
+                    <Button
+                        variant="subtle"
+                        onClick={() => setShowNewMessage(false)}
+                        className="text-[10px] font-black uppercase tracking-widest"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={handleSendDirectMessage}
+                        disabled={selectedRecipients.length === 0}
+                        className="flex items-center gap-2 font-black uppercase tracking-widest text-[10px] px-6 shadow-none"
+                    >
+                        <i className="fas fa-paper-plane" aria-hidden />
+                        <span>Send Message</span>
+                    </Button>
+                </div>
+            }
         >
             <div className="space-y-6">
                 {/* Selected Recipients Chip Cloud */}
                 {selectedRecipients.length > 0 && (
-                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl shadow-inner">
-                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">
-                            ACTIVE TARGETS ({selectedRecipients.length})
+                    <div className="p-4 bg-white/5 border border-white/5 rounded-md">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                            Active Targets ({selectedRecipients.length})
                         </p>
                         <div className="flex flex-wrap gap-2">
                             {selectedRecipients.map(id => {
@@ -37,12 +62,12 @@ export const NewMessageModal: React.FC = () => {
                                 return member ? (
                                     <span
                                         key={id}
-                                        className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-white rounded text-[10px] font-black uppercase tracking-wider"
+                                        className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-white rounded-md text-[10px] font-black uppercase tracking-wider"
                                     >
                                         <span>{member.name}</span>
                                         <button
                                             onClick={() => handleToggleRecipient(id)}
-                                            className="hover:text-red-500 transition-colors"
+                                            className="hover:text-red-400 transition-colors"
                                         >
                                             <i className="fas fa-times" />
                                         </button>
@@ -56,7 +81,9 @@ export const NewMessageModal: React.FC = () => {
                 {/* Team Members List */}
                 <div className="space-y-3">
                     <div className="flex items-center justify-between px-1">
-                        <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">OPERATIONAL PERSONNEL</h3>
+                        <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em]">
+                            Operational Personnel
+                        </h3>
                         <button
                             onClick={() => {
                                 if (selectedRecipients.length === teamMembers.length) {
@@ -65,9 +92,9 @@ export const NewMessageModal: React.FC = () => {
                                     setSelectedRecipients(teamMembers.map(m => m.id));
                                 }
                             }}
-                            className="text-[10px] font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest transition-colors"
+                            className="text-[10px] font-black text-blue-400 hover:text-blue-300 uppercase tracking-widest transition-colors"
                         >
-                            {selectedRecipients.length === teamMembers.length ? 'DESELECT ALL' : 'SELECT ALL PERSONNEL'}
+                            {selectedRecipients.length === teamMembers.length ? 'Deselect All' : 'Select All Personnel'}
                         </button>
                     </div>
 
@@ -76,10 +103,10 @@ export const NewMessageModal: React.FC = () => {
                             <label
                                 key={member.id}
                                 className={cn(
-                                    "flex items-center space-x-4 p-3 border rounded-xl cursor-pointer transition-all",
+                                    "flex items-center gap-4 p-3 border rounded-md cursor-pointer transition-colors",
                                     selectedRecipients.includes(member.id)
-                                        ? 'border-blue-500 bg-blue-600/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
-                                        : 'border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/5'
+                                        ? 'border-blue-500 bg-blue-600/10'
+                                        : 'border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/10'
                                 )}
                             >
                                 <div className="relative">
@@ -90,30 +117,39 @@ export const NewMessageModal: React.FC = () => {
                                         className="sr-only"
                                     />
                                     <div className={cn(
-                                        "w-5 h-5 border-2 rounded flex items-center justify-center transition-all",
+                                        "w-5 h-5 border-2 rounded-md flex items-center justify-center transition-colors",
                                         selectedRecipients.includes(member.id)
                                             ? "bg-blue-600 border-blue-500"
                                             : "border-white/20 bg-black/20"
                                     )}>
-                                        {selectedRecipients.includes(member.id) && <i className="fas fa-check text-white text-[10px]" />}
+                                        {selectedRecipients.includes(member.id) && (
+                                            <i className="fas fa-check text-white text-[10px]" />
+                                        )}
                                     </div>
                                 </div>
                                 <div className="relative shrink-0">
-                                    <div className="w-10 h-10 bg-white/10 border border-white/5 rounded flex items-center justify-center text-white font-black text-xs uppercase">
+                                    <div className="w-10 h-10 bg-white/10 border border-white/5 rounded-md flex items-center justify-center text-white font-black text-xs uppercase">
                                         {member.name.split(' ').map(n => n[0]).join('')}
                                     </div>
                                     <div
-                                        className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-black"
-                                        style={{ backgroundColor: member.isOnline ? '#22c55e' : '#6b7280' }}
-                                    ></div>
+                                        className={cn(
+                                            "absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-slate-900",
+                                            member.isOnline ? 'bg-emerald-500' : 'bg-slate-500'
+                                        )}
+                                    />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-black text-white truncate">{member.name}</p>
-                                    <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">{member.role}</p>
+                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                                        {member.role}
+                                    </p>
                                 </div>
-                                {!member.isOnline && (
-                                    <span className="text-[10px] font-bold text-white/20 uppercase tracking-tighter shrink-0">OFFLINE</span>
-                                )}
+                                <Badge
+                                    variant={getStatusBadgeVariant(member.isOnline)}
+                                    className="text-[8px] shrink-0"
+                                >
+                                    {member.isOnline ? 'Online' : 'Offline'}
+                                </Badge>
                             </label>
                         ))}
                     </div>
@@ -121,36 +157,16 @@ export const NewMessageModal: React.FC = () => {
 
                 {/* Initial Message Block */}
                 <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] ml-1">
-                        HANDOVER BRIEFING (OPTIONAL)
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">
+                        Initial Message (Optional)
                     </label>
                     <textarea
-                        placeholder="ENTER PRELIMINARY DATA..."
+                        placeholder="Enter preliminary data..."
                         rows={3}
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500/50 transition-all resize-none placeholder:text-white/10"
+                        className="w-full bg-black/40 border border-white/5 rounded-md px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none placeholder:text-slate-600"
                     />
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-6 border-t border-white/5">
-                    <Button
-                        variant="outline"
-                        onClick={() => setShowNewMessage(false)}
-                        className="font-black uppercase tracking-widest text-[10px] border-white/5 text-white/40 hover:text-white hover:bg-white/5"
-                    >
-                        CANCEL
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={handleSendDirectMessage}
-                        disabled={selectedRecipients.length === 0}
-                        className="flex items-center space-x-2 font-black uppercase tracking-widest text-[10px] px-6 shadow-lg shadow-blue-500/20"
-                    >
-                        <i className="fas fa-paper-plane" />
-                        <span>SEND MESSAGE</span>
-                    </Button>
                 </div>
             </div>
         </Modal>
     );
 };
-

@@ -31,23 +31,32 @@ LOGIN_TIMEOUT_MINUTES = int(os.getenv("LOGIN_TIMEOUT_MINUTES", "15"))
 # Password hashing with enhanced security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
-# Rate limiting storage (in production, use Redis)
-login_attempts = {}
+# Rate limiting storage (in-memory; use Redis in multi-instance production)
+login_attempts: Dict[str, Dict[str, Any]] = {}
 
 def rate_limit_login(ip_address: str) -> bool:
-    # TEMPORARY: Disable rate limiting for debugging
+    """
+    Rate limit login attempts per IP address.
+    Returns True if allowed, False if rate limited.
+    Max MAX_LOGIN_ATTEMPTS per LOGIN_TIMEOUT_MINUTES.
+    """
+    current_time = time.time()
+    window_seconds = LOGIN_TIMEOUT_MINUTES * 60
+    if ip_address not in login_attempts:
+        login_attempts[ip_address] = {"count": 0, "first_attempt": current_time}
+    attempts = login_attempts[ip_address]
+    if current_time - attempts["first_attempt"] > window_seconds:
+        attempts["count"] = 0
+        attempts["first_attempt"] = current_time
+    if attempts["count"] >= MAX_LOGIN_ATTEMPTS:
+        return False
+    attempts["count"] += 1
     return True
-    # current_time = time.time()
-    # if ip_address not in login_attempts:
-    #     login_attempts[ip_address] = {"count": 0, "first_attempt": current_time}
-    # attempts = login_attempts[ip_address]
-    # if current_time - attempts["first_attempt"] > LOGIN_TIMEOUT_MINUTES * 60:
-    #     attempts["count"] = 0
-    #     attempts["first_attempt"] = current_time
-    # if attempts["count"] >= MAX_LOGIN_ATTEMPTS:
-    #     return False
-    # attempts["count"] += 1
-    # return True
+
+def clear_rate_limit(ip_address: str) -> None:
+    """Clear rate limit after successful login."""
+    if ip_address in login_attempts:
+        del login_attempts[ip_address]
 
 class AuthService:
     @staticmethod
@@ -215,8 +224,7 @@ class AuthService:
             refresh_token = AuthService.create_refresh_token(token_data)
             
             # Reset rate limiting on successful login
-            if ip_address in login_attempts:
-                del login_attempts[ip_address]
+            clear_rate_limit(ip_address)
             
             logger.info(f"Successful login for user: {user.user_id}")
             
@@ -253,26 +261,6 @@ class AuthService:
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid token type"
                 )
-            # Development fallback for mock admin user
-            if os.getenv("ENVIRONMENT") == "development" and payload.get("user_id") == "1":
-                token_data = {
-                    "sub": "1",
-                    "username": payload.get("username") or "admin",
-                    "email": payload.get("email") or "admin@proper29.com",
-                    "roles": payload.get("roles") or ["admin"]
-                }
-                access_token = AuthService.create_access_token(token_data)
-                new_refresh_token = AuthService.create_refresh_token(token_data)
-                return TokenResponse(
-                    access_token=access_token,
-                    refresh_token=new_refresh_token,
-                    token_type="bearer",
-                    expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-                    user_id="1",
-                    username=token_data["username"],
-                    roles=token_data["roles"]
-                )
-
             # Get user from database
             db = SessionLocal()
             try:

@@ -54,6 +54,24 @@ class GuestSafetyService:
         return prop.property_id
 
     @staticmethod
+    def _infer_incident_type(incident: GuestSafetyIncident) -> str:
+        """Infer type from title/description for evacuation and API compatibility."""
+        text = f"{(incident.title or '')} {(incident.description or '')}".lower()
+        if "evacuation" in text:
+            return "evacuation"
+        if "medical" in text or "heart" in text or "fall" in text:
+            return "medical"
+        if "security" in text or "suspicious" in text:
+            return "security"
+        if "maintenance" in text or "repair" in text:
+            return "maintenance"
+        if "service" in text or "towel" in text:
+            return "service"
+        if "noise" in text:
+            return "noise"
+        return "other"
+
+    @staticmethod
     def _to_response(incident: GuestSafetyIncident) -> GuestSafetyIncidentResponse:
         return GuestSafetyIncidentResponse(
             id=incident.incident_id,
@@ -62,6 +80,7 @@ class GuestSafetyService:
             location=incident.location,
             severity=incident.severity,
             status=incident.status,
+            type=GuestSafetyService._infer_incident_type(incident),
             reported_by=incident.reported_by,
             reported_at=incident.reported_at,
             resolved_at=incident.resolved_at,
@@ -506,7 +525,7 @@ class GuestSafetyService:
             db.refresh(check_in_message)
             
             # Get guest info from incident or message
-            incident = db.query(GuestSafetyIncident).filter(GuestSafetyIncident.id == incident_id).first()
+            incident = db.query(GuestSafetyIncident).filter(GuestSafetyIncident.incident_id == incident_id).first()
             guest_name = 'Guest'
             room_number = ''
             

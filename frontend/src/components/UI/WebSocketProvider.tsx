@@ -26,121 +26,174 @@ const WebSocketContext = createContext<WebSocketContextType>({
   lastMessage: null,
 });
 
+// --- Module-level shared WebSocket so Strict Mode unmount doesn't close the connection ---
+type WsListener = {
+  onOpen: () => void;
+  onClose: () => void;
+  onMessage: (msg: WebSocketMessage) => void;
+};
+let sharedSocket: WebSocket | null = null;
+let sharedUserId: string | null = null;
+const listeners = new Set<WsListener>();
+
+function notifyOpen(): void {
+  listeners.forEach((l) => {
+    try {
+      l.onOpen();
+    } catch (e) {
+      logger.error('WebSocket listener onOpen error', e instanceof Error ? e : new Error(String(e)), { module: 'WebSocketProvider' });
+    }
+  });
+}
+
+function notifyClose(): void {
+  sharedSocket = null;
+  sharedUserId = null;
+  listeners.forEach((l) => {
+    try {
+      l.onClose();
+    } catch (e) {
+      logger.error('WebSocket listener onClose error', e instanceof Error ? e : new Error(String(e)), { module: 'WebSocketProvider' });
+    }
+  });
+}
+
+function notifyMessage(msg: WebSocketMessage): void {
+  listeners.forEach((l) => {
+    try {
+      l.onMessage(msg);
+    } catch (e) {
+      logger.error('WebSocket listener onMessage error', e instanceof Error ? e : new Error(String(e)), { module: 'WebSocketProvider' });
+    }
+  });
+}
+
+function connectShared(userId: string, token: string | null): void {
+  if (sharedSocket?.readyState === WebSocket.OPEN && sharedUserId === userId) {
+    logger.debug('WebSocket: Reusing existing connection', { module: 'WebSocketProvider', userId });
+    notifyOpen();
+    return;
+  }
+  if (sharedSocket) {
+    sharedSocket.close(1000, 'Reconnecting');
+    sharedSocket = null;
+    sharedUserId = null;
+  }
+  const wsUrl = token
+    ? `${env.WS_URL}/${userId}?token=${encodeURIComponent(token)}`
+    : `${env.WS_URL}/${userId}`;
+  try {
+    logger.debug(`WebSocket: Connecting to ${env.WS_URL}/${userId}`, { module: 'WebSocketProvider', action: 'connect' });
+    const ws = new WebSocket(wsUrl);
+    sharedSocket = ws;
+    sharedUserId = userId;
+    ws.onopen = () => {
+      logger.info('WebSocket connected successfully', { module: 'WebSocketProvider', action: 'onopen', userId });
+      notifyOpen();
+    };
+    ws.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        notifyMessage(message);
+      } catch (error) {
+        logger.error('Error parsing WebSocket message', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'onmessage' });
+      }
+    };
+    ws.onclose = () => {
+      logger.debug('WebSocket closed', { module: 'WebSocketProvider', action: 'onclose' });
+      notifyClose();
+    };
+    ws.onerror = () => {
+      notifyClose();
+    };
+  } catch (error) {
+    logger.error('Error creating WebSocket', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'connect' });
+    sharedSocket = null;
+    sharedUserId = null;
+    notifyClose();
+  }
+}
+
+function disconnectShared(): void {
+  if (sharedSocket) {
+    sharedSocket.close(1000, 'User disconnecting');
+    sharedSocket = null;
+    sharedUserId = null;
+  }
+  notifyClose();
+}
+
+function sendShared(message: WebSocketMessage): void {
+  if (sharedSocket?.readyState === WebSocket.OPEN) {
+    try {
+      sharedSocket.send(JSON.stringify(message));
+    } catch (error) {
+      logger.error('Error sending WebSocket message', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'sendMessage' });
+    }
+  } else {
+    logger.warn('WebSocket is not connected, cannot send message', { module: 'WebSocketProvider', action: 'sendMessage', messageType: message.type });
+  }
+}
+
+// --- Provider ---
 interface WebSocketProviderProps {
   children: ReactNode;
 }
+
+const MIN_RECONNECT_DELAY_MS = 2500;
+const maxReconnectAttempts = 5;
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
   const subscribersRef = useRef<Map<string, Set<(data: Record<string, unknown>) => void>>>(new Map());
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 5;
+
+  const listenerRef = useRef<WsListener>({
+    onOpen: () => {},
+    onClose: () => {},
+    onMessage: () => {},
+  });
 
   const connect = React.useCallback(() => {
-    // Only connect if user is authenticated and has a user_id
-    if (!isAuthenticated || !user?.user_id) {
-      logger.debug('WebSocket: User not authenticated or no user_id, skipping connection', { module: 'WebSocketProvider', action: 'connect' });
-      return;
-    }
-
-    // Don't connect if already connected
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      logger.debug('WebSocket: Already connected', { module: 'WebSocketProvider', action: 'connect' });
-      return;
-    }
-
-    const accessToken = localStorage.getItem('access_token');
-    const wsUrl = accessToken
-      ? `${env.WS_URL}/${user.user_id}?token=${encodeURIComponent(accessToken)}`
-      : `${env.WS_URL}/${user.user_id}`;
-    
-    try {
-      logger.debug(`WebSocket: Attempting to connect to ${wsUrl}`, { module: 'WebSocketProvider', action: 'connect', wsUrl });
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        logger.info('WebSocket connected successfully', { module: 'WebSocketProvider', action: 'onopen', userId: user.user_id });
-        setIsConnected(true);
-        reconnectAttemptsRef.current = 0;
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const message: WebSocketMessage = JSON.parse(event.data);
-          setLastMessage(message);
-          
-          // Notify subscribers
-          const subscribers = subscribersRef.current.get(message.type);
-          if (subscribers) {
-            subscribers.forEach(callback => {
-              try {
-                callback(message.data);
-              } catch (error) {
-                logger.error('Error in WebSocket subscriber callback', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'onmessage', messageType: message.type });
-              }
-            });
-          }
-        } catch (error) {
-          logger.error('Error parsing WebSocket message', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'onmessage' });
-        }
-      };
-
-      ws.onclose = (event) => {
-        logger.info(`WebSocket disconnected: ${event.code} ${event.reason}`, { module: 'WebSocketProvider', action: 'onclose', code: event.code, reason: event.reason });
-        setIsConnected(false);
-        wsRef.current = null;
-        
-        // Only attempt to reconnect if user is still authenticated
-        if (isAuthenticated && reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-          logger.debug(`WebSocket: Attempting reconnect in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`, { module: 'WebSocketProvider', action: 'onclose', delay, attempt: reconnectAttemptsRef.current + 1 });
-          reconnectTimeoutRef.current = setTimeout(() => {
-            reconnectAttemptsRef.current++;
-            connect();
-          }, delay);
-        }
-      };
-
-      ws.onerror = (error) => {
-        logger.error('WebSocket error', new Error('WebSocket connection error'), { module: 'WebSocketProvider', action: 'onerror', error });
-        setIsConnected(false);
-      };
-
-    } catch (error) {
-      logger.error('Error creating WebSocket connection', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'connect' });
-      setIsConnected(false);
-    }
+    if (!isAuthenticated || !user?.user_id) return;
+    const token = localStorage.getItem('access_token');
+    connectShared(user.user_id, token);
   }, [isAuthenticated, user?.user_id]);
 
-  const disconnect = React.useCallback(() => {
-    logger.debug('WebSocket: Disconnecting', { module: 'WebSocketProvider', action: 'disconnect' });
-    if (wsRef.current) {
-      wsRef.current.close(1000, 'User disconnecting');
-      wsRef.current = null;
-    }
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    setIsConnected(false);
-    reconnectAttemptsRef.current = 0;
-  }, []);
+  useEffect(() => {
+    listenerRef.current.onOpen = () => {
+      setIsConnected(true);
+      reconnectAttemptsRef.current = 0;
+    };
+    listenerRef.current.onClose = () => {
+      setIsConnected(false);
+      if (!isAuthenticated || reconnectAttemptsRef.current >= maxReconnectAttempts) return;
+      const delay = Math.max(MIN_RECONNECT_DELAY_MS, Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000));
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectAttemptsRef.current += 1;
+        connect();
+      }, delay);
+    };
+    listenerRef.current.onMessage = (msg) => {
+      setLastMessage(msg);
+      const subscribers = subscribersRef.current.get(msg.type);
+      if (subscribers) {
+        subscribers.forEach((cb) => {
+          try {
+            cb(msg.data);
+          } catch (e) {
+            logger.error('WebSocket subscriber error', e instanceof Error ? e : new Error(String(e)), { module: 'WebSocketProvider' });
+          }
+        });
+      }
+    };
+  });
 
   const sendMessage = React.useCallback((message: WebSocketMessage) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      try {
-        wsRef.current.send(JSON.stringify(message));
-      } catch (error) {
-        logger.error('Error sending WebSocket message', error instanceof Error ? error : new Error(String(error)), { module: 'WebSocketProvider', action: 'sendMessage', messageType: message.type });
-      }
-    } else {
-      logger.warn('WebSocket is not connected, cannot send message', { module: 'WebSocketProvider', action: 'sendMessage', messageType: message.type });
-    }
+    sendShared(message);
   }, []);
 
   const subscribe = React.useCallback((type: string, callback: (data: Record<string, unknown>) => void) => {
@@ -148,34 +201,31 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       subscribersRef.current.set(type, new Set());
     }
     subscribersRef.current.get(type)!.add(callback);
-
-    // Return unsubscribe function
     return () => {
       const subscribers = subscribersRef.current.get(type);
       if (subscribers) {
         subscribers.delete(callback);
-        if (subscribers.size === 0) {
-          subscribersRef.current.delete(type);
-        }
+        if (subscribers.size === 0) subscribersRef.current.delete(type);
       }
     };
   }, []);
 
-  // Connect when authenticated user is available
+  // When authenticated: register listener and connect. On unmount only unregister (do not close socket).
   useEffect(() => {
     if (isAuthenticated && user?.user_id) {
+      listeners.add(listenerRef.current);
       connect();
-    } else {
-      disconnect();
+      return () => {
+        listeners.delete(listenerRef.current);
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+      };
     }
-  }, [isAuthenticated, user?.user_id, connect, disconnect]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      disconnect();
-    };
-  }, [disconnect]);
+    disconnectShared();
+    return () => {};
+  }, [isAuthenticated, user?.user_id, connect]);
 
   const value: WebSocketContextType = React.useMemo(() => ({
     isConnected,

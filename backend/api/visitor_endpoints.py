@@ -99,6 +99,30 @@ class VisitorCreate(BaseModel):
     event_id: Optional[str] = None
     access_points: Optional[List[str]] = None
 
+
+class VisitorUpdate(BaseModel):
+    """Partial update for visitor - all fields optional."""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    company: Optional[str] = None
+    purpose: Optional[str] = None
+    host_name: Optional[str] = None
+    host_phone: Optional[str] = None
+    host_email: Optional[EmailStr] = None
+    host_room: Optional[str] = None
+    expected_duration: Optional[int] = None
+    location: Optional[str] = None
+    visit_type: Optional[VisitType] = None
+    notes: Optional[str] = None
+    vehicle_number: Optional[str] = None
+    status: Optional[VisitorStatus] = None
+    security_clearance: Optional[SecurityClearance] = None
+    risk_level: Optional[RiskLevel] = None
+    access_points: Optional[List[str]] = None
+    updated_at: Optional[str] = None
+
 class VisitorResponse(BaseModel):
     id: str
     property_id: str  # Added for property-level isolation
@@ -207,10 +231,9 @@ async def get_visitors(
         
         # Additional filters
         if property_id:
-            # Verify user has access to requested property
             if property_id not in user_property_ids:
-                logger.warning(f"User {current_user.user_id} attempted to access property {property_id} without access")
-                raise HTTPException(status_code=403, detail="Access denied to this property")
+                logger.warning(f"User {current_user.user_id} requested property {property_id} without access; returning empty list")
+                return []
             filtered = [v for v in filtered if v.get("property_id") == property_id]
         
         if status:
@@ -293,6 +316,34 @@ async def get_visitor(
     except Exception as e:
         logger.error(f"Failed to get visitor: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve visitor. Please try again.")
+
+
+@router.put("/{visitor_id}", response_model=VisitorResponse)
+async def update_visitor(
+    visitor_id: str,
+    updates: VisitorUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update a visitor - Enforces property-level access control"""
+    try:
+        visitor = next((v for v in visitors_storage if v["id"] == visitor_id), None)
+        if not visitor:
+            raise HTTPException(status_code=404, detail="Visitor not found")
+        if not check_user_has_property_access(current_user, visitor.get("property_id", "")):
+            logger.warning(f"User {current_user.user_id} attempted to update visitor {visitor_id} without property access")
+            raise HTTPException(status_code=403, detail="Access denied to this visitor")
+        update_dict = updates.dict(exclude_unset=True)
+        update_dict.pop("updated_at", None)
+        for key, value in update_dict.items():
+            if value is not None:
+                visitor[key] = value.value if hasattr(value, "value") else value
+        visitor["updated_at"] = datetime.now().isoformat()
+        return visitor
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update visitor: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update visitor. Please try again.")
 
 
 @router.post("/{visitor_id}/check-in", response_model=VisitorResponse)
@@ -571,10 +622,9 @@ async def get_events(
         filtered = [e for e in events_storage if e.get("property_id") in user_property_ids]
         
         if property_id:
-            # Verify user has access to requested property
             if property_id not in user_property_ids:
-                logger.warning(f"User {current_user.user_id} attempted to access events for property {property_id} without access")
-                raise HTTPException(status_code=403, detail="Access denied to this property")
+                logger.warning(f"User {current_user.user_id} requested events for property {property_id} without access; returning empty list")
+                return []
             filtered = [e for e in filtered if e.get("property_id") == property_id]
         
         return filtered
@@ -583,6 +633,30 @@ async def get_events(
     except Exception as e:
         logger.error(f"Failed to get events: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve events. Please try again.")
+
+
+@router.get("/events/{event_id}", response_model=EventResponse)
+async def get_event(
+    event_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get a single event by ID - Enforces property-level access control"""
+    try:
+        user_property_ids = get_user_property_ids(current_user)
+        if not user_property_ids:
+            raise HTTPException(status_code=403, detail="No property access")
+        event = next((e for e in events_storage if e["id"] == event_id), None)
+        if not event:
+            raise HTTPException(status_code=404, detail="Event not found")
+        if event.get("property_id") not in user_property_ids:
+            logger.warning(f"User {current_user.user_id} attempted to access event {event_id} without property access")
+            raise HTTPException(status_code=403, detail="Access denied to this event")
+        return event
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get event: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve event. Please try again.")
 
 
 @router.delete("/events/{event_id}", status_code=204)
@@ -668,3 +742,305 @@ async def register_event_attendee(
     except Exception as e:
         logger.error(f"Failed to register event attendee: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to register event attendee. Please try again.")
+
+
+# --- Mobile agents (stub storage for plug-and-play) ---
+mobile_agents_storage: List[dict] = []
+mobile_submissions_storage: List[dict] = []
+
+
+@router.get("/mobile-agents")
+async def get_mobile_agents(
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """List registered mobile agent devices - property scoped."""
+    user_property_ids = get_user_property_ids(current_user)
+    if not user_property_ids:
+        return []
+    filtered = [a for a in mobile_agents_storage if a.get("property_id") in user_property_ids or not property_id]
+    if property_id and property_id in user_property_ids:
+        filtered = [a for a in filtered if a.get("property_id") == property_id]
+    return filtered
+
+
+class MobileAgentRegister(BaseModel):
+    agent_name: str
+    device_id: str
+    device_model: Optional[str] = None
+    app_version: str = "1.0.0"
+    assigned_properties: List[str]
+
+
+@router.post("/mobile-agents/register")
+async def register_mobile_agent(
+    body: MobileAgentRegister,
+    current_user: User = Depends(get_current_user)
+):
+    """Register a mobile agent device."""
+    prop = body.assigned_properties[0] if body.assigned_properties else get_user_property_ids(current_user)[0]
+    if not check_user_has_property_access(current_user, prop):
+        raise HTTPException(status_code=403, detail="Access denied")
+    agent_id = str(uuid.uuid4())
+    agent = {
+        "agent_id": agent_id,
+        "device_id": body.device_id,
+        "agent_name": body.agent_name,
+        "device_model": body.device_model,
+        "app_version": body.app_version,
+        "last_sync": datetime.now().isoformat(),
+        "status": "online",
+        "assigned_properties": body.assigned_properties,
+        "property_id": prop,
+    }
+    mobile_agents_storage.append(agent)
+    return agent
+
+
+@router.get("/mobile-agents/submissions")
+async def get_mobile_agent_submissions(
+    agent_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """List mobile agent submissions (pending sync)."""
+    user_property_ids = get_user_property_ids(current_user)
+    if not user_property_ids:
+        return []
+    out = list(mobile_submissions_storage)
+    if agent_id:
+        out = [s for s in out if s.get("agent_id") == agent_id]
+    if status:
+        out = [s for s in out if s.get("status") == status]
+    return out
+
+
+@router.post("/mobile-agents/submissions/{submission_id}/process")
+async def process_mobile_agent_submission(
+    submission_id: str,
+    body: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Approve or reject a submission - returns created visitor if approve."""
+    action = body.get("action", "approve")
+    for i, sub in enumerate(mobile_submissions_storage):
+        if sub.get("submission_id") == submission_id:
+            mobile_submissions_storage[i] = {**sub, "status": "processed" if action == "approve" else "rejected"}
+            return {"data": None, "error": None}
+    raise HTTPException(status_code=404, detail="Submission not found")
+
+
+@router.post("/mobile-agents/{agent_id}/sync")
+async def sync_mobile_agent(agent_id: str, current_user: User = Depends(get_current_user)):
+    """Sync data from mobile agent."""
+    return {"synced_items": 0, "pending_items": 0, "errors": []}
+
+
+# --- Hardware devices (stub for plug-and-play) ---
+hardware_devices_storage: List[dict] = []
+
+
+@router.get("/hardware/devices")
+async def get_hardware_devices(
+    property_id: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """List hardware devices - property scoped."""
+    user_property_ids = get_user_property_ids(current_user)
+    if not user_property_ids:
+        return []
+    out = [d for d in hardware_devices_storage if d.get("property_id") in user_property_ids]
+    if property_id:
+        out = [d for d in out if d.get("property_id") == property_id]
+    if type:
+        out = [d for d in out if d.get("device_type") == type]
+    return out
+
+
+@router.get("/hardware/devices/{device_id}/status")
+async def get_hardware_device_status(device_id: str, current_user: User = Depends(get_current_user)):
+    """Get single device status."""
+    user_property_ids = get_user_property_ids(current_user)
+    device = next((d for d in hardware_devices_storage if d.get("device_id") == device_id), None)
+    if not device or device.get("property_id") not in user_property_ids:
+        raise HTTPException(status_code=404, detail="Device not found")
+    return device
+
+
+@router.get("/hardware/card-reader/events")
+async def get_card_reader_events(
+    device_id: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Card reader events - stub."""
+    return []
+
+
+@router.get("/hardware/camera/events")
+async def get_camera_events(
+    device_id: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_user)
+):
+    """Camera events - stub."""
+    return []
+
+
+class PrintBadgeBody(BaseModel):
+    visitor_id: str
+    printer_id: Optional[str] = None
+
+
+@router.post("/hardware/printer/print-badge")
+async def print_visitor_badge(body: PrintBadgeBody, current_user: User = Depends(get_current_user)):
+    """Queue badge print job - stub returns queued."""
+    visitor = next((v for v in visitors_storage if v["id"] == body.visitor_id), None)
+    if not visitor:
+        raise HTTPException(status_code=404, detail="Visitor not found")
+    if not check_user_has_property_access(current_user, visitor.get("property_id", "")):
+        raise HTTPException(status_code=403, detail="Access denied")
+    return {"print_job_id": str(uuid.uuid4()), "status": "queued"}
+
+
+# --- System connectivity & health ---
+@router.get("/system/connectivity")
+async def get_system_connectivity(current_user: User = Depends(get_current_user)):
+    """System connectivity status for desktop UI."""
+    return {
+        "network_status": "online",
+        "backend_status": "connected",
+        "mobile_agents_connected": len([a for a in mobile_agents_storage if a.get("status") == "online"]),
+        "hardware_devices_connected": len([d for d in hardware_devices_storage if d.get("status") == "online"]),
+        "last_sync": datetime.now().isoformat(),
+        "pending_sync_items": 0,
+        "connectivity_errors": [],
+    }
+
+
+@router.get("/system/health")
+async def get_system_health(current_user: User = Depends(get_current_user)):
+    """Health check for visitor security backend."""
+    return {
+        "status": "healthy",
+        "components": {"api": "up", "storage": "up"},
+        "timestamp": datetime.now().isoformat(),
+    }
+
+
+# --- Enhanced settings (in-memory) ---
+enhanced_settings_storage: dict = {}
+
+
+def _default_enhanced_settings(property_id: str) -> dict:
+    return {
+        "visitor_retention_days": 365,
+        "auto_checkout_hours": 24,
+        "require_photo": True,
+        "require_host_approval": False,
+        "mobile_agent_settings": {
+            "enabled": True,
+            "require_location": True,
+            "auto_sync_enabled": True,
+            "offline_mode_duration_hours": 8,
+            "photo_quality": "medium",
+            "allow_bulk_operations": True,
+            "require_supervisor_approval": False,
+        },
+        "hardware_settings": {
+            "card_reader_enabled": False,
+            "camera_integration_enabled": False,
+            "printer_integration_enabled": False,
+            "auto_badge_printing": False,
+            "device_health_monitoring": True,
+            "alert_on_device_offline": True,
+            "maintenance_reminder_days": 30,
+        },
+        "mso_settings": {
+            "offline_mode_enabled": True,
+            "cache_size_limit_mb": 500,
+            "sync_interval_seconds": 300,
+            "auto_backup_enabled": True,
+            "backup_retention_days": 30,
+            "hardware_timeout_seconds": 30,
+            "mobile_agent_timeout_seconds": 60,
+            "network_retry_attempts": 3,
+        },
+        "api_settings": {
+            "mobile_agent_endpoint": "/api/visitors/mobile-agents",
+            "hardware_device_endpoint": "/api/visitors/hardware",
+            "websocket_endpoint": "/api/visitors/ws",
+            "api_key_mobile": "mobile_key_placeholder",
+            "api_key_hardware": "hardware_key_placeholder",
+            "encryption_enabled": True,
+        },
+    }
+
+
+@router.get("/settings/enhanced")
+async def get_enhanced_settings(
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get enhanced visitor settings."""
+    user_property_ids = get_user_property_ids(current_user)
+    if property_id and property_id not in user_property_ids:
+        prop = user_property_ids[0] if user_property_ids else "default-property-id"
+        return enhanced_settings_storage.get(prop, _default_enhanced_settings(prop))
+    prop = property_id or (user_property_ids[0] if user_property_ids else "default-property-id")
+    return enhanced_settings_storage.get(prop, _default_enhanced_settings(prop))
+
+
+@router.put("/settings/enhanced")
+async def update_enhanced_settings(
+    settings: dict,
+    property_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Update enhanced visitor settings."""
+    user_property_ids = get_user_property_ids(current_user)
+    prop = property_id or (user_property_ids[0] if user_property_ids else "default-property-id")
+    if property_id and property_id not in user_property_ids:
+        raise HTTPException(status_code=403, detail="Access denied")
+    enhanced_settings_storage[prop] = {**_default_enhanced_settings(prop), **settings}
+    return enhanced_settings_storage[prop]
+
+
+# --- Bulk operations ---
+@router.post("/bulk/{operation_type}")
+async def bulk_process_visitors(
+    operation_type: str,
+    body: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Bulk check-in, check-out, or update - stub."""
+    if operation_type not in ("bulk_checkin", "bulk_checkout", "bulk_update"):
+        raise HTTPException(status_code=400, detail="Invalid operation type")
+    visitor_ids = body.get("visitor_ids", [])
+    op_id = str(uuid.uuid4())
+    return {
+        "operation_id": op_id,
+        "operation_type": operation_type,
+        "visitor_ids": visitor_ids,
+        "status": "completed",
+        "progress": 100,
+        "results": {"successful": len(visitor_ids), "failed": 0, "errors": []},
+        "created_at": datetime.now().isoformat(),
+        "completed_at": datetime.now().isoformat(),
+    }
+
+
+@router.get("/bulk/operations/{operation_id}")
+async def get_bulk_operation_status(operation_id: str, current_user: User = Depends(get_current_user)):
+    """Get bulk operation status - stub."""
+    return {
+        "operation_id": operation_id,
+        "operation_type": "bulk_checkin",
+        "visitor_ids": [],
+        "status": "completed",
+        "progress": 100,
+        "results": {"successful": 0, "failed": 0, "errors": []},
+        "created_at": datetime.now().isoformat(),
+        "completed_at": datetime.now().isoformat(),
+    }

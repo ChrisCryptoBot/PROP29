@@ -50,6 +50,7 @@ const AccessPointsTabComponent: React.FC = () => {
     syncCachedEvents,
     createAccessPoint,
     updateAccessPoint,
+    deleteAccessPoint,
     refreshAccessPoints,
     recordAuditEntry,
   } = useAccessControlContext();
@@ -67,6 +68,9 @@ const AccessPointsTabComponent: React.FC = () => {
   const [bulkResult, setBulkResult] = useState<{ successes: number; failures: string[] } | null>(null);
   const [bulkAcknowledgeOffline, setBulkAcknowledgeOffline] = useState(false);
   const [editingAccessPoint, setEditingAccessPoint] = useState<AccessPoint | null>(null);
+  const [deletingAccessPoint, setDeletingAccessPoint] = useState<AccessPoint | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [lastBulkAction, setLastBulkAction] = useState<{
@@ -217,6 +221,32 @@ const AccessPointsTabComponent: React.FC = () => {
     }
   }, [accessPoints, recordAuditEntry, toggleAccessPoint]);
 
+  // Handle delete access point
+  const handleDeleteAccessPoint = useCallback(async () => {
+    if (!deletingAccessPoint) return;
+    setDeleteLoading(true);
+    try {
+      await deleteAccessPoint(deletingAccessPoint.id);
+      showSuccess(`Access point "${deletingAccessPoint.name}" deleted successfully.`);
+      recordAuditEntry({
+        action: 'Delete access point',
+        status: 'success',
+        target: deletingAccessPoint.name
+      });
+      setShowDeleteModal(false);
+      setDeletingAccessPoint(null);
+    } catch (error) {
+      showError(`Failed to delete access point "${deletingAccessPoint.name}".`);
+      recordAuditEntry({
+        action: 'Delete access point',
+        status: 'failure',
+        target: deletingAccessPoint.name
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deletingAccessPoint, deleteAccessPoint, recordAuditEntry]);
+
   // Clear all filters
   const handleClearAllFilters = useCallback(() => {
     setSearchQuery('');
@@ -314,8 +344,8 @@ const AccessPointsTabComponent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Access Points</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Access Points</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Manage system access points and status
           </p>
           {lastRefreshAt && (
@@ -404,7 +434,7 @@ const AccessPointsTabComponent: React.FC = () => {
       </div>
 
       {/* Filter Component */}
-      <div className="bg-slate-900/50 backdrop-blur-xl p-2 rounded-2xl border border-white/5">
+      <div className="bg-slate-900/50 p-2 rounded-md border border-white/5">
         <AccessPointsFilter
           searchQuery={searchQuery}
           typeFilter={typeFilter}
@@ -424,7 +454,7 @@ const AccessPointsTabComponent: React.FC = () => {
             <Card
               key={point.id}
               className={cn(
-                "bg-slate-900/50 backdrop-blur-xl border  transition-all duration-300 relative group overflow-hidden",
+                "bg-slate-900/50 border border-white/5 transition-all duration-300 relative group overflow-hidden",
                 point.isOnline === false ? 'border-red-500/50 opacity-90' : 'border-white/5'
               )}
               role="listitem"
@@ -432,8 +462,8 @@ const AccessPointsTabComponent: React.FC = () => {
 
               {/* Offline Hardware Overlay */}
               {point.isOnline === false && (
-                <div className="absolute inset-0 bg-red-950/40 border border-red-500/30 rounded-lg flex items-center justify-center z-10 backdrop-blur-[2px]" role="alert" aria-live="polite">
-                  <div className="text-center p-6 bg-black/60 rounded-2xl border border-red-500/20  scale-95 hover:scale-100 transition-transform">
+                <div className="absolute inset-0 bg-red-950/40 border border-red-500/30 rounded-md flex items-center justify-center z-10" role="alert" aria-live="polite">
+                  <div className="text-center p-6 bg-black/60 rounded-md border border-red-500/20">
                     <i className="fas fa-broadcast-tower text-red-500 text-3xl mb-3 animate-pulse" aria-hidden="true" />
                     <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">OFFLINE</p>
                     <p className="text-[9px] text-red-200/40 font-bold mt-1 uppercase">Connection Lost</p>
@@ -444,7 +474,7 @@ const AccessPointsTabComponent: React.FC = () => {
               <CardHeader className="border-b border-white/5 pb-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg font-black text-[color:var(--text-main)] uppercase tracking-tight group-hover:text-blue-400 transition-colors">{point.name}</CardTitle>
+                    <CardTitle className="card-title-text">{point.name}</CardTitle>
                     <p className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest opacity-50 mt-0.5">ID: {point.id.slice(0, 8).toUpperCase()}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -470,17 +500,17 @@ const AccessPointsTabComponent: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-6 pt-6">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-slate-900/30 rounded-xl border border-white/5">
+                  <div className="p-3 bg-slate-900/30 rounded-md border border-white/5">
                     <p className="text-[8px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-1.5 opacity-50">Location</p>
                     <div className="flex items-center text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-tight">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-2 border border-white/5 shrink-0"><i className="fas fa-map-pin text-white text-xs" aria-hidden="true" /></div>
+                      <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center mr-2 border border-white/5 shrink-0"><i className="fas fa-map-pin text-white text-xs" aria-hidden="true" /></div>
                       <span aria-label={`Location: ${formatLocationDisplay(point.location as string | { lat?: number; lng?: number } | null) || '—'}`}>{formatLocationDisplay(point.location as string | { lat?: number; lng?: number } | null) || '—'}</span>
                     </div>
                   </div>
-                  <div className="p-3 bg-slate-900/30 rounded-xl border border-white/5">
+                  <div className="p-3 bg-slate-900/30 rounded-md border border-white/5">
                     <p className="text-[8px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-1.5 opacity-50">Device Info</p>
                     <div className="flex items-center text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-tight">
-                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-2 border border-white/5 shrink-0"><i className="fas fa-microchip text-white text-xs" aria-hidden="true" /></div>
+                      <div className="w-8 h-8 bg-indigo-600 rounded-md flex items-center justify-center mr-2 border border-white/5 shrink-0"><i className="fas fa-microchip text-white text-xs" aria-hidden="true" /></div>
                       <span aria-label={`Type: ${point.type}, Method: ${point.accessMethod}`}>
                         {point.type.toUpperCase()} / {point.accessMethod.toUpperCase()}
                       </span>
@@ -498,7 +528,7 @@ const AccessPointsTabComponent: React.FC = () => {
 
                   {/* Sensor Status */}
                   {point.sensorStatus && (
-                    <div className="flex items-center justify-between p-3 bg-black/20 rounded-xl border border-white/5 mt-2">
+                    <div className="flex items-center justify-between p-3 bg-black/20 rounded-md border border-white/5 mt-2">
                       <span className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest opacity-50">Sensor Status</span>
                       <div className="flex items-center gap-2">
                         <i
@@ -527,7 +557,7 @@ const AccessPointsTabComponent: React.FC = () => {
 
                   {/* Power Source & Battery */}
                   {point.powerSource && (
-                    <div className="p-3 bg-black/20 rounded-xl border border-white/5">
+                    <div className="p-3 bg-black/20 rounded-md border border-white/5">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest opacity-50">Power Status</span>
                         <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">
@@ -543,10 +573,10 @@ const AccessPointsTabComponent: React.FC = () => {
                           <div className="flex-1 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5" role="progressbar" aria-valuenow={point.batteryLevel} aria-valuemin={0} aria-valuemax={100}>
                             <div
                               className={cn(
-                                "h-full transition-all duration-1000 bg-gradient-to-r",
-                                point.batteryLevel > 50 ? 'from-green-600 to-emerald-400' :
-                                  point.batteryLevel > 20 ? 'from-amber-600 to-yellow-400' :
-                                    'from-red-600 to-red-400'
+                                "h-full transition-all duration-1000",
+                                point.batteryLevel > 50 ? 'bg-green-600' :
+                                  point.batteryLevel > 20 ? 'bg-amber-500' :
+                                    'bg-red-600'
                               )}
                               style={{ width: `${point.batteryLevel}%` }}
                             />
@@ -567,7 +597,7 @@ const AccessPointsTabComponent: React.FC = () => {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-blue-500/5 rounded-xl border border-blue-500/10">
+                <div className="flex items-center justify-between p-3 bg-blue-500/5 rounded-md border border-blue-500/10">
                   <span className="text-[9px] font-black text-blue-300 uppercase tracking-widest">Total Events</span>
                   <span className="text-sm font-black text-white" aria-label={`Total access count: ${point.accessCount}`}>
                     {point.accessCount} <span className="text-[8px] opacity-50">EVENTS</span>
@@ -576,7 +606,7 @@ const AccessPointsTabComponent: React.FC = () => {
 
                 {/* Hardware Late-Sync Button */}
                 {point.isOnline && point.cachedEvents && point.cachedEvents.filter(e => !e.synced).length > 0 && (
-                  <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl animate-in fade-in" role="alert">
+                  <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-md animate-in fade-in" role="alert">
                     <div className="flex flex-col space-y-3">
                       <div className="flex items-center gap-3">
                         <i className="fas fa-triangle-exclamation text-amber-500 text-lg" aria-hidden="true" />
@@ -647,6 +677,21 @@ const AccessPointsTabComponent: React.FC = () => {
                     <i className="fas mr-2 fa-power-off" aria-hidden="true" />
                     {point.status === 'active' ? 'DISABLE' : 'ENABLE'}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-[10px] font-black uppercase tracking-widest border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all"
+                    onClick={() => {
+                      setDeletingAccessPoint(point);
+                      setShowDeleteModal(true);
+                    }}
+                    disabled={isStale}
+                    title={isStale ? 'Data is stale, refresh required' : `Delete ${point.name}`}
+                    aria-label={`Delete ${point.name}`}
+                    aria-disabled={isStale}
+                  >
+                    <i className="fas fa-trash" aria-hidden="true" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -662,7 +707,7 @@ const AccessPointsTabComponent: React.FC = () => {
               description={searchQuery || typeFilter !== 'all' || statusFilter !== 'all'
                 ? "No access points match your current filtering criteria."
                 : "Add your first access point to begin."}
-              className="bg-slate-900/50 border-dashed border-2 border-white/5 rounded-3xl p-12"
+              className="bg-slate-900/50 border-dashed border-2 border-white/5 rounded-lg p-12"
               action={
                 !searchQuery && typeFilter === 'all' && statusFilter === 'all' ? {
                   label: 'ADD ACCESS POINT',
@@ -702,8 +747,9 @@ const AccessPointsTabComponent: React.FC = () => {
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               className="text-[10px] font-black uppercase tracking-widest border-white/5"
+              aria-label="Go to previous page"
             >
-              <i className="fas fa-chevron-left mr-1" />
+              <i className="fas fa-chevron-left mr-1" aria-hidden="true" />
               Previous
             </Button>
             <div className="flex items-center gap-1">
@@ -725,6 +771,8 @@ const AccessPointsTabComponent: React.FC = () => {
                     size="sm"
                     onClick={() => setCurrentPage(pageNum)}
                     className="text-[10px] font-black uppercase tracking-widest min-w-[2rem]"
+                    aria-label={`Go to page ${pageNum}`}
+                    aria-current={currentPage === pageNum ? 'page' : undefined}
                   >
                     {pageNum}
                   </Button>
@@ -737,9 +785,10 @@ const AccessPointsTabComponent: React.FC = () => {
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
               className="text-[10px] font-black uppercase tracking-widest border-white/5"
+              aria-label="Go to next page"
             >
               Next
-              <i className="fas fa-chevron-right ml-1" />
+              <i className="fas fa-chevron-right ml-1" aria-hidden="true" />
             </Button>
             <Select
               id="items-per-page"
@@ -769,7 +818,7 @@ const AccessPointsTabComponent: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-500">
             Applies to filtered access points ({filteredAccessPoints.length})
           </p>
           {isStale && (
@@ -887,6 +936,90 @@ const AccessPointsTabComponent: React.FC = () => {
         isFormDirty={isFormDirty}
         setIsFormDirty={setIsFormDirty}
       />
+
+      {/* Delete Access Point Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeletingAccessPoint(null);
+        }}
+        title="Delete Access Point"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setDeletingAccessPoint(null);
+              }}
+              className="text-xs font-black uppercase tracking-widest"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleDeleteAccessPoint}
+              disabled={deleteLoading}
+              className="text-xs font-black uppercase tracking-widest bg-red-600 hover:bg-red-700 shadow-none"
+            >
+              {deleteLoading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin mr-2" aria-hidden="true" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-trash mr-2" aria-hidden="true" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <div className="flex items-start gap-3">
+              <i className="fas fa-exclamation-triangle text-red-400 text-xl mt-0.5" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-bold text-red-400 uppercase tracking-wide">Warning: This action cannot be undone</p>
+                <p className="text-xs text-red-200/70 mt-1">
+                  All associated events and cached data for this access point will be permanently removed.
+                </p>
+              </div>
+            </div>
+          </div>
+          {deletingAccessPoint && (
+            <div className="p-4 bg-slate-900/50 border border-white/5 rounded-lg">
+              <p className="text-[9px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2">Access Point to Delete</p>
+              <p className="text-sm font-bold text-white">{deletingAccessPoint.name}</p>
+              <p className="text-xs text-[color:var(--text-sub)] mt-1">
+                {deletingAccessPoint.type.toUpperCase()} · {deletingAccessPoint.location || 'No location'}
+              </p>
+              <div className="flex items-center gap-2 mt-3">
+                <Badge
+                  className={cn(
+                    "text-[8px] font-black uppercase tracking-widest px-2",
+                    deletingAccessPoint.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                      deletingAccessPoint.status === 'maintenance' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                        'bg-red-500/10 text-red-400 border border-red-500/20'
+                  )}
+                  size="sm"
+                >
+                  {deletingAccessPoint.status.toUpperCase()}
+                </Badge>
+                {deletingAccessPoint.isOnline === false && (
+                  <Badge className="bg-red-500 text-white text-[8px] font-black uppercase tracking-widest px-2" size="sm">
+                    OFFLINE
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

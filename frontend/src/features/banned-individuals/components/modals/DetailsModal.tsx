@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Modal } from '../../../../components/UI/Modal';
 import { useBannedIndividualsContext } from '../../context/BannedIndividualsContext';
 import { cn } from '../../../../utils/cn';
 
@@ -90,21 +90,17 @@ export const DetailsModal: React.FC = () => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4">
-            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300">
-                <CardHeader className="pb-2 border-b border-white/5 mb-6">
-                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                            <i className="fas fa-user-shield text-white text-lg" />
-                        </div>
-                        Ban Details
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-6">
-                        <div className="flex items-center space-x-6 p-5 border border-white/5 rounded-2xl bg-white/5">
+        <Modal
+            isOpen={showDetailsModal}
+            onClose={() => setShowDetailsModal(false)}
+            title={`${selectedIndividual.firstName} ${selectedIndividual.lastName}`}
+            size="lg"
+            footer={<Button variant="subtle" onClick={() => setShowDetailsModal(false)}>Cancel</Button>}
+        >
+            <div className="space-y-6">
+                        <div className="flex items-center space-x-6 p-5 border border-white/5 rounded-md bg-white/5">
                             <div className="relative">
-                                <div className="w-20 h-20 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-full flex items-center justify-center shadow-2xl border border-white/5">
+                                <div className="w-20 h-20 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                     <span className="text-white font-bold text-2xl">
                                         {selectedIndividual.firstName.charAt(0)}{selectedIndividual.lastName.charAt(0)}
                                     </span>
@@ -116,7 +112,7 @@ export const DetailsModal: React.FC = () => {
                                 )}
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-2xl font-black text-white leading-tight uppercase tracking-tighter">
+                                <h3 className="text-2xl font-black text-[color:var(--text-main)] leading-tight uppercase tracking-tighter">
                                     {selectedIndividual.firstName} {selectedIndividual.lastName}
                                 </h3>
                                 <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -153,7 +149,7 @@ export const DetailsModal: React.FC = () => {
                         </div>
 
                         <div className="space-y-4 px-2">
-                            <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl">
+                            <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-lg">
                                 <h4 className="text-xs font-bold text-red-400 flex items-center mb-2 uppercase tracking-widest">
                                     <i className="fas fa-gavel mr-2" />
                                     Official Reason for Ban
@@ -162,12 +158,12 @@ export const DetailsModal: React.FC = () => {
                             </div>
 
                             {selectedIndividual.notes && (
-                                <div className="p-4 border border-white/5 rounded-xl bg-white/5">
+                                <div className="p-4 border border-white/5 rounded-lg bg-white/5">
                                     <h4 className="text-xs font-bold text-slate-400 flex items-center mb-2 uppercase tracking-widest">
                                         <i className="fas fa-sticky-note mr-2 text-blue-500" />
                                         Internal Security Notes
                                     </h4>
-                                    <p className="text-slate-300 text-sm leading-relaxed italic">"{selectedIndividual.notes}"</p>
+                                    <p className="text-[color:var(--text-sub)] text-sm leading-relaxed italic">"{selectedIndividual.notes}"</p>
                                 </div>
                             )}
                         </div>
@@ -181,7 +177,7 @@ export const DetailsModal: React.FC = () => {
                                 {detectionAlerts
                                     .filter(alert => alert.individualId === selectedIndividual.id)
                                     .map((alert) => (
-                                        <div key={alert.id} className="p-4 bg-white/5 border border-white/5 rounded-xl shadow-sm hover:border-blue-500/30 transition-all hover:bg-white/[0.07]">
+                                        <div key={alert.id} className="p-4 bg-white/5 border border-white/5 rounded-lg shadow-sm hover:border-blue-500/30 transition-all hover:bg-white/[0.07]">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="font-bold text-white">
                                                     {typeof alert.location === 'string'
@@ -194,15 +190,15 @@ export const DetailsModal: React.FC = () => {
                                                     {alert.confidence != null ? `${alert.confidence}%` : ''} Confirmed
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-slate-400 mb-2">{alert.actionTaken}</p>
-                                            <div className="flex items-center text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                            <p className="text-sm text-[color:var(--text-sub)] mb-2">{alert.actionTaken}</p>
+                                            <div className="flex items-center text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest">
                                                 <i className="far fa-clock mr-1" />
                                                 {new Date(alert.timestamp).toLocaleString()}
                                             </div>
                                         </div>
                                     ))}
                                 {detectionAlerts.filter(alert => alert.individualId === selectedIndividual.id).length === 0 && (
-                                    <div className="text-center p-10 border-2 border-dashed border-white/5 rounded-2xl text-slate-600 bg-black/20 font-bold uppercase tracking-[0.2em] text-[10px] opacity-40">
+                                    <div className="text-center p-10 border-2 border-dashed border-white/5 rounded-lg text-[color:var(--text-sub)] bg-black/20 font-bold uppercase tracking-[0.2em] text-[10px] opacity-40">
                                         <i className="fas fa-check-circle text-2xl mb-3" />
                                         <p>No detections recorded</p>
                                     </div>
@@ -210,29 +206,19 @@ export const DetailsModal: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-end pt-5 border-t border-white/5">
-                            <Button
-                                onClick={() => setShowDetailsModal(false)}
-                                variant="primary" className="font-bold uppercase text-[10px] tracking-widest px-10 py-3 shadow-lg"
-                            >
-                                Close
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+            </div>
+        </Modal>
     );
 };
 
 const DetailRow: React.FC<{ label: string; value: string; icon: string }> = ({ label, value, icon }) => (
-    <div className="flex items-center space-x-3 p-2 group">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600/80 to-slate-900 flex items-center justify-center text-white group-hover:scale-110 transition-all border border-white/5 shadow-2xl">
+    <div className="flex items-center space-x-3 p-2">
+        <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white border border-white/5">
             <i className={cn("fas", icon, "text-xs")} />
         </div>
         <div>
-            <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1.5">{label}</span>
-            <span className="block text-sm font-bold text-white leading-none">{value}</span>
+            <span className="block text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-widest leading-none mb-1.5">{label}</span>
+            <span className="block text-sm font-bold text-[color:var(--text-main)] leading-none">{value}</span>
         </div>
     </div>
 );

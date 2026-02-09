@@ -114,13 +114,14 @@ export const AdvancedFiltersModal: React.FC<AdvancedFiltersModalProps> = ({ isOp
             )}
         >
             <div className="space-y-6">
-                    {/* Saved Filters */}
+                    {/* Saved Filters (localStorage only; not synced to server) */}
                     {savedFilters.length > 0 && (
                         <div>
                             <h3 className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-4">Saved Filters</h3>
+                            <p className="text-[10px] text-slate-400 mb-2">Stored in this browser only.</p>
                             <div className="space-y-2">
                                 {savedFilters.map((saved, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-lg">
+                                    <div key={index} className="flex items-center justify-between p-3 bg-white/5 border border-white/5 rounded-md">
                                         <span className="text-sm text-white">{saved.name}</span>
                                         <div className="flex gap-2">
                                             <Button

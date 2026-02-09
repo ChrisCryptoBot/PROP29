@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from typing import List, Optional
 from datetime import datetime
+import logging
 
 from api.auth_dependencies import get_current_user, require_security_manager_or_admin
 from services.iot_environmental_service import IoTEnvironmentalService
@@ -14,13 +15,47 @@ from schemas import (
     IoTEnvironmentalSettingsResponse,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/iot", tags=["IoT & Environmental Monitoring"])
 
 @router.post("/sensors/data", response_model=IoTEnvironmentalDataResponse, status_code=201)
-def record_sensor_data(payload: IoTEnvironmentalDataCreate, current_user=Depends(get_current_user)):
+async def record_sensor_data(payload: IoTEnvironmentalDataCreate, current_user=Depends(get_current_user)):
     service = IoTEnvironmentalService()
     try:
-        return service.record_sensor_data(payload, str(current_user.user_id))
+        result = service.record_sensor_data(payload, str(current_user.user_id))
+        # Broadcast via WebSocket
+        try:
+            from main import manager
+            if manager and manager.active_connections:
+                sensor_dict = {
+                    "id": result.data_id,
+                    "sensor_id": result.sensor_id,
+                    "sensor_type": result.sensor_type,
+                    "location": result.location,
+                    "value": result.value,
+                    "unit": result.unit,
+                    "status": result.status,
+                    "timestamp": result.timestamp.isoformat() if hasattr(result.timestamp, 'isoformat') else str(result.timestamp),
+                    "threshold_min": result.threshold_min,
+                    "threshold_max": result.threshold_max,
+                    "camera_id": result.camera_id,
+                    "camera_name": result.camera_name,
+                }
+                message = {
+                    "type": "environmental_data",
+                    "sensor_data": sensor_dict
+                }
+                # Broadcast to all connected users
+                for user_id, connections in manager.active_connections.items():
+                    for ws in connections:
+                        try:
+                            await ws.send_json(message)
+                        except Exception as e:
+                            logger.warning(f"Failed to send WebSocket message to {user_id}: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to broadcast sensor data via WebSocket: {e}")
+        return result
     finally:
         service.close()
 
@@ -87,18 +122,82 @@ def list_environmental_alerts(current_user=Depends(get_current_user)):
         service.close()
 
 @router.post("/environmental/alerts", response_model=SensorAlertResponse, status_code=201)
-def create_environmental_alert(payload: SensorAlertCreate, current_user=Depends(require_security_manager_or_admin)):
+async def create_environmental_alert(payload: SensorAlertCreate, current_user=Depends(require_security_manager_or_admin)):
     service = IoTEnvironmentalService()
     try:
-        return service.create_alert(payload, str(current_user.user_id))
+        result = service.create_alert(payload, str(current_user.user_id))
+        # Broadcast via WebSocket
+        try:
+            from main import manager
+            if manager and manager.active_connections:
+                alert_dict = {
+                    "id": result.alert_id,
+                    "sensor_id": result.sensor_id,
+                    "alert_type": result.alert_type,
+                    "severity": result.severity.value if hasattr(result.severity, 'value') else str(result.severity),
+                    "message": result.message,
+                    "location": result.location,
+                    "status": result.status,
+                    "resolved": result.resolved,
+                    "timestamp": result.created_at.isoformat() if hasattr(result.created_at, 'isoformat') else str(result.created_at),
+                    "resolved_at": result.resolved_at.isoformat() if result.resolved_at and hasattr(result.resolved_at, 'isoformat') else (str(result.resolved_at) if result.resolved_at else None),
+                    "camera_id": result.camera_id,
+                    "camera_name": result.camera_name,
+                }
+                message = {
+                    "type": "environmental_alert",
+                    "alert": alert_dict
+                }
+                # Broadcast to all connected users
+                for user_id, connections in manager.active_connections.items():
+                    for ws in connections:
+                        try:
+                            await ws.send_json(message)
+                        except Exception as e:
+                            logger.warning(f"Failed to send WebSocket message to {user_id}: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to broadcast environmental alert via WebSocket: {e}")
+        return result
     finally:
         service.close()
 
 @router.put("/environmental/alerts/{alert_id}", response_model=SensorAlertResponse)
-def update_environmental_alert(alert_id: str, payload: SensorAlertUpdate, current_user=Depends(require_security_manager_or_admin)):
+async def update_environmental_alert(alert_id: str, payload: SensorAlertUpdate, current_user=Depends(require_security_manager_or_admin)):
     service = IoTEnvironmentalService()
     try:
-        return service.update_alert(alert_id, payload, str(current_user.user_id))
+        result = service.update_alert(alert_id, payload, str(current_user.user_id))
+        # Broadcast via WebSocket if alert status changed
+        try:
+            from main import manager
+            if manager and manager.active_connections:
+                alert_dict = {
+                    "id": result.alert_id,
+                    "sensor_id": result.sensor_id,
+                    "alert_type": result.alert_type,
+                    "severity": result.severity.value if hasattr(result.severity, 'value') else str(result.severity),
+                    "message": result.message,
+                    "location": result.location,
+                    "status": result.status,
+                    "resolved": result.resolved,
+                    "timestamp": result.created_at.isoformat() if hasattr(result.created_at, 'isoformat') else str(result.created_at),
+                    "resolved_at": result.resolved_at.isoformat() if result.resolved_at and hasattr(result.resolved_at, 'isoformat') else (str(result.resolved_at) if result.resolved_at else None),
+                    "camera_id": result.camera_id,
+                    "camera_name": result.camera_name,
+                }
+                message = {
+                    "type": "environmental_alert",
+                    "alert": alert_dict
+                }
+                # Broadcast to all connected users
+                for user_id, connections in manager.active_connections.items():
+                    for ws in connections:
+                        try:
+                            await ws.send_json(message)
+                        except Exception as e:
+                            logger.warning(f"Failed to send WebSocket message to {user_id}: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to broadcast environmental alert update via WebSocket: {e}")
+        return result
     finally:
         service.close()
 

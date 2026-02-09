@@ -52,18 +52,18 @@ export const SettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[color:var(--surface-card)] border-[1.5px] border-[color:var(--border-subtle)] group">
-        <CardHeader>
+      <Card className="bg-slate-900/50 border border-white/5">
+        <CardHeader className="border-b border-white/5 pb-4">
           <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center mr-3 shadow-lg group-hover:scale-110 transition-transform" aria-hidden="true">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
               <i className="fas fa-cog text-white" />
             </div>
             Smart Lockers System Settings
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           {!isAdmin && (
-            <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center text-amber-100 text-sm font-medium">
+            <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-md flex items-center text-amber-100 text-sm font-medium">
               <i className="fas fa-shield-alt mr-3 text-amber-500" />
               Restricted: Modifications require Administrative privileges.
             </div>
@@ -72,9 +72,9 @@ export const SettingsTab: React.FC = () => {
           <div className="space-y-8">
             {/* Alert Thresholds */}
             <section>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-[color:var(--text-main)] mb-6">Alert Thresholds</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-[color:var(--text-main)] mb-6">Alert Thresholds</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-6 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/[0.08] transition-all">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-md hover:bg-white/10">
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
                     Battery Alert Threshold (%)
                   </label>
@@ -87,14 +87,14 @@ export const SettingsTab: React.FC = () => {
                       value={localSettings.batteryAlertThreshold}
                       onChange={(e) => handleThresholdChange('batteryAlertThreshold', parseInt(e.target.value, 10) || 0)}
                       disabled={!canManageSettings}
-                      className="accent-blue-500 h-1.5 flex-1 rounded-lg appearance-none bg-white/10 cursor-pointer shadow-inner disabled:opacity-30"
+                      className="accent-blue-500 h-1.5 flex-1 rounded appearance-none bg-white/10 cursor-pointer disabled:opacity-30"
                     />
                   </div>
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3">
                     Alert when battery level drops below this threshold
                   </p>
                 </div>
-                <div className="p-6 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/[0.08] transition-all">
+                <div className="p-6 bg-white/5 border border-white/5 rounded-md hover:bg-white/10">
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
                     Signal Strength Alert Threshold (%)
                   </label>
@@ -107,7 +107,7 @@ export const SettingsTab: React.FC = () => {
                       value={localSettings.signalStrengthAlertThreshold}
                       onChange={(e) => handleThresholdChange('signalStrengthAlertThreshold', parseInt(e.target.value, 10) || 0)}
                       disabled={!canManageSettings}
-                      className="accent-blue-500 h-1.5 flex-1 rounded-lg appearance-none bg-white/10 cursor-pointer shadow-inner disabled:opacity-30"
+                      className="accent-blue-500 h-1.5 flex-1 rounded appearance-none bg-white/10 cursor-pointer disabled:opacity-30"
                     />
                   </div>
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-3">
@@ -130,7 +130,7 @@ export const SettingsTab: React.FC = () => {
               )}
               <Button
                 variant="primary"
-                className="font-black uppercase tracking-widest px-8 shadow-lg shadow-blue-500/20"
+                className="font-black uppercase tracking-widest px-8"
                 onClick={handleSaveSettings}
                 disabled={!canManageSettings || !isDirty}
               >

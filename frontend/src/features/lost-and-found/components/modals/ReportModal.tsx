@@ -1,149 +1,99 @@
 /**
  * Report Modal
- * Export reports for Lost & Found items
+ * Export reports for Lost & Found items. Uses global Modal (UI gold standard).
  */
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
+import { Modal } from '../../../../components/UI/Modal';
 import { useLostFoundContext } from '../../context/LostFoundContext';
 import { LostFoundStatus } from '../../types/lost-and-found.types';
 
+const inputClass =
+  'w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500 [&>option]:bg-slate-900';
+
 interface ReportModalProps {
-    isOpen: boolean;
-    onClose: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose }) => {
-    const {
-        exportReport,
-        loading
-    } = useLostFoundContext();
+  const { exportReport, loading } = useLostFoundContext();
+  const [format, setFormat] = useState<'pdf' | 'csv'>('pdf');
+  const [status, setStatus] = useState<LostFoundStatus | 'all'>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-    const [format, setFormat] = useState<'pdf' | 'csv'>('pdf');
-    const [status, setStatus] = useState<LostFoundStatus | 'all'>('all');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+  const handleExport = async () => {
+    const filters = status !== 'all' ? { status } : undefined;
+    const success = await exportReport(format, filters, startDate || undefined, endDate || undefined);
+    if (success) onClose();
+  };
 
-    if (!isOpen) return null;
-
-    const handleExport = async () => {
-        const filters = status !== 'all' ? { status } : undefined;
-        await exportReport(format, filters, startDate || undefined, endDate || undefined);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/5 shadow-2xl max-w-2xl w-full">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center mr-3 shadow-lg ring-1 ring-white/10">
-                            <i className="fas fa-file-export text-white text-lg" />
-                        </div>
-                        Export Report
-                    </CardTitle>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onClose}
-                        className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 p-0 flex items-center justify-center transition-colors"
-                    >
-                        <i className="fas fa-times" />
-                    </Button>
-                </CardHeader>
-
-                <CardContent className="p-6 space-y-6">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                Format
-                            </label>
-                            <select
-                                value={format}
-                                onChange={(e) => setFormat(e.target.value as 'pdf' | 'csv')}
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
-                            >
-                                <option value="pdf">PDF</option>
-                                <option value="csv">CSV</option>
-                            </select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                Status Filter
-                            </label>
-                            <select
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value as LostFoundStatus | 'all')}
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all [&>option]:bg-slate-900 [&>option]:text-white"
-                            >
-                                <option value="all">All Statuses</option>
-                                <option value={LostFoundStatus.FOUND}>Found</option>
-                                <option value={LostFoundStatus.CLAIMED}>Claimed</option>
-                                <option value={LostFoundStatus.EXPIRED}>Expired</option>
-                                <option value={LostFoundStatus.DONATED}>Donated</option>
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    Start Date
-                                </label>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    End Date
-                                </label>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-3 pt-4 border-t border-white/5">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={onClose}
-                            className="border-white/5 text-slate-300 hover:bg-white/5 disabled:opacity-50"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleExport}
-                            variant="primary"
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold disabled:opacity-50"
-                            disabled={loading.items}
-                        >
-                            {loading.items ? (
-                                <div className="flex items-center">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    Exporting...
-                                </div>
-                            ) : (
-                                <>
-                                    <i className="fas fa-download mr-2" />
-                                    Export Report
-                                </>
-                            )}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Export report"
+      size="sm"
+      footer={
+        <>
+          <Button variant="subtle" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleExport} disabled={loading.items}>
+            {loading.items ? 'Exporting…' : 'Export'}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-6">
+        <div>
+          <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Format</label>
+          <select
+            value={format}
+            onChange={(e) => setFormat(e.target.value as 'pdf' | 'csv')}
+            className={inputClass + ' appearance-none cursor-pointer'}
+          >
+            <option value="pdf">PDF</option>
+            <option value="csv">CSV</option>
+          </select>
         </div>
-    );
+        <div>
+          <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Status</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as LostFoundStatus | 'all')}
+            className={inputClass + ' appearance-none cursor-pointer'}
+          >
+            <option value="all">All</option>
+            <option value={LostFoundStatus.FOUND}>Found</option>
+            <option value={LostFoundStatus.CLAIMED}>Claimed</option>
+            <option value={LostFoundStatus.EXPIRED}>Expired</option>
+            <option value={LostFoundStatus.DONATED}>Donated</option>
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Start date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">End date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
 };
-
-
-

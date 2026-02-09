@@ -257,36 +257,8 @@ class AnalyticsEngine:
         return trends
     
     async def simulate_realtime_data(self) -> None:
-        """Simulate real-time data generation for demonstration."""
-        # Generate some mock motion events
-        cameras = [
-            {"id": "cam-1", "name": "North Lobby"},
-            {"id": "cam-2", "name": "East Parking Lot"},
-            {"id": "cam-3", "name": "West Corridor"}
-        ]
-        
-        # Add some motion events
-        for i in range(10):
-            camera = cameras[i % len(cameras)]
-            motion_event = {
-                "id": f"motion-{i}",
-                "camera_id": camera["id"],
-                "camera_name": camera["name"],
-                "timestamp": (datetime.now(timezone.utc) - timedelta(minutes=i*5)).isoformat(),
-                "confidence": 0.85 + (i % 3) * 0.05,
-                "detection_zone": f"Zone {(i % 3) + 1}"
-            }
-            await self.process_motion_event(motion_event)
-        
-        # Add some camera health data
-        for camera in cameras:
-            health_data = {
-                "status": "online" if camera["id"] != "cam-2" else "offline",
-                "response_time": 120 + (hash(camera["id"]) % 50),
-                "stream_quality": "good",
-                "last_motion": datetime.now(timezone.utc).isoformat()
-            }
-            await self.process_camera_health_update(camera["id"], health_data)
+        """No-op: real-time data comes from live APIs/ingestion (no mock data)."""
+        pass
 
 # Global analytics engine instance
 analytics_engine = AnalyticsEngine()

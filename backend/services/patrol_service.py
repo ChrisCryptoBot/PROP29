@@ -195,7 +195,6 @@ class PatrolService:
             try:
                 resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
             except HTTPException:
-                # If no property found, use None and return mock data
                 resolved_property_id = None
             if resolved_property_id:
                 query = db.query(Patrol).filter(Patrol.property_id == resolved_property_id)
@@ -204,32 +203,10 @@ class PatrolService:
                 patrols = query.order_by(Patrol.created_at.desc()).all()
             else:
                 patrols = []
-            
+
             if not patrols:
-                # Return mock patrols
-                mock_patrols = PatrolService._get_mock_patrols()
-                filtered_patrols = mock_patrols if not status else [p for p in mock_patrols if p["status"] == status]
-                return [PatrolResponse(
-                    patrol_id=patrol["patrol_id"],
-                    property_id=patrol["property_id"],
-                    guard_id=patrol["guard_id"],
-                    template_id=patrol["template_id"],
-                    patrol_type=patrol["patrol_type"],
-                    route=patrol["route"],
-                    status=patrol["status"],
-                    started_at=patrol["started_at"],
-                    completed_at=patrol["completed_at"],
-                    created_at=patrol["created_at"],
-                    ai_priority_score=patrol["ai_priority_score"],
-                    checkpoints=patrol["checkpoints"],
-                    observations=patrol["observations"],
-                    incidents_found=patrol["incidents_found"],
-                    efficiency_score=patrol["efficiency_score"],
-                    guard_name=patrol["guard_name"],
-                    property_name=patrol["property_name"],
-                    version=patrol["version"]
-                ) for patrol in filtered_patrols]
-            
+                return []
+
             return [
                 PatrolResponse(
                     patrol_id=patrol.patrol_id,
@@ -254,29 +231,8 @@ class PatrolService:
                 for patrol in patrols
             ]
         except Exception as e:
-            logger.error(f"Error getting patrols, returning mock data: {e}")
-            mock_patrols = PatrolService._get_mock_patrols()
-            filtered_patrols = mock_patrols if not status else [p for p in mock_patrols if p["status"] == status]
-            return [PatrolResponse(
-                patrol_id=patrol["patrol_id"],
-                property_id=patrol["property_id"],
-                guard_id=patrol["guard_id"],
-                template_id=patrol["template_id"],
-                patrol_type=patrol["patrol_type"],
-                route=patrol["route"],
-                status=patrol["status"],
-                started_at=patrol["started_at"],
-                completed_at=patrol["completed_at"],
-                created_at=patrol["created_at"],
-                ai_priority_score=patrol["ai_priority_score"],
-                checkpoints=patrol["checkpoints"],
-                observations=patrol["observations"],
-                incidents_found=patrol["incidents_found"],
-                efficiency_score=patrol["efficiency_score"],
-                guard_name=patrol["guard_name"],
-                property_name=patrol["property_name"],
-                version=patrol["version"]
-            ) for patrol in filtered_patrols]
+            logger.error(f"Error getting patrols: {e}")
+            return []
         finally:
             db.close()
     
@@ -535,10 +491,9 @@ class PatrolService:
                     UserRole.role_name.in_([UserRoleEnum.SECURITY_OFFICER, UserRoleEnum.GUARD])
                 ).all()
             except Exception as e:
-                logger.warning(f"Error querying officers from DB: {e}, returning mock data")
+                logger.warning(f"Error querying officers from DB: {e}")
                 users = []
 
-            # Helper to convert DB user to Response
             def map_user(u):
                 return UserResponse(
                     user_id=u.user_id,
@@ -554,40 +509,13 @@ class PatrolService:
                     profile_image_url=u.profile_image_url
                 )
 
-            # If no officers found, return mock data
             if not users:
-                mock_officers = PatrolService._get_mock_officers()
-                return [UserResponse(
-                    user_id=officer["user_id"],
-                    email=officer["email"], 
-                    username=officer["username"],
-                    first_name=officer["first_name"],
-                    last_name=officer["last_name"],
-                    phone=officer["phone"],
-                    status=officer["status"],
-                    created_at=officer["created_at"],
-                    updated_at=officer["updated_at"],
-                    roles=officer["roles"],
-                    profile_image_url=officer["profile_image_url"]
-                ) for officer in mock_officers]
+                return []
 
             return [map_user(u) for u in users]
         except Exception as e:
-            logger.error(f"Error fetching officers, returning mock data: {e}")
-            mock_officers = PatrolService._get_mock_officers()
-            return [UserResponse(
-                user_id=officer["user_id"],
-                email=officer["email"], 
-                username=officer["username"],
-                first_name=officer["first_name"],
-                last_name=officer["last_name"],
-                phone=officer["phone"],
-                status=officer["status"],
-                created_at=officer["created_at"],
-                updated_at=officer["updated_at"],
-                roles=officer["roles"],
-                profile_image_url=officer["profile_image_url"]
-            ) for officer in mock_officers]
+            logger.error(f"Error fetching officers: {e}")
+            return []
 
     @staticmethod
     async def update_officer(user_id: str, updates: Dict[str, Any]) -> UserResponse:
@@ -663,22 +591,6 @@ class PatrolService:
         offline_sec = (offline_threshold_minutes or (HEARTBEAT_OFFLINE_SEC // 60)) * 60
         result: Dict[str, Dict[str, Any]] = {}
         
-        # If heartbeat cache is empty, populate with mock data
-        if not _heartbeat_cache:
-            mock_officers = PatrolService._get_mock_officers()
-            for officer in mock_officers:
-                oid = officer["user_id"]
-                lb_str = officer.get("last_heartbeat")
-                if lb_str:
-                    try:
-                        lb = datetime.fromisoformat(lb_str.replace('Z', '+00:00'))
-                        _heartbeat_cache[oid] = {
-                            "last_heartbeat": lb,
-                            "device_id": f"device-{oid}"
-                        }
-                    except ValueError:
-                        pass
-        
         for oid, v in _heartbeat_cache.items():
             lb = v.get("last_heartbeat")
             if not lb:
@@ -694,15 +606,6 @@ class PatrolService:
                 "last_heartbeat": lb.isoformat() if isinstance(lb, datetime) else str(lb),
                 "connection_status": status,
             }
-        
-        # If still no result, return mock health data
-        if not result:
-            mock_officers = PatrolService._get_mock_officers()
-            for officer in mock_officers:
-                result[officer["user_id"]] = {
-                    "last_heartbeat": officer.get("last_heartbeat", now.isoformat()),
-                    "connection_status": officer.get("connection_status", "online")
-                }
         
         return result
 
@@ -769,14 +672,14 @@ class PatrolService:
             resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
             settings = db.query(PatrolSettings).filter(PatrolSettings.property_id == resolved_property_id).first()
             if not settings:
-                # Return mock settings instead of creating new ones
-                mock_settings = PatrolService._get_mock_settings()
-                return PatrolSettingsResponse(**mock_settings)
-            return PatrolSettingsResponse.from_orm(settings)
+                settings = PatrolSettings(property_id=resolved_property_id)
+                db.add(settings)
+                db.commit()
+                db.refresh(settings)
+            return PatrolSettingsResponse.model_validate(settings)
         except Exception as e:
-            logger.error(f"Error getting settings, returning mock data: {e}")
-            mock_settings = PatrolService._get_mock_settings()
-            return PatrolSettingsResponse(**mock_settings)
+            logger.error(f"Error getting settings: {e}")
+            raise
         finally:
             db.close()
 
@@ -807,23 +710,8 @@ class PatrolService:
             routes = db.query(PatrolRoute).filter(PatrolRoute.property_id == resolved_property_id).all()
             
             if not routes:
-                # Return mock routes
-                mock_routes = PatrolService._get_mock_routes()
-                return [PatrolRouteResponse(
-                    property_id=route["property_id"],
-                    name=route["name"],
-                    description=route["description"],
-                    checkpoints=route["checkpoints"],
-                    estimated_duration=route["estimated_duration"],
-                    difficulty=route["difficulty"],
-                    frequency=route["frequency"],
-                    route_id=route["route_id"],
-                    is_active=route["is_active"],
-                    created_at=route["created_at"],
-                    updated_at=route["updated_at"],
-                    created_by=route["created_by"]
-                ) for route in mock_routes]
-            
+                return []
+
             return [
                 PatrolRouteResponse(
                     property_id=route.property_id,
@@ -842,22 +730,8 @@ class PatrolService:
                 for route in routes
             ]
         except Exception as e:
-            logger.error(f"Error getting routes, returning mock data: {e}")
-            mock_routes = PatrolService._get_mock_routes()
-            return [PatrolRouteResponse(
-                property_id=route["property_id"],
-                name=route["name"],
-                description=route["description"],
-                checkpoints=route["checkpoints"],
-                estimated_duration=route["estimated_duration"],
-                difficulty=route["difficulty"],
-                frequency=route["frequency"],
-                route_id=route["route_id"],
-                is_active=route["is_active"],
-                created_at=route["created_at"],
-                updated_at=route["updated_at"],
-                created_by=route["created_by"]
-            ) for route in mock_routes]
+            logger.error(f"Error getting routes: {e}")
+            return []
         finally:
             db.close()
 
@@ -1001,23 +875,8 @@ class PatrolService:
                 templates = []
             
             if not templates:
-                # Return mock templates
-                mock_templates = PatrolService._get_mock_templates()
-                return [PatrolTemplateResponse(
-                    property_id=template["property_id"],
-                    name=template["name"],
-                    description=template["description"],
-                    route_id=template["route_id"],
-                    assigned_officers=template["assigned_officers"],
-                    schedule=template["schedule"],
-                    priority=template["priority"],
-                    is_recurring=template["is_recurring"],
-                    template_id=template["template_id"],
-                    created_at=template["created_at"],
-                    updated_at=template["updated_at"],
-                    created_by=template["created_by"]
-                ) for template in mock_templates]
-            
+                return []
+
             return [
                 PatrolTemplateResponse(
                     property_id=template.property_id,
@@ -1036,22 +895,8 @@ class PatrolService:
                 for template in templates
             ]
         except Exception as e:
-            logger.error(f"Error getting templates, returning mock data: {e}")
-            mock_templates = PatrolService._get_mock_templates()
-            return [PatrolTemplateResponse(
-                property_id=template["property_id"],
-                name=template["name"],
-                description=template["description"],
-                route_id=template["route_id"],
-                assigned_officers=template["assigned_officers"],
-                schedule=template["schedule"],
-                priority=template["priority"],
-                is_recurring=template["is_recurring"],
-                template_id=template["template_id"],
-                created_at=template["created_at"],
-                updated_at=template["updated_at"],
-                created_by=template["created_by"]
-            ) for template in mock_templates]
+            logger.error(f"Error getting templates: {e}")
+            return []
         finally:
             db.close()
 
@@ -1402,10 +1247,26 @@ class PatrolService:
             db.close()
 
     @staticmethod
+    def _empty_metrics() -> Dict[str, Any]:
+        return {
+            "total_patrols": 0,
+            "completed_patrols": 0,
+            "average_efficiency_score": 0.0,
+            "patrols_by_type": {},
+            "average_duration": 0.0,
+            "incidents_found": 0,
+            "efficiency_trend": [],
+            "guard_performance": []
+        }
+
+    @staticmethod
     async def get_metrics(user_id: str, property_id: Optional[str] = None) -> Dict[str, Any]:
         db = SessionLocal()
         try:
-            resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
+            try:
+                resolved_property_id = property_id or PatrolService._get_default_property_id(db, user_id)
+            except HTTPException:
+                return PatrolService._empty_metrics()
             patrols = db.query(Patrol).filter(Patrol.property_id == resolved_property_id).all()
 
             total_patrols = len(patrols)
@@ -1453,9 +1314,13 @@ class PatrolService:
                 if not patrol.guard_id:
                     continue
                 if patrol.guard_id not in guard_stats:
+                    guard = getattr(patrol, "guard", None)
+                    guard_name = "Unknown"
+                    if guard:
+                        guard_name = f"{getattr(guard, 'first_name', '') or ''} {getattr(guard, 'last_name', '') or ''}".strip() or "Unknown"
                     guard_stats[patrol.guard_id] = {
                         "guard_id": patrol.guard_id,
-                        "guard_name": f"{patrol.guard.first_name} {patrol.guard.last_name}" if patrol.guard else "Unknown",
+                        "guard_name": guard_name,
                         "completed_patrols": 0,
                         "efficiency_total": 0.0,
                         "efficiency_count": 0
@@ -1482,9 +1347,8 @@ class PatrolService:
                 reverse=True
             )[:10]
 
-            # If no real data, return comprehensive mock metrics
             if total_patrols == 0:
-                return PatrolService._get_mock_metrics()
+                return PatrolService._empty_metrics()
 
             return {
                 "total_patrols": total_patrols,
@@ -1497,8 +1361,8 @@ class PatrolService:
                 "guard_performance": guard_performance
             }
         except Exception as e:
-            logger.error(f"Error getting patrol metrics, returning mock data: {e}")
-            return PatrolService._get_mock_metrics()
+            logger.error(f"Error getting patrol metrics: {e}")
+            return PatrolService._empty_metrics()
         finally:
             db.close()
 
@@ -1525,629 +1389,17 @@ class PatrolService:
                 for log in logs
             ]
         except Exception as e:
-            logger.error(f"Error getting patrol audit logs, returning mock data: {e}")
-            return PatrolService._get_mock_audit_logs()
+            logger.error(f"Error getting patrol audit logs: {e}")
+            return []
         finally:
             db.close()
 
-    # ================== MOCK DATA METHODS ==================
-
-    @staticmethod
-    def _get_mock_metrics() -> Dict[str, Any]:
-        """Return comprehensive mock patrol metrics for demonstration"""
-        return {
-            "total_patrols": 47,
-            "completed_patrols": 43,
-            "average_efficiency_score": 87.3,
-            "patrols_by_type": {
-                "routine": 28,
-                "incident_response": 12,
-                "security_check": 7
-            },
-            "average_duration": 45.7,
-            "incidents_found": 5,
-            "efficiency_trend": [
-                {"date": "2025-01-17", "average_efficiency": 82.1},
-                {"date": "2025-01-18", "average_efficiency": 85.4},
-                {"date": "2025-01-19", "average_efficiency": 88.9},
-                {"date": "2025-01-20", "average_efficiency": 90.2},
-                {"date": "2025-01-21", "average_efficiency": 87.6},
-                {"date": "2025-01-22", "average_efficiency": 89.3},
-                {"date": "2025-01-23", "average_efficiency": 91.7}
-            ],
-            "guard_performance": [
-                {"guard_id": "guard-001", "guard_name": "Alex Rodriguez", "completed_patrols": 12, "average_efficiency": 93.2},
-                {"guard_id": "guard-002", "guard_name": "Sarah Chen", "completed_patrols": 11, "average_efficiency": 91.8},
-                {"guard_id": "guard-003", "guard_name": "Marcus Thompson", "completed_patrols": 10, "average_efficiency": 89.4},
-                {"guard_id": "guard-004", "guard_name": "Elena Vasquez", "completed_patrols": 8, "average_efficiency": 87.9}
-            ]
-        }
-
-    @staticmethod
-    def _get_mock_officers() -> List[Dict[str, Any]]:
-        """Return mock officers data with all required fields"""
-        return [
-            {
-                "user_id": "b2c3d4e5-f6g7-8901-bcde-f23456789012",
-                "email": "alex.rodriguez@propersec.com",
-                "username": "a.rodriguez",
-                "first_name": "Alex",
-                "last_name": "Rodriguez",
-                "phone": "(555) 0101",
-                "status": "active",
-                "created_at": "2024-01-15T08:30:00Z",
-                "updated_at": "2025-01-23T10:15:00Z",
-                "roles": [{"role": "security_officer", "permissions": {"specializations": ["patrol_leader", "incident_response"]}}],
-                "profile_image_url": None,
-                "specializations": ["patrol_leader", "incident_response"],
-                "badge_number": "SEC-001",
-                "activePatrols": 1,
-                "connection_status": "online",
-                "last_heartbeat": "2025-01-23T14:28:00Z"
-            },
-            {
-                "user_id": "c9d0e1f2-a3b4-5678-cdef-901234567890",
-                "email": "sarah.chen@propersec.com",
-                "username": "s.chen",
-                "first_name": "Sarah",
-                "last_name": "Chen",
-                "phone": "(555) 0102",
-                "status": "active",
-                "created_at": "2024-02-01T09:00:00Z",
-                "updated_at": "2025-01-23T11:20:00Z",
-                "roles": [{"role": "security_officer", "permissions": {"specializations": ["k9_handler", "crowd_control"]}}],
-                "profile_image_url": None,
-                "specializations": ["k9_handler", "crowd_control"],
-                "badge_number": "SEC-002",
-                "activePatrols": 0,
-                "connection_status": "online",
-                "last_heartbeat": "2025-01-23T14:27:00Z"
-            },
-            {
-                "user_id": "f6a7b8c9-d0e1-2345-fabc-678901234567",
-                "email": "marcus.thompson@propersec.com",
-                "username": "m.thompson",
-                "first_name": "Marcus",
-                "last_name": "Thompson",
-                "phone": "(555) 0103",
-                "status": "active",
-                "created_at": "2024-01-20T07:45:00Z",
-                "updated_at": "2025-01-23T09:30:00Z",
-                "roles": [{"role": "security_officer", "permissions": {"specializations": ["vehicle_patrol", "perimeter_security"]}}],
-                "profile_image_url": None,
-                "specializations": ["vehicle_patrol", "perimeter_security"],
-                "badge_number": "SEC-003",
-                "activePatrols": 2,
-                "connection_status": "online",
-                "last_heartbeat": "2025-01-23T14:26:00Z"
-            },
-            {
-                "user_id": "e1f2a3b4-c5d6-7890-efab-123456789012",
-                "email": "elena.vasquez@propersec.com",
-                "username": "e.vasquez",
-                "first_name": "Elena",
-                "last_name": "Vasquez",
-                "phone": "(555) 0104",
-                "status": "active",
-                "created_at": "2024-03-10T08:15:00Z",
-                "updated_at": "2025-01-23T12:45:00Z",
-                "roles": [{"role": "security_officer", "permissions": {"specializations": ["first_aid", "access_control"]}}],
-                "profile_image_url": None,
-                "specializations": ["first_aid", "access_control"],
-                "badge_number": "SEC-004",
-                "activePatrols": 1,
-                "connection_status": "unknown",
-                "last_heartbeat": "2025-01-23T14:15:00Z"
-            },
-            {
-                "user_id": "guard-005",
-                "email": "james.wilson@propersec.com",
-                "username": "j.wilson",
-                "first_name": "James",
-                "last_name": "Wilson",
-                "phone": "(555) 0105",
-                "status": "active",
-                "created_at": "2024-04-05T10:00:00Z",
-                "updated_at": "2025-01-23T13:10:00Z",
-                "roles": [{"role": "security_officer", "permissions": {"specializations": ["night_security", "alarm_response"]}}],
-                "profile_image_url": None,
-                "specializations": ["night_security", "alarm_response"],
-                "badge_number": "SEC-005",
-                "activePatrols": 0,
-                "connection_status": "offline",
-                "last_heartbeat": "2025-01-23T13:45:00Z"
-            },
-            {
-                "user_id": "guard-006",
-                "email": "nina.patel@propersec.com",
-                "username": "n.patel",
-                "first_name": "Nina",
-                "last_name": "Patel",
-                "phone": "(555) 0106",
-                "status": "on-break",
-                "created_at": "2024-05-12T09:30:00Z",
-                "updated_at": "2025-01-23T14:00:00Z",
-                "roles": [{"role": "security_officer", "permissions": {"specializations": ["surveillance", "report_writing"]}}],
-                "profile_image_url": None,
-                "specializations": ["surveillance", "report_writing"],
-                "badge_number": "SEC-006",
-                "activePatrols": 0,
-                "connection_status": "online",
-                "last_heartbeat": "2025-01-23T14:29:00Z"
-            }
-        ]
-
-    @staticmethod
-    def _get_mock_patrols() -> List[Dict[str, Any]]:
-        """Return mock patrols with all required fields"""
-        return [
-            {
-                "patrol_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                "property_id": "default-prop",
-                "guard_id": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
-                "template_id": "c3d4e5f6-a7b8-9012-cdef-345678901234",
-                "patrol_type": "scheduled",
-                "route": {
-                    "route_id": "d4e5f6a7-b8c9-0123-def0-456789012345",
-                    "name": "Main Building Perimeter",
-                    "estimated_duration": 45,
-                    "checkpoints": [
-                        {"id": "cp-001", "name": "Main Entrance", "status": "completed", "completedAt": "2025-01-23T14:15:00Z"},
-                        {"id": "cp-002", "name": "Parking Garage", "status": "completed", "completedAt": "2025-01-23T14:25:00Z"},
-                        {"id": "cp-003", "name": "Loading Dock", "status": "pending"}
-                    ]
-                },
-                "status": "active",
-                "started_at": "2025-01-23T14:00:00Z",
-                "completed_at": None,
-                "created_at": "2025-01-23T13:45:00Z",
-                "ai_priority_score": 85,
-                "checkpoints": [
-                    {"id": "cp-001", "name": "Main Entrance", "status": "completed", "completedAt": "2025-01-23T14:15:00Z", "notes": "All clear"},
-                    {"id": "cp-002", "name": "Parking Garage", "status": "completed", "completedAt": "2025-01-23T14:25:00Z", "notes": "Minor lighting issue reported"},
-                    {"id": "cp-003", "name": "Loading Dock", "status": "pending"}
-                ],
-                "observations": "Lighting issue in parking garage level 2; Minor fence damage noted near north gate",
-                "incidents_found": [],
-                "efficiency_score": None,
-                "guard_name": "Alex Rodriguez",
-                "property_name": "Corporate Headquarters",
-                "version": 3
-            },
-            {
-                "patrol_id": "e5f6a7b8-c9d0-1234-efab-567890123456",
-                "property_id": "default-prop",
-                "guard_id": "f6a7b8c9-d0e1-2345-fabc-678901234567",
-                "template_id": "a7b8c9d0-e1f2-3456-abcd-789012345678",
-                "patrol_type": "scheduled",
-                "route": {
-                    "route_id": "route-002",
-                    "name": "Warehouse District",
-                    "estimated_duration": 60,
-                    "checkpoints": [
-                        {"id": "cp-004", "name": "Warehouse A", "status": "completed"},
-                        {"id": "cp-005", "name": "Warehouse B", "status": "completed"},
-                        {"id": "cp-006", "name": "Security Office", "status": "in-progress"}
-                    ]
-                },
-                "status": "active",
-                "started_at": "2025-01-23T13:30:00Z",
-                "completed_at": None,
-                "created_at": "2025-01-23T13:00:00Z",
-                "ai_priority_score": 92,
-                "checkpoints": [
-                    {"id": "cp-004", "name": "Warehouse A", "status": "completed", "completedAt": "2025-01-23T13:45:00Z"},
-                    {"id": "cp-005", "name": "Warehouse B", "status": "completed", "completedAt": "2025-01-23T14:10:00Z"},
-                    {"id": "cp-006", "name": "Security Office", "status": "in-progress"}
-                ],
-                "observations": "Unusual activity near warehouse B reported by maintenance",
-                "incidents_found": ["INC-2025-0123-001"],
-                "efficiency_score": None,
-                "guard_name": "Marcus Thompson",
-                "property_name": "Corporate Headquarters",
-                "version": 2
-            },
-            {
-                "patrol_id": "b8c9d0e1-f2a3-4567-bcde-890123456789",
-                "property_id": "default-prop",
-                "guard_id": "c9d0e1f2-a3b4-5678-cdef-901234567890",
-                "template_id": None,
-                "patrol_type": "emergency",
-                "route": {
-                    "route_id": "route-003",
-                    "name": "Emergency Response Route",
-                    "estimated_duration": 30,
-                    "checkpoints": [
-                        {"id": "cp-007", "name": "Incident Location", "status": "completed"},
-                        {"id": "cp-008", "name": "Security Command", "status": "completed"}
-                    ]
-                },
-                "status": "completed",
-                "started_at": "2025-01-23T12:00:00Z",
-                "completed_at": "2025-01-23T12:28:00Z",
-                "created_at": "2025-01-23T11:55:00Z",
-                "ai_priority_score": 98,
-                "checkpoints": [
-                    {"id": "cp-007", "name": "Incident Location", "status": "completed", "completedAt": "2025-01-23T12:15:00Z", "notes": "False alarm - resolved"},
-                    {"id": "cp-008", "name": "Security Command", "status": "completed", "completedAt": "2025-01-23T12:28:00Z", "notes": "Reported back to dispatch"}
-                ],
-                "observations": "False alarm triggered by maintenance work",
-                "incidents_found": [],
-                "efficiency_score": 96.2,
-                "guard_name": "Sarah Chen",
-                "property_name": "Corporate Headquarters",
-                "version": 4
-            },
-            {
-                "patrol_id": "d0e1f2a3-b4c5-6789-defa-012345678901",
-                "property_id": "default-prop",
-                "guard_id": "e1f2a3b4-c5d6-7890-efab-123456789012",
-                "template_id": "f2a3b4c5-d6e7-8901-fabc-234567890123",
-                "patrol_type": "scheduled",
-                "route": {
-                    "route_id": "route-004",
-                    "name": "Office Complex",
-                    "estimated_duration": 40,
-                    "checkpoints": [
-                        {"id": "cp-009", "name": "Lobby", "status": "scheduled"},
-                        {"id": "cp-010", "name": "Floor 1-5", "status": "scheduled"},
-                        {"id": "cp-011", "name": "Roof Access", "status": "scheduled"}
-                    ]
-                },
-                "status": "scheduled",
-                "started_at": None,
-                "completed_at": None,
-                "created_at": "2025-01-23T14:30:00Z",
-                "ai_priority_score": 78,
-                "checkpoints": [
-                    {"id": "cp-009", "name": "Lobby", "status": "scheduled"},
-                    {"id": "cp-010", "name": "Floor 1-5", "status": "scheduled"},
-                    {"id": "cp-011", "name": "Roof Access", "status": "scheduled"}
-                ],
-                "observations": "",
-                "incidents_found": [],
-                "efficiency_score": None,
-                "guard_name": "Elena Vasquez",
-                "property_name": "Corporate Headquarters",
-                "version": 1
-            }
-        ]
-
-    @staticmethod  
-    def _get_mock_routes() -> List[Dict[str, Any]]:
-        """Return mock patrol routes"""
-        # Use consistent UUIDs for mock data
-        route1_id = UUID('00000000-0000-0000-0000-000000000001')
-        route2_id = UUID('00000000-0000-0000-0000-000000000002')
-        route3_id = UUID('00000000-0000-0000-0000-000000000003')
-        route4_id = UUID('00000000-0000-0000-0000-000000000004')
-        admin_id = UUID('00000000-0000-0000-0000-0000000000ff')
-        
-        return [
-            {
-                "route_id": route1_id,
-                "property_id": "prop-001", 
-                "name": "Main Building Perimeter",
-                "description": "Complete perimeter check of main building including parking and access points",
-                "checkpoints": [
-                    {"id": "cp-001", "name": "Main Entrance", "location": {"lat": 40.7128, "lng": -74.0060}, "isCritical": True},
-                    {"id": "cp-002", "name": "Parking Garage", "location": {"lat": 40.7129, "lng": -74.0061}, "isCritical": False},
-                    {"id": "cp-003", "name": "Loading Dock", "location": {"lat": 40.7127, "lng": -74.0062}, "isCritical": True}
-                ],
-                "estimated_duration": "45",
-                "difficulty": "easy",
-                "frequency": "daily",
-                "is_active": True,
-                "created_at": datetime.fromisoformat("2024-01-15T10:00:00"),
-                "updated_at": datetime.fromisoformat("2025-01-20T15:30:00"),
-                "created_by": admin_id
-            },
-            {
-                "route_id": route2_id,
-                "property_id": "prop-001",
-                "name": "Warehouse District", 
-                "description": "Security check of all warehouse facilities and storage areas",
-                "checkpoints": [
-                    {"id": "cp-004", "name": "Warehouse A", "location": {"lat": 40.7130, "lng": -74.0065}, "isCritical": True},
-                    {"id": "cp-005", "name": "Warehouse B", "location": {"lat": 40.7131, "lng": -74.0066}, "isCritical": True},
-                    {"id": "cp-006", "name": "Security Office", "location": {"lat": 40.7132, "lng": -74.0067}, "isCritical": False}
-                ],
-                "estimated_duration": "60",
-                "difficulty": "medium", 
-                "frequency": "daily",
-                "is_active": True,
-                "created_at": datetime.fromisoformat("2024-02-01T11:00:00"),
-                "updated_at": datetime.fromisoformat("2025-01-22T09:15:00"),
-                "created_by": admin_id
-            },
-            {
-                "route_id": route3_id,
-                "property_id": "prop-001",
-                "name": "Emergency Response Route",
-                "description": "Rapid response route for incidents and emergencies", 
-                "checkpoints": [
-                    {"id": "cp-007", "name": "Incident Location", "location": {"lat": 40.7125, "lng": -74.0058}, "isCritical": True},
-                    {"id": "cp-008", "name": "Security Command", "location": {"lat": 40.7126, "lng": -74.0059}, "isCritical": True}
-                ],
-                "estimated_duration": "30",
-                "difficulty": "easy",
-                "frequency": "as_needed",
-                "is_active": True,
-                "created_at": datetime.fromisoformat("2024-01-15T10:30:00"),
-                "updated_at": datetime.fromisoformat("2025-01-23T12:00:00"), 
-                "created_by": admin_id
-            },
-            {
-                "route_id": route4_id,
-                "property_id": "prop-001",
-                "name": "Office Complex",
-                "description": "Interior patrol of office floors and common areas",
-                "checkpoints": [
-                    {"id": "cp-009", "name": "Lobby", "location": {"lat": 40.7128, "lng": -74.0060}, "isCritical": False},
-                    {"id": "cp-010", "name": "Floor 1-5", "location": {"lat": 40.7128, "lng": -74.0060}, "isCritical": False},
-                    {"id": "cp-011", "name": "Roof Access", "location": {"lat": 40.7128, "lng": -74.0060}, "isCritical": True}
-                ],
-                "estimated_duration": "40",
-                "difficulty": "medium",
-                "frequency": "twice_daily", 
-                "is_active": True,
-                "created_at": datetime.fromisoformat("2024-03-10T14:00:00"),
-                "updated_at": datetime.fromisoformat("2025-01-21T16:45:00"),
-                "created_by": admin_id
-            }
-        ]
-
-    @staticmethod
-    def _get_mock_templates() -> List[Dict[str, Any]]:
-        """Return mock patrol templates"""
-        return [
-            {
-                "template_id": "template-001",
-                "property_id": "prop-001",
-                "name": "Morning Perimeter Check",
-                "description": "Standard morning security check of all perimeter access points",
-                "route_id": "route-001", 
-                "assigned_officers": ["guard-001", "guard-002"],
-                "schedule": {
-                    "startTime": "06:00",
-                    "endTime": "07:00", 
-                    "days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
-                    "timezone": "America/New_York"
-                },
-                "priority": "high",
-                "is_recurring": True,
-                "created_at": "2024-01-15T08:00:00Z",
-                "updated_at": "2025-01-20T10:30:00Z",
-                "created_by": "admin-001"
-            },
-            {
-                "template_id": "template-002", 
-                "property_id": "prop-001",
-                "name": "Warehouse Security Sweep",
-                "description": "Comprehensive security check of warehouse district",
-                "route_id": "route-002",
-                "assigned_officers": ["guard-003"],
-                "schedule": {
-                    "startTime": "13:00",
-                    "endTime": "14:30",
-                    "days": ["monday", "wednesday", "friday"], 
-                    "timezone": "America/New_York"
-                },
-                "priority": "medium",
-                "is_recurring": True,
-                "created_at": "2024-02-01T09:00:00Z",
-                "updated_at": "2025-01-18T14:15:00Z",
-                "created_by": "admin-001"
-            },
-            {
-                "template_id": "template-003",
-                "property_id": "prop-001", 
-                "name": "Evening Office Patrol",
-                "description": "End-of-day security patrol of office areas",
-                "route_id": "route-004",
-                "assigned_officers": ["guard-004", "guard-005"],
-                "schedule": {
-                    "startTime": "18:00",
-                    "endTime": "19:00",
-                    "days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
-                    "timezone": "America/New_York"
-                },
-                "priority": "medium", 
-                "is_recurring": True,
-                "created_at": "2024-03-10T16:00:00Z",
-                "updated_at": "2025-01-22T17:30:00Z",
-                "created_by": "admin-001"
-            }
-        ]
-
-    @staticmethod
-    def _get_mock_settings() -> Dict[str, Any]:
-        """Return mock patrol settings"""
-        return {
-            "settings_id": UUID('00000000-0000-0000-0000-0000000000aa'),
-            "property_id": "prop-001",
-            "default_patrol_duration_minutes": 45,
-            "patrol_frequency": "hourly",
-            "shift_handover_time": "06:00",
-            "emergency_response_minutes": 2,
-            "patrol_buffer_minutes": 5,
-            "max_concurrent_patrols": 5,
-            "real_time_sync": True,
-            "offline_mode": True,
-            "auto_schedule_updates": True,
-            "push_notifications": True,
-            "location_tracking": True,
-            "emergency_alerts": True,
-            "checkpoint_missed_alert": True,
-            "patrol_completion_notification": False,
-            "shift_change_alerts": False,
-            "route_deviation_alert": False,
-            "system_status_alerts": False,
-            "gps_tracking": True,
-            "biometric_verification": False,
-            "auto_report_generation": False,
-            "audit_logging": True,
-            "two_factor_auth": False,
-            "session_timeout": True,
-            "ip_whitelist": False,
-            "mobile_app_sync": True,
-            "api_integration": True,
-            "database_sync": True,
-            "webhook_support": False,
-            "cloud_backup": True,
-            "role_based_access": True,
-            "data_encryption": True,
-            "heartbeat_offline_threshold_minutes": 15,
-            "updated_at": datetime.now()
-        }
-
-    @staticmethod
-    def _get_mock_weather() -> Dict[str, Any]:
-        """Return mock weather data"""
-        return {
-            "temperature": 18,
-            "condition": "Partly cloudy",
-            "windSpeed": 12,
-            "visibility": "Good",
-            "humidity": 65,
-            "patrolRecommendation": "Optimal patrol conditions. Light jacket recommended."
-        }
-
-    @staticmethod  
-    def _get_mock_alerts() -> List[Dict[str, Any]]:
-        """Return mock security alerts"""
-        return [
-            {
-                "id": "alert-001",
-                "type": "checkpoint_missed", 
-                "message": "Checkpoint 'Loading Dock' missed for Patrol P-001",
-                "timestamp": "2025-01-23T14:35:00Z",
-                "severity": "medium",
-                "isRead": False,
-                "patrol_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                "officer": "Alex Rodriguez"
-            },
-            {
-                "id": "alert-002",
-                "type": "officer_offline",
-                "message": "Officer James Wilson has been offline for 45 minutes", 
-                "timestamp": "2025-01-23T14:30:00Z",
-                "severity": "high",
-                "isRead": False,
-                "officer_id": "a3b4c5d6-e7f8-9012-abcd-345678901234",
-                "officer": "James Wilson"
-            },
-            {
-                "id": "alert-003",
-                "type": "incident_reported",
-                "message": "New incident reported: Suspicious activity in Warehouse B",
-                "timestamp": "2025-01-23T14:10:00Z", 
-                "severity": "high",
-                "isRead": True,
-                "incident_id": "INC-2025-0123-001",
-                "location": "Warehouse B"
-            },
-            {
-                "id": "alert-004",
-                "type": "equipment_malfunction",
-                "message": "Radio check failed for Officer Elena Vasquez",
-                "timestamp": "2025-01-23T14:00:00Z",
-                "severity": "low",
-                "isRead": False,
-                "officer_id": "guard-004", 
-                "officer": "Elena Vasquez"
-            }
-        ]
-
-    @staticmethod
-    def _get_mock_emergency_status() -> Dict[str, Any]:
-        """Return mock emergency status"""
-        return {
-            "level": "normal",  # normal, elevated, high, critical
-            "message": "All systems operational",
-            "activeAlerts": 2,
-            "lastIncident": "2025-01-23T14:10:00Z",
-            "escalationProtocols": "standard"
-        }
-
-    @staticmethod 
-    def _get_mock_audit_logs() -> List[Dict[str, Any]]:
-        """Return mock audit log entries"""
-        return [
-            {
-                "log_id": "log-001",
-                "log_level": "info",
-                "message": "patrol_checkpoint_checkin",
-                "timestamp": "2025-01-23T14:25:00Z",
-                "service": "patrols",
-                "log_metadata": {
-                    "patrol_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    "checkpoint_id": "cp-002", 
-                    "method": "manual",
-                    "officer": "Alex Rodriguez"
-                },
-                "user_id": "b2c3d4e5-f6g7-8901-bcde-f23456789012",
-                "property_id": "prop-001"
-            },
-            {
-                "log_id": "log-002",
-                "log_level": "info", 
-                "message": "patrol_status_changed",
-                "timestamp": "2025-01-23T14:00:00Z",
-                "service": "patrols",
-                "log_metadata": {
-                    "patrol_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    "from": "scheduled",
-                    "to": "active"
-                },
-                "user_id": "b2c3d4e5-f6g7-8901-bcde-f23456789012",
-                "property_id": "prop-001" 
-            },
-            {
-                "log_id": "log-003",
-                "log_level": "info",
-                "message": "patrol_created",
-                "timestamp": "2025-01-23T13:45:00Z", 
-                "service": "patrols",
-                "log_metadata": {
-                    "patrol_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    "template_id": "template-001",
-                    "assigned_to": "Alex Rodriguez"
-                },
-                "user_id": "admin-001",
-                "property_id": "prop-001"
-            },
-            {
-                "log_id": "log-004", 
-                "log_level": "warning",
-                "message": "patrol_checkpoint_missed",
-                "timestamp": "2025-01-23T14:35:00Z",
-                "service": "patrols",
-                "log_metadata": {
-                    "patrol_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                    "checkpoint_id": "cp-003",
-                    "expected_time": "2025-01-23T14:30:00Z"
-                },
-                "user_id": "b2c3d4e5-f6g7-8901-bcde-f23456789012", 
-                "property_id": "prop-001"
-            }
-        ]
-
     @staticmethod
     def get_dashboard_data(user_id: str, property_id: Optional[str] = None) -> Dict[str, Any]:
-        """Return comprehensive dashboard data including alerts, weather, emergency status"""
-        try:
-            return {
-                "alerts": PatrolService._get_mock_alerts(),
-                "weather": PatrolService._get_mock_weather(),
-                "emergencyStatus": PatrolService._get_mock_emergency_status(),
-                "metrics": PatrolService._get_mock_metrics()
-            }
-        except Exception as e:
-            logger.error(f"Error getting dashboard data: {e}")
-            return {
-                "alerts": [],
-                "weather": {"temperature": 0, "condition": "Unknown", "patrolRecommendation": "No data"},
-                "emergencyStatus": {"level": "unknown", "message": "Error loading status"},
-                "metrics": {}
-            }
+        """Return comprehensive dashboard data including alerts, weather, emergency status."""
+        return {
+            "alerts": [],
+            "weather": {"temperature": 0, "condition": "Unknown", "windSpeed": 0, "visibility": "Unknown", "humidity": 0, "patrolRecommendation": "No data"},
+            "emergencyStatus": {"level": "normal", "message": "No data", "activeAlerts": 0, "lastIncident": None, "escalationProtocols": "standard"},
+            "metrics": {}
+        }

@@ -1,7 +1,8 @@
 """
 Security Operations Center - Camera Service
 """
-from typing import List, Optional
+import uuid
+from typing import List, Optional, Tuple, Any
 from datetime import datetime
 from database import SessionLocal
 from models import Camera, CameraHealth, CameraStatus, UserRole, Property
@@ -11,6 +12,17 @@ from services.stream_proxy_service import StreamProxyService
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_camera_id(camera_id: str) -> str:
+    """Normalize to hyphenated UUID string so lookup matches DB (stored as str(uuid))."""
+    if not camera_id:
+        return camera_id
+    try:
+        return str(uuid.UUID(camera_id))
+    except (ValueError, TypeError):
+        return camera_id
+
 
 class CameraService:
     @staticmethod
@@ -56,12 +68,30 @@ class CameraService:
 
     @staticmethod
     def get_camera(camera_id: str) -> CameraResponse:
+        cid = _normalize_camera_id(camera_id)
         db = SessionLocal()
         try:
-            camera = db.query(Camera).filter(Camera.camera_id == camera_id).first()
+            camera = db.query(Camera).filter(Camera.camera_id == cid).first()
             if not camera:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Camera not found")
             return CameraService._serialize_camera(camera)
+        finally:
+            db.close()
+
+    @staticmethod
+    def get_camera_and_stream_config(camera_id: str) -> Tuple[CameraResponse, Optional[str], Optional[Any]]:
+        """One-shot fetch for HLS endpoint: returns serialized camera (for 404/auth) plus source_stream_url and credentials for stream manager."""
+        cid = _normalize_camera_id(camera_id)
+        db = SessionLocal()
+        try:
+            camera = db.query(Camera).filter(Camera.camera_id == cid).first()
+            if not camera:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Camera not found")
+            return (
+                CameraService._serialize_camera(camera),
+                getattr(camera, "source_stream_url", None) or None,
+                camera.credentials if isinstance(getattr(camera, "credentials", None), dict) else None,
+            )
         finally:
             db.close()
 
@@ -71,6 +101,10 @@ class CameraService:
         try:
             property_id = CameraService._get_default_property_id(db, user_id)
             safe_stream_url = StreamProxyService.resolve_stream_url(payload.stream_url, "pending")
+            # Use model enum for status (payload may use schema enum)
+            status_value = (payload.status.value if payload.status is not None else None) or CameraStatus.OFFLINE.value
+            status_enum = CameraStatus(status_value) if isinstance(status_value, str) else CameraStatus.OFFLINE
+
             camera = Camera(
                 property_id=property_id,
                 name=payload.name,
@@ -79,7 +113,7 @@ class CameraService:
                 stream_url=safe_stream_url,
                 source_stream_url=payload.stream_url,
                 credentials=payload.credentials,
-                status=payload.status or CameraStatus.OFFLINE,
+                status=status_enum,
                 is_recording=payload.is_recording or False,
                 motion_detection_enabled=payload.motion_detection_enabled if payload.motion_detection_enabled is not None else True,
             )
@@ -102,16 +136,17 @@ class CameraService:
             return CameraService._serialize_camera(camera)
         except Exception as error:
             db.rollback()
-            logger.error("Failed to create camera", error)
+            logger.exception("Failed to create camera: %s", error)
             raise
         finally:
             db.close()
 
     @staticmethod
     def update_camera(camera_id: str, payload: CameraUpdate) -> CameraResponse:
+        cid = _normalize_camera_id(camera_id)
         db = SessionLocal()
         try:
-            camera = db.query(Camera).filter(Camera.camera_id == camera_id).first()
+            camera = db.query(Camera).filter(Camera.camera_id == cid).first()
             if not camera:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Camera not found")
 
@@ -149,9 +184,10 @@ class CameraService:
 
     @staticmethod
     def delete_camera(camera_id: str) -> None:
+        cid = _normalize_camera_id(camera_id)
         db = SessionLocal()
         try:
-            camera = db.query(Camera).filter(Camera.camera_id == camera_id).first()
+            camera = db.query(Camera).filter(Camera.camera_id == cid).first()
             if not camera:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Camera not found")
             db.delete(camera)

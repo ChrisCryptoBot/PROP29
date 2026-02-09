@@ -1,4 +1,5 @@
 import apiService from '../../../services/ApiService';
+import { getBackendOrigin } from '../../../config/env';
 import { logger } from '../../../services/logger';
 import { retryWithBackoff } from '../../../utils/retryWithBackoff';
 import type {
@@ -29,17 +30,38 @@ interface CameraApiResponse {
   updated_at?: string | null;
 }
 
+/** Longer timeout for SOC endpoints; backend can be slow when many requests hit at once on load. */
+const SOC_REQUEST_TIMEOUT_MS = 25000;
+
+/** Resolve stream URL to an absolute backend URL so HLS requests hit the API server (avoids dev proxy 404). */
+function resolveStreamUrl(streamUrl: string): string {
+  if (!streamUrl) return streamUrl;
+  if (streamUrl.startsWith('http://') || streamUrl.startsWith('https://')) return streamUrl;
+  const origin = getBackendOrigin();
+  const path = streamUrl.startsWith('/') ? streamUrl : `/${streamUrl}`;
+  return `${origin}${path}`;
+}
+
+/** Resolve poster/last-image URL to backend origin so <img>/poster work when frontend and API differ. */
+function resolvePosterUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const origin = getBackendOrigin();
+  const path = url.startsWith('/') ? url : `/${url}`;
+  return `${origin}${path}`;
+}
+
 const mapCamera = (camera: CameraApiResponse): CameraEntry => ({
   id: camera.camera_id,
   name: camera.name,
   location: typeof camera.location === 'string' ? camera.location : (camera.location.label as string) || 'Unknown',
   ipAddress: camera.ip_address,
-  streamUrl: camera.stream_url,
+  streamUrl: resolveStreamUrl(camera.stream_url),
   status: camera.status,
   isRecording: camera.is_recording,
   motionDetectionEnabled: camera.motion_detection_enabled,
   hardwareStatus: camera.hardware_status,
-  lastKnownImageUrl: camera.last_known_image_url || undefined,
+  lastKnownImageUrl: resolvePosterUrl(camera.last_known_image_url) ?? undefined,
   lastHeartbeat: camera.last_heartbeat ?? undefined,
   lastStatusChange: camera.last_status_change ?? undefined,
   version: camera.version ?? 1,
@@ -49,7 +71,7 @@ const mapCamera = (camera: CameraApiResponse): CameraEntry => ({
 export async function getCameras(): Promise<CameraEntry[]> {
   try {
     const response = await retryWithBackoff(
-      () => apiService.get<CameraApiResponse[]>('/security-operations/cameras'),
+      () => apiService.get<CameraApiResponse[]>('/security-operations/cameras', { timeout: SOC_REQUEST_TIMEOUT_MS }),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
     return response.data ? response.data.map(mapCamera) : [];
@@ -106,8 +128,16 @@ export async function updateCamera(cameraId: string, payload: UpdateCameraPayloa
       () => apiService.put<CameraApiResponse>(`/security-operations/cameras/${cameraId}`, requestBody),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
+    if (!response.success && typeof response.statusCode === 'number' && response.statusCode >= 400 && response.statusCode < 500) {
+      const e = new Error(response.error || 'Request failed') as Error & { statusCode: number };
+      e.statusCode = response.statusCode;
+      throw e;
+    }
     return response.data ? mapCamera(response.data) : null;
   } catch (error) {
+    if (error && typeof (error as any).statusCode === 'number' && (error as any).statusCode >= 400 && (error as any).statusCode < 500) {
+      throw error;
+    }
     logger.error('Failed to update camera', error instanceof Error ? error : new Error(String(error)), {
       module: 'SecurityOperationsService',
       action: 'updateCamera',
@@ -119,6 +149,7 @@ export async function updateCamera(cameraId: string, payload: UpdateCameraPayloa
 
 export async function deleteCamera(cameraId: string): Promise<boolean> {
   try {
+    // Backend returns 204 No Content; success is inferred from 2xx response.
     const response = await retryWithBackoff(
       () => apiService.delete<void>(`/security-operations/cameras/${cameraId}`),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
@@ -136,7 +167,7 @@ export async function deleteCamera(cameraId: string): Promise<boolean> {
 export async function getRecordings(): Promise<Recording[]> {
   try {
     const response = await retryWithBackoff(
-      () => apiService.get<{ data?: Recording[] }>('/security-operations/recordings'),
+      () => apiService.get<{ data?: Recording[] }>('/security-operations/recordings', { timeout: SOC_REQUEST_TIMEOUT_MS }),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
     const list = (response.data as { data?: Recording[] } | undefined)?.data;
@@ -153,7 +184,7 @@ export async function getRecordings(): Promise<Recording[]> {
 export async function getEvidence(): Promise<EvidenceItem[]> {
   try {
     const response = await retryWithBackoff(
-      () => apiService.get<{ data?: EvidenceItem[] }>('/security-operations/evidence'),
+      () => apiService.get<{ data?: EvidenceItem[] }>('/security-operations/evidence', { timeout: SOC_REQUEST_TIMEOUT_MS }),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
     const list = (response.data as { data?: EvidenceItem[] } | undefined)?.data;
@@ -177,7 +208,7 @@ export async function getMetrics(): Promise<CameraMetrics | null> {
         maintenance: number;
         recording: number;
         avg_uptime: string;
-      }>('/security-operations/metrics'),
+      }>('/security-operations/metrics', { timeout: SOC_REQUEST_TIMEOUT_MS }),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
     if (!response.data) return null;
@@ -201,7 +232,7 @@ export async function getMetrics(): Promise<CameraMetrics | null> {
 export async function getAnalytics(): Promise<AnalyticsData | null> {
   try {
     const response = await retryWithBackoff(
-      () => apiService.get<{ data?: AnalyticsData }>('/security-operations/analytics'),
+      () => apiService.get<{ data?: AnalyticsData }>('/security-operations/analytics', { timeout: SOC_REQUEST_TIMEOUT_MS }),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
     const data = (response.data as { data?: AnalyticsData } | undefined)?.data;
@@ -217,7 +248,7 @@ export async function getAnalytics(): Promise<AnalyticsData | null> {
 
 export async function getSettings(): Promise<SecurityOperationsSettings | null> {
   try {
-    const response = await apiService.get<{ data?: SecurityOperationsSettings }>('/security-operations/settings');
+    const response = await apiService.get<{ data?: SecurityOperationsSettings }>('/security-operations/settings', { timeout: SOC_REQUEST_TIMEOUT_MS });
     const data = (response.data as { data?: SecurityOperationsSettings } | undefined)?.data;
     return data ?? null;
   } catch (error) {
@@ -238,9 +269,17 @@ export async function updateSettings(settings: SecurityOperationsSettings): Prom
       ),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
+    if (!response.success && typeof response.statusCode === 'number' && response.statusCode >= 400 && response.statusCode < 500) {
+      const e = new Error(response.error || 'Request failed') as Error & { statusCode: number };
+      e.statusCode = response.statusCode;
+      throw e;
+    }
     const data = (response.data as { data?: SecurityOperationsSettings } | undefined)?.data;
     return data ?? null;
   } catch (error) {
+    if (error && typeof (error as any).statusCode === 'number' && (error as any).statusCode >= 400 && (error as any).statusCode < 500) {
+      throw error;
+    }
     logger.error('Failed to update settings', error instanceof Error ? error : new Error(String(error)), {
       module: 'SecurityOperationsService',
       action: 'updateSettings',
@@ -292,6 +331,25 @@ export async function controlCameraPTZ(cameraId: string, action: string): Promis
   }
 }
 
+/** Send a heartbeat so the camera is shown as "Online". Call once or periodically. */
+export async function sendCameraHeartbeat(cameraId: string): Promise<boolean> {
+  try {
+    const response = await apiService.post<{ ok: boolean; camera_id: string; timestamp?: string }>(
+      `/security-operations/cameras/${cameraId}/heartbeat`,
+      {},
+      { timeout: 25000 }
+    );
+    return response.data?.ok === true;
+  } catch (error) {
+    logger.error('Failed to send camera heartbeat', error instanceof Error ? error : new Error(String(error)), {
+      module: 'SecurityOperationsService',
+      action: 'sendCameraHeartbeat',
+      cameraId,
+    });
+    return false;
+  }
+}
+
 export async function reportCameraIssue(cameraId: string, details?: { reason?: string }): Promise<boolean> {
   try {
     const response = await apiService.post<{ ok: boolean }>(
@@ -321,8 +379,16 @@ export async function updateEvidenceStatus(
       ),
       { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
     );
+    if (!response.success && typeof response.statusCode === 'number' && response.statusCode >= 400 && response.statusCode < 500) {
+      const e = new Error(response.error || 'Request failed') as Error & { statusCode: number };
+      e.statusCode = response.statusCode;
+      throw e;
+    }
     return !!response.data;
   } catch (error) {
+    if (error && typeof (error as any).statusCode === 'number' && (error as any).statusCode >= 400 && (error as any).statusCode < 500) {
+      throw error;
+    }
     logger.error('Failed to update evidence status', error instanceof Error ? error : new Error(String(error)), {
       module: 'SecurityOperationsService',
       action: 'updateEvidenceStatus',

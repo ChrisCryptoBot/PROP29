@@ -33,13 +33,28 @@ export const AddSpaceModal: React.FC<AddSpaceModalProps> = ({ isOpen, onClose, o
         try {
             await onSubmit(formData);
             onClose();
-        } catch (error) {
-            console.error('Failed to add space:', error);
+        } catch {
+            // Error surfaced via context/toast where applicable
         }
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Parking Space" size="sm">
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Add Parking Space"
+            size="sm"
+            footer={
+                <div className="flex justify-end space-x-3">
+                    <Button onClick={onClose} variant="subtle" className="text-xs font-black uppercase tracking-widest">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSubmit} variant="primary" className="text-xs font-black uppercase tracking-widest">
+                        Add Space
+                    </Button>
+                </div>
+            }
+        >
             <div className="space-y-4">
                 <div>
                     <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Space Number</label>
@@ -75,14 +90,6 @@ export const AddSpaceModal: React.FC<AddSpaceModalProps> = ({ isOpen, onClose, o
                         placeholder="e.g., A, B, C"
                     />
                 </div>
-            </div>
-            <div className="flex justify-end space-x-3 mt-6">
-                <Button onClick={onClose} variant="subtle" className="text-xs font-black uppercase tracking-widest">
-                    Cancel
-                </Button>
-                <Button onClick={handleSubmit} variant="primary" className="text-xs font-black uppercase tracking-widest">
-                    Add Space
-                </Button>
             </div>
         </Modal>
     );

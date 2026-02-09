@@ -104,6 +104,8 @@ export interface UseSecurityOperationsStateReturn {
   toggleRecording: (cameraId: string) => Promise<void>;
   toggleMotionDetection: (cameraId: string) => Promise<void>;
   reportCameraIssue: (cameraId: string) => Promise<void>;
+  /** Stops recording on all cameras (e.g. emergency stop). Calls API for each recording camera then refreshes. */
+  emergencyStopAllRecording: () => Promise<void>;
 }
 
 export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
@@ -112,7 +114,9 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
 
   const hasManagementAccess = useMemo(() => {
     if (!user) return false;
-    return user.roles.some((role) => ['ADMIN', 'SECURITY_OFFICER'].includes(role.toUpperCase()));
+    return user.roles.some((role) =>
+      ['ADMIN', 'SECURITY_MANAGER', 'SECURITY_OFFICER'].includes(role.toUpperCase())
+    );
   }, [user]);
 
   const isAdmin = useMemo(() => {
@@ -153,12 +157,16 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
         () => securityOpsService.getCameras(),
         { maxRetries: 3, baseDelay: 1000, maxDelay: 10000 }
       );
-      
-      // Cache last known state for cameras going offline
+
+      // Don't replace with empty list if we had cameras (backend error or transient returned [])
       setCameras(prevCameras => {
+        if (data.length === 0 && prevCameras.length > 0) {
+          setTimeout(() => showError('Could not refresh camera list. Showing last known list.'), 0);
+          return prevCameras;
+        }
         return data.map(newCamera => {
           const prevCamera = prevCameras.find(c => c.id === newCamera.id);
-          
+
           // If camera was online and now offline, cache last known state
           if (prevCamera && prevCamera.status === 'online' && newCamera.status === 'offline') {
             return {
@@ -172,7 +180,7 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
               }
             };
           }
-          
+
           // If camera is still offline, preserve last known state
           if (newCamera.status === 'offline' && prevCamera?.lastKnownState) {
             return {
@@ -180,7 +188,7 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
               lastKnownState: prevCamera.lastKnownState
             };
           }
-          
+
           return newCamera;
         });
       });
@@ -820,6 +828,32 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
     }
   }, [canManageCameras, cameras, trackAction, trackPerformance, trackError]);
 
+  const emergencyStopAllRecording = useCallback(async () => {
+    const recordingCameras = cameras.filter((c) => c.isRecording);
+    if (recordingCameras.length === 0) {
+      showInfo('No cameras are currently recording');
+      return;
+    }
+    setLoading((prev) => ({ ...prev, actions: true }));
+    const toastId = showLoading(`Stopping recording on ${recordingCameras.length} camera(s)...`);
+    try {
+      await Promise.all(
+        recordingCameras.map((c) =>
+          securityOpsService.updateCamera(c.id, { isRecording: false })
+        )
+      );
+      await refreshCameras();
+      dismissLoadingAndShowSuccess(toastId, `Recording stopped on ${recordingCameras.length} camera(s).`);
+      trackAction('emergency_stop', 'camera', { count: recordingCameras.length });
+    } catch (error) {
+      const msg = ErrorHandlerService.handle(error, 'Emergency stop failed');
+      dismissLoadingAndShowError(toastId, msg);
+      await refreshCameras(); // still refresh to reflect partial state
+    } finally {
+      setLoading((prev) => ({ ...prev, actions: false }));
+    }
+  }, [cameras, refreshCameras, trackAction]);
+
   useEffect(() => {
     refreshCameras();
     refreshRecordings();
@@ -886,5 +920,6 @@ export function useSecurityOperationsState(): UseSecurityOperationsStateReturn {
     toggleRecording,
     toggleMotionDetection,
     reportCameraIssue,
+    emergencyStopAllRecording,
   };
 }

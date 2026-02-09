@@ -45,8 +45,18 @@ export const SendMessageModal: React.FC = () => {
       onClose={handleClose}
       title={`Send Message - ${selectedIncident.guestName}`}
       size="md"
+      footer={
+        <>
+          <Button type="button" variant="subtle" onClick={handleClose} disabled={loading.actions} className="px-8 font-black uppercase tracking-widest text-[10px]">
+            Cancel
+          </Button>
+          <Button type="submit" form="send-message-form" variant="primary" disabled={!message.trim() || loading.actions} className="px-8 font-black uppercase tracking-widest text-[10px]">
+            {loading.actions ? 'Sending...' : 'Send Message'}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="send-message-form" onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
             Message
@@ -59,25 +69,6 @@ export const SendMessageModal: React.FC = () => {
             required
             disabled={loading.actions}
           />
-        </div>
-
-        <div className="flex justify-end gap-4 pt-4 border-t border-white/5">
-          <Button
-            type="button"
-            variant="outline"
-            className="px-8 font-black uppercase tracking-widest text-[10px] border-white/5 text-slate-400 hover:bg-white/5 hover:text-white"
-            onClick={handleClose}
-            disabled={loading.actions}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="px-8 font-black uppercase tracking-widest text-[10px] bg-blue-600 hover:bg-blue-700 text-white border-none"
-            disabled={!message.trim() || loading.actions}
-          >
-            {loading.actions ? 'Sending...' : 'Send Message'}
-          </Button>
         </div>
       </form>
     </Modal>

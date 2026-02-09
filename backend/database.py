@@ -133,7 +133,25 @@ def init_db():
                             text(f"ALTER TABLE patrol_settings ADD COLUMN {column_name} {column_type}")
                         )
                         logger.info("Added %s column to patrol_settings table", column_name)
-                
+
+                # Cameras table: add columns if missing (last_heartbeat, last_status_change, version, source_stream_url, etc.)
+                try:
+                    cameras_columns = connection.execute(text("PRAGMA table_info(cameras)")).fetchall()
+                    cameras_names = {row[1] for row in cameras_columns}
+                    cameras_additions = [
+                        ("last_heartbeat", "DATETIME"),
+                        ("last_status_change", "DATETIME"),
+                        ("version", "INTEGER DEFAULT 1"),
+                        ("source_stream_url", "TEXT"),
+                    ]
+                    for col_name, col_type in cameras_additions:
+                        if col_name not in cameras_names:
+                            connection.execute(text(f"ALTER TABLE cameras ADD COLUMN {col_name} {col_type}"))
+                            logger.info("Added %s column to cameras table", col_name)
+                    connection.commit()
+                except Exception as e:
+                    logger.warning("Could not add missing columns to cameras: %s", e)
+
                 # Add source tracking to guest_safety_incidents
                 try:
                     guest_safety_columns = connection.execute(text("PRAGMA table_info(guest_safety_incidents)")).fetchall()

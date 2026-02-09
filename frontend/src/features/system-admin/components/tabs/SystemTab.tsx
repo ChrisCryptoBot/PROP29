@@ -1,14 +1,63 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../../../../components/UI/Button';
 import { Card, CardContent } from '../../../../components/UI/Card';
+import { Modal } from '../../../../components/UI/Modal';
 import { useSystemAdminContext } from '../../context/SystemAdminContext';
 import { cn } from '../../../../utils/cn';
+import * as systemAdminApi from '../../services/systemAdminApi';
 
 export const SystemTab: React.FC = () => {
-    const { settings, setSettings, handleSaveSettings, loading, showSuccess } = useSystemAdminContext();
+    const {
+        settings,
+        setSettings,
+        handleSaveSettings,
+        handleResetSettings,
+        loading,
+        showSuccess,
+        refreshData,
+        setConfirmModal
+    } = useSystemAdminContext();
+
+    const [diagnosticsResult, setDiagnosticsResult] = useState<{ status: string; checks?: { name: string; status: string; latency_ms?: number }[] } | null>(null);
+    const [diagnosticsLoading, setDiagnosticsLoading] = useState(false);
 
     const handleInputChange = (field: keyof typeof settings, value: any) => {
         setSettings({ ...settings, [field]: value });
+    };
+
+    const handleRestartServices = () => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Restart system services',
+            message: 'This may cause brief downtime. Are you sure you want to restart system services?',
+            variant: 'warning',
+            onConfirm: () => {
+                systemAdminApi.restartServices().then((r) => {
+                    showSuccess(r.message ?? 'Restart requested');
+                    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+                }).catch(() => {
+                    showSuccess('Restart request failed. Try again or contact support.');
+                    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+                });
+            }
+        });
+    };
+
+    const handleRunDiagnostics = () => {
+        setDiagnosticsLoading(true);
+        systemAdminApi.runDiagnostics()
+            .then((r) => {
+                setDiagnosticsResult(r);
+                setDiagnosticsLoading(false);
+            })
+            .catch(() => {
+                setDiagnosticsResult({ status: 'error', checks: [] });
+                setDiagnosticsLoading(false);
+            });
+    };
+
+    const handleGlobalSync = () => {
+        refreshData().then(() => showSuccess('Settings synced')).catch(() => {});
     };
 
     return (
@@ -16,23 +65,23 @@ export const SystemTab: React.FC = () => {
             {/* System Settings Header */}
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
                 <div>
-                    <h3 className="text-3xl font-black text-white tracking-tight uppercase">System Configuration</h3>
-                    <p className="text-slate-400 mt-1 font-medium tracking-wide">Global system settings and performance</p>
+                    <h2 className="page-title">System Configuration</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">Global system settings and performance</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
-                        variant="glass"
-                        className="border-white/5 hover:bg-white/10 shadow-xl font-bold uppercase text-[10px] tracking-widest px-6"
-                        onClick={() => showSuccess('Resetting settings to defaults')}
+                        variant="outline"
+                        className="border-white/5 hover:bg-white/10 font-bold uppercase text-[10px] tracking-widest px-6"
+                        onClick={handleResetSettings}
                     >
-                        <i className="fas fa-undo mr-2 opacity-70"></i>
-                        Reset Defaults
+                        <i className="fas fa-undo mr-2 opacity-70" aria-hidden />
+                        Reset defaults
                     </Button>
                     <Button
                         onClick={handleSaveSettings}
                         disabled={loading}
                         variant="primary"
-                        className="shadow-lg shadow-blue-500/20 px-8 py-3 hover:scale-105 transition-transform"
+                        className="px-8 py-3"
                     >
                         {loading ? (
                             <>
@@ -51,10 +100,10 @@ export const SystemTab: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* General Settings */}
-                <div className="glass-card p-6">
+                <div className="bg-slate-900/50 border border-white/5 rounded-md p-6">
                     <div className="flex items-center space-x-3 mb-8">
-                        <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20 shadow-inner">
-                            <i className="fas fa-desktop text-blue-400"></i>
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                            <i className="fas fa-desktop text-white"></i>
                         </div>
                         <h4 className="text-lg font-bold text-white uppercase tracking-wider">System Identity</h4>
                     </div>
@@ -62,12 +111,12 @@ export const SystemTab: React.FC = () => {
                         <div className="group">
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">System Name</label>
                             <div className="relative">
-                                <i className="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <i className="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                 <input
                                     type="text"
                                     value={settings.systemName}
                                     onChange={(e) => handleInputChange('systemName', e.target.value)}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 hover:bg-white/10 transition-all placeholder:text-slate-700"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/50 hover:bg-white/10 transition-all placeholder:text-slate-700"
                                     placeholder="Enter system designation..."
                                 />
                             </div>
@@ -76,11 +125,11 @@ export const SystemTab: React.FC = () => {
                             <div className="group">
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">Timezone</label>
                                 <div className="relative">
-                                    <i className="fas fa-globe-americas absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                    <i className="fas fa-globe-americas absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                     <select
                                         value={settings.timezone}
                                         onChange={(e) => handleInputChange('timezone', e.target.value)}
-                                        className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
+                                        className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
                                     >
                                         <option value="UTC" className="bg-slate-900">UTC Standard</option>
                                         <option value="EST" className="bg-slate-900">Eastern Time</option>
@@ -94,11 +143,11 @@ export const SystemTab: React.FC = () => {
                             <div className="group">
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">System Language</label>
                                 <div className="relative">
-                                    <i className="fas fa-language absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                    <i className="fas fa-language absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                     <select
                                         value={settings.language}
                                         onChange={(e) => handleInputChange('language', e.target.value)}
-                                        className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
+                                        className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all uppercase text-xs"
                                     >
                                         <option value="en" className="bg-slate-900">English (Global)</option>
                                         <option value="es" className="bg-slate-900">Español</option>
@@ -113,11 +162,11 @@ export const SystemTab: React.FC = () => {
                         <div className="group">
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">Date Format</label>
                             <div className="relative">
-                                <i className="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <i className="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                 <select
                                     value={settings.dateFormat}
                                     onChange={(e) => handleInputChange('dateFormat', e.target.value)}
-                                    className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all"
+                                    className="w-full pl-11 pr-10 py-3 border border-white/5 bg-white/5 text-white font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 appearance-none cursor-pointer hover:bg-white/10 transition-all"
                                 >
                                     <option value="MM/DD/YYYY" className="bg-slate-900">MM / DD / YYYY (US)</option>
                                     <option value="DD/MM/YYYY" className="bg-slate-900">DD / MM / YYYY (EU)</option>
@@ -132,12 +181,12 @@ export const SystemTab: React.FC = () => {
                 </div>
 
                 {/* System Behavior */}
-                <div className="glass-card p-6">
+                <div className="bg-slate-900/50 border border-white/5 rounded-md p-6">
                     <div className="flex items-center space-x-3 mb-8">
-                        <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20 shadow-inner">
-                            <i className="fas fa-sliders-h text-emerald-400"></i>
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                            <i className="fas fa-sliders-h text-white" aria-hidden />
                         </div>
-                        <h4 className="text-lg font-bold text-white uppercase tracking-wider">Automated Protocols</h4>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-white">Automated Protocols</h3>
                     </div>
                     <div className="space-y-2">
                         <ToggleRow
@@ -161,8 +210,8 @@ export const SystemTab: React.FC = () => {
                             onChange={(val) => handleInputChange('autoUpdates', val)}
                         />
                     </div>
-                    <div className="mt-8 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex items-start space-x-3">
-                        <i className="fas fa-shield-virus text-emerald-500/50 mt-1"></i>
+                    <div className="mt-8 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-md flex items-start space-x-3">
+                        <i className="fas fa-shield-virus text-emerald-400 mt-1" aria-hidden />
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
                             Settings ensure platform resilience. Disabling automatic backups may result in data loss.
                         </p>
@@ -170,10 +219,10 @@ export const SystemTab: React.FC = () => {
                 </div>
 
                 {/* Performance Tuning */}
-                <div className="glass-card p-6">
+                <div className="bg-slate-900/50 border border-white/5 rounded-md p-6">
                     <div className="flex items-center space-x-3 mb-8">
-                        <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center border border-orange-500/20 shadow-inner">
-                            <i className="fas fa-bolt text-orange-400"></i>
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                            <i className="fas fa-bolt text-white" aria-hidden />
                         </div>
                         <h4 className="text-lg font-bold text-white uppercase tracking-wider">Core Optimization</h4>
                     </div>
@@ -181,12 +230,12 @@ export const SystemTab: React.FC = () => {
                         <div className="group">
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">Cache Persistence (SEC)</label>
                             <div className="relative">
-                                <i className="fas fa-hdd absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <i className="fas fa-hdd absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                 <input
                                     type="number"
                                     value={settings.cacheTtl}
                                     onChange={(e) => handleInputChange('cacheTtl', parseInt(e.target.value))}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:bg-white/10 transition-all "
                                     placeholder="3600"
                                 />
                             </div>
@@ -194,12 +243,12 @@ export const SystemTab: React.FC = () => {
                         <div className="group">
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">Concurrency Threshold</label>
                             <div className="relative">
-                                <i className="fas fa-network-wired absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <i className="fas fa-network-wired absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                 <input
                                     type="number"
                                     value={settings.maxConnections}
                                     onChange={(e) => handleInputChange('maxConnections', parseInt(e.target.value))}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:bg-white/10 transition-all "
                                     placeholder="100"
                                 />
                             </div>
@@ -207,12 +256,12 @@ export const SystemTab: React.FC = () => {
                         <div className="group">
                             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 px-1">Session TTL (MIN)</label>
                             <div className="relative">
-                                <i className="fas fa-hourglass-half absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs"></i>
+                                <i className="fas fa-hourglass-half absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs" aria-hidden />
                                 <input
                                     type="number"
                                     value={settings.sessionTimeout}
                                     onChange={(e) => handleInputChange('sessionTimeout', parseInt(e.target.value))}
-                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/50 hover:bg-white/10 transition-all shadow-inner"
+                                    className="w-full pl-11 pr-4 py-3 border border-white/5 bg-white/5 text-white font-mono font-bold rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent hover:bg-white/10 transition-all "
                                     placeholder="30"
                                 />
                             </div>
@@ -221,47 +270,70 @@ export const SystemTab: React.FC = () => {
                 </div>
 
                 {/* System Operations */}
-                <div className="glass-card p-6">
+                <div className="bg-slate-900/50 border border-white/5 rounded-md p-6">
                     <div className="flex items-center space-x-3 mb-8">
-                        <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20 shadow-inner">
-                            <i className="fas fa-tools text-red-400"></i>
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
+                            <i className="fas fa-tools text-white" aria-hidden />
                         </div>
-                        <h4 className="text-lg font-bold text-white uppercase tracking-wider">System Operations</h4>
+                        <h3 className="text-sm font-black uppercase tracking-widest text-white">System Operations</h3>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                         <Button
-                            variant="glass"
-                            className="flex flex-col items-center justify-center p-8 h-auto border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 group shadow-2xl transition-all"
-                            onClick={() => showSuccess('Restarting system services')}
+                            variant="outline"
+                            className="flex flex-col items-center justify-center p-8 h-auto border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 group transition-all"
+                            onClick={handleRestartServices}
                         >
-                            <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-sync-alt text-2xl text-blue-500 animate-[spin_3s_linear_infinite]"></i>
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mb-4">
+                                <i className="fas fa-sync-alt text-2xl text-white animate-[spin_3s_linear_infinite]" aria-hidden />
                             </div>
                             <span className="font-black uppercase text-[10px] tracking-widest text-slate-300">Restart Services</span>
                         </Button>
                         <Button
-                            variant="glass"
-                            className="flex flex-col items-center justify-center p-8 h-auto border-white/5 hover:border-green-500/30 hover:bg-green-500/5 group shadow-2xl transition-all"
-                            onClick={() => showSuccess('Running system diagnostics')}
+                            variant="outline"
+                            disabled={diagnosticsLoading}
+                            className="flex flex-col items-center justify-center p-8 h-auto border-white/5 hover:border-green-500/30 hover:bg-green-500/5 group transition-all"
+                            onClick={handleRunDiagnostics}
                         >
-                            <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-microchip text-2xl text-green-500"></i>
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5 mb-4">
+                                {diagnosticsLoading ? (
+                                    <i className="fas fa-spinner fa-spin text-2xl text-white" aria-hidden />
+                                ) : (
+                                    <i className="fas fa-microchip text-2xl text-white" aria-hidden />
+                                )}
                             </div>
-                            <span className="font-black uppercase text-[10px] tracking-widest text-slate-300">Diagnostics</span>
+                            <span className="font-black uppercase text-[10px] tracking-widest text-slate-300">{diagnosticsLoading ? 'Running…' : 'Diagnostics'}</span>
                         </Button>
                     </div>
-                    <div className="mt-8 flex items-center justify-between p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl shadow-inner overflow-hidden relative group cursor-pointer" onClick={() => showSuccess('Syncing settings')}>
-                        <div className="absolute inset-0 bg-blue-500/5 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                        <div className="flex items-center relative z-10">
-                            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center mr-4 border border-blue-500/30">
+                    {diagnosticsResult && (
+                        <Modal
+                            isOpen={!!diagnosticsResult}
+                            onClose={() => setDiagnosticsResult(null)}
+                            title="System diagnostics"
+                            size="sm"
+                        >
+                            <div className="space-y-3">
+                                <p className="text-sm text-slate-300">Status: <strong className={diagnosticsResult.status === 'ok' ? 'text-green-400' : 'text-red-400'}>{diagnosticsResult.status}</strong></p>
+                                {diagnosticsResult.checks?.length ? (
+                                    <ul className="text-xs text-slate-400 space-y-1">
+                                        {diagnosticsResult.checks.map((c, i) => (
+                                            <li key={i}>{c.name}: {c.status}{c.latency_ms != null ? ` (${c.latency_ms}ms)` : ''}</li>
+                                        ))}
+                                    </ul>
+                                ) : null}
+                            </div>
+                        </Modal>
+                    )}
+                    <div className="mt-8 flex items-center justify-between p-5 bg-blue-500/10 border border-blue-500/20 rounded-md cursor-pointer hover:bg-blue-500/15 transition-colors" onClick={handleGlobalSync}>
+                        <div className="flex items-center">
+                            <div className="w-10 h-10 border-white/5 rounded-md flex items-center justify-center mr-4 border border-blue-500/30">
                                 <i className="fas fa-cloud-download-alt text-blue-400"></i>
                             </div>
                             <div>
-                                <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Global Sync</div>
-                                <div className="text-xs font-bold text-slate-400 mt-0.5 uppercase tracking-tighter">Last Sync: 10:45 AM</div>
+                                <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Global sync</div>
+                                <div className="text-xs font-bold text-slate-400 mt-0.5 uppercase tracking-tighter">Last sync: 10:45 AM</div>
                             </div>
                         </div>
-                        <i className="fas fa-chevron-right text-blue-400/50 relative z-10 group-hover:translate-x-1 transition-transform"></i>
+                        <i className="fas fa-chevron-right text-blue-400/50" aria-hidden />
                     </div>
                 </div>
             </div>
@@ -276,12 +348,12 @@ const ToggleRow: React.FC<{ label: string; enabled: boolean; onChange: (val: boo
             onClick={() => onChange(!enabled)}
             className={cn(
                 "relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-0",
-                enabled ? "bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.4)]" : "bg-white/10"
+                enabled ? "bg-blue-600" : "bg-white/10"
             )}
         >
             <span
                 className={cn(
-                    "inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform duration-300",
+                    "inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300",
                     enabled ? "translate-x-6" : "translate-x-1"
                 )}
             />

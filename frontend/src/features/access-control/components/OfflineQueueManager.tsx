@@ -35,11 +35,11 @@ export const OfflineQueueManager: React.FC = () => {
   }
 
   return (
-    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 mb-4">
+    <Card className="bg-slate-900/50 border border-white/5 mb-4">
       <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center text-white">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
               <i className={`fas ${isOffline ? 'fa-wifi-slash' : 'fa-sync-alt'} text-white`} aria-hidden="true" />
             </div>
             <span className="text-sm font-black uppercase tracking-widest">
@@ -96,7 +96,7 @@ export const OfflineQueueManager: React.FC = () => {
                 onClick={handleRetryFailed}
                 className="w-full"
               >
-                <i className="fas fa-redo mr-2" />
+                <i className="fas fa-redo mr-2" aria-hidden />
                 Retry Failed Operations
               </Button>
             </div>

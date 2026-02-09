@@ -69,27 +69,10 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
         );
     }, [incidents, displayAgent]);
 
-    // Generate mock trust score history (in production, this would come from API)
+    // Trust score history from API when available (no mock data)
     useEffect(() => {
         if (displayAgent && isOpen) {
-            // Mock historical trust score data
-            const history = [];
-            const currentDate = new Date();
-            for (let i = 30; i >= 0; i--) {
-                const date = new Date(currentDate);
-                date.setDate(date.getDate() - i);
-                const baseScore = displayAgent.trust_score;
-                const variance = Math.random() * 20 - 10; // ±10 variation
-                const score = Math.max(0, Math.min(100, baseScore + variance));
-                const level = score >= 80 ? 'HIGH' : score >= 50 ? 'MEDIUM' : 'LOW';
-                
-                history.push({
-                    date: date.toISOString().split('T')[0],
-                    score: Math.round(score),
-                    level
-                });
-            }
-            setTrustScoreHistory(history);
+            setTrustScoreHistory([]);
         }
     }, [displayAgent, isOpen]);
 
@@ -211,7 +194,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
         >
             <div className="space-y-6">
                 {/* Tab Navigation */}
-                <div className="flex space-x-1 p-1 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex space-x-1 p-1 bg-white/5 rounded-md border border-white/5">
                     {[
                         { key: 'overview', label: 'Overview', icon: 'fa-chart-line' },
                         { key: 'trends', label: 'Trends', icon: 'fa-trending-up' },
@@ -224,7 +207,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                             className={cn(
                                 "flex-1 flex items-center justify-center px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-md transition-all",
                                 activeTab === tab.key
-                                    ? "text-white bg-white/10 shadow-lg"
+                                    ? "text-white bg-white/10"
                                     : "text-slate-400 hover:text-white hover:bg-white/5"
                             )}
                         >
@@ -239,10 +222,10 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                     <div className="space-y-6">
                         {/* Key Metrics */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                                 <CardContent className="pt-6 px-6 pb-6">
                                     <div className="text-center">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mx-auto mb-3">
                                             <i className="fas fa-paper-plane text-white" />
                                         </div>
                                         <p className="text-2xl font-black text-white">{displayAgent.submissions_count}</p>
@@ -251,10 +234,10 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                                 </CardContent>
                             </Card>
                             
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                                 <CardContent className="pt-6 px-6 pb-6">
                                     <div className="text-center">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mx-auto mb-3">
                                             <i className="fas fa-check text-white" />
                                         </div>
                                         <p className="text-2xl font-black text-white">{displayAgent.approval_rate.toFixed(1)}%</p>
@@ -263,10 +246,10 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                                 </CardContent>
                             </Card>
                             
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                                 <CardContent className="pt-6 px-6 pb-6">
                                     <div className="text-center">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mx-auto mb-3">
                                             <i className="fas fa-clock text-white" />
                                         </div>
                                         <p className="text-2xl font-black text-white">{displayAgent.average_response_time}</p>
@@ -275,10 +258,10 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                                 </CardContent>
                             </Card>
                             
-                            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-white/5">
                                 <CardContent className="pt-6 px-6 pb-6">
                                     <div className="text-center">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+                                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mx-auto mb-3">
                                             <i className="fas fa-flag text-white" />
                                         </div>
                                         <p className="text-2xl font-black text-white">{displayAgent.flagged_submissions || 0}</p>
@@ -289,7 +272,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                         </div>
 
                         {/* Performance Breakdown */}
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-white">Performance Breakdown</CardTitle>
                             </CardHeader>
@@ -364,7 +347,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                 {/* Trends Tab */}
                 {activeTab === 'trends' && (
                     <div className="space-y-6">
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-white">Trust Score History (30 Days)</CardTitle>
                             </CardHeader>
@@ -403,7 +386,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                             </CardContent>
                         </Card>
 
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-white">Weekly Submission Trends</CardTitle>
                             </CardHeader>
@@ -440,7 +423,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
 
                 {/* Submissions Tab */}
                 {activeTab === 'submissions' && (
-                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                    <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white">Recent Submissions ({agentSubmissions.length})</CardTitle>
                         </CardHeader>
@@ -454,7 +437,7 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
                             ) : (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
                                     {agentSubmissions.slice(-10).reverse().map((incident) => (
-                                        <div key={incident.incident_id} className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                        <div key={incident.incident_id} className="p-3 bg-white/5 rounded-md border border-white/5">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <h5 className="text-sm font-bold text-white">{incident.title}</h5>
@@ -498,13 +481,13 @@ export const AgentPerformanceModal: React.FC<AgentPerformanceModalProps> = ({
 
                 {/* Settings Tab */}
                 {activeTab === 'settings' && (
-                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                    <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white">Agent Management</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-6">
-                                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
                                     <div className="flex items-center space-x-2">
                                         <i className="fas fa-info-circle text-yellow-400" />
                                         <p className="text-sm text-yellow-200">

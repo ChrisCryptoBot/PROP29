@@ -30,24 +30,32 @@ function getBooleanEnvVar(key: string, defaultValue: boolean): boolean {
   return value.toLowerCase() === 'true';
 }
 
-const rawApiBaseUrl = getEnvVar('REACT_APP_API_BASE_URL', '/api');
-const normalizedApiBaseUrl = (() => {
-  if (typeof window === 'undefined') {
-    return rawApiBaseUrl;
+const rawApiBaseUrl = getEnvVar('REACT_APP_API_BASE_URL', 'http://localhost:8000/api');
+// Use full backend URL so requests hit the API server (e.g. 8000), not the dev server (3000)
+const normalizedApiBaseUrl = rawApiBaseUrl.startsWith('http') ? rawApiBaseUrl.replace(/\/+$/, '') : `http://localhost:8000${rawApiBaseUrl.startsWith('/') ? '' : '/'}${rawApiBaseUrl}`;
+
+const rawWsUrl = getEnvVar('REACT_APP_WS_URL', 'ws://localhost:8000/ws');
+// WebSocket must connect to the backend (8000), not the frontend dev server (3000)
+const normalizedWsUrl = /:\d+/.test(rawWsUrl) && (rawWsUrl.includes(':3000') || rawWsUrl.includes('localhost:3000'))
+  ? 'ws://localhost:8000/ws'
+  : rawWsUrl.startsWith('ws') ? rawWsUrl.replace(/\/+$/, '') : `ws://localhost:8000${rawWsUrl.startsWith('/') ? rawWsUrl : '/ws'}`;
+
+/** Backend origin (e.g. http://localhost:8000) for direct requests (e.g. HLS stream proxy). */
+export const getBackendOrigin = (): string => {
+  const base = normalizedApiBaseUrl;
+  const withoutTrailing = base.replace(/\/+$/, '');
+  if (withoutTrailing.endsWith('/api')) return withoutTrailing.replace(/\/api\/?$/, '');
+  try {
+    const u = new URL(base);
+    return u.origin;
+  } catch {
+    return 'http://localhost:8000';
   }
-  if (
-    process.env.NODE_ENV === 'development' &&
-    (rawApiBaseUrl.startsWith('http://localhost:8000') ||
-      rawApiBaseUrl.startsWith('http://127.0.0.1:8000'))
-  ) {
-    return '/api';
-  }
-  return rawApiBaseUrl;
-})();
+};
 
 export const env: EnvConfig = {
   API_BASE_URL: normalizedApiBaseUrl,
-  WS_URL: getEnvVar('REACT_APP_WS_URL', 'ws://localhost:8000/ws'),
+  WS_URL: normalizedWsUrl,
   ENVIRONMENT: (getEnvVar('REACT_APP_ENVIRONMENT', 'development') as EnvConfig['ENVIRONMENT']) || 'development',
   VERSION: getEnvVar('REACT_APP_VERSION', '2.9.0'),
   IS_PRODUCTION: process.env.NODE_ENV === 'production',

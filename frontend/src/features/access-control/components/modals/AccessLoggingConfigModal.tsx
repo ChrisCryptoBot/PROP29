@@ -92,7 +92,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
     >
       <div className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
             <div>
               <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Access Logging</h4>
               <p className="text-[10px] text-[color:var(--text-sub)] font-medium italic opacity-60 uppercase tracking-tight">Log access events for audit and compliance</p>
@@ -107,7 +107,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
           </div>
 
           {config.enabled && (
-            <div className="space-y-4 pl-6 border-l-2 border-white/5">
+            <div className="space-y-4 pl-6">
               <Select
                 id="log-level"
                 label="Log Level"
@@ -124,7 +124,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                 <option value="comprehensive">COMPREHENSIVE</option>
               </Select>
 
-              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+              <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                 <label htmlFor="retention-period" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                   Retention (Days)
                 </label>
@@ -146,7 +146,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
               <div className="space-y-3 mt-8">
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Log Fields</h5>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">SUCCESSFUL ACCESS</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Log granted access events</p>
@@ -160,7 +160,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-red-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-red-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">DENIED ACCESS</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Log denied access attempts</p>
@@ -174,7 +174,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-amber-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-amber-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">CRITICAL OVERRIDES</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Log lockdown/unlock events</p>
@@ -188,7 +188,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-indigo-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-indigo-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">BIOMETRIC SCANS</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Log biometric authentication data</p>
@@ -207,7 +207,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Data Manifest</h5>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">LOCATION</h6>
                     <Toggle
                       checked={config.includeLocation}
@@ -218,7 +218,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">TIMESTAMP</h6>
                     <Toggle
                       checked={config.includeTime}
@@ -229,7 +229,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">USER_ID</h6>
                     <Toggle
                       checked={config.includeUserInfo}
@@ -240,7 +240,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">DEVICE_ID</h6>
                     <Toggle
                       checked={config.includeDeviceInfo}
@@ -256,7 +256,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
               <div className="space-y-4 mt-8">
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Archive & Export</h5>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Pulse Compression</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Compress logs older than retention cycles</p>
@@ -285,7 +285,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                   <option value="xml">INTERCHANGE_XML</option>
                 </Select>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Cold Storage Archive</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Automatically archive legacy signatures</p>
@@ -300,7 +300,7 @@ export const AccessLoggingConfigModal: React.FC<AccessLoggingConfigModalProps> =
                 </div>
 
                 {config.autoArchive && (
-                  <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl ml-6">
+                  <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md ml-6">
                     <label htmlFor="archive-after-days" className="block text-[10px] font-black text-[color:var(--text-sub)] mb-3 uppercase tracking-widest ml-1">
                       Archive Threshold (Days)
                     </label>

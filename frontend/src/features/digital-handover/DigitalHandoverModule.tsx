@@ -5,11 +5,15 @@
  * Integrates all tabs, components, and context providers.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ErrorBoundary } from '../../components/UI/ErrorBoundary';
 import { HandoverProvider, useHandoverContext } from './context/HandoverContext';
+import { useGlobalRefresh } from '../../contexts/GlobalRefreshContext';
+import { useHandoverTelemetry } from './hooks/useHandoverTelemetry';
 import { HandoverForm } from './components/modals/HandoverForm';
 import { HandoverDetailsModal } from './components/modals/HandoverDetailsModal';
+import { ConfirmModal } from './components/modals/ConfirmModal';
+import { ErrorHandlerService } from '../../services/ErrorHandlerService';
 import {
   ManagementTab,
   TrackingTab,
@@ -20,6 +24,7 @@ import {
 import { cn } from '../../utils/cn';
 import type { Handover, CreateHandoverRequest, UpdateHandoverRequest } from './types';
 import ModuleShell from '../../components/Layout/ModuleShell';
+import { getShiftTypeBadge, getStatusBadgeClass, getPriorityBadgeClass } from './utils/badgeHelpers';
 
 /**
  * Tab configuration
@@ -31,54 +36,6 @@ const tabs = [
   { id: 'analytics', label: 'Analytics', path: '#' },
   { id: 'settings', label: 'Settings', path: '#' },
 ];
-
-/**
- * Helper functions for badge rendering
- */
-const getShiftTypeBadge = (shiftType: string) => {
-  const badges: Record<string, { label: string; className: string }> = {
-    morning: { label: 'Morning', className: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-    afternoon: { label: 'Afternoon', className: 'text-orange-400 bg-orange-500/10 border-orange-500/20' },
-    night: { label: 'Night', className: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-  };
-
-  const badge = badges[shiftType] || badges.morning;
-  return (
-    <span className={cn('px-2 py-0.5 text-[10px] font-black uppercase tracking-widest border rounded transition-all', badge.className)}>
-      {badge.label}
-    </span>
-  );
-};
-
-const getStatusBadgeClass = (status: string): string => {
-  switch (status) {
-    case 'completed':
-      return 'text-green-400 bg-green-500/10 border-green-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-    case 'in_progress':
-      return 'text-blue-400 bg-blue-500/10 border-blue-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-    case 'pending':
-      return 'text-amber-400 bg-amber-500/10 border-amber-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-    case 'overdue':
-      return 'text-red-400 bg-red-500/10 border-red-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px] animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]';
-    default:
-      return 'text-white/40 bg-white/5 border-white/5 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-  }
-};
-
-const getPriorityBadgeClass = (priority: string): string => {
-  switch (priority) {
-    case 'critical':
-      return 'text-red-400 bg-red-500/10 border-red-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px] animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.2)]';
-    case 'high':
-      return 'text-orange-400 bg-orange-500/10 border-orange-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-    case 'medium':
-      return 'text-blue-400 bg-blue-500/10 border-blue-500/20 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-    case 'low':
-      return 'text-white/40 bg-white/5 border-white/5 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-    default:
-      return 'text-white/40 bg-white/5 border-white/5 px-2 py-0.5 rounded border font-black uppercase tracking-widest text-[10px]';
-  }
-};
 
 /**
  * Internal module content (uses context)
@@ -98,18 +55,45 @@ const DigitalHandoverContent: React.FC = () => {
     setShowCreateModal,
     setShowEditModal,
     setShowDetailsModal,
+    confirmModal,
+    setConfirmModal,
+    lastSyncTimestamp,
+    refreshAll,
   } = useHandoverContext();
 
   const [activeTab, setActiveTab] = useState<string>('management');
+  const { trackAction } = useHandoverTelemetry();
+
+  const refreshAllRef = useRef(refreshAll);
+  refreshAllRef.current = refreshAll;
+  const { register, unregister, triggerGlobalRefresh } = useGlobalRefresh();
+  useEffect(() => {
+    const handler = async () => {
+      await refreshAllRef.current();
+    };
+    register('digital-handover', handler);
+    return () => unregister('digital-handover');
+  }, [register, unregister]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+        triggerGlobalRefresh();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [triggerGlobalRefresh]);
 
   // Handlers
   const handleCreateHandover = async (data: CreateHandoverRequest) => {
     try {
-      await createHandover(data);
+      const created = await createHandover(data);
       setShowCreateModal(false);
       await refreshHandovers();
+      trackAction('handover_created', 'handover', { handoverId: created.id });
     } catch (error) {
-      console.error('Failed to create handover:', error);
       throw error;
     }
   };
@@ -145,8 +129,9 @@ const DigitalHandoverContent: React.FC = () => {
       setShowEditModal(false);
       setSelectedHandover(null);
       await refreshHandovers();
+      trackAction('handover_updated', 'handover', { handoverId: selectedHandover.id });
     } catch (error) {
-      console.error('Failed to update handover:', error);
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'DigitalHandover:handleEditHandover');
       throw error;
     }
   };
@@ -159,8 +144,8 @@ const DigitalHandoverContent: React.FC = () => {
         setShowDetailsModal(false);
       }
       await refreshHandovers();
-    } catch (error) {
-      console.error('Failed to delete handover:', error);
+    } catch {
+      // Error surfaced via toast/context where applicable
     }
   };
 
@@ -175,6 +160,26 @@ const DigitalHandoverContent: React.FC = () => {
     setShowDetailsModal(false);
   };
 
+  const handleDeleteRequest = (handover: Handover) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete handover',
+      message: `Are you sure you want to delete this handover (${handover.handoverFrom} → ${handover.handoverTo})? This cannot be undone.`,
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await deleteHandover(handover.id);
+          setSelectedHandover(null);
+          setShowDetailsModal(false);
+          await refreshHandovers();
+          trackAction('handover_deleted', 'handover', { handoverId: handover.id });
+        } finally {
+          setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+        }
+      },
+    });
+  };
+
   return (
     <ModuleShell
       title="Digital Handover"
@@ -183,6 +188,13 @@ const DigitalHandoverContent: React.FC = () => {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
+      actions={
+        lastSyncTimestamp ? (
+          <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
+            Last refreshed {lastSyncTimestamp.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </p>
+        ) : null
+      }
     >
       <div className="space-y-6">
         {/* Tab Content */}
@@ -231,11 +243,21 @@ const DigitalHandoverContent: React.FC = () => {
             }}
             onEdit={(handover) => handleEditClick(handover)}
             onDelete={handleDeleteHandover}
+            onDeleteRequest={handleDeleteRequest}
             getShiftTypeBadge={getShiftTypeBadge}
             getStatusBadgeClass={getStatusBadgeClass}
             getPriorityBadgeClass={getPriorityBadgeClass}
           />
         )}
+
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          variant={confirmModal.variant || 'destructive'}
+        />
       </div>
     </ModuleShell>
 

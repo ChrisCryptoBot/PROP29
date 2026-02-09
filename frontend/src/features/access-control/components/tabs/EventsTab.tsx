@@ -194,8 +194,8 @@ const EventsTabComponent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Access Logs</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Access Logs</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             View and audit access events
           </p>
           {lastRefreshAt && (
@@ -295,11 +295,11 @@ const EventsTabComponent: React.FC = () => {
       {pendingAgentEvents.length > 0 && (
         <Card className="bg-amber-950/20 border border-amber-500/20  overflow-hidden" role="region" aria-label="Pending agent events">
           <CardHeader className="border-b border-amber-500/20 px-6 py-4">
-            <CardTitle className="flex items-center text-xl text-amber-400 font-black uppercase tracking-tighter">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-mobile-alt text-white text-base" />
+            <CardTitle className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-mobile-alt text-white" />
               </div>
-              Pending agent events ({pendingAgentEvents.length})
+              <span className="card-title-text">Pending agent events ({pendingAgentEvents.length})</span>
             </CardTitle>
             <p className="text-[10px] font-bold text-amber-400/70 uppercase tracking-[0.2em] mt-2 italic">
               Submitted by mobile or hardware; approve or reject for audit.
@@ -310,15 +310,15 @@ const EventsTabComponent: React.FC = () => {
               {pendingAgentEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex items-center justify-between p-4 bg-slate-900/30 border border-amber-500/10 rounded-2xl hover:bg-white/5 transition-all"
+                  className="flex items-center justify-between p-4 bg-slate-900/30 border border-amber-500/10 rounded-md hover:bg-white/5 transition-all"
                   role="listitem"
                 >
                   <div className="flex items-center space-x-5">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-amber-600/80 to-slate-900 border border-white/5 " aria-hidden="true">
-                      <i className="fas fa-user-clock text-amber-400 text-lg" />
+                    <div className="w-10 h-10 rounded-md flex items-center justify-center bg-amber-600 border border-white/5" aria-hidden="true">
+                      <i className="fas fa-user-clock text-amber-400" />
                     </div>
                     <div>
-                      <h4 className="font-black text-white text-sm uppercase tracking-tight">{event.userName}</h4>
+                      <h4 className="card-title-text">{event.userName}</h4>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{event.accessPointName}</p>
                       <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mt-1">
                         {event.location} · {event.accessMethod}
@@ -356,13 +356,13 @@ const EventsTabComponent: React.FC = () => {
       )}
 
       {/* Events Registry */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-              <i className="fas fa-bars-staggered text-white text-base" />
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-bars-staggered text-white" />
             </div>
-            Recent Events
+            <span className="card-title-text">Recent Events</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -376,7 +376,7 @@ const EventsTabComponent: React.FC = () => {
               icon="fas fa-tower-observation"
               title="No Events Found"
               description="No access events match your current filter."
-              className="bg-black/20 border-dashed border-2 border-white/5 rounded-3xl p-12"
+              className="bg-slate-900/50 border-dashed border-2 border-white/5 rounded-lg p-12"
             />
           ) : (
             <>
@@ -384,22 +384,22 @@ const EventsTabComponent: React.FC = () => {
                 {paginatedEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="flex items-center justify-between p-4 bg-slate-900/30 border border-white/5 rounded-2xl group hover:bg-white/5 transition-all "
+                  className="flex items-center justify-between p-4 bg-slate-900/30 border border-white/5 rounded-md group hover:bg-white/5 transition-colors"
                   role="listitem"
                 >
                   <div className="flex items-center space-x-5">
                     <div
                       className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform duration-300",
-                        event.action === 'granted' ? 'bg-gradient-to-br from-emerald-600/80 to-slate-900' : 'bg-gradient-to-br from-red-600/80 to-slate-900'
+                        "w-10 h-10 rounded-md flex items-center justify-center border border-white/5",
+                        event.action === 'granted' ? 'bg-emerald-600' : 'bg-red-600'
                       )}
                       aria-label={`Access ${event.action}`}
                       aria-hidden="true"
                     >
-                      <i className={cn("fas text-lg text-white", event.action === 'granted' ? 'fa-user-check' : 'fa-user-slash')} />
+                      <i className={cn("fas text-white", event.action === 'granted' ? 'fa-user-check' : 'fa-user-slash')} />
                     </div>
                     <div>
-                      <h4 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-tight group-hover:text-blue-400 transition-colors">
+                      <h4 className="card-title-text">
                         {event.userName}
                       </h4>
                       <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest mt-0.5 opacity-60">
@@ -508,8 +508,9 @@ const EventsTabComponent: React.FC = () => {
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
                       className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                      aria-label="Go to previous page"
                     >
-                      <i className="fas fa-chevron-left mr-1" />
+                      <i className="fas fa-chevron-left mr-1" aria-hidden="true" />
                       Previous
                     </Button>
                     <div className="flex items-center gap-1">
@@ -531,6 +532,8 @@ const EventsTabComponent: React.FC = () => {
                             size="sm"
                             onClick={() => setCurrentPage(pageNum)}
                             className="text-[10px] font-black uppercase tracking-widest min-w-[2rem]"
+                            aria-label={`Go to page ${pageNum}`}
+                            aria-current={currentPage === pageNum ? 'page' : undefined}
                           >
                             {pageNum}
                           </Button>
@@ -543,9 +546,10 @@ const EventsTabComponent: React.FC = () => {
                       onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
                       className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                      aria-label="Go to next page"
                     >
                       Next
-                      <i className="fas fa-chevron-right ml-1" />
+                      <i className="fas fa-chevron-right ml-1" aria-hidden="true" />
                     </Button>
                     <Select
                       id="items-per-page"

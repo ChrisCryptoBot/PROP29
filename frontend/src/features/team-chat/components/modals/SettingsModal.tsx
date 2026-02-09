@@ -2,8 +2,8 @@ import React from 'react';
 import { useTeamChatContext } from '../../context/TeamChatContext';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
+import { Toggle } from '../../../../components/UI/Toggle';
 import { showSuccess } from '../../../../utils/toast';
-import { cn } from '../../../../utils/cn';
 
 export const SettingsModal: React.FC = () => {
     const {
@@ -14,125 +14,181 @@ export const SettingsModal: React.FC = () => {
 
     if (!showSettings) return null;
 
-    const renderToggleRow = (label: string, isChecked: boolean = true, isDisabled: boolean = false, description?: string) => (
-        <label className={cn(
-            "flex items-center justify-between p-3 border rounded-xl transition-all cursor-pointer group",
-            isDisabled ? "bg-black/20 border-white/5 opacity-50 cursor-not-allowed" : "bg-white/5 border-white/5 hover:bg-white/10"
-        )}>
-            <div className="flex-1">
-                <span className="text-sm font-bold text-white/80 group-hover:text-white transition-colors">{label}</span>
-                {description && <span className="block text-[10px] text-white/30 uppercase tracking-widest font-bold mt-0.5">{description}</span>}
-            </div>
-            <div className="relative">
-                <input type="checkbox" defaultChecked={isChecked} disabled={isDisabled} className="sr-only" />
-                <div className={cn(
-                    "w-10 h-5 rounded-full p-1 transition-all duration-300",
-                    isChecked ? "bg-blue-600" : "bg-white/10"
-                )}>
-                    <div className={cn(
-                        "w-3 h-3 bg-white rounded-full shadow-lg transition-transform duration-300",
-                        isChecked ? "translate-x-5" : "translate-x-0"
-                    )} />
-                </div>
-            </div>
-        </label>
-    );
-
     return (
         <Modal
             isOpen={showSettings}
             onClose={() => setShowSettings(false)}
-            title="COMMUNICATION CONFIG"
+            title="Quick Settings"
             size="lg"
-        >
-            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-                <p className="text-[10px] font-bold text-blue-500/60 uppercase tracking-[0.2em] italic ml-1">SYSTEM CONFIGURATION PREFERENCES v2.0</p>
-
-                {/* Notifications Section */}
-                <div className="space-y-3">
-                    <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] flex items-center space-x-2 ml-1">
-                        <i className="fas fa-bell" />
-                        <span>ALERT PROTOCOLS</span>
-                    </h3>
-                    <div className="space-y-1.5">
-                        {renderToggleRow('Desktop Notifications')}
-                        {renderToggleRow('Audio Feedback')}
-                        {renderToggleRow('Priority Override Sound')}
-                    </div>
-                </div>
-
-                {/* Privacy Section */}
-                <div className="space-y-3">
-                    <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] flex items-center space-x-2 ml-1">
-                        <i className="fas fa-shield-alt" />
-                        <span>SECURITY & PRIVACY</span>
-                    </h3>
-                    <div className="space-y-1.5">
-                        {renderToggleRow('End-to-End Encryption', true, true, 'Enterprise Managed • AES-256')}
-                        {renderToggleRow('Broadcast Online Status')}
-                        {renderToggleRow('Transmit Geospatial Data')}
-                    </div>
-                </div>
-
-                {/* Message Settings */}
-                <div className="space-y-3">
-                    <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] flex items-center space-x-2 ml-1">
-                        <i className="fas fa-comments" />
-                        <span>DATA MANAGEMENT</span>
-                    </h3>
-                    <div className="space-y-1.5">
-                        <div className="p-3 bg-white/5 border border-white/5 rounded-xl">
-                            <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 ml-1">DATA PURGE INTERVAL</label>
-                            <select className="w-full bg-black/40 border-white/5 rounded-lg py-2 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 outline-none">
-                                <option value="never">DISABLED (PERMANENT LOG)</option>
-                                <option value="24h">24 HOUR CYCLE</option>
-                                <option value="7d">7 DAY RETENTION</option>
-                                <option value="30d">30 DAY ARCHIVE</option>
-                            </select>
-                        </div>
-                        {renderToggleRow('Typing Indicators')}
-                        {renderToggleRow('Data Receipt Acknowledgment')}
-                    </div>
-                </div>
-
-                {/* Channel Management */}
-                <div className="space-y-3">
-                    <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] flex items-center space-x-2 ml-1">
-                        <i className="fas fa-hashtag" />
-                        <span>SYSTEM CHANNELS</span>
-                    </h3>
-                    <div className="space-y-1.5">
-                        <button
-                            onClick={() => showSuccess('Channel creation coming soon...')}
-                            className="w-full p-4 border border-dashed border-white/5 rounded-xl text-white/30 hover:border-blue-500/50 hover:text-blue-500 transition-all text-[10px] font-black uppercase tracking-widest bg-white/[0.02]"
-                        >
-                            <i className="fas fa-plus mr-2" />
-                            Create New Channel
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-6 border-t border-white/5">
+            footer={
+                <div className="flex justify-end gap-3">
                     <Button
-                        variant="outline"
+                        variant="subtle"
                         onClick={() => setShowSettings(false)}
-                        className="font-black uppercase tracking-widest text-[10px] border-white/5 text-white/40 hover:text-white hover:bg-white/5"
+                        className="text-[10px] font-black uppercase tracking-widest"
                     >
-                        CANCEL
+                        Cancel
                     </Button>
                     <Button
                         variant="primary"
                         onClick={() => {
                             showSuccess('Settings saved to system');
+                            setShowSettings(false);
                             handleToggleSettings();
                         }}
-                        className="font-black uppercase tracking-widest text-[10px] px-6 shadow-lg shadow-blue-500/20"
+                        className="font-black uppercase tracking-widest text-[10px] px-6 shadow-none"
                     >
-                        SAVE CHANGES
+                        Save Changes
                     </Button>
+                </div>
+            }
+        >
+            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                <p className="text-[10px] font-bold text-blue-400/60 uppercase tracking-[0.2em] italic ml-1">
+                    Quick Configuration v2.0
+                </p>
+
+                {/* Notifications Section */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                        <div className="w-6 h-6 bg-blue-600/20 rounded-md flex items-center justify-center border border-blue-500/20">
+                            <i className="fas fa-bell text-blue-400 text-xs" />
+                        </div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                            Alert Protocols
+                        </h3>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="Desktop Notifications"
+                                description="Show browser notifications for new messages"
+                            />
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="Audio Feedback"
+                                description="Play sounds for incoming messages"
+                            />
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="Priority Override Sound"
+                                description="Distinct alert for priority messages"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Privacy Section */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                        <div className="w-6 h-6 bg-blue-600/20 rounded-md flex items-center justify-center border border-blue-500/20">
+                            <i className="fas fa-shield-alt text-blue-400 text-xs" />
+                        </div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                            Security & Privacy
+                        </h3>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 opacity-70">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="End-to-End Encryption"
+                                description="Enterprise Managed - AES-256"
+                                disabled
+                            />
+                            <p className="text-[9px] text-blue-400 mt-2 font-bold uppercase tracking-widest">
+                                <i className="fas fa-lock mr-1" />
+                                Enforced by organization policy
+                            </p>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="Broadcast Online Status"
+                                description="Show your availability to team members"
+                            />
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={false}
+                                onChange={() => {}}
+                                label="Location Sharing"
+                                description="Share location data with messages"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Data Management */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                        <div className="w-6 h-6 bg-blue-600/20 rounded-md flex items-center justify-center border border-blue-500/20">
+                            <i className="fas fa-database text-blue-400 text-xs" />
+                        </div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                            Data Management
+                        </h3>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="p-4 bg-white/5 border border-white/5 rounded-md">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">
+                                Data Retention Period
+                            </label>
+                            <select className="w-full bg-black/40 border border-white/5 rounded-md py-2 px-3 text-sm text-white focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                                <option value="never">Permanent (No Auto-Delete)</option>
+                                <option value="24h">24 Hour Cycle</option>
+                                <option value="7d">7 Day Retention</option>
+                                <option value="30d">30 Day Archive</option>
+                            </select>
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="Typing Indicators"
+                                description="Show when others are typing"
+                            />
+                        </div>
+                        <div className="bg-white/5 p-4 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
+                            <Toggle
+                                checked={true}
+                                onChange={() => {}}
+                                label="Read Receipts"
+                                description="Let others know when you've read messages"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Channel Management */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 ml-1">
+                        <div className="w-6 h-6 bg-blue-600/20 rounded-md flex items-center justify-center border border-blue-500/20">
+                            <i className="fas fa-hashtag text-blue-400 text-xs" />
+                        </div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                            Channel Actions
+                        </h3>
+                    </div>
+                    <button
+                        onClick={() => showSuccess('Channel creation coming soon...')}
+                        className="w-full p-4 border border-dashed border-white/10 rounded-md text-slate-500 hover:border-blue-500/50 hover:text-blue-400 transition-colors text-[10px] font-black uppercase tracking-widest bg-white/[0.02]"
+                    >
+                        <i className="fas fa-plus mr-2" />
+                        Create New Channel
+                    </button>
                 </div>
             </div>
         </Modal>
     );
 };
-

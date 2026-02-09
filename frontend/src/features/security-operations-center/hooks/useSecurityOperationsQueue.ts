@@ -175,7 +175,9 @@ export function useSecurityOperationsQueue(options: UseSecurityOperationsQueueOp
           throw new Error('Operation returned false');
         }
       } catch (err) {
-        const nextRetry = e.retry_count + 1;
+        const statusCode = err && typeof (err as any).statusCode === 'number' ? (err as any).statusCode : undefined;
+        const is4xx = statusCode >= 400 && statusCode < 500;
+        const nextRetry = is4xx ? MAX_RETRIES : e.retry_count + 1;
         updated[i] = {
           ...e,
           sync_status: nextRetry >= MAX_RETRIES ? 'failed' : 'pending',

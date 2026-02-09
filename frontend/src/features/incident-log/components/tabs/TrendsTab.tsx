@@ -212,8 +212,8 @@ export const TrendsTab: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Trends & Analytics</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Trends & Analytics</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Visualize incident patterns over time
                     </p>
                 </div>
@@ -316,7 +316,7 @@ export const TrendsTab: React.FC = () => {
                 </div>
             </div>
             {dateRange === 'custom' && (
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                <Card className="bg-slate-900/50 border border-white/5">
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -343,13 +343,13 @@ export const TrendsTab: React.FC = () => {
             )}
             {/* Conditional Analytics Views */}
             {viewMode === 'incidents' && (
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="flex items-center text-xl text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                <Card className="bg-slate-900/50 border border-white/5">
+                    <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-chart-line text-white" />
                             </div>
-                            <span className="uppercase tracking-tight">Incident Trends Over Time</span>
+                            <span className="card-title-text">Incident Trends Over Time</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -380,13 +380,13 @@ export const TrendsTab: React.FC = () => {
             )}
 
             {viewMode === 'sources' && (
-                <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="flex items-center text-xl text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                <Card className="bg-slate-900/50 border border-white/5">
+                    <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                        <CardTitle className="flex items-center">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-source-alt text-white" />
                             </div>
-                            <span className="uppercase tracking-tight">Incident Sources Over Time</span>
+                            <span className="card-title-text">Incident Sources Over Time</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -422,13 +422,13 @@ export const TrendsTab: React.FC = () => {
             {viewMode === 'performance' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Agent Performance Trends */}
-                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                        <CardHeader>
-                            <CardTitle className="flex items-center text-xl text-white">
-                                <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                    <Card className="bg-slate-900/50 border border-white/5">
+                        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                            <CardTitle className="flex items-center">
+                                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                     <i className="fas fa-user-shield text-white" />
                                 </div>
-                                <span className="uppercase tracking-tight">Agent Performance</span>
+                                <span className="card-title-text">Agent Performance</span>
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -459,13 +459,13 @@ export const TrendsTab: React.FC = () => {
                     </Card>
 
                     {/* Hardware Health Trends */}
-                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                        <CardHeader>
-                            <CardTitle className="flex items-center text-xl text-white">
-                                <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                    <Card className="bg-slate-900/50 border border-white/5">
+                        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                            <CardTitle className="flex items-center">
+                                <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                     <i className="fas fa-microchip text-white" />
                                 </div>
-                                <span className="uppercase tracking-tight">Hardware Health</span>
+                                <span className="card-title-text">Hardware Health</span>
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -498,13 +498,13 @@ export const TrendsTab: React.FC = () => {
             )}
 
             {/* Incident Type Distribution */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+<CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-chart-pie text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Incident Type Distribution</span>
+                        <span className="card-title-text">Incident Type Distribution</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -547,7 +547,7 @@ export const TrendsTab: React.FC = () => {
 
                             <div className="space-y-3">
                                 {typeDistribution.map((item, index) => (
-                                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div key={index} className="flex items-center justify-between p-3 rounded-md bg-white/5 border border-white/5">
                                         <div className="flex items-center space-x-3">
                                             <div className="w-4 h-4 rounded" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                                             <span className="text-sm font-medium text-slate-300">{item.type}</span>
@@ -565,13 +565,13 @@ export const TrendsTab: React.FC = () => {
             </Card>
 
             {/* Location Hotspots */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+<CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-map-marker-alt text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Location Hotspots</span>
+                        <span className="card-title-text">Location Hotspots</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -601,13 +601,13 @@ export const TrendsTab: React.FC = () => {
             </Card>
 
             {/* Time Pattern Analysis */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+<CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-clock text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Time Pattern Analysis</span>
+                        <span className="card-title-text">Time Pattern Analysis</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>

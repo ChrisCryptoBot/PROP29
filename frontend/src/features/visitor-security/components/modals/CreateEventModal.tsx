@@ -150,7 +150,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
       <div className="space-y-6">
         {/* Basic Information */}
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Event Details</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-1">Event Details</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
@@ -160,7 +160,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
                 type="text"
                 value={formData.name || ''}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Smith-Johnson Wedding"
               />
             </div>
@@ -171,7 +171,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
               <select
                 value={formData.type || 'wedding'}
                 onChange={(e) => handleChange('type', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
               >
                 <option value="wedding">Wedding</option>
                 <option value="conference">Conference</option>
@@ -188,7 +188,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
                 type="number"
                 value={formData.expected_attendees || 100}
                 onChange={(e) => handleChange('expected_attendees', parseInt(e.target.value) || 100)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
                 min="1"
               />
             </div>
@@ -207,7 +207,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
                 type="datetime-local"
                 value={formData.start_date || ''}
                 onChange={(e) => handleChange('start_date', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
               />
             </div>
             <div>
@@ -218,7 +218,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
                 type="datetime-local"
                 value={formData.end_date || ''}
                 onChange={(e) => handleChange('end_date', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)]"
               />
             </div>
             <div className="col-span-2">
@@ -229,7 +229,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
                 type="text"
                 value={formData.location || ''}
                 onChange={(e) => handleChange('location', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
                 placeholder="Ballroom A"
               />
             </div>
@@ -238,7 +238,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
 
         {/* Access Points */}
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Sector Authorization <span className="text-red-400">*</span></p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-1">Sector Authorization <span className="text-red-400">*</span></p>
           <div className="flex space-x-2 mb-4">
             <input
               type="text"
@@ -250,7 +250,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
                   handleAddAccessPoint();
                 }
               }}
-              className="flex-1 px-4 py-2 bg-white/5 border border-white/5 rounded-lg focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
+              className="flex-1 px-4 py-2 bg-white/5 border border-white/5 rounded-md focus:ring-2 focus:ring-blue-500/50 text-[color:var(--text-main)] placeholder:text-[color:var(--text-sub)]/30"
               placeholder="Enter zone ID (e.g., 1, 5, 7)"
             />
             <Button
@@ -264,7 +264,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
             </Button>
           </div>
           {formData.access_points && formData.access_points.length > 0 && (
-            <div className="flex flex-wrap gap-2 p-3 bg-[color:var(--console-dark)] rounded-lg border border-[color:var(--border-subtle)]/20">
+            <div className="flex flex-wrap gap-2 p-3 bg-slate-900/50 rounded-md border border-white/5">
               {formData.access_points.map((ap, index) => (
                 <span
                   key={index}
@@ -285,7 +285,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = React.memo(({
         </div>
 
         {/* Options */}
-        <div className="flex items-center justify-between border border-white/5 rounded-lg p-4">
+        <div className="flex items-center justify-between border border-white/5 rounded-md p-4">
           <div>
             <h4 className="text-sm font-bold text-[color:var(--text-main)]">QR Authentication</h4>
             <p className="text-xs text-[color:var(--text-sub)]">Require dynamic QR codes for secure check-in</p>

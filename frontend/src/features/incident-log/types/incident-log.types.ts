@@ -237,6 +237,9 @@ export interface IncidentFilters {
   status?: IncidentStatus;
   severity?: IncidentSeverity;
   search?: string; // Client-side search
+  /** Applied client-side after fetch (backend does not filter by date) */
+  start_date?: string;
+  end_date?: string;
   dateRange?: {
     start?: string;
     end?: string;

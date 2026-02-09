@@ -7,9 +7,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNetworkStatus } from '../../../contexts/NetworkStatusContext';
 import { propertyItemsOfflineService, type LastKnownGoodState, type OfflineAction } from '../services/PropertyItemsOfflineService';
 import { logger } from '../../../services/logger';
-import { showError, showSuccess, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../utils/toast';
+import { ErrorHandlerService } from '../../../services/ErrorHandlerService';
+import { showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../utils/toast';
 import type { LostFoundItem } from '../../lost-and-found/types/lost-and-found.types';
 import type { Package } from '../../packages/types/package.types';
+
+/** Called for each queued action during sync. Return true to remove from queue, false to keep (retry later). */
+export type SyncActionHandler = (action: OfflineAction) => Promise<boolean>;
+
+export interface UsePropertyItemsOfflineOptions {
+  /** Handlers to apply queued actions (create/update/delete for lost-found and package). If not provided, sync clears queue without API calls. */
+  onSyncAction?: SyncActionHandler;
+}
 
 export interface UsePropertyItemsOfflineReturn {
   isOffline: boolean;
@@ -23,7 +32,10 @@ export interface UsePropertyItemsOfflineReturn {
   clearCache: () => void;
 }
 
-export function usePropertyItemsOffline(propertyId?: string): UsePropertyItemsOfflineReturn {
+const MAX_RETRY_PER_ACTION = 3;
+
+export function usePropertyItemsOffline(propertyId?: string, options: UsePropertyItemsOfflineOptions = {}): UsePropertyItemsOfflineReturn {
+  const { onSyncAction } = options;
   const { status: networkStatus } = useNetworkStatus();
   const isOffline = networkStatus === 'offline' || networkStatus === 'reconnecting';
   
@@ -69,7 +81,8 @@ export function usePropertyItemsOffline(propertyId?: string): UsePropertyItemsOf
   }, []);
 
   /**
-   * Sync offline queue when connection is restored
+   * Sync offline queue when connection is restored.
+   * Replays each queued action via onSyncAction; removes on success, keeps on 5xx or after max retries.
    */
   const syncOfflineQueue = useCallback(async (): Promise<boolean> => {
     if (isOffline) {
@@ -85,35 +98,54 @@ export function usePropertyItemsOffline(propertyId?: string): UsePropertyItemsOf
     const toastId = showLoading(`Syncing ${queue.length} offline action(s)...`);
     
     try {
-      // TODO: Implement actual sync logic
-      // For now, we'll just clear the queue after a delay
-      // In production, this would:
-      // 1. Process each queued action
-      // 2. Call appropriate API endpoints
-      // 3. Handle conflicts and retries
-      // 4. Remove successfully synced actions
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate successful sync
-      propertyItemsOfflineService.clearQueue();
-      setQueueSize(0);
-      
-      dismissLoadingAndShowSuccess(toastId, `Successfully synced ${queue.length} action(s)`);
-      logger.info('Offline queue synced successfully', {
-        module: 'PropertyItemsOffline',
-        actionCount: queue.length
-      });
-      
-      return true;
+      if (!onSyncAction) {
+        propertyItemsOfflineService.clearQueue();
+        setQueueSize(0);
+        dismissLoadingAndShowSuccess(toastId, 'Offline queue cleared.');
+        return true;
+      }
+
+      let synced = 0;
+      let failed = 0;
+      for (const action of queue) {
+        if (action.retryCount >= MAX_RETRY_PER_ACTION) {
+          propertyItemsOfflineService.removeQueuedAction(action.id);
+          failed++;
+          continue;
+        }
+        try {
+          const success = await onSyncAction(action);
+          if (success) {
+            propertyItemsOfflineService.removeQueuedAction(action.id);
+            synced++;
+          } else {
+            propertyItemsOfflineService.incrementRetryCount(action.id);
+            failed++;
+          }
+        } catch (err) {
+          ErrorHandlerService.logError(err instanceof Error ? err : new Error(String(err)), `PropertyItems:syncAction:${action.entity}:${action.type}`);
+          propertyItemsOfflineService.incrementRetryCount(action.id);
+          failed++;
+        }
+      }
+
+      setQueueSize(propertyItemsOfflineService.getQueueSize());
+
+      if (failed === 0) {
+        dismissLoadingAndShowSuccess(toastId, `Successfully synced ${synced} action(s).`);
+        logger.info('Offline queue synced successfully', { module: 'PropertyItemsOffline', synced });
+      } else if (synced > 0) {
+        dismissLoadingAndShowSuccess(toastId, `Synced ${synced} action(s). ${failed} failed — will retry later.`);
+      } else {
+        dismissLoadingAndShowError(toastId, 'Sync failed. Actions will retry when you sync again.');
+      }
+      return failed === 0;
     } catch (error) {
-      logger.error('Failed to sync offline queue', error instanceof Error ? error : new Error(String(error)), {
-        module: 'PropertyItemsOffline'
-      });
+      ErrorHandlerService.logError(error instanceof Error ? error : new Error(String(error)), 'PropertyItems:syncOfflineQueue');
       dismissLoadingAndShowError(toastId, 'Failed to sync offline actions');
       return false;
     }
-  }, [isOffline]);
+  }, [isOffline, onSyncAction]);
 
   /**
    * Clear cache

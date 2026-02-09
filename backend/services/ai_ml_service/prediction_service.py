@@ -126,44 +126,16 @@ class PredictionService:
             raise
     
     def _get_historical_incidents(self, property_id: str) -> List[Dict[str, Any]]:
-        """Get historical incident data for risk prediction."""
-        # This would query the incident service
-        # For now, return sample data
-        return [
-            {
-                'incident_type': 'theft',
-                'severity': 'medium',
-                'timestamp': datetime.utcnow() - timedelta(days=1),
-                'location': 'parking_lot'
-            },
-            {
-                'incident_type': 'disturbance',
-                'severity': 'low',
-                'timestamp': datetime.utcnow() - timedelta(days=2),
-                'location': 'lobby'
-            }
-        ]
+        """Get historical incident data for risk prediction (from incident service when implemented)."""
+        return []
     
     def _get_environmental_factors(self, property_id: str) -> Dict[str, Any]:
-        """Get environmental factors affecting security risk."""
-        # This would query IoT sensors and weather data
-        return {
-            'weather': 'clear',
-            'temperature': 22,
-            'humidity': 45,
-            'visibility': 'good',
-            'crowd_level': 'medium'
-        }
+        """Get environmental factors affecting security risk (from IoT/weather when implemented)."""
+        return {}
     
     def _get_occupancy_data(self, property_id: str) -> Dict[str, Any]:
-        """Get current occupancy and guest data."""
-        # This would query guest and room data
-        return {
-            'total_guests': 150,
-            'occupancy_rate': 0.75,
-            'vip_guests': 5,
-            'group_bookings': 2
-        }
+        """Get current occupancy and guest data (from guest/room API when implemented)."""
+        return {}
     
     def _calculate_risk_scores(self, historical_data: List[Dict[str, Any]], 
                              environmental_factors: Dict[str, Any],
@@ -179,11 +151,11 @@ class PredictionService:
         incident_risk = min(0.4, recent_incidents * 0.1)
         
         # Adjust for environmental factors
-        weather_risk = 0.1 if environmental_factors['weather'] == 'stormy' else 0
-        crowd_risk = 0.2 if environmental_factors['crowd_level'] == 'high' else 0
-        
+        weather_risk = 0.1 if environmental_factors.get('weather') == 'stormy' else 0
+        crowd_risk = 0.2 if environmental_factors.get('crowd_level') == 'high' else 0
+
         # Adjust for occupancy
-        occupancy_risk = 0.1 if occupancy_data['occupancy_rate'] > 0.8 else 0
+        occupancy_risk = 0.1 if (occupancy_data.get('occupancy_rate') or 0) > 0.8 else 0
         
         total_risk = base_risk + incident_risk + weather_risk + crowd_risk + occupancy_risk
         
@@ -232,20 +204,19 @@ class PredictionService:
     
     def _get_data_for_anomaly_detection(self, property_id: str, data_type: str, 
                                       time_window: int) -> List[Dict[str, Any]]:
-        """Get data for anomaly detection."""
-        # This would query relevant data based on type
-        # For now, return sample data
-        return [
-            {'timestamp': datetime.utcnow() - timedelta(hours=i), 'value': np.random.normal(100, 10)}
-            for i in range(time_window)
-        ]
+        """Get data for anomaly detection (from relevant API when implemented)."""
+        return []
     
     def _apply_anomaly_detection(self, data: List[Dict[str, Any]], data_type: str) -> List[Dict[str, Any]]:
         """Apply anomaly detection algorithms."""
+        if not data:
+            return []
         # Simple statistical anomaly detection
         values = [d['value'] for d in data]
         mean_val = np.mean(values)
         std_val = np.std(values)
+        if std_val == 0 or np.isnan(std_val):
+            return []
         
         anomalies = []
         for i, point in enumerate(data):

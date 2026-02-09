@@ -34,14 +34,14 @@ export const OfflineQueueManager: React.FC = () => {
     }
 
     return (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+        <Card className="bg-slate-900/50 border border-white/5">
             <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                 <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-sync-alt text-white"></i>
                         </div>
-                        <span className="text-sm font-black uppercase tracking-widest">Offline Queue</span>
+                        <span className="card-title-text">Offline Queue</span>
                     </span>
                     <div className="flex items-center gap-2">
                         {totalPending > 0 && (

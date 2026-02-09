@@ -4,6 +4,7 @@ import { useWebSocket } from '../../../components/UI/WebSocketProvider';
 import apiService from '../../../services/ApiService';
 import { showSuccess, showError, showLoading, dismissLoadingAndShowSuccess, dismissLoadingAndShowError } from '../../../utils/toast';
 import { logger } from '../../../services/logger';
+import { retryWithBackoff } from '../../../utils/retryWithBackoff';
 import type {
   EnvironmentalAlert,
   EnvironmentalData,
@@ -17,6 +18,7 @@ export interface UseIoTEnvironmentalStateReturn {
   environmentalData: EnvironmentalData[];
   alerts: EnvironmentalAlert[];
   loading: boolean;
+  loadError: string | null;
   canManageSensors: boolean;
   canUpdateSettings: boolean;
   selectedSensor: string;
@@ -41,6 +43,8 @@ export interface UseIoTEnvironmentalStateReturn {
   loadData: () => Promise<void>;
   handleAddSensor: () => Promise<void>;
   handleEditSensor: () => Promise<void>;
+  pendingDeleteSensorId: string | null;
+  setPendingDeleteSensorId: (id: string | null) => void;
   handleDeleteSensor: (sensorId: string) => Promise<void>;
   handleAcknowledgeAlert: (alertId: string) => Promise<void>;
   handleResolveAlert: (alertId: string) => Promise<void>;
@@ -57,6 +61,9 @@ export interface UseIoTEnvironmentalStateReturn {
   uniqueSensors: string[];
   activeAlerts: EnvironmentalAlert[];
   criticalAlerts: EnvironmentalAlert[];
+  lastSyncTimestamp: Date | null;
+  mutationError: string | null;
+  clearMutationError: () => void;
   analytics: {
     total_sensors: number;
     active_sensors: number;
@@ -98,6 +105,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
   const [environmentalData, setEnvironmentalData] = useState<EnvironmentalData[]>([]);
   const [alerts, setAlerts] = useState<EnvironmentalAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedSensor, setSelectedSensor] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('timestamp');
@@ -105,9 +113,12 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSensor, setEditingSensor] = useState<EnvironmentalData | null>(null);
   const [viewingSensor, setViewingSensor] = useState<EnvironmentalData | null>(null);
+  const [pendingDeleteSensorId, setPendingDeleteSensorId] = useState<string | null>(null);
   const [sensorForm, setSensorForm] = useState<SensorFormData>(emptySensorForm);
   const [settings, setSettings] = useState<IoTEnvironmentalSettings>(defaultSettings);
   const [settingsForm, setSettingsForm] = useState<IoTEnvironmentalSettings>(defaultSettings);
+  const [lastSyncTimestamp, setLastSyncTimestamp] = useState<Date | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState({
     total_sensors: 0,
     active_sensors: 0,
@@ -195,6 +206,8 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
 
       setEnvironmentalData(data);
       setAlerts(alertsData);
+      setLoadError(null);
+      setLastSyncTimestamp(new Date());
       if (analyticsResponse.data) {
         setAnalytics(analyticsResponse.data as typeof analytics);
       }
@@ -203,6 +216,8 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
         dismissLoadingAndShowSuccess(toastId, 'Data loaded successfully');
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load environmental data';
+      setLoadError(message);
       logger.error('Error loading environmental data', error instanceof Error ? error : new Error(String(error)), { module: 'IoTEnvironmental', action: 'loadEnvironmentalData' });
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to load environmental data');
@@ -210,7 +225,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [mapSensorData, mapAlert]);
 
   useEffect(() => {
     loadData();
@@ -248,7 +263,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
       unsubscribeData();
       unsubscribeAlerts();
     };
-  }, [loadData, settings.enableNotifications, subscribe]);
+  }, [loadData, settings.enableNotifications, subscribe, mapAlert]);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -290,7 +305,10 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
         threshold_min: sensorForm.threshold_min ? Number(sensorForm.threshold_min) : undefined,
         threshold_max: sensorForm.threshold_max ? Number(sensorForm.threshold_max) : undefined,
       };
-      const response = await apiService.createEnvironmentalSensor(payload);
+      const response = await retryWithBackoff(
+        () => apiService.createEnvironmentalSensor(payload),
+        { maxRetries: 3, baseDelay: 1000 }
+      );
       if (!response.data) {
         throw new Error(response.error || 'Failed to add sensor');
       }
@@ -307,6 +325,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to add sensor');
       }
+      setMutationError('Failed to add sensor. Please try again.');
     }
   }, [canManageSensors, loadData, sensorForm]);
 
@@ -327,7 +346,10 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
         threshold_min: sensorForm.threshold_min ? Number(sensorForm.threshold_min) : undefined,
         threshold_max: sensorForm.threshold_max ? Number(sensorForm.threshold_max) : undefined,
       };
-      const response = await apiService.updateEnvironmentalSensor(sensorForm.sensor_id, payload);
+      const response = await retryWithBackoff(
+        () => apiService.updateEnvironmentalSensor(sensorForm.sensor_id, payload),
+        { maxRetries: 3, baseDelay: 1000 }
+      );
       if (!response.data) {
         throw new Error(response.error || 'Failed to update sensor');
       }
@@ -344,21 +366,28 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to update sensor');
       }
+      setMutationError('Failed to update sensor. Please try again.');
     }
-  }, [canManageSensors, editingSensor, loadData]);
+  }, [canManageSensors, editingSensor, loadData, sensorForm]);
 
   const handleDeleteSensor = useCallback(async (sensorId: string) => {
     if (!canManageSensors) {
       showError('You do not have permission to delete sensors');
       return;
     }
-    const confirmed = window.confirm('Are you sure you want to delete this sensor?');
-    if (!confirmed) return;
-
+    setPendingDeleteSensorId(null);
+    
+    // Optimistic update: remove sensor immediately
+    const sensorToRestore = environmentalData.find(s => s.sensor_id === sensorId);
+    setEnvironmentalData(prev => prev.filter(s => s.sensor_id !== sensorId));
+    
     let toastId: string | undefined;
     try {
       toastId = showLoading('Deleting sensor...');
-      const response = await apiService.deleteEnvironmentalSensor(sensorId);
+      const response = await retryWithBackoff(
+        () => apiService.deleteEnvironmentalSensor(sensorId),
+        { maxRetries: 3, baseDelay: 1000 }
+      );
       if (response.error) {
         throw new Error(response.error);
       }
@@ -367,74 +396,115 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
         dismissLoadingAndShowSuccess(toastId, 'Sensor deleted successfully');
       }
 
+      // Refresh data to ensure consistency
       loadData();
     } catch (error) {
+      // Rollback optimistic update on failure
+      if (sensorToRestore) {
+        setEnvironmentalData(prev => [...prev, sensorToRestore].sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        ));
+      }
       logger.error('Failed to delete sensor', error instanceof Error ? error : new Error(String(error)), { module: 'IoTEnvironmental', action: 'handleDeleteSensor' });
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to delete sensor');
       }
+      setMutationError('Failed to delete sensor. Please try again.');
     }
-  }, [canManageSensors, loadData]);
+  }, [canManageSensors, loadData, environmentalData]);
 
   const handleAcknowledgeAlert = useCallback(async (alertId: string) => {
+    // Optimistic update: update alert status immediately
+    const alertToRestore = alerts.find(a => a.id === alertId);
+    setAlerts(prev => prev.map(alert =>
+      alert.id === alertId ? { ...alert, status: 'acknowledged' as const } : alert
+    ));
+    
     let toastId: string | undefined;
     try {
       toastId = showLoading('Acknowledging alert...');
-      const response = await apiService.updateEnvironmentalAlert(alertId, { status: 'acknowledged', resolved: false });
+      const response = await retryWithBackoff(
+        () => apiService.updateEnvironmentalAlert(alertId, { status: 'acknowledged', resolved: false }),
+        { maxRetries: 3, baseDelay: 1000 }
+      );
       if (!response.data) {
         throw new Error(response.error || 'Failed to acknowledge alert');
       }
-
-      setAlerts(prev => prev.map(alert =>
-        alert.id === alertId ? { ...alert, status: 'acknowledged' as const } : alert
-      ));
 
       if (toastId) {
         dismissLoadingAndShowSuccess(toastId, 'Alert acknowledged');
       }
     } catch (error) {
+      // Rollback optimistic update on failure
+      if (alertToRestore) {
+        setAlerts(prev => prev.map(alert =>
+          alert.id === alertId ? alertToRestore : alert
+        ));
+      }
       logger.error('Failed to acknowledge alert', error instanceof Error ? error : new Error(String(error)), { module: 'IoTEnvironmental', action: 'handleAcknowledgeAlert' });
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to acknowledge alert');
       }
+      setMutationError('Failed to acknowledge alert. Please try again.');
     }
-  }, []);
+  }, [alerts]);
 
   const handleResolveAlert = useCallback(async (alertId: string) => {
+    // Optimistic update: update alert status immediately
+    const alertToRestore = alerts.find(a => a.id === alertId);
+    setAlerts(prev => prev.map(alert =>
+      alert.id === alertId
+        ? { ...alert, status: 'resolved' as const, resolved: true, resolved_at: new Date().toISOString() }
+        : alert
+    ));
+    
     let toastId: string | undefined;
     try {
       toastId = showLoading('Resolving alert...');
-      const response = await apiService.updateEnvironmentalAlert(alertId, { status: 'resolved', resolved: true });
+      const response = await retryWithBackoff(
+        () => apiService.updateEnvironmentalAlert(alertId, { status: 'resolved', resolved: true }),
+        { maxRetries: 3, baseDelay: 1000 }
+      );
       if (!response.data) {
         throw new Error(response.error || 'Failed to resolve alert');
       }
-
-      setAlerts(prev => prev.map(alert =>
-        alert.id === alertId
-          ? { ...alert, status: 'resolved' as const, resolved: true, resolved_at: new Date().toISOString() }
-          : alert
-      ));
 
       if (toastId) {
         dismissLoadingAndShowSuccess(toastId, 'Alert resolved');
       }
     } catch (error) {
+      // Rollback optimistic update on failure
+      if (alertToRestore) {
+        setAlerts(prev => prev.map(alert =>
+          alert.id === alertId ? alertToRestore : alert
+        ));
+      }
       logger.error('Failed to resolve alert', error instanceof Error ? error : new Error(String(error)), { module: 'IoTEnvironmental', action: 'handleResolveAlert' });
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to resolve alert');
       }
+      setMutationError('Failed to resolve alert. Please try again.');
     }
-  }, []);
+  }, [alerts]);
 
   const handleExportData = useCallback(async () => {
     let toastId: string | undefined;
     try {
       toastId = showLoading('Exporting data...');
-      const response = await apiService.getEnvironmentalAnalytics();
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
+      const headers = 'sensor_id,sensor_type,location,value,unit,status,timestamp,threshold_min,threshold_max\n';
+      const rows = environmentalData.map((d) =>
+        [d.sensor_id, d.sensor_type, String(d.location ?? ''), String(d.value ?? ''), String(d.unit ?? ''), d.status, d.timestamp, String(d.threshold_min ?? ''), String(d.threshold_max ?? '')].map((cell) => (cell.includes(',') || cell.includes('"') ? `"${String(cell).replace(/"/g, '""')}"` : cell)).join(',')
+      ).join('\n');
+      const csv = headers + rows;
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `environmental-sensors-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       if (toastId) {
         dismissLoadingAndShowSuccess(toastId, 'Data exported successfully');
       }
@@ -444,7 +514,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
         dismissLoadingAndShowError(toastId, 'Failed to export data');
       }
     }
-  }, []);
+  }, [environmentalData]);
 
   const handleSaveSettings = useCallback(async () => {
     if (!canUpdateSettings) {
@@ -454,7 +524,10 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
     let toastId: string | undefined;
     try {
       toastId = showLoading('Saving settings...');
-      const response = await apiService.updateEnvironmentalSettings(settingsForm);
+      const response = await retryWithBackoff(
+        () => apiService.updateEnvironmentalSettings(settingsForm),
+        { maxRetries: 3, baseDelay: 1000 }
+      );
       if (!response.data) {
         throw new Error(response.error || 'Failed to save settings');
       }
@@ -469,8 +542,13 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
       if (toastId) {
         dismissLoadingAndShowError(toastId, 'Failed to save settings');
       }
+      setMutationError('Failed to save settings. Please try again.');
     }
   }, [canUpdateSettings, settingsForm]);
+  
+  const clearMutationError = useCallback(() => {
+    setMutationError(null);
+  }, []);
 
   const handleResetSettings = useCallback(() => {
     setSettingsForm(defaultSettings);
@@ -500,27 +578,27 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
 
   const getStatusBadgeClass = useCallback((status: string): string => {
     switch (status) {
-      case 'normal': return 'text-green-800 bg-green-100';
-      case 'warning': return 'text-yellow-800 bg-yellow-100';
-      case 'critical': return 'text-red-800 bg-red-100';
-      default: return 'text-slate-800 bg-slate-100';
+      case 'normal': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'warning': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      case 'critical': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
     }
   }, []);
 
   const getAlertSeverityBadgeClass = useCallback((severity: string): string => {
     switch (severity) {
-      case 'low': return 'text-blue-800 bg-blue-100';
-      case 'medium': return 'text-yellow-800 bg-yellow-100';
-      case 'high': return 'text-orange-800 bg-orange-100';
-      case 'critical': return 'text-red-800 bg-red-100';
-      default: return 'text-slate-800 bg-slate-100';
+      case 'low': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'medium': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      case 'high': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+      case 'critical': return 'bg-red-500/10 text-red-400 border-red-500/20';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
     }
   }, []);
 
   const getStatusBadge = useCallback((status: string) => {
     return createElement(
       'span',
-      { className: `px-2.5 py-1 text-xs font-semibold rounded capitalize ${getStatusBadgeClass(status)}` },
+      { className: `px-2.5 py-1 text-xs font-semibold rounded border capitalize ${getStatusBadgeClass(status)}` },
       status
     );
   }, [getStatusBadgeClass]);
@@ -528,7 +606,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
   const getAlertSeverityBadge = useCallback((severity: string) => {
     return createElement(
       'span',
-      { className: `px-2.5 py-1 text-xs font-semibold rounded capitalize ${getAlertSeverityBadgeClass(severity)}` },
+      { className: `px-2.5 py-1 text-xs font-semibold rounded border capitalize ${getAlertSeverityBadgeClass(severity)}` },
       severity
     );
   }, [getAlertSeverityBadgeClass]);
@@ -581,6 +659,7 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
     environmentalData,
     alerts,
     loading,
+    loadError,
     canManageSensors,
     canUpdateSettings,
     selectedSensor,
@@ -605,6 +684,8 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
     loadData,
     handleAddSensor,
     handleEditSensor,
+    pendingDeleteSensorId,
+    setPendingDeleteSensorId,
     handleDeleteSensor,
     handleAcknowledgeAlert,
     handleResolveAlert,
@@ -622,5 +703,8 @@ export function useIoTEnvironmentalState(): UseIoTEnvironmentalStateReturn {
     activeAlerts,
     criticalAlerts,
     analytics,
+    lastSyncTimestamp,
+    mutationError,
+    clearMutationError,
   };
 }

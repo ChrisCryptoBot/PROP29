@@ -1,6 +1,7 @@
 """
 Hardware Control Service
 Provides write-back commands to physical devices via bridge.
+Uses circuit breaker to avoid cascading failures when bridge is unavailable.
 """
 from typing import Optional, Dict, Any
 import logging
@@ -13,6 +14,7 @@ from fastapi import HTTPException, status
 
 from database import SessionLocal
 from models import SmartLocker, Property, UserRole
+from utils.circuit_breaker import get_hardware_bridge_circuit_breaker
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +45,16 @@ class HardwareControlService:
     def _send_release_command(self, locker: SmartLocker, payload: Dict[str, Any]) -> Dict[str, Any]:
         bridge_url = os.getenv("HARDWARE_BRIDGE_URL")
         if not bridge_url:
-            logger.info("Hardware bridge not configured. Returning mock success.")
+            logger.info("Hardware bridge not configured. Returning not_configured.")
             return {
-                "released": True,
-                "bridge_status": "mocked",
-                "message": "No hardware bridge configured; mocked response returned.",
+                "released": False,
+                "bridge_status": "not_configured",
+                "message": "No hardware bridge configured.",
             }
 
         endpoint = f"{bridge_url.rstrip('/')}/lockers/{locker.locker_id}/release"
-        try:
+
+        def _do_request() -> Dict[str, Any]:
             response = requests.post(endpoint, json=payload, timeout=10)
             response.raise_for_status()
             data = response.json() if response.content else {}
@@ -60,6 +63,19 @@ class HardwareControlService:
                 "bridge_status": "ok",
                 "message": data.get("message", "Solenoid release command sent."),
             }
+
+        try:
+            breaker = get_hardware_bridge_circuit_breaker()
+            return breaker.call(_do_request)
+        except RuntimeError as e:
+            if "OPEN" in str(e):
+                logger.warning("Hardware bridge circuit open; rejecting release command")
+                return {
+                    "released": False,
+                    "bridge_status": "circuit_open",
+                    "message": "Hardware bridge temporarily unavailable; try again later.",
+                }
+            raise
         except Exception as exc:
             logger.error("Failed to send locker release command", exc_info=exc)
             return {

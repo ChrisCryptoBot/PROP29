@@ -149,8 +149,8 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                     endTime: new Date()
                 } : null);
             } else if (typeof result === 'boolean') {
-                // Boolean result (legacy operations)
-                const mockResult: BulkOperationResult = {
+                // Boolean result (legacy operations) – derive result shape for UI
+                const derivedResult: BulkOperationResult = {
                     operation_type: operation.type as any,
                     total: operation.incidentIds.length,
                     successful: result ? operation.incidentIds.length : 0,
@@ -165,12 +165,12 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                     executed_by: 'current_user',
                     executed_at: new Date().toISOString()
                 };
-                setResults(mockResult);
+                setResults(derivedResult);
                 setOperationProgress(prev => prev ? {
                     ...prev,
                     processed: operation.incidentIds.length,
-                    successful: mockResult.successful,
-                    failed: mockResult.failed,
+                    successful: derivedResult.successful,
+                    failed: derivedResult.failed,
                     errors: [],
                     endTime: new Date()
                 } : null);
@@ -285,11 +285,11 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
             <div className="space-y-6">
                 {/* Operation Overview */}
                 {!showResults && (
-                    <div className={cn("p-4 border rounded-lg", getOperationColor())}>
+                    <div className={cn("p-4 border rounded-md", getOperationColor())}>
                         <div className="flex items-center space-x-3 mb-3">
                             <i className={cn("fas text-lg", getOperationIcon())} />
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-white">{operation.title}</h3>
+                                <h3 className="text-xl font-black text-white uppercase tracking-tighter">{operation.title}</h3>
                                 <p className="text-sm text-slate-300">{operation.description}</p>
                             </div>
                         </div>
@@ -316,7 +316,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                 {/* Operation Analysis */}
                 {!showResults && operationAnalysis && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-sm text-white">Source Breakdown</CardTitle>
                             </CardHeader>
@@ -343,7 +343,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
                             </CardContent>
                         </Card>
 
-                        <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                        <Card className="bg-slate-900/50 border border-white/5">
                             <CardHeader>
                                 <CardTitle className="text-sm text-white">Agent Trust Levels</CardTitle>
                             </CardHeader>
@@ -401,7 +401,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
 
                 {/* Operation Progress */}
                 {isProcessing && operationProgress && (
-                    <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
+                    <Card className="bg-slate-900/50 border border-white/5">
                         <CardHeader>
                             <CardTitle className="text-white flex items-center">
                                 <i className="fas fa-spinner fa-spin mr-2 text-blue-400" />
@@ -499,7 +499,7 @@ export const BulkOperationConfirmModal: React.FC<BulkOperationConfirmModalProps>
 
                         {/* Error Details */}
                         {results.errors && results.errors.length > 0 && (
-                            <Card className="glass-card border border-red-500/30 bg-slate-900/50 backdrop-blur-xl">
+                            <Card className="bg-slate-900/50 border border-red-500/30">
                                 <CardHeader>
                                     <CardTitle className="text-red-300 flex items-center">
                                         <i className="fas fa-exclamation-triangle mr-2" />

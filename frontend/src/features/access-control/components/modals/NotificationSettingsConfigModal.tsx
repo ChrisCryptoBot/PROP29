@@ -93,7 +93,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
     >
       <div className="space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
             <div>
               <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Alert Notifications</h4>
               <p className="text-[10px] text-[color:var(--text-sub)] font-medium italic opacity-60 uppercase tracking-tight">Send alerts for access control events</p>
@@ -108,11 +108,11 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
           </div>
 
           {config.enabled && (
-            <div className="space-y-4 pl-6 border-l-2 border-white/5">
+            <div className="space-y-4 pl-6">
               <div className="space-y-3">
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Channels</h5>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">Email</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Send alerts by email</p>
@@ -126,7 +126,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">SMS</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Send alerts by SMS</p>
@@ -140,7 +140,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                   <div>
                     <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">Push</h6>
                     <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Send push alerts</p>
@@ -156,7 +156,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
               </div>
 
               {(config.emailNotifications || config.smsNotifications) && (
-                <div className="space-y-4 p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl">
+                <div className="space-y-4 p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md">
                   <h5 className="text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest mb-2 ml-1">Dispatch Targets</h5>
 
                   {config.emailNotifications && (
@@ -203,7 +203,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                 <h5 className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-[0.2em] mb-4 ml-1">Event Triggers</h5>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-red-500/5 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-red-500/5 transition-colors">
                     <span className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-widest">ACCESS_VIOLATION</span>
                     <Toggle
                       checked={config.notifyOnAccessDenied}
@@ -214,7 +214,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-red-500/5 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-red-500/5 transition-colors">
                     <span className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-widest">CRITICAL_OVERRIDE</span>
                     <Toggle
                       checked={config.notifyOnEmergencyAction}
@@ -225,7 +225,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-amber-500/5 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-amber-500/5 transition-colors">
                     <span className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-widest">HELD_OPEN_ALARM</span>
                     <Toggle
                       checked={config.notifyOnHeldOpenAlarm}
@@ -236,7 +236,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-blue-500/5 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-blue-500/5 transition-colors">
                     <span className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-widest">DECAY_EXPIRY</span>
                     <Toggle
                       checked={config.notifyOnTimeoutExpiry}
@@ -247,7 +247,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-red-600/5 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-red-600/5 transition-colors">
                     <span className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-widest">BANNED_DETECTION</span>
                     <Toggle
                       checked={config.notifyOnBannedAttempt}
@@ -258,7 +258,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl hover:bg-white/10 transition-colors">
+                  <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md hover:bg-white/10 transition-colors">
                     <span className="text-[10px] font-black text-[color:var(--text-main)] uppercase tracking-widest">OFFLINE_SIGNAL</span>
                     <Toggle
                       checked={config.notifyOnOfflineDevice}
@@ -272,7 +272,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
               </div>
 
               <div className="space-y-4 mt-8">
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">High-Clearance Isolation</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Notify admins only</p>
@@ -288,7 +288,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
               </div>
 
               <div className="space-y-4 mt-8">
-                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                   <div>
                     <h4 className="font-black text-[color:var(--text-main)] text-xs uppercase tracking-widest mb-1">Quiet Hours</h4>
                     <p className="text-[10px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Suppress non-critical signals during defined cycles</p>
@@ -303,7 +303,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                 </div>
 
                 {config.quietHoursEnabled && (
-                  <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-xl ml-6">
+                  <div className="p-5 bg-[color:var(--console-dark)]/10 border border-white/5 rounded-md ml-6">
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="space-y-2">
                         <label htmlFor="quiet-hours-start" className="block text-[10px] font-black text-[color:var(--text-sub)] uppercase tracking-widest ml-1">
@@ -337,7 +337,7 @@ export const NotificationSettingsConfigModal: React.FC<NotificationSettingsConfi
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-xl">
+                    <div className="flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border border-white/5 rounded-md">
                       <div>
                         <h6 className="font-black text-[color:var(--text-main)] text-[10px] uppercase tracking-widest">CRITICAL_BYPASS</h6>
                         <p className="text-[9px] text-[color:var(--text-sub)] font-medium opacity-60 uppercase">Allow priority signals during silent cycles</p>

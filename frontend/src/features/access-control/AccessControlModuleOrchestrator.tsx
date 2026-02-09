@@ -129,7 +129,6 @@ const AccessControlWebSocketIntegration: React.FC = () => {
     operationLock,
   } = useAccessControlContext();
   const { trackAction } = useAccessControlTelemetry();
-  const { logger } = require('../../services/logger');
 
   useAccessControlWebSocket({
     onAccessPointUpdated: (point) => {

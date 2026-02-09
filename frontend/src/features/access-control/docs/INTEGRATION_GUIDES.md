@@ -6,10 +6,20 @@
 
 ## Table of Contents
 
-1. [Mobile Agent Integration](#mobile-agent-integration)
-2. [Hardware Device Integration](#hardware-device-integration)
-3. [External Data Sources](#external-data-sources)
-4. [Troubleshooting](#troubleshooting)
+1. [Lockdown vs Access Control Emergency](#lockdown-vs-access-control-emergency)
+2. [Mobile Agent Integration](#mobile-agent-integration)
+3. [Hardware Device Integration](#hardware-device-integration)
+4. [External Data Sources](#external-data-sources)
+5. [Troubleshooting](#troubleshooting)
+
+---
+
+## Lockdown vs Access Control Emergency
+
+Two separate systems control locking behavior:
+
+- **Access Control Emergency (Overview tab)** — Uses `/access-control/emergency/*` (lockdown, unlock, restore). Affects **access points only** (lock/unlock doors managed by this module). Use for access-point-level emergency control.
+- **Lockdown Facility (Lockdown Facility tab)** — Uses `/lockdown/*` (status, hardware, history, initiate, cancel, test). Facility-wide lockdown state and hardware; separate from access-control emergency. Use for building-wide or zone-wide lockdown when integrated with hardware.
 
 ---
 
@@ -582,6 +592,8 @@ Devices are automatically marked offline if no heartbeat is received for **15 mi
 1. Mark device as `isOnline: false`
 2. Broadcast WebSocket event: `access-control.point.offline`
 3. Update UI to show offline status
+
+**Safe state:** When a device is offline, the UI shows last known state and **disables access point control** (e.g. toggle enable/disable). Reconnection updates status via WebSocket/heartbeat.
 
 **To change threshold:** Configure `heartbeatOfflineThresholdMinutes` in frontend settings (default: 15 minutes).
 

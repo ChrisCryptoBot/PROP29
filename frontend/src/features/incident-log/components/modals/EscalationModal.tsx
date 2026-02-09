@@ -66,7 +66,7 @@ export const EscalationModal: React.FC<EscalationModalProps> = ({ isOpen, onClos
         >
             <div className="space-y-6">
                     {/* Current Escalation Level */}
-                    <div className="rounded-lg p-4 bg-white/5 border border-white/5">
+                    <div className="rounded-md p-4 bg-white/5 border border-white/5">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Current Escalation Level</p>
@@ -95,7 +95,7 @@ export const EscalationModal: React.FC<EscalationModalProps> = ({ isOpen, onClos
                     {/* Notification Recipients */}
                     <div>
                         <label className="block text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)] mb-2">Notify</label>
-                        <div className="space-y-2 bg-white/5 p-4 rounded-lg border border-white/5">
+                        <div className="space-y-2 bg-white/5 p-4 rounded-md border border-white/5">
                             {['Security Manager', 'Operations Manager', 'General Manager', 'Legal Team'].map((recipient) => (
                                 <label key={recipient} className="flex items-center p-2 rounded hover:bg-white/5 transition-colors cursor-pointer">
                                     <input
@@ -105,7 +105,7 @@ export const EscalationModal: React.FC<EscalationModalProps> = ({ isOpen, onClos
                                             if (e.target.checked) setNotifyRecipients(prev => [...prev, recipient]);
                                             else setNotifyRecipients(prev => prev.filter(r => r !== recipient));
                                         }}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20 mr-3"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20 mr-3"
                                     />
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">{recipient}</span>
                                 </label>

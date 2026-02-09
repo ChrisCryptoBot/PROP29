@@ -79,7 +79,7 @@ const LostFoundContent: React.FC<{
                 actions={
                     <Button
                         onClick={() => setShowRegisterModal(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
+                        className="bg-blue-600 hover:bg-blue-500 text-white"
                         aria-label="Register New Item"
                     >
                         <i className="fas fa-plus mr-2" />
@@ -114,7 +114,7 @@ const LostFoundContent: React.FC<{
                         onClick={() => setShowRegisterModal(true)}
                         variant="primary"
                         size="icon"
-                        className="w-14 h-14 rounded-full shadow-2xl hover:scale-110 transition-transform"
+                        className="w-14 h-14 rounded-full border-0"
                         title="Register New Item"
                         aria-label="Register New Item"
                     >
@@ -134,10 +134,12 @@ export const LostFoundModuleOrchestrator: React.FC = () => {
     return (
         <LostFoundProvider
             modalControls={{
+                showRegisterModal,
                 setShowRegisterModal,
+                showReportModal,
+                setShowReportModal,
                 setShowEditModal: () => { }, // Not used in Lost & Found
-                setShowDetailsModal,
-                setShowReportModal
+                setShowDetailsModal
             }}
         >
             <LostFoundContent

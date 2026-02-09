@@ -101,48 +101,71 @@ export function useIncidentLogQueue(options: UseIncidentLogQueueOptions = {}) {
   );
 
   const executeOperation = useCallback(async (op: QueuedOperation): Promise<boolean> => {
+    const assertSuccess = (response: { success?: boolean; error?: string; statusCode?: number }) => {
+      if (!response.success) {
+        const err = new Error(response.error || 'Request failed') as Error & { statusCode?: number };
+        err.statusCode = response.statusCode;
+        throw err;
+      }
+    };
     try {
       switch (op.type) {
-        case 'create_incident':
-          await incidentService.createIncident(op.payload as unknown as IncidentCreate);
+        case 'create_incident': {
+          const res = await incidentService.createIncident(op.payload as unknown as IncidentCreate);
+          assertSuccess(res);
           break;
-        case 'update_incident':
-          await incidentService.updateIncident(op.payload.incidentId as string, op.payload.updates as unknown as IncidentUpdate);
+        }
+        case 'update_incident': {
+          const res = await incidentService.updateIncident(op.payload.incidentId as string, op.payload.updates as unknown as IncidentUpdate);
+          assertSuccess(res);
           break;
-        case 'delete_incident':
-          await incidentService.deleteIncident(op.payload.incidentId as string);
+        }
+        case 'delete_incident': {
+          const res = await incidentService.deleteIncident(op.payload.incidentId as string);
+          assertSuccess(res);
           break;
-        case 'create_emergency_alert':
-          await incidentService.createEmergencyAlert(op.payload.alert as any);
+        }
+        case 'create_emergency_alert': {
+          const res = await incidentService.createEmergencyAlert(op.payload.alert as any);
+          assertSuccess(res);
           break;
-        case 'bulk_approve':
-          await incidentService.bulkApproveIncidents(
+        }
+        case 'bulk_approve': {
+          const res = await incidentService.bulkApproveIncidents(
             op.payload.incidentIds as string[],
             op.payload.reason as string | undefined,
             op.payload.propertyId as string | undefined
           );
+          assertSuccess(res);
           break;
-        case 'bulk_reject':
-          await incidentService.bulkRejectIncidents(
+        }
+        case 'bulk_reject': {
+          const res = await incidentService.bulkRejectIncidents(
             op.payload.incidentIds as string[],
             op.payload.reason as string,
             op.payload.propertyId as string | undefined
           );
+          assertSuccess(res);
           break;
-        case 'bulk_delete':
-          await incidentService.bulkDeleteIncidents(
+        }
+        case 'bulk_delete': {
+          const res = await incidentService.bulkDeleteIncidents(
             op.payload.incidentIds as string[],
             op.payload.propertyId as string | undefined
           );
+          assertSuccess(res);
           break;
-        case 'bulk_status_change':
-          await incidentService.bulkStatusChange(
+        }
+        case 'bulk_status_change': {
+          const res = await incidentService.bulkStatusChange(
             op.payload.incidentIds as string[],
             op.payload.status as IncidentStatus,
             op.payload.reason as string | undefined,
             op.payload.propertyId as string | undefined
           );
+          assertSuccess(res);
           break;
+        }
         default:
           logger.warn('Unknown operation type', { module: 'IncidentLogQueue', action: 'executeOperation', type: op.type });
           return false;
@@ -181,7 +204,9 @@ export function useIncidentLogQueue(options: UseIncidentLogQueueOptions = {}) {
         updated[i] = { ...e, sync_status: 'synced' };
         changed = true;
       } catch (err) {
-        const nextRetry = e.retry_count + 1;
+        const statusCode = err && typeof (err as any).statusCode === 'number' ? (err as any).statusCode : undefined;
+        const is4xx = statusCode >= 400 && statusCode < 500;
+        const nextRetry = is4xx ? MAX_RETRIES : e.retry_count + 1;
         updated[i] = {
           ...e,
           sync_status: nextRetry >= MAX_RETRIES ? 'failed' : 'pending',

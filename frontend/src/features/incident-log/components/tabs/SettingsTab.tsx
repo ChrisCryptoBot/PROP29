@@ -290,20 +290,20 @@ export const SettingsTab: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Settings</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Settings</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Configure retention, notifications, and integrations
                     </p>
                 </div>
             </div>
             {/* System Settings */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-cogs text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">System Settings</span>
+                        <span className="card-title-text">System Settings</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -311,31 +311,31 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Incident Configuration</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Auto-assign incidents</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.autoAssign}
                                         onChange={(e) => setSettings({ ...settings, autoAssign: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Auto-escalate after 24h</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.autoEscalate}
                                         onChange={(e) => setSettings({ ...settings, autoEscalate: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Email notifications</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emailNotifications}
                                         onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -376,13 +376,13 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Notification Settings */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-bell text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Notification Settings</span>
+                        <span className="card-title-text">Notification Settings</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -390,31 +390,31 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Email Notifications</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">New incidents</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emailNewIncidents}
                                         onChange={(e) => setSettings({ ...settings, emailNewIncidents: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Status changes</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emailStatusChanges}
                                         onChange={(e) => setSettings({ ...settings, emailStatusChanges: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Escalations</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emailEscalations}
                                         onChange={(e) => setSettings({ ...settings, emailEscalations: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -423,22 +423,22 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">SMS Notifications</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Critical incidents</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.smsCritical}
                                         onChange={(e) => setSettings({ ...settings, smsCritical: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Emergency alerts</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.smsEmergency}
                                         onChange={(e) => setSettings({ ...settings, smsEmergency: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -448,13 +448,13 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Integration Settings */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-plug text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Integration Settings</span>
+                        <span className="card-title-text">Integration Settings</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -488,31 +488,31 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Third-party Integrations</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Slack integration</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.slackIntegration}
                                         onChange={(e) => setSettings({ ...settings, slackIntegration: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Microsoft Teams</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.teamsIntegration}
                                         onChange={(e) => setSettings({ ...settings, teamsIntegration: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Webhook notifications</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.webhookNotifications}
                                         onChange={(e) => setSettings({ ...settings, webhookNotifications: e.target.checked })}
-                                        className="h-5 w-5 text-blue-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-blue-500/20"
+                                        className="h-5 w-5 text-blue-400 bg-slate-900/50 border-white/5 rounded focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
@@ -522,15 +522,15 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Mobile Agent Integration Settings - PRODUCTION READINESS */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center justify-between text-xl text-white">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center justify-between">
                         <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-br from-green-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                                 <i className="fas fa-mobile-alt text-white" />
                             </div>
                             <div>
-                                <span className="uppercase tracking-tight">Mobile Agent Integration</span>
+                                <span className="card-title-text">Mobile Agent Integration</span>
                                 <p className="text-[9px] text-[color:var(--text-sub)] mt-1">Configure agent performance settings</p>
                             </div>
                         </div>
@@ -541,16 +541,16 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Agent Performance Settings</h3>
                             <div className="space-y-3">
-                                <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <div className="p-3 bg-white/5 rounded-md border border-white/5">
                                     <p className="text-[9px] text-[color:var(--text-sub)]">Trust scores are displayed for agent performance monitoring. Auto-approval based on trust scores has been removed for security reasons.</p>
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Enable bulk approval</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.bulkApprovalEnabled}
                                         onChange={(e) => setSettings({ ...settings, bulkApprovalEnabled: e.target.checked })}
-                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-green-500/20"
+                                        className="h-5 w-5 text-green-400 bg-slate-900/50 border-white/5 rounded focus:ring-green-500/20"
                                     />
                                 </div>
                             </div>
@@ -559,13 +559,13 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Agent Performance Monitoring</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Performance alerts</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.agentPerformanceAlerts}
                                         onChange={(e) => setSettings({ ...settings, agentPerformanceAlerts: e.target.checked })}
-                                        className="h-5 w-5 text-green-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-green-500/20"
+                                        className="h-5 w-5 text-green-400 bg-slate-900/50 border-white/5 rounded focus:ring-green-500/20"
                                     />
                                 </div>
                                 <div>
@@ -576,7 +576,7 @@ export const SettingsTab: React.FC = () => {
                                         max="100"
                                         value={settings.lowTrustScoreThreshold}
                                         onChange={(e) => setSettings({ ...settings, lowTrustScoreThreshold: parseInt(e.target.value) })}
-                                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider-orange"
+                                        className="w-full h-2 bg-white/10 rounded-md appearance-none cursor-pointer slider-orange"
                                     />
                                 </div>
                                 <div>
@@ -600,13 +600,13 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Hardware Device Integration Settings - PRODUCTION READINESS */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-orange-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-microchip text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Hardware Device Integration</span>
+                        <span className="card-title-text">Hardware Device Integration</span>
                     </CardTitle>
                     <p className="text-[9px] text-[color:var(--text-sub)] ml-13">Configure hardware device monitoring and incident creation</p>
                 </CardHeader>
@@ -615,13 +615,13 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Incident Generation</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Auto-create from device events</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.autoCreateIncidentsFromEvents}
                                         onChange={(e) => setSettings({ ...settings, autoCreateIncidentsFromEvents: e.target.checked })}
-                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-orange-500/20"
+                                        className="h-5 w-5 text-orange-400 bg-slate-900/50 border-white/5 rounded focus:ring-orange-500/20"
                                     />
                                 </div>
                                 <div>
@@ -637,13 +637,13 @@ export const SettingsTab: React.FC = () => {
                                         <option value="critical" className="bg-slate-900">Critical</option>
                                     </select>
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Auto-assign hardware incidents</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.autoAssignHardwareIncidents}
                                         onChange={(e) => setSettings({ ...settings, autoAssignHardwareIncidents: e.target.checked })}
-                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-orange-500/20"
+                                        className="h-5 w-5 text-orange-400 bg-slate-900/50 border-white/5 rounded focus:ring-orange-500/20"
                                     />
                                 </div>
                             </div>
@@ -652,13 +652,13 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Device Monitoring</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Device offline alerts</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.deviceOfflineAlertEnabled}
                                         onChange={(e) => setSettings({ ...settings, deviceOfflineAlertEnabled: e.target.checked })}
-                                        className="h-5 w-5 text-orange-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-orange-500/20"
+                                        className="h-5 w-5 text-orange-400 bg-slate-900/50 border-white/5 rounded focus:ring-orange-500/20"
                                     />
                                 </div>
                                 <div>
@@ -680,7 +680,7 @@ export const SettingsTab: React.FC = () => {
                                         max="50"
                                         value={settings.lowBatteryAlertThreshold}
                                         onChange={(e) => setSettings({ ...settings, lowBatteryAlertThreshold: parseInt(e.target.value) })}
-                                        className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer slider-orange"
+                                        className="w-full h-2 bg-white/10 rounded-md appearance-none cursor-pointer slider-orange"
                                     />
                                 </div>
                             </div>
@@ -690,13 +690,13 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Emergency Alert Conversion Settings - PRODUCTION READINESS */}
-            <Card className="glass-card border border-white/5 bg-slate-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-xl text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-lg flex items-center justify-center mr-3  border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-exclamation-triangle text-white" />
                         </div>
-                        <span className="uppercase tracking-tight">Emergency Alert Conversion</span>
+                        <span className="card-title-text">Emergency Alert Conversion</span>
                     </CardTitle>
                     <p className="text-[9px] text-[color:var(--text-sub)] ml-13">Configure automatic conversion of emergency alerts to incidents</p>
                 </CardHeader>
@@ -705,13 +705,13 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Conversion Settings</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Auto-convert to incident</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emergencyAutoConvertToIncident}
                                         onChange={(e) => setSettings({ ...settings, emergencyAutoConvertToIncident: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-slate-900/50 border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                                 <div>
@@ -726,13 +726,13 @@ export const SettingsTab: React.FC = () => {
                                         <option value="critical" className="bg-slate-900">Critical</option>
                                     </select>
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Preserve original alert</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emergencyPreserveOriginalAlert}
                                         onChange={(e) => setSettings({ ...settings, emergencyPreserveOriginalAlert: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-slate-900/50 border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                             </div>
@@ -741,13 +741,13 @@ export const SettingsTab: React.FC = () => {
                         <div className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-[color:var(--text-main)]">Workflow Settings</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Require manager approval</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emergencyRequireManagerApproval}
                                         onChange={(e) => setSettings({ ...settings, emergencyRequireManagerApproval: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-slate-900/50 border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                                 <div>
@@ -762,13 +762,13 @@ export const SettingsTab: React.FC = () => {
                                         <option value="manual" className="bg-slate-900">Manual</option>
                                     </select>
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/10 transition-colors">
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-md border border-white/5 hover:bg-white/10 transition-colors">
                                     <span className="text-[9px] font-black uppercase tracking-widest text-[color:var(--text-sub)]">Auto-assign converted incidents</span>
                                     <input
                                         type="checkbox"
                                         checked={settings.emergencyAutoAssignConverted}
                                         onChange={(e) => setSettings({ ...settings, emergencyAutoAssignConverted: e.target.checked })}
-                                        className="h-5 w-5 text-red-400 bg-[color:var(--console-dark)] border-white/5 rounded focus:ring-red-500/20"
+                                        className="h-5 w-5 text-red-400 bg-slate-900/50 border-white/5 rounded focus:ring-red-500/20"
                                     />
                                 </div>
                             </div>
@@ -797,7 +797,7 @@ export const SettingsTab: React.FC = () => {
             {/* Add custom CSS for sliders */}
             <style>{`
                 .slider-green {
-                    background: linear-gradient(to right, #1f2937 0%, #16a34a 50%, #16a34a 100%);
+                    background: #1f2937;
                 }
                 .slider-green::-webkit-slider-thumb {
                     appearance: none;
@@ -810,7 +810,7 @@ export const SettingsTab: React.FC = () => {
                     box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
                 }
                 .slider-orange {
-                    background: linear-gradient(to right, #1f2937 0%, #ea580c 50%, #ea580c 100%);
+                    background: #1f2937;
                 }
                 .slider-orange::-webkit-slider-thumb {
                     appearance: none;
@@ -820,7 +820,7 @@ export const SettingsTab: React.FC = () => {
                     background: #f97316;
                     cursor: pointer;
                     border: 2px solid #ea580c;
-                    box-shadow: 0 4px 8px rgba(249, 115, 22, 0.3);
+                    box-shadow: none;
                 }
             `}</style>
 

@@ -8,7 +8,7 @@
  */
 export const getPriorityBadgeClass = (priority: string): string => {
   switch (priority.toLowerCase()) {
-    case 'critical': return 'text-red-400 bg-red-500/10 border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]';
+    case 'critical': return 'text-red-400 bg-red-500/10 border-red-500/20';
     case 'high': return 'text-orange-400 bg-orange-500/10 border-orange-500/20';
     case 'medium': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
     case 'low': return 'text-blue-400 bg-blue-500/10 border-blue-500/20';

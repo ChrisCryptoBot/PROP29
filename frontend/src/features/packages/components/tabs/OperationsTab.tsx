@@ -22,8 +22,8 @@ export const OperationsTab: React.FC = React.memo(() => {
             {/* Gold Standard Page Header */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Operations</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Operations</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Package delivery and pickup workflows
                     </p>
                 </div>
@@ -31,13 +31,13 @@ export const OperationsTab: React.FC = React.memo(() => {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                <Card className="bg-slate-900/50 border border-white/5 group">
                     <CardContent className="pt-6 px-6 pb-6 relative">
                         <div className="absolute top-4 right-4">
                             <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded uppercase">PENDING</span>
                         </div>
                         <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                 <i className="fas fa-bell text-white text-lg"></i>
                             </div>
                         </div>
@@ -48,13 +48,13 @@ export const OperationsTab: React.FC = React.memo(() => {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                <Card className="bg-slate-900/50 border border-white/5 group">
                     <CardContent className="pt-6 px-6 pb-6 relative">
                         <div className="absolute top-4 right-4">
                             <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">RECEIVED</span>
                         </div>
                         <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                 <i className="fas fa-inbox text-white text-lg"></i>
                             </div>
                         </div>
@@ -65,13 +65,13 @@ export const OperationsTab: React.FC = React.memo(() => {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
+                <Card className="bg-slate-900/50 border border-white/5 group">
                     <CardContent className="pt-6 px-6 pb-6 relative">
                         <div className="absolute top-4 right-4">
                             <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded uppercase">EXPIRED</span>
                         </div>
                         <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                 <i className="fas fa-exclamation-triangle text-white text-lg"></i>
                             </div>
                         </div>
@@ -83,41 +83,35 @@ export const OperationsTab: React.FC = React.memo(() => {
                 </Card>
             </div>
 
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                            <i className="fas fa-cogs text-white text-lg" />
+                    <CardTitle className="flex items-center">
+                        <div className="card-title-icon-box" aria-hidden="true">
+                            <i className="fas fa-cogs text-white" />
                         </div>
-                        Operations
+                        <span className="card-title-text">Operations</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="p-6 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                <h3 className="text-lg font-bold text-white mb-3 flex items-center">
+                            <div className="p-6 rounded-md bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white mb-3 flex items-center">
                                     <i className="fas fa-truck mr-2 text-white" />
                                     Delivery Operations
                                 </h3>
                                 <p className="text-slate-400 mb-4 text-sm leading-relaxed">
-                                    Delivery operations management including route optimization, staff assignments, and delivery tracking.
+                                    Delivery operations management including route optimization, staff assignments, and delivery tracking. Available in a future release. Use the Packages list and Notify/Deliver actions for now.
                                 </p>
-                                <Button variant="outline" className="w-full text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20">
-                                    Manage Deliveries
-                                </Button>
                             </div>
-                            <div className="p-6 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                <h3 className="text-lg font-bold text-white mb-3 flex items-center">
+                            <div className="p-6 rounded-md bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white mb-3 flex items-center">
                                     <i className="fas fa-link mr-2 text-white" />
                                     Carrier Integration
                                 </h3>
                                 <p className="text-slate-400 mb-4 text-sm leading-relaxed">
-                                    Carrier integration management with real-time API connections, tracking updates, and delivery notifications.
+                                    Carrier integration management with real-time API connections, tracking updates, and delivery notifications. Available in a future release.
                                 </p>
-                                <Button variant="outline" className="w-full text-[10px] font-black uppercase tracking-widest h-10 px-6 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20">
-                                    Manage Carriers
-                                </Button>
                             </div>
                         </div>
                     </div>

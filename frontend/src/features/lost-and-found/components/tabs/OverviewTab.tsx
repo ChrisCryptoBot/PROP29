@@ -5,23 +5,25 @@
  */
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/UI/Card';
 import { Button } from '../../../../components/UI/Button';
 import { useLostFoundContext } from '../../context/LostFoundContext';
 import { cn } from '../../../../utils/cn';
 import { LostFoundStatus } from '../../types/lost-and-found.types';
-import { showSuccess } from '../../../../utils/toast';
 import { EmptyState } from '../../../../components/UI/EmptyState';
 import { useGlobalRefresh } from '../../../../contexts/GlobalRefreshContext';
 
-export const OverviewTab: React.FC = React.memo(() => {
+export interface OverviewTabProps {
+    /** When true, hide the page header (Lost & Found + subtitle); use when embedded in Property Items Overview. */
+    embedded?: boolean;
+}
+
+export const OverviewTab: React.FC<OverviewTabProps> = React.memo(({ embedded = false }) => {
     const context = useLostFoundContext();
     const {
         items,
         loading,
         setSelectedItem,
         notifyGuest,
-        claimItem,
         archiveItem,
         setShowDetailsModal,
         refreshItems
@@ -43,11 +45,11 @@ export const OverviewTab: React.FC = React.memo(() => {
 
     const getStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'found': return 'text-blue-800 bg-blue-100';
-            case 'claimed': return 'text-green-800 bg-green-100';
-            case 'expired': return 'text-yellow-800 bg-yellow-100';
-            case 'donated': return 'text-slate-800 bg-slate-100';
-            default: return 'text-slate-800 bg-slate-100';
+            case 'found': return 'text-blue-300 bg-blue-500/20 border border-blue-500/30';
+            case 'claimed': return 'text-green-300 bg-green-500/20 border border-green-500/30';
+            case 'expired': return 'text-amber-300 bg-amber-500/20 border border-amber-500/30';
+            case 'donated': return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
+            default: return 'text-slate-300 bg-slate-500/20 border border-slate-500/30';
         }
     };
 
@@ -77,14 +79,9 @@ export const OverviewTab: React.FC = React.memo(() => {
         await notifyGuest(itemId);
     };
 
-    const handleClaimItem = async (itemId: string) => {
-        // For now, claim without guest info - can be enhanced later
-        await claimItem(itemId, {
-            item_id: itemId,
-            claimer_name: 'Guest',
-            claimer_contact: '',
-            description: 'Item claimed'
-        });
+    const handleClaimItem = (item: any) => {
+        setSelectedItem(item);
+        if (setShowDetailsModal) setShowDetailsModal(true);
     };
 
     const handleArchiveItem = async (itemId: string) => {
@@ -141,122 +138,48 @@ export const OverviewTab: React.FC = React.memo(() => {
 
     return (
         <div className="space-y-6">
-            {/* Page Header - Gold Standard */}
-            <div className="flex justify-between items-end mb-8">
-                <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Lost & Found</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
-                        Item recovery and guest claim management
-                    </p>
-                </div>
-                <div className="flex items-center gap-4">
-                    {lastRefreshAt && (
-                        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
-                            Data as of {lastRefreshAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Refreshed {formatRefreshedAgo(lastRefreshAt)}
+            {!embedded && (
+                <div className="flex justify-between items-end mb-8">
+                    <div>
+                        <h2 className="page-title">Lost & Found</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
+                            Item recovery and guest claim management
                         </p>
-                    )}
-                    {isStale && (
-                        <span className="px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            STALE
-                        </span>
-                    )}
-                    {!isStale && lastRefreshAt && (
-                        <span className="px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            LIVE
-                        </span>
-                    )}
-                    <Button onClick={handleManualRefresh} variant="outline" disabled={loading.items} className="text-[10px] font-black uppercase tracking-widest h-10 px-6">
-                        <i className={`fas fa-sync-alt mr-2 ${loading.items ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </Button>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        {lastRefreshAt && (
+                            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
+                                Data as of {lastRefreshAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Refreshed {formatRefreshedAgo(lastRefreshAt)}
+                            </p>
+                        )}
+                        {isStale && (
+                            <span className="px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                STALE
+                            </span>
+                        )}
+                        {!isStale && lastRefreshAt && (
+                            <span className="px-2.5 py-1 text-[9px] font-black rounded uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                LIVE
+                            </span>
+                        )}
+                        <Button onClick={handleManualRefresh} variant="outline" disabled={loading.items} className="text-[10px] font-black uppercase tracking-widest h-10 px-6">
+                            <i className={`fas fa-sync-alt mr-2 ${loading.items ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
+            )}
+
+            {/* When embedded: section title first, then metrics (aligns with Packages section order) */}
+            {embedded && <h3 className="text-sm font-black uppercase tracking-widest text-white mb-4">Lost & Found Items</h3>}
+            {/* Compact metrics bar (gold standard — uniform with other modules) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)] mb-6" role="group" aria-label="Lost & Found metrics">
+                <span>Total <strong className="font-black text-white">{metrics.total}</strong> · Found <strong className="font-black text-white">{metrics.found}</strong> · Claimed <strong className="font-black text-white">{metrics.claimed}</strong> · Expired <strong className="font-black text-white">{metrics.expired}</strong></span>
             </div>
 
-            {/* Key Metrics - Canonical Pattern */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">TOTAL</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-box text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Items</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.total}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">FOUND</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-search text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Found Items</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.found}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">CLAIMED</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-check-circle text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Claimed Items</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.claimed}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded uppercase">EXPIRED</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-clock text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Expired Items</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.expired}</h3>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Item Management */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl mb-8">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                            <i className="fas fa-box-open text-white text-lg" />
-                        </div>
-                        Item Management
-                    </CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
-                        Filter and manage lost & found items
-                    </p>
-                </CardHeader>
-                <CardContent className="pt-6 px-6 pb-6">
+            {/* Item list — no card wrapper */}
+            <section className="mb-8">
+                {!embedded && <h3 className="text-sm font-black uppercase tracking-widest text-white mb-4">Lost & Found Items</h3>}
                     <div className="flex flex-wrap gap-2 mb-8">
                         {['all', LostFoundStatus.FOUND, LostFoundStatus.CLAIMED, LostFoundStatus.EXPIRED, LostFoundStatus.DONATED].map(filterType => (
                             <Button
@@ -309,19 +232,22 @@ export const OverviewTab: React.FC = React.memo(() => {
                                 const dateFound = item.found_date || new Date().toISOString();
 
                                 return (
-                                    <Card
+                                    <div
                                         key={item.item_id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => handleViewDetails(item)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleViewDetails(item); } }}
                                         className={cn(
-                                            "hover:bg-white/5 transition-all duration-300 bg-white/5 border-white/5",
+                                            "rounded-md border p-4 hover:bg-white/5 transition-all duration-300 bg-white/5 border-white/5 cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
                                             item.status === LostFoundStatus.FOUND && "border-l-4 border-l-blue-500",
                                             item.status === LostFoundStatus.CLAIMED && "border-l-4 border-l-green-500",
                                             item.status === LostFoundStatus.EXPIRED && "border-l-4 border-l-yellow-500"
                                         )}
                                     >
-                                        <CardContent className="p-6">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div className="flex items-center space-x-3">
-                                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform">
+                                                    <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                                                         <i className={cn("text-white text-lg", getCategoryIcon(category))} />
                                                     </div>
                                                     <div>
@@ -360,7 +286,7 @@ export const OverviewTab: React.FC = React.memo(() => {
                                             </div>
 
                                             {item.guestInfo && (
-                                                <div className="mb-4 p-3 bg-slate-800/50 rounded-lg border border-white/5">
+                                                <div className="mb-4 p-3 bg-slate-800/50 rounded-md border border-white/5">
                                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Guest Info:</p>
                                                     <p className="text-sm text-slate-300">{item.guestInfo.name} - Room {item.guestInfo.room}</p>
                                                     <p className="text-xs text-slate-500">{item.guestInfo.phone}</p>
@@ -368,7 +294,7 @@ export const OverviewTab: React.FC = React.memo(() => {
                                             )}
 
                                             {category === 'Weapons' && item.managerApproved === false && (
-                                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
                                                     <div className="flex items-center space-x-2">
                                                         <i className="fas fa-exclamation-triangle text-red-500" />
                                                         <p className="text-sm font-bold text-red-400">⚠️ Pending Approval</p>
@@ -377,7 +303,7 @@ export const OverviewTab: React.FC = React.memo(() => {
                                                 </div>
                                             )}
 
-                                            <div className="flex gap-2 pt-4 border-t border-white/5">
+                                            <div className="flex gap-2 pt-4 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
                                                 {item.status === LostFoundStatus.FOUND && (
                                                     <>
                                                         <Button
@@ -391,7 +317,7 @@ export const OverviewTab: React.FC = React.memo(() => {
                                                         <Button
                                                             variant="outline"
                                                             className="flex-1 text-[10px] font-black uppercase tracking-widest h-9 px-4 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
-                                                            onClick={() => handleClaimItem(item.item_id)}
+                                                            onClick={() => handleClaimItem(item)}
                                                             disabled={loading.items}
                                                         >
                                                             Claim
@@ -416,50 +342,12 @@ export const OverviewTab: React.FC = React.memo(() => {
                                                     Details
                                                 </Button>
                                             </div>
-                                        </CardContent>
-                                    </Card>
+                                    </div>
                                 );
                             })}
                         </div>
                     )}
-                </CardContent>
-            </Card>
-
-            {/* Emergency Actions */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-                        <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 mr-3">
-                            <i className="fas fa-exclamation-triangle text-white text-lg" />
-                        </div>
-                        Emergency Actions
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Button
-                            className="bg-red-600 hover:bg-red-500 text-white uppercase tracking-wider font-bold"
-                            onClick={() => {
-                                const weaponItems = items.filter(i => (i.category || i.item_type) === 'Weapons' && i.managerApproved === false);
-                                showSuccess(`${weaponItems.length} weapons require immediate manager approval`);
-                            }}
-                        >
-                            <i className="fas fa-exclamation-triangle mr-2" />
-                            Weapon Alert
-                        </Button>
-                        <Button
-                            className="bg-orange-600 hover:bg-orange-500 text-white uppercase tracking-wider font-bold"
-                            onClick={() => {
-                                const expiredItems = items.filter(i => i.status === LostFoundStatus.EXPIRED);
-                                showSuccess(`${expiredItems.length} items require disposal`);
-                            }}
-                        >
-                            <i className="fas fa-trash mr-2" />
-                            Disposal Alert
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            </section>
         </div>
     );
 });

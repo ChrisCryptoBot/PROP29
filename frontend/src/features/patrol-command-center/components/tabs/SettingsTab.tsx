@@ -101,20 +101,20 @@ export const SettingsTab: React.FC = () => {
         <div className="space-y-6" role="main" aria-label="Patrol Settings">
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Settings</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Settings</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         System policies and patrol automation
                     </p>
                 </div>
             </div>
             {/* System Configuration */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-cog text-white"></i>
                         </div>
-                        <span className="text-sm font-black uppercase tracking-widest text-white">System Configuration</span>
+                        <span className="card-title-text">System Configuration</span>
                     </CardTitle>
                     <div className="ml-auto">
                         <Button
@@ -229,13 +229,13 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Mobile App Integration */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
                             <i className="fas fa-mobile-alt text-white"></i>
                         </div>
-                        <span className="text-sm font-black uppercase tracking-widest text-white">Mobile App Integration</span>
+                        <span className="card-title-text">Mobile App Integration</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 px-6 pb-6">
@@ -297,17 +297,17 @@ export const SettingsTab: React.FC = () => {
             </Card>
 
             {/* Mobile App Configuration */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5">
+            <Card className="bg-slate-900/50 border border-white/5">
                 <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                     <CardTitle className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
-                            <i className="fas fa-code text-white"></i>
+                        <div className="card-title-icon-box" aria-hidden="true">
+                            <i className="fas fa-code text-white" />
                         </div>
-                        <span className="text-sm font-black uppercase tracking-widest text-white">Mobile App Configuration</span>
+                        <span className="card-title-text">Mobile App Configuration</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 px-6 pb-6 space-y-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-400">
                         Use these endpoints for patrol agent mobile apps. Authenticate with the hardware ingest API key for check-ins.
                     </p>
                     <div>

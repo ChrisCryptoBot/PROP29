@@ -66,18 +66,23 @@ export const SettingsTab: React.FC = React.memo(() => {
             {/* Gold Standard Page Header */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Settings</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Settings</h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">
                         Package management system configuration and policies
                     </p>
                 </div>
             </div>
 
             {/* System Settings */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="text-xl text-white font-black uppercase tracking-tighter">System Settings</CardTitle>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic opacity-70">Configure general package management preferences</p>
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5">
+                            <i className="fas fa-cog text-white" aria-hidden />
+                        </div>
+                        <span className="card-title-text">System Settings</span>
+                    </CardTitle>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1 italic">Configure general package management preferences</p>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -86,7 +91,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                                 Default Storage Location
                             </label>
                             <select
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.defaultStorageLocation}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, defaultStorageLocation: e.target.value }))}
                             >
@@ -102,7 +107,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                                 Auto-Notification Timing
                             </label>
                             <select
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.autoNotificationTiming}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, autoNotificationTiming: e.target.value }))}
                             >
@@ -120,7 +125,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.defaultRetentionPeriod}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, defaultRetentionPeriod: parseInt(e.target.value) || 30 }))}
                             />
@@ -133,7 +138,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.expirationWarningDays}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, expirationWarningDays: parseInt(e.target.value) || 3 }))}
                             />
@@ -146,7 +151,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.highValueThreshold}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, highValueThreshold: parseInt(e.target.value) || 100 }))}
                             />
@@ -159,7 +164,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                             </label>
                             <input
                                 type="number"
-                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                                className="w-full px-4 py-3 bg-slate-900/50 border border-white/5 rounded-md text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                                 value={localSettings.autoArchiveAfterDays}
                                 onChange={(e) => setLocalSettings(prev => ({ ...prev, autoArchiveAfterDays: parseInt(e.target.value) || 60 }))}
                             />
@@ -174,7 +179,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {Object.entries(localSettings.notificationChannels).map(([channel, enabled]) => (
-                                <div key={channel} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg">
+                                <div key={channel} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-md">
                                     <div className="flex items-center space-x-3">
                                         <i className={`fas ${channel === 'email' ? 'fa-envelope' : channel === 'sms' ? 'fa-sms' : 'fa-bell'} text-slate-400`} />
                                         <span className="text-sm font-medium text-white capitalize">{channel}</span>
@@ -197,7 +202,7 @@ export const SettingsTab: React.FC = React.memo(() => {
                     </div>
 
                     {/* Require Signature */}
-                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-md">
                         <div className="flex items-center space-x-3">
                             <i className="fas fa-signature text-slate-400" />
                             <div>
@@ -214,10 +219,10 @@ export const SettingsTab: React.FC = React.memo(() => {
                     </div>
 
                     <Button
+                        variant="primary"
+                        className="w-full"
                         onClick={handleSaveSettings}
                         disabled={loading.settings}
-                        variant="outline"
-                        className="w-full text-[10px] font-black uppercase tracking-widest h-12 bg-white/5 border border-white/5 text-slate-500 hover:bg-white/10 hover:text-white hover:border-white/20"
                     >
                         <i className={`fas fa-save mr-2 ${loading.settings ? 'animate-spin' : ''}`} />
                         Save Package Settings

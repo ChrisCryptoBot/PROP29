@@ -20,70 +20,57 @@ const OverviewTabContent: React.FC = () => {
             {/* Page Header - matches tab name Overview */}
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Overview</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Overview</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Space utilization and guest registry
                     </p>
                 </div>
             </div>
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                    { label: 'Active Sessions', value: activeGuestParkings.length, icon: 'fa-parking', color: 'from-blue-600/80 to-slate-900', secondary: 'text-blue-400' },
-                    { label: 'Current Revenue', value: `$${analytics.revenue.today}`, icon: 'fa-dollar-sign', color: 'from-emerald-600/80 to-slate-900', secondary: 'text-emerald-400' },
-                    { label: 'Available Slots', value: availableSpaces.length, icon: 'fa-check-circle', color: 'from-indigo-600/80 to-slate-900', secondary: 'text-indigo-400' },
-                    { label: 'System Health', value: '100%', icon: 'fa-shield-alt', color: 'from-slate-600/80 to-slate-900', secondary: 'text-white' }
-                ].map((stat, i) => (
-                    <Card key={i} className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-xl hover:border-white/5 transition-all duration-300 group">
-                        <CardContent className="pt-6 px-6 pb-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className={cn("w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border border-white/5", stat.color)}>
-                                    <i className={cn("fas text-white text-lg", stat.icon)} />
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <h3 className="text-3xl font-black text-white">{stat.value}</h3>
-                                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+            {/* Compact metrics bar (gold standard — no KPI cards at top) */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)]" role="group" aria-label="Smart Parking key metrics">
+                <span>Active sessions <strong className="font-black text-white">{activeGuestParkings.length}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Revenue today <strong className="font-black text-white">${analytics.revenue.today}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>Available slots <strong className="font-black text-white">{availableSpaces.length}</strong></span>
+                <span className="text-white/30" aria-hidden="true">|</span>
+                <span>System health <strong className="font-black text-white">100%</strong></span>
             </div>
 
             {/* Quick Actions / Alerts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button
-                    variant="glass"
+                    variant="outline"
                     onClick={() => {
                         const overdueVehicles = guestParkings.filter(g => g.status === 'overdue');
                         showSuccess(`${overdueVehicles.length} vehicles have exceeded their time limit`);
                     }}
-                    className="relative group overflow-hidden w-full justify-start py-4 px-6 h-auto transition-all duration-300 active:scale-[0.98] border-white/5 hover:border-red-500/30"
+                    className="w-full justify-start py-4 px-6 h-auto border-white/5 hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-400"
                 >
-                    <div className="relative text-left flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white/5 rounded flex items-center justify-center border border-white/5 group-hover:border-red-500/20 group-hover:bg-red-500/5 transition-all">
-                            <i className="fas fa-exclamation-triangle text-slate-500 group-hover:text-red-400" />
+                    <div className="text-left flex items-center gap-4">
+                        <div className="w-10 h-10 bg-red-500/10 rounded-md flex items-center justify-center border border-red-500/20">
+                            <i className="fas fa-exclamation-triangle text-red-400" />
                         </div>
                         <div>
-                            <div className="font-black uppercase tracking-widest text-[10px] mb-0.5 group-hover:text-white transition-colors">Overstay Alerts</div>
+                            <div className="font-black uppercase tracking-widest text-[10px] mb-0.5">Overstay Alerts</div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.1em] italic opacity-50 text-slate-400">Review session limits and violations</p>
                         </div>
                     </div>
                 </Button>
                 <Button
-                    variant="glass"
+                    variant="outline"
                     onClick={() => {
                         const activeVehicles = guestParkings.filter(g => g.status === 'active');
                         showSuccess(`${activeVehicles.length} vehicles currently parked`);
                     }}
-                    className="relative group overflow-hidden w-full justify-start py-4 px-6 h-auto transition-all duration-300 active:scale-[0.98] border-white/5 hover:border-blue-500/30"
+                    className="w-full justify-start py-4 px-6 h-auto border-white/5 hover:border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400"
                 >
-                    <div className="relative text-left flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white/5 rounded flex items-center justify-center border border-white/5 group-hover:border-blue-500/20 group-hover:bg-blue-500/5 transition-all">
-                            <i className="fas fa-car text-slate-500 group-hover:text-blue-400" />
+                    <div className="text-left flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-md flex items-center justify-center border border-blue-500/20">
+                            <i className="fas fa-car text-blue-400" />
                         </div>
                         <div>
-                            <div className="font-black uppercase tracking-widest text-[10px] mb-0.5 group-hover:text-white transition-colors">Live Occupancy</div>
+                            <div className="font-black uppercase tracking-widest text-[10px] mb-0.5">Live Occupancy</div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.1em] italic opacity-50 text-slate-400">Monitor space usage in real time</p>
                         </div>
                     </div>
@@ -91,11 +78,13 @@ const OverviewTabContent: React.FC = () => {
             </div>
 
             {/* Recent Activity */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl">
-                <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
-                    <CardTitle className="flex items-center text-sm text-white font-black uppercase tracking-widest">
-                        <i className="fas fa-history text-blue-500 mr-3" />
-                        Automated Activity Log
+            <Card className="bg-slate-900/50 border border-white/5">
+                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                    <CardTitle className="flex items-center">
+                        <div className="card-title-icon-box" aria-hidden="true">
+                            <i className="fas fa-history text-white" />
+                        </div>
+                        <span className="card-title-text">Automated Activity Log</span>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
@@ -104,18 +93,18 @@ const OverviewTabContent: React.FC = () => {
                             icon="fas fa-clock"
                             title="No Recent Activity"
                             description="Recent registrations and occupancy updates will appear here."
-                            className="bg-slate-950/30 border-dashed border-2 border-white/5 mt-4 py-12"
+                            className="bg-[color:var(--console-dark)]/30 border-dashed border-2 border-white/5 mt-4 py-12"
                         />
                     ) : (
                         <div className="space-y-2 mt-4">
                             {filteredGuests.slice(0, 5).map((guest) => (
-                                <div key={guest.id} className="flex items-center justify-between p-4 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-blue-500/30 transition-all group">
+                                <div key={guest.id} className="flex items-center justify-between p-4 rounded-md border border-white/5 bg-white/[0.02] hover:bg-white/5 hover:border-white/10 transition-colors group">
                                     <div className="flex items-center space-x-4">
-                                        <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center text-slate-500 group-hover:text-blue-400 group-hover:scale-110 transition-all duration-300 border border-white/5">
+                                        <div className="w-10 h-10 rounded-md bg-white/5 flex items-center justify-center text-slate-500 group-hover:text-blue-400 border border-white/5">
                                             <i className="fas fa-car-side" />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-white group-hover:text-blue-400 transition-colors text-sm">
+                                            <h4 className="font-black text-white group-hover:text-blue-400 transition-colors text-sm uppercase tracking-widest">
                                                 {guest.guestName}
                                             </h4>
                                             <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">

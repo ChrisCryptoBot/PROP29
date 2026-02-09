@@ -12,37 +12,30 @@ const SettingsTabContent: React.FC = () => {
         <div className="space-y-6">
             {/* Header / Summary Section */}
             <div className="flex justify-between items-end mb-8">
-                <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-slate-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-4 shadow-2xl border border-white/5">
-                        <i className="fas fa-sliders-h text-white text-lg" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black uppercase tracking-tighter text-white">System Settings</h2>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400 mt-1">Configure Pricing, Policies, and Integrations</p>
-                    </div>
+                <div>
+                    <h2 className="page-title">System Settings</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">Configure pricing, policies, and integrations</p>
                 </div>
                 <Button
-                    variant="glass"
+                    variant="primary"
                     onClick={handleSaveSettings}
                     disabled={loading}
-                    className="relative group overflow-hidden px-12 h-10 active:scale-[0.98] border-white/5 hover:border-emerald-500/30"
+                    className="px-12 h-10"
                 >
-                    <div className="relative flex items-center">
-                        <i className="fas fa-save mr-3 text-slate-500 group-hover:text-emerald-400 transition-colors" />
-                        <span className="font-black uppercase tracking-widest text-[10px] group-hover:text-white transition-colors">
-                            {loading ? 'Processing...' : 'Save Configuration'}
-                        </span>
-                    </div>
+                    <i className={`fas fa-save mr-3 ${loading ? 'fa-spinner fa-spin' : ''}`} aria-hidden />
+                    {loading ? 'Saving...' : 'Save Configuration'}
                 </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Pricing Configuration */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl h-full">
-                    <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
-                        <CardTitle className="flex items-center text-sm text-white font-black uppercase tracking-widest">
-                            <i className="fas fa-dollar-sign text-emerald-500 mr-3" />
-                            Fee Schedules
+                <Card className="bg-slate-900/50 border border-white/5 h-full">
+                    <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                        <CardTitle className="flex items-center">
+                            <div className="card-title-icon-box" aria-hidden="true">
+                                <i className="fas fa-dollar-sign text-white" />
+                            </div>
+                            <span className="card-title-text">Fee Schedules</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
@@ -56,7 +49,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.guestHourly}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, guestHourly: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white/10 font-mono"
                                     />
                                 </div>
                             </div>
@@ -69,7 +62,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.guestDaily}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, guestDaily: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white/10 font-mono"
                                     />
                                 </div>
                             </div>
@@ -82,7 +75,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.valetFee}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, valetFee: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white/10 font-mono"
                                     />
                                 </div>
                             </div>
@@ -95,7 +88,7 @@ const SettingsTabContent: React.FC = () => {
                                         step="0.01"
                                         value={settings.pricing.evChargingFee}
                                         onChange={(e) => handleSettingsChange('pricing', { ...settings.pricing, evChargingFee: parseFloat(e.target.value) })}
-                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all font-mono"
+                                        className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white/10 font-mono"
                                     />
                                 </div>
                             </div>
@@ -104,11 +97,13 @@ const SettingsTabContent: React.FC = () => {
                 </Card>
 
                 {/* Policy Settings */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl h-full">
-                    <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
-                        <CardTitle className="flex items-center text-sm text-white font-black uppercase tracking-widest">
-                            <i className="fas fa-shield-alt text-blue-500 mr-3" />
-                            System Rules
+                <Card className="bg-slate-900/50 border border-white/5 h-full">
+                    <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                        <CardTitle className="flex items-center">
+                            <div className="card-title-icon-box" aria-hidden="true">
+                                <i className="fas fa-shield-alt text-white" />
+                            </div>
+                            <span className="card-title-text">System Rules</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-6">
@@ -119,7 +114,7 @@ const SettingsTabContent: React.FC = () => {
                                     type="number"
                                     value={settings.policies.maxStayHours}
                                     onChange={(e) => handleSettingsChange('policies', { ...settings.policies, maxStayHours: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                                 />
                             </div>
                             <div>
@@ -128,7 +123,7 @@ const SettingsTabContent: React.FC = () => {
                                     type="number"
                                     value={settings.policies.gracePeriodMinutes}
                                     onChange={(e) => handleSettingsChange('policies', { ...settings.policies, gracePeriodMinutes: parseInt(e.target.value) })}
-                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-mono"
+                                    className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                                 />
                             </div>
                         </div>
@@ -145,11 +140,13 @@ const SettingsTabContent: React.FC = () => {
                 </Card>
 
                 {/* Notification Settings */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl h-full">
-                    <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
-                        <CardTitle className="flex items-center text-sm text-white font-black uppercase tracking-widest">
-                            <i className="fas fa-bell text-orange-500 mr-3" />
-                            System Notifications
+                <Card className="bg-slate-900/50 border border-white/5 h-full">
+                    <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                        <CardTitle className="flex items-center">
+                            <div className="card-title-icon-box" aria-hidden="true">
+                                <i className="fas fa-bell text-white" />
+                            </div>
+                            <span className="card-title-text">System Notifications</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">
@@ -173,11 +170,13 @@ const SettingsTabContent: React.FC = () => {
                 </Card>
 
                 {/* Integration Settings */}
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl h-full">
-                    <CardHeader className="px-6 pt-6 pb-4 border-b border-white/5">
-                        <CardTitle className="flex items-center text-sm text-white font-black uppercase tracking-widest">
-                            <i className="fas fa-network-wired text-purple-500 mr-3" />
-                            External Integrations
+                <Card className="bg-slate-900/50 border border-white/5 h-full">
+                    <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+                        <CardTitle className="flex items-center">
+                            <div className="card-title-icon-box" aria-hidden="true">
+                                <i className="fas fa-network-wired text-white" />
+                            </div>
+                            <span className="card-title-text">External Integrations</span>
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6 space-y-4">

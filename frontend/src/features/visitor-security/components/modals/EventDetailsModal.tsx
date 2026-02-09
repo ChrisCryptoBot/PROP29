@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { useVisitorContext } from '../../context/VisitorContext';
@@ -11,7 +11,20 @@ interface EventDetailsModalProps {
 }
 
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = React.memo(({ isOpen, onClose }) => {
-    const { selectedEvent } = useVisitorContext();
+    const { selectedEvent, deleteEvent, setShowEventDetailsModal, setSelectedEvent, loading } = useVisitorContext();
+    const [deleting, setDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!selectedEvent || !window.confirm('Delete this event? This cannot be undone.')) return;
+        setDeleting(true);
+        const success = await deleteEvent(selectedEvent.id);
+        setDeleting(false);
+        if (success) {
+            setSelectedEvent(null);
+            setShowEventDetailsModal(false);
+            onClose();
+        }
+    };
 
     if (!selectedEvent) return null;
 
@@ -22,13 +35,24 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = React.memo(({
             title={selectedEvent.name}
             size="lg"
             footer={
-                <Button
-                    variant="subtle"
-                    onClick={onClose}
-                    className="text-xs font-black uppercase tracking-widest"
-                >
-                    Close
-                </Button>
+                <>
+                    <Button
+                        variant="subtle"
+                        onClick={onClose}
+                        className="text-xs font-black uppercase tracking-widest"
+                    >
+                        Close
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={loading.events || deleting}
+                        className="text-xs font-black uppercase tracking-widest"
+                    >
+                        {deleting || loading.events ? <i className="fas fa-spinner fa-spin mr-2" aria-hidden /> : <i className="fas fa-trash mr-2" aria-hidden />}
+                        Delete Event
+                    </Button>
+                </>
             }
         >
             <div className="space-y-6">

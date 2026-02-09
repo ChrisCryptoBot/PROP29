@@ -343,8 +343,8 @@ const UsersTabComponent: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">User Management</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">User Management</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Manage users and permissions
           </p>
           {lastRefreshAt && (
@@ -417,13 +417,13 @@ const UsersTabComponent: React.FC = () => {
 
 
       {/* Visitor Management Card */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden mb-8">
-        <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-              <i className="fas fa-id-card-clip text-white text-base" />
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden mb-8">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center">
+            <div className="card-title-icon-box" aria-hidden="true">
+              <i className="fas fa-id-card-clip text-white" />
             </div>
-            Visitor Management
+            <span className="card-title-text">Visitor Management</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -456,7 +456,7 @@ const UsersTabComponent: React.FC = () => {
               Grant Temporary Access
             </Button>
           </div>
-          <div className="mt-4 flex items-center p-3 bg-red-500/5 border border-red-500/10 rounded-xl">
+          <div className="mt-4 flex items-center p-3 bg-red-500/5 border border-red-500/10 rounded-md">
             <i className="fas fa-shield-virus text-red-400 mr-3" />
             <p className="text-[10px] text-red-300 font-bold uppercase tracking-wider">
               Banned user check active. Temporary badges expire automatically.
@@ -466,7 +466,7 @@ const UsersTabComponent: React.FC = () => {
       </Card>
 
       {/* Filter Component */}
-      <div className="bg-slate-900/50 backdrop-blur-xl p-3 rounded-2xl border border-white/5 mb-6">
+      <div className="bg-slate-900/50 p-3 rounded-md border border-white/5 mb-6">
         <UsersFilter
           searchQuery={searchQuery}
           roleFilter={roleFilter}
@@ -479,15 +479,15 @@ const UsersTabComponent: React.FC = () => {
       </div>
 
       {/* Users Registry */}
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5  overflow-hidden">
-        <CardHeader className="bg-white/5 border-b border-white/5 py-4">
-          <CardTitle className="flex items-center justify-between text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3  border border-white/5" aria-hidden="true">
-                <i className="fas fa-fingerprint text-white text-base" />
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
+        <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center text-white">
+              <div className="w-10 h-10 bg-indigo-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+                <i className="fas fa-fingerprint text-white" />
               </div>
-              Users
-            </div>
+              <span className="card-title-text">Users</span>
+            </span>
             <div className="flex items-center gap-6">
               {selectedUsers.size > 0 && (
                 <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20" aria-label={`${selectedUsers.size} users selected`}>
@@ -500,7 +500,7 @@ const UsersTabComponent: React.FC = () => {
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-6 px-6 pb-6">
+        <CardContent className="px-6 py-6">
           <div className="flex flex-wrap gap-2 mb-8">
             {['all', 'active', 'inactive', 'suspended'].map((status) => (
               <Button
@@ -556,7 +556,7 @@ const UsersTabComponent: React.FC = () => {
               description={searchQuery || roleFilter !== 'all' || statusFilter !== 'all'
                 ? "No users match your current filter."
                 : "Add your first user to begin."}
-              className="bg-black/20 border-dashed border-2 border-white/5 rounded-3xl p-12"
+              className="bg-black/20 border-dashed border-2 border-white/5 rounded-md p-12"
               action={
                 !searchQuery && roleFilter === 'all' && statusFilter === 'all' ? {
                   label: 'ADD FIRST USER',
@@ -574,7 +574,7 @@ const UsersTabComponent: React.FC = () => {
                 <div
                   key={user.id}
                   className={cn(
-                    "flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border rounded-2xl transition-all group hover:bg-blue-500/5",
+                    "flex items-center justify-between p-4 bg-[color:var(--console-dark)]/20 border rounded-md transition-colors group hover:bg-blue-500/5",
                     selectedUsers.has(user.id) ? 'border-blue-500/50 bg-blue-500/5 ' : 'border-white/5'
                   )}
                   role="listitem"
@@ -595,11 +595,11 @@ const UsersTabComponent: React.FC = () => {
                       className="w-4 h-4 text-blue-600 border-white/5 rounded bg-[color:var(--console-dark)] cursor-pointer"
                       aria-label={`Select ${user.name}`}
                     />
-                    <Avatar className="w-14 h-14 bg-gradient-to-br from-blue-600/80 to-slate-900 text-white rounded-xl  border border-white/5 group-hover:scale-105 transition-transform font-black text-xl" aria-label={`${user.name} avatar`}>
+                    <Avatar className="w-14 h-14 bg-blue-600 text-white rounded-md font-black text-xl" aria-label={`${user.name} avatar`}>
                       {user.avatar}
                     </Avatar>
                     <div>
-                      <h4 className="font-black text-[color:var(--text-main)] text-sm uppercase tracking-tight group-hover:text-blue-400 transition-colors">{user.name}</h4>
+                      <h4 className="card-title-text">{user.name}</h4>
                       <p className="text-[10px] text-[color:var(--text-sub)] font-bold uppercase tracking-widest mt-0.5 opacity-60">{user.email}</p>
                       <div className="flex items-center space-x-4 mt-2">
                         <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-0.5 rounded">{user.department}</span>
@@ -666,7 +666,7 @@ const UsersTabComponent: React.FC = () => {
         }
       >
         <div className="space-y-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic text-slate-500">
             Applies to {selectedUsers.size} selected user(s)
           </p>
           {isStale && (

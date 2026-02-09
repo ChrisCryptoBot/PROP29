@@ -1,105 +1,143 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../../../../components/UI/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
+import { Modal } from '../../../../components/UI/Modal';
 import { useSystemAdminContext } from '../../context/SystemAdminContext';
 
+const inputClass =
+  'w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500';
+const inputErrorClass =
+  'w-full px-3 py-2 bg-white/5 border border-red-500/50 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:bg-white/10 font-mono placeholder-slate-500';
+
 export const AddUserModal: React.FC = () => {
-    const {
-        showAddUserModal,
-        setShowAddUserModal,
-        newUser,
-        setNewUser,
-        handleAddUser
-    } = useSystemAdminContext();
+  const {
+    showAddUserModal,
+    setShowAddUserModal,
+    newUser,
+    setNewUser,
+    handleAddUser,
+  } = useSystemAdminContext();
 
-    if (!showAddUserModal) return null;
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-    return (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-            <Card className="glass-card border-white/5 shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-300">
-                <CardHeader className="border-b border-white/5 pb-4">
-                    <CardTitle className="flex items-center text-xl font-bold text-white">
-                        <div className="w-10 h-10 bg-blue-600/20 rounded-xl flex items-center justify-center mr-3 border border-blue-500/30">
-                            <i className="fas fa-user-plus text-blue-400 text-lg" />
-                        </div>
-                        Enlist System User
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                    <div className="space-y-6">
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Full Legal Name</label>
-                            <div className="relative">
-                                <i className="fas fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-blue-400/50" />
-                                <input
-                                    type="text"
-                                    value={newUser.name}
-                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                                    className="w-full pl-12 pr-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
-                                    placeholder="e.g. Alexander Pierce"
-                                />
-                            </div>
-                        </div>
+  if (!showAddUserModal) return null;
 
-                        <div className="space-y-4">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Secure Email Address</label>
-                            <div className="relative">
-                                <i className="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-blue-400/50" />
-                                <input
-                                    type="email"
-                                    value={newUser.email}
-                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                    className="w-full pl-12 pr-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 placeholder:text-slate-600 shadow-inner"
-                                    placeholder="admin@proper.security"
-                                />
-                            </div>
-                        </div>
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Designated Role</label>
-                                <select
-                                    value={newUser.role}
-                                    onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
-                                >
-                                    <option value="admin" className="bg-slate-900">Administrator</option>
-                                    <option value="user" className="bg-slate-900">Staff Member</option>
-                                    <option value="manager" className="bg-slate-900">Manager</option>
-                                </select>
-                            </div>
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Status</label>
-                                <select
-                                    value={newUser.status}
-                                    onChange={(e) => setNewUser({ ...newUser, status: e.target.value as any })}
-                                    className="w-full px-5 py-3 border border-white/5 rounded-2xl focus:ring-2 focus:ring-blue-500/50 transition-all font-bold text-white bg-white/5 appearance-none cursor-pointer shadow-inner"
-                                >
-                                    <option value="active" className="bg-slate-900">Active</option>
-                                    <option value="inactive" className="bg-slate-900">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
+  const handleSubmit = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!newUser.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!newUser.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(newUser.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    
+    setErrors({});
+    handleAddUser();
+  };
 
-                        <div className="flex justify-end space-x-4 pt-6 border-t border-white/5">
-                            <Button
-                                variant="glass"
-                                onClick={() => setShowAddUserModal(false)}
-                                className="font-bold uppercase text-[10px] tracking-widest text-slate-400 hover:text-white"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                className="font-bold uppercase text-[10px] tracking-widest px-10 shadow-lg shadow-blue-600/20"
-                                onClick={handleAddUser}
-                            >
-                                Create User
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+  const handleFieldChange = (field: keyof typeof newUser, value: string) => {
+    setNewUser({ ...newUser, [field]: value });
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: '' });
+    }
+  };
+
+  const handleClose = () => {
+    setShowAddUserModal(false);
+    setErrors({});
+  };
+
+  return (
+    <Modal
+      isOpen={showAddUserModal}
+      onClose={handleClose}
+      title="Add user"
+      size="sm"
+      footer={
+        <>
+          <Button variant="subtle" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSubmit}>
+            Create user
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-6">
+        <div>
+          <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+            Full name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={newUser.name}
+            onChange={(e) => handleFieldChange('name', e.target.value)}
+            className={errors.name ? inputErrorClass : inputClass}
+            placeholder="e.g. Jane Smith"
+          />
+          {errors.name && (
+            <p className="text-[10px] text-red-400 font-black uppercase tracking-tight ml-1 mt-1">{errors.name}</p>
+          )}
         </div>
-    );
+        <div>
+          <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={newUser.email}
+            onChange={(e) => handleFieldChange('email', e.target.value)}
+            className={errors.email ? inputErrorClass : inputClass}
+            placeholder="user@example.com"
+          />
+          {errors.email && (
+            <p className="text-[10px] text-red-400 font-black uppercase tracking-tight ml-1 mt-1">{errors.email}</p>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+              Role
+            </label>
+            <select
+              value={newUser.role}
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+              className={inputClass + ' appearance-none cursor-pointer'}
+            >
+              <option value="admin" className="bg-slate-900">Administrator</option>
+              <option value="user" className="bg-slate-900">Staff</option>
+              <option value="manager" className="bg-slate-900">Manager</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
+              Status
+            </label>
+            <select
+              value={newUser.status}
+              onChange={(e) => setNewUser({ ...newUser, status: e.target.value as 'active' | 'inactive' })}
+              className={inputClass + ' appearance-none cursor-pointer'}
+            >
+              <option value="active" className="bg-slate-900">Active</option>
+              <option value="inactive" className="bg-slate-900">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
 };

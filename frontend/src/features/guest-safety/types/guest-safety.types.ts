@@ -13,7 +13,7 @@ export type { GuestSafetyIncident, GuestSafetyAlert };
 /**
  * Tab ID type
  */
-export type TabId = 'incidents' | 'messages' | 'mass-notification' | 'response-teams' | 'evacuation' | 'analytics' | 'settings';
+export type TabId = 'incidents' | 'messages' | 'mass-notification' | 'evacuation' | 'analytics' | 'settings';
 
 /**
  * Incident priority levels

@@ -12,7 +12,11 @@ import { EmptyState } from '../../../../components/UI/EmptyState';
 import { VideoStreamPlayer } from '../VideoStreamPlayer';
 import { CameraWall } from '../CameraWall/CameraWall';
 import { useCameraWallLayout } from '../../context/CameraWallLayoutContext';
+import { sendCameraHeartbeat } from '../../services/securityOperationsCenterService';
+import { showInfo } from '../../../../utils/toast';
 import type { CameraEntry } from '../../types/security-operations.types';
+
+const MAX_WALL_TILES_RECOMMENDED = 16;
 
 function formatRefreshedAgo(d: Date | null): string {
   if (!d) return '';
@@ -59,6 +63,7 @@ export const LiveViewTab: React.FC = () => {
     toggleRecording,
     toggleMotionDetection,
     reportCameraIssue,
+    refreshCameras,
     canManageCameras,
   } = useSecurityOperationsContext();
   const { lastRefreshedAt } = useGlobalRefresh();
@@ -71,7 +76,19 @@ export const LiveViewTab: React.FC = () => {
   const [gridSize, setGridSize] = useState<GridSize>(4);
   const [page, setPage] = useState(0);
   const [selectedCameraIds, setSelectedCameraIds] = useState<Set<string>>(new Set());
+  const [markingOnlineId, setMarkingOnlineId] = useState<string | null>(null);
+  const [cameraSelectionExpanded, setCameraSelectionExpanded] = useState(false);
+  const [streamRefreshKey, setStreamRefreshKey] = useState(0);
   const location = useLocation();
+
+  const handleMarkOnline = async (cameraId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (markingOnlineId) return;
+    setMarkingOnlineId(cameraId);
+    const ok = await sendCameraHeartbeat(cameraId);
+    setMarkingOnlineId(null);
+    if (ok) await refreshCameras();
+  };
 
   const handleFilterChange = (newFilter: string) => {
     setFilter(newFilter);
@@ -170,112 +187,71 @@ export const LiveViewTab: React.FC = () => {
 
   return (
     <div className="space-y-6" role="main" aria-label="Live View">
-      <div className="flex justify-between items-end mb-8">
+      <div className="flex justify-between items-end mb-8 flex-wrap gap-4">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Live View</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Live View</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Real-time camera feeds and metrics
           </p>
         </div>
-        {lastRefreshedAt && (
-          <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite">
-            Data as of {lastRefreshedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · Refreshed {formatRefreshedAgo(lastRefreshedAt)}
-          </p>
-        )}
+        <div className="flex items-center gap-3">
+          {lastRefreshedAt && (
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest" aria-live="polite" title="When the camera list was last fetched">
+              Last list refresh {lastRefreshedAt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })} · {formatRefreshedAgo(lastRefreshedAt)}
+            </p>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-[10px] font-black uppercase tracking-widest h-8"
+            onClick={() => {
+              refreshCameras();
+              setStreamRefreshKey((k) => k + 1);
+            }}
+            title="Refresh camera list and streams"
+            aria-label="Refresh camera list and streams"
+          >
+            <i className="fas fa-sync-alt mr-1.5" />
+            Refresh
+          </Button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" role="group" aria-label="Camera metrics">
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">LIVE</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-check-circle text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Online</p>
-              <h3 className="text-3xl font-black text-white">{metrics.online}</h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Operational</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded uppercase">OFF</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-rose-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-times-circle text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Offline</p>
-              <h3 className="text-3xl font-black text-white">{metrics.offline}</h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">No signal</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded uppercase">MNT</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-tools text-white text-lg" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Maintenance</p>
-              <h3 className="text-3xl font-black text-white">{metrics.maintenance}</h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Service</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl group" role="article">
-          <CardContent className="pt-6 px-6 pb-6 relative">
-            <div className="absolute top-4 right-4">
-              <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-red-400 bg-red-500/10 border border-red-500/20 rounded uppercase">REC</span>
-            </div>
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-600/80 to-slate-900 rounded-xl flex items-center justify-center shadow-2xl border border-white/5 group-hover:scale-110 transition-transform" aria-hidden="true">
-                <i className="fas fa-circle text-white text-xs animate-pulse" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Recording</p>
-              <h3 className="text-3xl font-black text-white">{metrics.recording}</h3>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Active</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Compact metrics bar (gold standard — no KPI cards) */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-bold uppercase tracking-widest text-[color:var(--text-sub)]" role="group" aria-label="Camera metrics">
+        <span title="Cameras currently reporting as online">Online <strong className="font-black text-white">{metrics.online}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span title="Cameras not reporting (no recent heartbeat)">Offline <strong className="font-black text-white">{metrics.offline}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span title="Cameras in maintenance">Maintenance <strong className="font-black text-white">{metrics.maintenance}</strong></span>
+        <span className="text-white/30" aria-hidden="true">|</span>
+        <span title="Cameras currently recording">Recording <strong className="font-black text-white">{metrics.recording}</strong></span>
       </div>
 
       {viewMode === 'wall' ? (
-        <div className="h-[calc(100vh-400px)] min-h-[600px]">
-          <CameraWall cameras={filteredCameras} onSwitchToGrid={() => setViewMode('grid')} />
+        <div className="h-[calc(100vh-400px)] min-h-[400px] sm:min-h-[50vh]">
+          <CameraWall cameras={filteredCameras} onSwitchToGrid={() => setViewMode('grid')} streamRefreshKey={streamRefreshKey} />
         </div>
       ) : (
-        <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+        <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
           <CardHeader className="border-b border-white/5 px-6 py-4">
-            <CardTitle className="flex items-center justify-between text-xl font-black uppercase tracking-tighter text-white">
+            <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-                  <i className="fas fa-video text-white text-lg" />
+                <div className="card-title-icon-box" aria-hidden="true">
+                  <i className="fas fa-video text-white" />
                 </div>
-                Live Camera Feeds
+                <span className="card-title-text">Live Camera Feeds</span>
               </div>
               <Button
                 size="sm"
                 variant="glass"
                 onClick={() => {
-                  filteredCameras.forEach(camera => {
+                  const toAdd = filteredCameras.length > MAX_WALL_TILES_RECOMMENDED
+                    ? filteredCameras.slice(0, MAX_WALL_TILES_RECOMMENDED)
+                    : filteredCameras;
+                  if (filteredCameras.length > MAX_WALL_TILES_RECOMMENDED) {
+                    showInfo(`Added first ${MAX_WALL_TILES_RECOMMENDED} cameras to wall. Many streams may affect performance.`);
+                  }
+                  toAdd.forEach(camera => {
                     addTile(camera.id, camera);
                     trackAction('add_to_wall', 'camera', { cameraId: camera.id });
                   });
@@ -283,7 +259,9 @@ export const LiveViewTab: React.FC = () => {
                 }}
                 className="text-[10px] font-black uppercase tracking-widest"
                 disabled={filteredCameras.length === 0}
-                title={`Add all ${filteredCameras.length} camera${filteredCameras.length !== 1 ? 's' : ''} to the wall and switch to Wall view`}
+                title={filteredCameras.length > MAX_WALL_TILES_RECOMMENDED
+                  ? `Add up to ${MAX_WALL_TILES_RECOMMENDED} cameras (recommended max for performance). Switch to Wall view.`
+                  : `Add all ${filteredCameras.length} camera${filteredCameras.length !== 1 ? 's' : ''} to the wall and switch to Wall view`}
               >
                 <i className="fas fa-border-all mr-2" />
                 Add All to Wall
@@ -325,7 +303,7 @@ export const LiveViewTab: React.FC = () => {
                         ? 'border-blue-500/50 bg-blue-500/20 text-white'
                         : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10'
                     )}
-                    aria-label={`${size} camera grid`}
+                    aria-label={`${size} camera${size === 1 ? '' : 's'} grid (${cols}×${rows})`}
                   >
                     <span
                       className="inline-grid gap-px w-8 h-6"
@@ -370,31 +348,45 @@ export const LiveViewTab: React.FC = () => {
           </div>
 
           {filteredCameras.length > 0 && (
-            <div className="mb-6 p-3 bg-white/5 rounded-xl border border-white/5 max-h-32 overflow-y-auto">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Select which cameras appear in the grid. Uncheck to hide; Clear = show all.</p>
-              <div className="flex flex-wrap gap-2">
-                {filteredCameras.map((camera) => {
-                  const isSelected = selectedCameraIds.size === 0 || selectedCameraIds.has(camera.id);
-                  return (
-                    <label
-                      key={camera.id}
-                      className={cn(
-                        'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-all text-[10px] font-bold uppercase tracking-tight',
-                        isSelected
-                          ? 'bg-blue-500/20 border-blue-500/30 text-white'
-                          : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleCameraSelection(camera.id)}
-                        className="rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500/30"
-                      />
-                      <span className="truncate max-w-[140px]">{camera.name}</span>
-                    </label>
-                  );
-                })}
+            <div className="mb-6 border border-white/5 rounded-md overflow-hidden bg-white/5">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 transition-colors"
+                onClick={() => setCameraSelectionExpanded((e) => !e)}
+                aria-expanded={cameraSelectionExpanded}
+                aria-controls="camera-selection-list"
+              >
+                <span>Select which cameras appear in grid</span>
+                <i className={cn('fas text-[10px] transition-transform', cameraSelectionExpanded ? 'fa-chevron-up' : 'fa-chevron-down')} />
+              </button>
+              <div id="camera-selection-list" className={cn('border-t border-white/5', !cameraSelectionExpanded && 'hidden')}>
+                <div className="p-3 max-h-32 overflow-y-auto">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Uncheck to hide; Clear = show all.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {filteredCameras.map((camera) => {
+                      const isSelected = selectedCameraIds.size === 0 || selectedCameraIds.has(camera.id);
+                      return (
+                        <label
+                          key={camera.id}
+                          className={cn(
+                            'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-all text-[10px] font-bold uppercase tracking-tight',
+                            isSelected
+                              ? 'bg-blue-500/20 border-blue-500/30 text-white'
+                              : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleCameraSelection(camera.id)}
+                            className="rounded border-white/20 bg-white/10 text-blue-500 focus:ring-blue-500/30"
+                          />
+                          <span className="truncate max-w-[140px]" title={camera.location ? `${camera.name} — ${camera.location}` : camera.name}>{camera.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -412,16 +404,26 @@ export const LiveViewTab: React.FC = () => {
             {camerasOnPage.map((camera) => (
               <div
                 key={camera.id}
+                role="button"
+                tabIndex={0}
                 className={cn(
-                  'relative flex flex-col bg-slate-900 overflow-hidden cursor-pointer group border border-white/5 hover:ring-2 hover:ring-blue-500/30 focus-within:ring-2 focus-within:ring-blue-500/50',
+                  'relative flex flex-col bg-slate-900 overflow-hidden cursor-pointer group border border-white/5 hover:ring-2 hover:ring-blue-500/30 focus-within:ring-2 focus-within:ring-blue-500/50 focus:outline-none',
                   camera.status === 'offline' && 'ring-1 ring-rose-500/20',
                   camera.status === 'maintenance' && 'ring-1 ring-amber-500/20'
                 )}
                 onClick={() => handleOpenModal(camera)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenModal(camera); } }}
+                aria-label={`${camera.name}${camera.location ? `, ${camera.location}` : ''}. ${camera.status}. Click to open full view.`}
               >
-                <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-2 py-1 bg-black/60 backdrop-blur-sm border-b border-white/5">
-                  <span className="text-[10px] font-black text-white uppercase tracking-tighter truncate">{camera.name}</span>
+                <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-2 py-1 bg-black/60 border-b border-white/5">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-black text-white uppercase tracking-tighter truncate block" title={camera.location ? `${camera.name} — ${camera.location}` : camera.name}>{camera.name}</span>
+                    {camera.location && <span className="text-[8px] text-white/60 truncate block">{camera.location}</span>}
+                  </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    {camera.isRecording && (
+                      <span className="px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-widest text-red-400 bg-red-500/20">REC</span>
+                    )}
                     <span className={cn(
                       'px-1.5 py-0.5 text-[9px] font-black rounded uppercase tracking-widest',
                       camera.status === 'online' ? 'text-emerald-400 bg-emerald-500/20' :
@@ -446,33 +448,39 @@ export const LiveViewTab: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex-1 min-h-0 flex flex-col pt-8">
-                  {camera.status === 'online' && camera.streamUrl ? (
-                    <VideoStreamPlayer
-                      src={camera.streamUrl}
-                      poster={camera.lastKnownImageUrl}
-                      className="w-full flex-1 min-h-[120px] object-cover bg-black"
-                      errorClassName="w-full flex-1 min-h-[120px] flex items-center justify-center text-slate-400 text-xs bg-slate-900"
-                      showTimestamp={true}
-                      timestampPosition="top-right"
-                    />
-                  ) : (
-                    <div className="w-full flex-1 min-h-[120px] flex items-center justify-center relative bg-slate-900">
-                      {camera.lastKnownImageUrl || camera.lastKnownState?.imageUrl ? (
-                        <>
-                          <img
-                            src={camera.lastKnownImageUrl || camera.lastKnownState?.imageUrl}
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover opacity-60"
-                          />
-                          {camera.lastKnownState && (
-                            <span className="absolute top-1 left-1 bg-amber-500/20 border border-amber-500/40 rounded px-1.5 py-0.5 text-[8px] font-black uppercase text-amber-400">
-                              Last known
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-slate-500 text-xs">No feed</span>
+                  {camera.status === 'maintenance' ? (
+                    <div className="w-full flex-1 min-h-[120px] flex flex-col items-center justify-center gap-2 bg-slate-900/90 border border-amber-500/20">
+                      <i className="fas fa-wrench text-2xl text-amber-400/80" aria-hidden />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Maintenance</span>
+                      <span className="text-[9px] text-slate-500">No live feed</span>
+                    </div>
+                  ) : camera.streamUrl ? (
+                    <div key={`stream-${camera.id}-${streamRefreshKey}`} className="w-full flex-1 min-h-[120px] relative">
+                      <VideoStreamPlayer
+                        src={camera.streamUrl}
+                        poster={camera.lastKnownImageUrl}
+                        className="w-full flex-1 min-h-[120px] object-cover bg-black"
+                        errorClassName="w-full flex-1 min-h-[120px] flex items-center justify-center text-slate-400 text-xs bg-slate-900"
+                        showTimestamp={true}
+                        timestampPosition="top-right"
+                        cameraId={camera.id}
+                      />
+                      {camera.status === 'offline' && (
+                        <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-rose-500/90 text-white">
+                          Offline
+                        </span>
                       )}
+                    </div>
+                  ) : camera.status === 'offline' ? (
+                    <div className="w-full flex-1 min-h-[120px] flex flex-col items-center justify-center gap-2 bg-slate-900/90 border border-rose-500/20">
+                      <i className="fas fa-video-slash text-2xl text-rose-400/80" aria-hidden />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-rose-400">Offline</span>
+                      <span className="text-[9px] text-slate-500">No live feed</span>
+                    </div>
+                  ) : (
+                    <div className="w-full flex-1 min-h-[120px] flex flex-col items-center justify-center gap-2 bg-slate-900">
+                      <i className="fas fa-video-slash text-xl text-slate-500" aria-hidden />
+                      <span className="text-slate-500 text-xs">No feed</span>
                     </div>
                   )}
                 </div>
@@ -482,6 +490,7 @@ export const LiveViewTab: React.FC = () => {
                     className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-white border-r border-white/5 disabled:opacity-50"
                     disabled={camera.actionsDisabled || !canManageCameras}
                     onClick={(e) => { e.stopPropagation(); toggleRecording(camera.id); }}
+                    title={camera.isRecording ? 'Stop recording' : 'Start recording'}
                   >
                     <i className={cn('fas mr-1', camera.isRecording ? 'fa-stop text-red-500' : 'fa-circle text-red-500/50')} /> Rec
                   </button>
@@ -490,6 +499,7 @@ export const LiveViewTab: React.FC = () => {
                     className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-white border-r border-white/5 disabled:opacity-50"
                     disabled={camera.actionsDisabled || !canManageCameras}
                     onClick={(e) => { e.stopPropagation(); toggleMotionDetection(camera.id); }}
+                    title={camera.motionDetectionEnabled ? 'Disable motion detection' : 'Enable motion detection'}
                   >
                     <i className={cn('fas fa-eye mr-1 text-[8px]', camera.motionDetectionEnabled ? 'text-blue-400' : 'text-slate-500')} /> Motion
                   </button>
@@ -498,9 +508,21 @@ export const LiveViewTab: React.FC = () => {
                     className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-white disabled:opacity-50"
                     disabled={camera.actionsDisabled || !canManageCameras}
                     onClick={(e) => { e.stopPropagation(); reportCameraIssue(camera.id); }}
+                    title="Report issue with this camera"
                   >
                     <i className="fas fa-exclamation-triangle mr-1 text-amber-500 text-[8px]" /> Report
                   </button>
+                  {camera.status !== 'online' && (
+                    <button
+                      type="button"
+                      className="flex-1 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 hover:bg-white/5 hover:text-emerald-500 disabled:opacity-50"
+                      disabled={camera.actionsDisabled || !canManageCameras || markingOnlineId === camera.id}
+                      onClick={(e) => handleMarkOnline(camera.id, e)}
+                      title="Mark as online (sends one heartbeat; camera stays online until heartbeat expires, ~15 min)"
+                    >
+                      <i className={cn('fas fa-heartbeat mr-1 text-[8px]', markingOnlineId === camera.id && 'animate-pulse')} /> Mark online
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -509,16 +531,58 @@ export const LiveViewTab: React.FC = () => {
                 <EmptyState
                   icon="fas fa-video-slash"
                   title="No camera feeds"
-                  description="No cameras match the current filter. Try “All Cameras” or add cameras in Provisioning."
+                  description={filter === 'Online Only' && cameras.some((c) => c.status === 'offline') ? 'No cameras are online. Try "All Cameras" or use "Mark online" on offline camera tiles to send a heartbeat.' : 'No cameras match the current filter. Try “All Cameras” or add cameras in Provisioning.'}
                 />
               </div>
             )}
           </div>
           {totalPages > 1 && (
-            <div className="mt-6 pt-4 border-t border-white/5 flex justify-center">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                Showing {currentPage * gridSize + 1}&ndash;{Math.min((currentPage + 1) * gridSize, totalCameras)} of {totalCameras} cameras
-              </span>
+            <div className="mt-6 pt-4 border-t border-white/5 flex flex-wrap items-center justify-center gap-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-[10px] font-black uppercase h-8"
+                  onClick={() => setPage(0)}
+                  disabled={currentPage === 0}
+                  aria-label="First page"
+                >
+                  <i className="fas fa-angle-double-left" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-[10px] font-black uppercase h-8"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={currentPage === 0}
+                  aria-label="Previous page"
+                >
+                  <i className="fas fa-angle-left" />
+                </Button>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">
+                  {currentPage * gridSize + 1}&ndash;{Math.min((currentPage + 1) * gridSize, totalCameras)} of {totalCameras}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-[10px] font-black uppercase h-8"
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={currentPage >= totalPages - 1}
+                  aria-label="Next page"
+                >
+                  <i className="fas fa-angle-right" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-[10px] font-black uppercase h-8"
+                  onClick={() => setPage(totalPages - 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  aria-label="Last page"
+                >
+                  <i className="fas fa-angle-double-right" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

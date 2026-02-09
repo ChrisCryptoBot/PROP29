@@ -91,17 +91,17 @@ export const ProvisioningTab: React.FC = () => {
     <div className="space-y-6" role="main" aria-label="Provisioning">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Provisioning</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Provisioning</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Add and manage cameras
           </p>
         </div>
       </div>
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-              <i className="fas fa-plus text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+              <i className="fas fa-plus text-white" />
             </div>
             Add Camera
           </CardTitle>
@@ -110,12 +110,12 @@ export const ProvisioningTab: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Camera Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={cn(
-                    "w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 transition-all placeholder:text-white/10",
+                    "w-full bg-white/5 border rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 transition-colors placeholder:text-white/10",
                     errors.name 
                       ? "border-red-500/50 focus:ring-red-500/30 focus:border-red-500/50"
                       : "border-white/5 focus:ring-blue-500/50"
@@ -130,12 +130,12 @@ export const ProvisioningTab: React.FC = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Location <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={cn(
-                    "w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 transition-all placeholder:text-white/10",
+                    "w-full bg-white/5 border rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 transition-colors placeholder:text-white/10",
                     errors.location 
                       ? "border-red-500/50 focus:ring-red-500/30 focus:border-red-500/50"
                       : "border-white/5 focus:ring-blue-500/50"
@@ -150,12 +150,12 @@ export const ProvisioningTab: React.FC = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   IP Address <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={cn(
-                    "w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 transition-all placeholder:text-white/10 font-mono",
+                    "w-full bg-white/5 border rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 transition-colors placeholder:text-white/10 font-mono",
                     errors.ipAddress 
                       ? "border-red-500/50 focus:ring-red-500/30 focus:border-red-500/50"
                       : "border-white/5 focus:ring-blue-500/50"
@@ -170,31 +170,36 @@ export const ProvisioningTab: React.FC = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Stream URL <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={cn(
-                    "w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 transition-all placeholder:text-white/10 font-mono",
+                    "w-full bg-white/5 border rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 transition-colors placeholder:text-white/10 font-mono",
                     errors.streamUrl 
                       ? "border-red-500/50 focus:ring-red-500/30 focus:border-red-500/50"
                       : "border-white/5 focus:ring-blue-500/50"
                   )}
                   value={formData.streamUrl}
                   onChange={(e) => handleChange('streamUrl', e.target.value)}
-                  placeholder="rtsp://camera/stream or https://...m3u8"
+                  placeholder="rtsp://user:pass@192.168.1.100:554/stream1 or https://...m3u8"
                   required
                 />
                 {errors.streamUrl && (
                   <p className="text-[10px] text-red-400 font-black uppercase tracking-tight ml-1">{errors.streamUrl}</p>
                 )}
+                {formData.streamUrl.toLowerCase().includes('rtsp') && (
+                  <p className="text-[10px] text-amber-400/90 mt-1.5">
+                    RTSP (e.g. Tapo C500): run <code className="bg-black/30 px-1 rounded">scripts\run-c500-ffmpeg.ps1</code> with this camera&apos;s ID, then <code className="bg-black/30 px-1 rounded">scripts\run-hls-gateway.ps1</code>. See HOW_TO_GET_CAMERA_VIDEO.md.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Username <span className="text-[9px] text-slate-500 italic">(Optional - stored securely server-side)</span>
                 </label>
                 <input
-                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors placeholder:text-white/10"
                   value={formData.username}
                   onChange={(e) => handleChange('username', e.target.value)}
                   placeholder="Camera username (if required)"
@@ -205,12 +210,12 @@ export const ProvisioningTab: React.FC = () => {
                 </p>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-50 text-white">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Password <span className="text-[9px] text-slate-500 italic">(Optional - stored securely server-side)</span>
                 </label>
                 <input
                   type="password"
-                  className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/10"
+                  className="w-full bg-white/5 border border-white/5 rounded-md px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors placeholder:text-white/10"
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
                   placeholder="Camera password (if required)"
@@ -236,11 +241,11 @@ export const ProvisioningTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 shadow-2xl overflow-hidden">
+      <Card className="bg-slate-900/50 border border-white/5 overflow-hidden">
         <CardHeader className="border-b border-white/5 px-6 py-4">
-          <CardTitle className="flex items-center text-xl font-black uppercase tracking-tighter text-white">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 shadow-2xl border border-white/5" aria-hidden="true">
-              <i className="fas fa-list text-white text-lg" />
+          <CardTitle className="flex items-center">
+            <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-3 border border-white/5" aria-hidden="true">
+              <i className="fas fa-list text-white" />
             </div>
             Camera List
           </CardTitle>
@@ -248,15 +253,25 @@ export const ProvisioningTab: React.FC = () => {
         <CardContent className="p-6">
           <div className="space-y-4">
             {cameras.map((camera) => (
-              <div key={camera.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/[0.08] transition-all">
+              <div key={camera.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-md group hover:bg-white/[0.08] transition-colors">
                 <div className="space-y-1">
-                  <div className="font-black text-white uppercase tracking-tighter text-base group-hover:text-blue-400 transition-colors">{camera.name}</div>
+                  <div className="card-title-text">{camera.name}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-white/50">{camera.location} · <span className="text-white/30 italic">{camera.ipAddress}</span></div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[9px] text-slate-500 font-mono">ID: {camera.id}</span>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(camera.id)}
+                      className="text-[9px] text-blue-400 hover:text-blue-300 font-bold uppercase"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="font-black uppercase tracking-widest text-[10px] border-rose-500/20 text-rose-400 hover:bg-rose-500/10 h-9 px-6 transition-all"
+                  className="font-black uppercase tracking-widest text-[10px] border-rose-500/20 text-rose-400 hover:bg-rose-500/10 h-9 px-6 transition-colors"
                   onClick={() => {
                     trackAction('delete', 'camera', { cameraId: camera.id, cameraName: camera.name });
                     deleteCamera(camera.id);

@@ -9,10 +9,12 @@ import { useLostFoundState, UseLostFoundStateReturn } from '../hooks/useLostFoun
 
 interface LostFoundContextValue extends UseLostFoundStateReturn {
     // Modal controls (managed by orchestrator)
+    showRegisterModal?: boolean;
     setShowRegisterModal?: (show: boolean) => void;
+    showReportModal?: boolean;
+    setShowReportModal?: (show: boolean) => void;
     setShowEditModal?: (show: boolean) => void;
     setShowDetailsModal?: (show: boolean) => void;
-    setShowReportModal?: (show: boolean) => void;
 }
 
 const LostFoundContext = createContext<LostFoundContextValue | undefined>(undefined);
@@ -28,10 +30,12 @@ export function useLostFoundContext(): LostFoundContextValue {
 interface LostFoundProviderProps {
     children: ReactNode;
     modalControls?: {
-        setShowRegisterModal: (show: boolean) => void;
-        setShowEditModal: (show: boolean) => void;
-        setShowDetailsModal: (show: boolean) => void;
-        setShowReportModal: (show: boolean) => void;
+        showRegisterModal?: boolean;
+        setShowRegisterModal?: (show: boolean) => void;
+        showReportModal?: boolean;
+        setShowReportModal?: (show: boolean) => void;
+        setShowEditModal?: (show: boolean) => void;
+        setShowDetailsModal?: (show: boolean) => void;
     };
 }
 

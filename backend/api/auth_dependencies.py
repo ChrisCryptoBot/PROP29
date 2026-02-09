@@ -29,25 +29,15 @@ async def get_current_user(
             ...
     """
     token = credentials.credentials
-    
-    # Handle mock token for backward compatibility during development
-    if token == "mock-token-12345":
-        # For development: allow mock token and return a mock user
-        # In production, this should be removed
-        db = SessionLocal()
-        try:
-            # Try to find admin user, or create mock user object
-            user = db.query(User).filter(User.username == "admin").first()
-            if user:
-                return user
-            # If no user exists, raise error (don't create mock users)
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
-        finally:
-            db.close()
-    
+
+    # No mock tokens - all tokens must be validated via JWT
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token required",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
     # Verify JWT token
     try:
         from services.auth_service import AuthService

@@ -194,7 +194,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       <div className="space-y-8">
         {/* Basic Information */}
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Basic Info</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Basic Info</p>
 
           <div>
             <label htmlFor="user-name" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Full Name <span className="text-red-400">*</span></label>
@@ -276,7 +276,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         </div>
 
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Access Settings</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Access Settings</p>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label htmlFor="user-role" className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Role</label>
@@ -321,7 +321,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         </div>
 
         <div className="space-y-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Access Schedule</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Access Schedule</p>
           <div>
             <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Active Days</label>
             <div className="grid grid-cols-7 gap-2">
@@ -370,7 +370,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         </div>
 
         <div className="space-y-3">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 border-b border-white/5 pb-2 mb-2">Advanced Options</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-4">Advanced Options</p>
           <label className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
             <div>
               <span className="text-xs font-bold text-white uppercase tracking-wider">Auto revoke on checkout</span>

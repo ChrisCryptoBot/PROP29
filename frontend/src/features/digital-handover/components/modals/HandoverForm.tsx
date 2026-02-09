@@ -1,15 +1,16 @@
 /**
  * HandoverForm Component
- * 
- * Modal form component for creating and editing handovers.
+ *
+ * Modal form for creating and editing handovers. Uses global Modal (z-[100])
+ * so it appears above sticky tabs; gold standard: no close X, footer actions only.
  */
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../../components/UI/Card';
+import { Modal } from '../../../../components/UI/Modal';
 import { Button } from '../../../../components/UI/Button';
 import { ChecklistItemEditor } from '../ChecklistItemEditor';
 import { cn } from '../../../../utils/cn';
-import type { Handover, ChecklistItem, ShiftType, HandoverPriority as Priority, CreateHandoverRequest } from '../../types';
+import type { Handover, ShiftType, HandoverPriority as Priority, CreateHandoverRequest } from '../../types';
 import { SHIFT_TYPES, PRIORITIES, PRIORITY_LABELS, SHIFT_TYPE_LABELS } from '../../utils/constants';
 
 export interface HandoverFormProps {
@@ -79,8 +80,6 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
     }
   }, [initialData]);
 
-  if (!isOpen) return null;
-
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -132,8 +131,8 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
         });
         setErrors({});
       }
-    } catch (error) {
-      console.error('Failed to submit handover:', error);
+    } catch {
+      // Error surfaced via toast where applicable
     } finally {
       setIsSubmitting(false);
     }
@@ -145,38 +144,56 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="glass-card border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <CardHeader className="px-6 pt-6 pb-4 border-b border-[color:var(--border-subtle)]/10">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center text-xl text-[color:var(--text-main)] font-black uppercase tracking-tighter">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-blue-900 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-                <i className={`fas ${mode === 'create' ? 'fa-plus' : 'fa-edit'} text-white text-sm`} />
-              </div>
-              {mode === 'create' ? 'Create New Handover' : 'Edit Handover'}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleClose}
-              className="border-[color:var(--border-subtle)]/50 text-[color:var(--text-sub)] hover:text-white hover:bg-white/5"
-            >
-              <i className="fas fa-times" />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={mode === 'create' ? 'Create New Handover' : 'Edit Handover'}
+      size="lg"
+      draggable={true}
+      footer={
+        <div className="flex justify-end space-x-3">
+          <Button
+            type="button"
+            variant="subtle"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="text-[10px] font-black uppercase tracking-widest"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="handover-form"
+            disabled={isSubmitting}
+            variant="primary"
+            className="font-black uppercase tracking-widest text-[10px] px-8 h-10 shadow-none"
+          >
+            {isSubmitting ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2" aria-hidden />
+                {mode === 'create' ? 'Creating...' : 'Saving...'}
+              </>
+            ) : (
+              <>
+                <i className={cn('fas mr-2', mode === 'create' ? 'fa-check' : 'fa-save')} aria-hidden />
+                {mode === 'create' ? 'Create Handover' : 'Save Changes'}
+              </>
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <form id="handover-form" onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Shift Type <span className="text-red-500 font-bold">*</span>
                 </label>
                 <select
                   value={formData.shiftType}
                   onChange={(e) => setFormData({ ...formData, shiftType: e.target.value as ShiftType })}
-                  className="w-full h-11 px-4 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer hover:border-white/20"
+                  className="w-full h-10 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                 >
                   {SHIFT_TYPES.map((type) => (
                     <option key={type} value={type} className="bg-slate-900 text-white">
@@ -187,7 +204,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Handover Date <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
@@ -195,7 +212,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   value={formData.handoverDate}
                   onChange={(e) => setFormData({ ...formData, handoverDate: e.target.value })}
                   className={cn(
-                    "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:border-white/20",
+                    "w-full h-10 px-3 py-2 bg-white/5 border rounded-md text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono",
                     errors.handoverDate ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                 />
@@ -205,7 +222,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Handover From <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
@@ -213,7 +230,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   value={formData.handoverFrom}
                   onChange={(e) => setFormData({ ...formData, handoverFrom: e.target.value })}
                   className={cn(
-                    "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20",
+                    "w-full px-3 py-2 h-10 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500",
                     errors.handoverFrom ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                   placeholder="Enter officer name"
@@ -224,7 +241,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Handover To <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
@@ -232,7 +249,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   value={formData.handoverTo}
                   onChange={(e) => setFormData({ ...formData, handoverTo: e.target.value })}
                   className={cn(
-                    "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20",
+                    "w-full px-3 py-2 h-10 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500",
                     errors.handoverTo ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                   placeholder="Enter officer name"
@@ -243,7 +260,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   Start Time <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
@@ -251,7 +268,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   value={formData.startTime}
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                   className={cn(
-                    "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:border-white/20",
+                    "w-full px-3 py-2 h-10 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono",
                     errors.startTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                 />
@@ -261,7 +278,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">
                   End Time <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
@@ -269,7 +286,7 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                   value={formData.endTime}
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                   className={cn(
-                    "w-full h-11 px-4 bg-white/5 border rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all hover:border-white/20",
+                    "w-full px-3 py-2 h-10 bg-white/5 border rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono",
                     errors.endTime ? "border-red-500/50 focus:ring-red-500/30" : "border-white/5"
                   )}
                 />
@@ -279,11 +296,11 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">Priority</label>
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Priority</label>
                 <select
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
-                  className="w-full h-11 px-4 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all cursor-pointer hover:border-white/20"
+                  className="w-full h-10 px-3 py-2 bg-white/5 border border-white/5 rounded-md text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono"
                 >
                   {PRIORITIES.map((priority) => (
                     <option key={priority} value={priority} className="bg-slate-900 text-white">
@@ -294,12 +311,12 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">Operational Post</label>
+                <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Operational Post</label>
                 <input
                   type="text"
                   value={formData.operationalPost}
                   onChange={(e) => setFormData({ ...formData, operationalPost: e.target.value })}
-                  className="w-full h-11 px-4 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20"
+                  className="w-full px-3 py-2 h-10 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500"
                   placeholder="e.g., Lobby, Loading Dock, Patrol"
                 />
               </div>
@@ -307,11 +324,11 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
 
             {/* Handover Notes */}
             <div className="space-y-2">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-[color:var(--text-sub)]/70">Handover Notes</label>
+              <label className="block text-xs font-bold text-white mb-2 uppercase tracking-wider">Handover Notes</label>
               <textarea
                 value={formData.handoverNotes}
                 onChange={(e) => setFormData({ ...formData, handoverNotes: e.target.value })}
-                className="w-full px-4 py-3 bg-white/5 border border-white/5 rounded-lg text-[color:var(--text-main)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-white/30 hover:border-white/20 min-h-[120px]"
+                className="w-full px-3 py-2 bg-white/5 border border-white/5 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white/10 font-mono placeholder-slate-500 min-h-[120px] resize-y"
                 placeholder="Enter handover notes and important information"
               />
             </div>
@@ -324,41 +341,8 @@ export const HandoverForm: React.FC<HandoverFormProps> = ({
                 setFormData({ ...formData, checklistItems: items });
               }}
             />
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-6 border-t border-[color:var(--border-subtle)]/10">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className="border-white/5 text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase tracking-widest text-[10px] px-8 h-11"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                variant="primary"
-                className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 font-black uppercase tracking-widest text-[10px] px-8 h-11 border-none"
-              >
-                {isSubmitting ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2" />
-                    {mode === 'create' ? 'Creating...' : 'Saving...'}
-                  </>
-                ) : (
-                  <>
-                    <i className={`fas ${mode === 'create' ? 'fa-check' : 'fa-save'} mr-2`} />
-                    {mode === 'create' ? 'Create Handover' : 'Save Changes'}
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+      </form>
+    </Modal>
   );
 };
 

@@ -1,0 +1,39 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-7.4.3, pluggy-1.6.0 -- C:\Users\14698\AppData\Local\Programs\Python\Python310\python.exe
+cachedir: .pytest_cache
+rootdir: C:\dev\proper-29\backend
+plugins: anyio-3.7.1, dash-2.16.1, Faker-20.1.0, asyncio-0.21.1, cov-4.1.0, mock-3.12.0
+asyncio: mode=strict
+collecting ... collected 7 items
+
+tests/test_system_admin_service.py::TestSystemAdminService::test_create_user PASSED [ 14%]
+tests/test_system_admin_service.py::TestSystemAdminService::test_get_user PASSED [ 28%]
+tests/test_system_admin_service.py::TestSystemAdminService::test_update_user PASSED [ 42%]
+tests/test_system_admin_service.py::TestSystemAdminService::test_delete_user PASSED [ 57%]
+tests/test_system_admin_service.py::TestSystemAdminService::test_property_management PASSED [ 71%]
+tests/test_system_admin_service.py::TestSystemAdminService::test_role_assignment PASSED [ 85%]
+tests/test_system_admin_service.py::TestSystemAdminService::test_api_keys PASSED [100%]
+
+============================== warnings summary ===============================
+database.py:57
+  C:\dev\proper-29\backend\database.py:57: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+..\..\..\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_config.py:272: 29 warnings
+  C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_config.py:272: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.6/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+..\..\..\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_generate_schema.py:262: 15 warnings
+  C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\_internal\_generate_schema.py:262: PydanticDeprecatedSince20: `json_encoders` is deprecated. See https://docs.pydantic.dev/2.6/concepts/serialization/#custom-serializers for alternatives. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.6/migration/
+    warnings.warn(
+
+tests/test_system_admin_service.py::TestSystemAdminService::test_update_user
+  C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\pydantic\main.py:1024: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.6/migration/
+    warnings.warn('The `dict` method is deprecated; use `model_dump` instead.', category=PydanticDeprecatedSince20)
+
+tests/test_system_admin_service.py::TestSystemAdminService::test_property_management
+  C:\Users\14698\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\python.py:198: PytestReturnNotNoneWarning: Expected None, but tests/test_system_admin_service.py::TestSystemAdminService::test_property_management returned <models.Property object at 0x000001E320CC09A0>, which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 7 passed, 47 warnings in 4.49s ========================

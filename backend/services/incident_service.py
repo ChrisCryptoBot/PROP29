@@ -48,9 +48,9 @@ class IncidentService:
             
             # Additional filters
             if property_id:
-                # Verify user has access to requested property
+                # If user has no access to requested property, return empty list (no 403)
                 if property_id not in user_property_ids:
-                    raise ValueError("Access denied to this property")
+                    return []
                 query = query.filter(Incident.property_id == property_id)
             if status:
                 query = query.filter(Incident.status == status)

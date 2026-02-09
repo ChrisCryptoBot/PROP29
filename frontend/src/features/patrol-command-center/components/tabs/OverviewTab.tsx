@@ -81,8 +81,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
             
             <div className="flex justify-between items-end mb-8">
                 <div>
-                    <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Overview</h2>
-                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+                    <h2 className="page-title">Overview</h2>
+                    <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
                         Live patrol operations overview
                     </p>
                 </div>
@@ -107,136 +107,31 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                     )}
                 </div>
             </div>
-            {/* Metrics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-white bg-blue-500/10 border border-blue-500/20 rounded uppercase">LIVE</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-route text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active Patrols</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.activePatrols}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Currently in progress</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">ON DUTY</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-user-shield text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Officers On Duty</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.onDutyOfficers}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Out of {metrics.totalOfficers || 0} total</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded uppercase">ACTIVE</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-map-marked-alt text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active Routes</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.activeRoutes}</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Patrol routes in use</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 group">
-                    <CardContent className="pt-6 px-6 pb-6 relative">
-                        <div className="absolute top-4 right-4">
-                            <span className="px-2 py-0.5 text-[9px] font-black tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded uppercase">SUCCESS</span>
-                        </div>
-                        <div className="flex items-center justify-between mb-4 mt-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-600/80 to-slate-900 rounded-xl flex items-center justify-center  border border-white/5 group-hover:scale-110 transition-transform">
-                                <i className="fas fa-check-double text-white text-lg"></i>
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Completion Rate</p>
-                            <h3 className="text-3xl font-black text-white">{metrics.checkpointCompletionRate ?? 0}%</h3>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.2em] italic opacity-70 text-slate-400">Checkpoint success</p>
-                            <div className="w-full bg-white/5 rounded-full h-1.5 mt-2 overflow-hidden border border-white/5">
-                                <div
-                                    className="bg-emerald-500 h-full rounded-full transition-all duration-300"
-                                    style={{ width: `${Math.min(100, Math.max(0, metrics.checkpointCompletionRate ?? 0))}%` }}
-                                    role="progressbar"
-                                    aria-valuenow={metrics.checkpointCompletionRate ?? 0}
-                                    aria-valuemin={0}
-                                    aria-valuemax={100}
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+            {/* Metrics: compact bar (gold standard — no KPI card grid) */}
+            <div className="flex flex-wrap items-center gap-6 py-3 border-b border-white/5 text-sm mb-6">
+                <span className="text-slate-400 font-medium">Active Patrols <strong className="text-white ml-1">{metrics.activePatrols}</strong></span>
+                <span className="text-slate-400 font-medium">On Duty <strong className="text-white ml-1">{metrics.onDutyOfficers}</strong><span className="text-slate-500 ml-0.5">/ {metrics.totalOfficers || 0}</span></span>
+                <span className="text-slate-400 font-medium">Active Routes <strong className="text-white ml-1">{metrics.activeRoutes}</strong></span>
+                <span className="text-slate-400 font-medium">Completion <strong className="text-white ml-1">{metrics.checkpointCompletionRate ?? 0}%</strong></span>
+                <span className="text-slate-400 font-medium">Total Patrols <strong className="text-white ml-1">{metrics.totalPatrols}</strong></span>
+                <span className="text-slate-400 font-medium">Completed <strong className="text-white ml-1">{metrics.completedPatrols}</strong></span>
+                <span className="text-slate-400 font-medium">Avg Efficiency <strong className="text-white ml-1">{Math.round(metrics.averageEfficiencyScore)}%</strong></span>
+                <span className="text-slate-400 font-medium">Avg Duration <strong className="text-white ml-1">{Math.round(metrics.averagePatrolDurationMinutes)} min</strong></span>
             </div>
-
-            {/* KPI Summary */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 ">
-                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
-                    <CardTitle className="flex items-center text-white">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
-                            <i className="fas fa-chart-line text-white"></i>
-                        </div>
-                        <span className="text-sm font-black uppercase tracking-widest">Operational KPIs</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="px-6 py-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div className="p-4 rounded-xl bg-slate-900/30 border border-white/5">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Total Patrols</div>
-                            <div className="text-2xl font-black text-white mt-2">{metrics.totalPatrols}</div>
-                        </div>
-                        <div className="p-4 rounded-xl bg-slate-900/30 border border-white/5">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Completed Patrols</div>
-                            <div className="text-2xl font-black text-white mt-2">{metrics.completedPatrols}</div>
-                        </div>
-                        <div className="p-4 rounded-xl bg-slate-900/30 border border-white/5">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Efficiency</div>
-                            <div className="text-2xl font-black text-emerald-400 mt-2">{Math.round(metrics.averageEfficiencyScore)}%</div>
-                        </div>
-                        <div className="p-4 rounded-xl bg-slate-900/30 border border-white/5">
-                            <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Avg Duration</div>
-                            <div className="text-2xl font-black text-white mt-2">{Math.round(metrics.averagePatrolDurationMinutes)} min</div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             {/* Enhanced Dashboard Components */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Emergency Status & Weather */}
                 <div className="space-y-4">
                     {/* Alert Center - Merged Emergency Status & Alerts */}
-                    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 ">
+                    <Card className="bg-slate-900/50 border border-white/5 ">
                         <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                             <CardTitle className="flex items-center justify-between">
-                                <span className="flex items-center text-white">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
-                                        <i className="fas fa-bell text-white"></i>
+                                <span className="flex items-center">
+                                    <div className="card-title-icon-box" aria-hidden="true">
+                                        <i className="fas fa-bell text-white" />
                                     </div>
-                                    <span className="text-sm font-black uppercase tracking-widest">Alert Center</span>
+                                    <span className="card-title-text">Alert Center</span>
                                 </span>
                                 <span className="px-2 py-0.5 text-[10px] font-black tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full uppercase">
                                     {(alerts || []).filter(alert => alert && !alert.isRead).length} unread
@@ -247,10 +142,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                             {/* Emergency Status Level */}
                             <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/5">
                                 <div>
-                                    <div className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest ${emergencyStatus.level === 'normal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]' :
-                                        emergencyStatus.level === 'elevated' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]' :
-                                            emergencyStatus.level === 'high' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-[0_0_15px_rgba(251,146,60,0.1)]' :
-                                                'bg-red-500/10 text-red-400 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
+                                    <div className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest ${emergencyStatus.level === 'normal' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ' :
+                                        emergencyStatus.level === 'elevated' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 ' :
+                                            emergencyStatus.level === 'high' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20 ' :
+                                                'bg-red-500/10 text-red-400 border border-red-500/20 '
                                         }`}>
                                         {emergencyStatus.level.toUpperCase()}
                                     </div>
@@ -290,8 +185,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-slate-400">Officer devices:</span>
                                                     <span className="text-white font-mono">
-                                                        <span className="text-emerald-400">📡 {online} online</span>
-                                                        {offline > 0 && <span className="text-amber-400 ml-2">⚠ {offline} offline</span>}
+                                                        <span className="text-white">📡 {online} online</span>
+                                                        {offline > 0 && <span className="ml-2 text-white">⚠ {offline} offline</span>}
                                                         {unknown > 0 && <span className="text-slate-500 ml-2">? {unknown} unknown</span>}
                                                     </span>
                                                 </div>
@@ -358,7 +253,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                                                         <p className={`text-xs ${alert.isRead ? 'text-slate-500' : 'text-white font-bold'}`}>
                                                             {alert.message || 'No message'}
                                                         </p>
-                                                        <p className="text-[10px] text-slate-500 mt-1 font-mono opacity-70">
+                                                        <p className="text-[10px] text-[color:var(--text-sub)] mt-1 font-mono">
                                                             {alertDate.toLocaleString()}
                                                         </p>
                                                     </div>
@@ -390,13 +285,13 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
 
                     {/* Weather Widget — hidden when disabled or no data */}
                     {weatherEnabled && (
-                    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 ">
+                    <Card className="bg-slate-900/50 border border-white/5 ">
                         <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
-                            <CardTitle className="flex items-center text-white">
-                                <div className="w-10 h-10 bg-gradient-to-br from-indigo-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5">
-                                    <i className="fas fa-cloud-sun text-white"></i>
+                            <CardTitle className="flex items-center">
+                                <div className="card-title-icon-box" aria-hidden="true">
+                                    <i className="fas fa-cloud-sun text-white" />
                                 </div>
-                                <span className="text-sm font-black uppercase tracking-widest">Weather Overview</span>
+                                <span className="card-title-text">Weather Overview</span>
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-6">
@@ -455,14 +350,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
 
                 {/* Calendar & Schedule */}
                 <div className="lg:col-span-2">
-                    <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 ">
+                    <Card className="bg-slate-900/50 border border-white/5 ">
                         <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
                             <CardTitle className="flex items-center justify-between">
-                                <span className="flex items-center text-white">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
-                                        <i className="fas fa-calendar-alt text-white"></i>
+                                <span className="flex items-center">
+                                    <div className="card-title-icon-box" aria-hidden="true">
+                                        <i className="fas fa-calendar-alt text-white" />
                                     </div>
-                                    <span className="text-sm font-black uppercase tracking-widest">Patrol Schedule</span>
+                                    <span className="card-title-text">Patrol Schedule</span>
                                 </span>
                                 <div className="flex items-center space-x-2">
                                     <span className="px-2 py-0.5 text-[10px] font-black tracking-widest text-slate-400 bg-white/5 border border-white/5 rounded uppercase">
@@ -495,7 +390,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                                                             }`}></div>
                                                         <div>
                                                             <h4 className="font-bold text-white text-[10px] uppercase tracking-widest">{item.title || 'Untitled Patrol'}</h4>
-                                                            <p className="text-[10px] text-slate-500 mt-0.5 font-bold uppercase tracking-widest italic opacity-70">
+                                                            <p className="text-[10px] text-[color:var(--text-sub)] mt-0.5 font-bold uppercase tracking-widest italic">
                                                                 {item.route || 'No route'} <span className="mx-1 text-slate-700">•</span> <span className="text-indigo-400">{item.assignedOfficer || 'Unassigned'}</span>
                                                             </p>
                                                         </div>
@@ -533,7 +428,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                             </div>
                             <div className="mt-4 pt-4 border-t border-white/5">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="text-center p-4 rounded-xl bg-slate-900/30 border border-white/5">
+                                    <div className="text-center p-4 rounded-md bg-slate-900/30 border border-white/5">
                                         <div className="text-2xl font-black text-white">
                                             {(schedule || []).filter(item => {
                                                 if (!item || !item.date) return false;
@@ -545,7 +440,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                                         </div>
                                         <div className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-1">Tomorrow's Load</div>
                                     </div>
-                                    <div className="text-center p-4 rounded-xl bg-slate-900/30 border border-white/5">
+                                    <div className="text-center p-4 rounded-md bg-slate-900/30 border border-white/5">
                                         <div className="text-2xl font-black text-white">
                                             {(schedule || []).filter(item => {
                                                 if (!item) return false;
@@ -563,7 +458,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
                                 <div className="mt-4 pt-3 border-t border-white/5">
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-bold uppercase tracking-wider text-[color:var(--text-sub)]">Average Route Performance:</span>
-                                        <span className="text-lg font-black text-green-400">
+                                        <span className="text-lg font-black text-white">
                                             {routes.length > 0
                                                 ? Math.round(
                                                     routes.reduce((sum, r) => sum + (r.performanceScore ?? 0), 0) / routes.length
@@ -579,49 +474,22 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ setActiveTab }) => {
             </div>
 
 
-            {/* Quick Link to Officer Deployment */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border border-white/5 ">
-                <CardHeader className="border-b border-white/5 pb-4 px-6 pt-6">
-                    <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center text-white">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 rounded-xl flex items-center justify-center mr-3 border border-white/5 shadow-lg">
-                                <i className="fas fa-users text-white"></i>
-                            </div>
-                            <span className="text-sm font-black uppercase tracking-widest">Patrol Force Management</span>
-                        </span>
-                        <Button
-                            variant="glass"
-                            size="sm"
-                            className="border-white/5 hover:border-blue-500/30 h-8"
-                            onClick={() => setActiveTab('deployment')}
-                        >
-                            View All Officers →
-                        </Button>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="px-6 py-6">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
-                            <div className="text-center px-6 py-3 bg-slate-900/30 border border-white/5 rounded-xl">
-                                <div className="text-2xl font-black text-white">{(officers || []).filter(o => o && o.status === 'on-duty').length}</div>
-                                <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Active Duty</div>
-                            </div>
-                            <div className="text-center px-6 py-3 bg-slate-900/30 border border-white/5 rounded-xl">
-                                <div className="text-2xl font-black text-white">{(officers || []).length}</div>
-                                <div className="text-[9px] font-black uppercase tracking-widest text-slate-500">Force Total</div>
-                            </div>
-                        </div>
-                        <Button
-                            variant="glass"
-                            className="w-full md:w-auto border-emerald-500/20 hover:border-emerald-500/40 text-emerald-400 h-10 px-8"
-                            onClick={() => setActiveTab('deployment')}
-                        >
-                            <i className="fas fa-user-shield mr-2"></i>
-                            Open Officer Roster
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Patrol Force — section + metrics row (gold standard) */}
+            <section className="flex flex-wrap items-center justify-between gap-4 py-4 border-t border-white/5">
+                <h3 className="card-title-text">Patrol Force Management</h3>
+                <div className="flex flex-wrap items-center gap-6">
+                    <span className="text-slate-400 font-medium">Active Duty <strong className="text-white ml-1">{(officers || []).filter(o => o && o.status === 'on-duty').length}</strong></span>
+                    <span className="text-slate-400 font-medium">Force Total <strong className="text-white ml-1">{(officers || []).length}</strong></span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-white/5 text-slate-300 hover:bg-white/5 hover:text-white h-9 px-4 text-[10px] font-black uppercase tracking-widest"
+                        onClick={() => setActiveTab('deployment')}
+                    >
+                        View All Officers →
+                    </Button>
+                </div>
+            </section>
         </div>
     );
 };

@@ -58,8 +58,8 @@ export const VisitorsTab: React.FC = React.memo(() => {
       {/* Page Header - Gold Standard */}
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[color:var(--text-main)] uppercase tracking-tighter">Visitor Registry & Management</h2>
-          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic opacity-70">
+          <h2 className="page-title">Visitor Registry & Management</h2>
+          <p className="text-[10px] font-bold text-[color:var(--text-sub)] uppercase tracking-[0.2em] mt-1 italic">
             Complete visitor lifecycle management with mobile agent integration and hardware verification.
           </p>
         </div>
@@ -74,23 +74,23 @@ export const VisitorsTab: React.FC = React.memo(() => {
         </Button>
       </div>
 
-      <Card className="glass-card border border-white/5 shadow-2xl">
+      <Card className="bg-[color:var(--console-dark)] border border-white/5">
         <CardHeader className="bg-white/5 border-b border-white/5 py-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center text-xl text-white font-black uppercase tracking-tighter">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600/80 to-slate-900 border border-white/5 rounded-xl shadow-2xl flex items-center justify-center mr-3">
-                <i className="fas fa-users text-white text-sm" />
+            <CardTitle className="flex items-center">
+              <div className="card-title-icon-box" aria-hidden="true">
+                <i className="fas fa-users text-white" />
               </div>
-              Active Visitor Registry
+              <span className="card-title-text">Active Visitor Registry</span>
             </CardTitle>
           </div>
         </CardHeader>
       <CardContent className="pt-6 px-6 pb-6">
         {/* Expired Badge Alert Banner */}
         {filteredVisitors.filter(v => v.status === 'overdue').length > 0 && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-between animate-pulse">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-md flex items-center justify-between animate-pulse">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center border border-red-500/30">
+              <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center border border-white/5">
                 <i className="fas fa-exclamation-triangle text-red-500 text-lg" />
               </div>
               <div>
@@ -182,8 +182,9 @@ export const VisitorsTab: React.FC = React.memo(() => {
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
                     className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                    aria-label="Previous page"
                   >
-                    <i className="fas fa-chevron-left mr-1" />
+                    <i className="fas fa-chevron-left mr-1" aria-hidden />
                     Previous
                   </Button>
                   <div className="flex items-center gap-1">
@@ -217,9 +218,10 @@ export const VisitorsTab: React.FC = React.memo(() => {
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
                     className="text-[10px] font-black uppercase tracking-widest border-white/5"
+                    aria-label="Next page"
                   >
                     Next
-                    <i className="fas fa-chevron-right ml-1" />
+                    <i className="fas fa-chevron-right ml-1" aria-hidden />
                   </Button>
                   <Select
                     id="items-per-page"

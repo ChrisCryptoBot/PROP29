@@ -749,10 +749,16 @@ export function useVisitorState(): UseVisitorStateReturn {
   const getEvent = useCallback(async (eventId: string): Promise<Event | null> => {
     setLoading(prev => ({ ...prev, event: true }));
     try {
-      // Note: There's no getEvent endpoint, so we find it from the events list
-      const event = events.find(e => e.id === eventId);
-      if (event) {
+      const fromList = events.find(e => e.id === eventId);
+      if (fromList) {
+        setSelectedEvent(fromList);
+        return fromList;
+      }
+      const response = await visitorService.getEvent(eventId);
+      if (response.data) {
+        const event = response.data;
         setSelectedEvent(event);
+        setEvents(prev => (prev.some(e => e.id === event.id) ? prev : [event, ...prev]));
         return event;
       }
       return null;
@@ -1489,22 +1495,25 @@ export function useVisitorState(): UseVisitorStateReturn {
   const syncOfflineData = useCallback(async (): Promise<boolean> => {
     const toastId = showLoading('Synchronizing offline data...');
     try {
-      // Refresh all data from server
-      await Promise.all([
-        refreshVisitors(),
-        refreshEvents(),
-        refreshSecurityRequests(),
-        refreshMobileAgents(),
-        refreshHardwareDevices()
+      const filters = { property_id: propertyId };
+      const [vRes, eRes, srRes] = await Promise.all([
+        visitorService.getVisitors(filters),
+        visitorService.getEvents(filters),
+        visitorService.getSecurityRequests(filters)
       ]);
-      
-      // Update cached data
+      const vList = vRes.data ?? [];
+      const eList = eRes.data ?? [];
+      const srList = srRes.data ?? [];
+      setVisitors(vList);
+      setEvents(eList);
+      setSecurityRequests(srList);
+      setLastSynced(new Date().toISOString());
       visitorService.cacheDataLocally({
-        visitors,
-        events,
-        securityRequests
+        visitors: vList,
+        events: eList,
+        securityRequests: srList
       });
-      
+      await Promise.all([refreshMobileAgents(), refreshHardwareDevices()]);
       dismissLoadingAndShowSuccess(toastId, 'Data synchronized successfully');
       return true;
     } catch (error) {
@@ -1512,7 +1521,7 @@ export function useVisitorState(): UseVisitorStateReturn {
       dismissLoadingAndShowError(toastId, 'Failed to synchronize data');
       return false;
     }
-  }, [visitors, events, securityRequests, refreshVisitors, refreshEvents, refreshSecurityRequests, refreshMobileAgents, refreshHardwareDevices]);
+  }, [propertyId, refreshMobileAgents, refreshHardwareDevices]);
 
   // Auto-fetch on mount - Enhanced for Production Readiness
   useEffect(() => {
