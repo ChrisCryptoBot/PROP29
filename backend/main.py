@@ -20,7 +20,7 @@ import uvicorn
 
 # Set environment variables FIRST
 os.environ.setdefault("DATABASE_URL", "sqlite:///./proper29.db")
-os.environ.setdefault("ENVIRONMENT", "development")
+os.environ.setdefault("ENVIRONMENT", "production")
 if not os.getenv("SECRET_KEY"):
     if os.getenv("ENVIRONMENT") == "development":
         os.environ["SECRET_KEY"] = "dev-only-secret-key-not-for-production"
@@ -224,6 +224,16 @@ api_router.include_router(profile_router)
 api_router.include_router(sound_monitoring_router)
 api_router.include_router(help_support_router)
 api_router.include_router(chat_router)
+
+# Health check endpoint for Railway
+@api_router.get("/health")
+async def api_health_check():
+    """Health check endpoint for deployment platforms like Railway."""
+    return {
+        "status": "healthy",
+        "service": "PROPER 2.9 API",
+        "version": "2.9.0"
+    }
 
 # Include the consolidated API router in the app
 app.include_router(api_router)

@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 # Database configuration with environment-based settings
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./proper29.db")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+DEBUG_SQL = os.getenv("DEBUG_SQL", "false").lower() == "true"
 
 # Production database configuration
 if ENVIRONMENT == "production":
@@ -32,7 +33,7 @@ elif DATABASE_URL.startswith("sqlite"):
         poolclass=QueuePool,
         pool_size=10,
         max_overflow=20,
-        echo=True if ENVIRONMENT == "development" else False
+        echo=DEBUG_SQL
     )
 else:
     # Default configuration for other databases
@@ -42,7 +43,7 @@ else:
         pool_size=int(os.getenv("DB_POOL_SIZE", "10")),
         max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "20")),
         pool_pre_ping=True,
-        echo=True if ENVIRONMENT == "development" else False
+        echo=DEBUG_SQL
     )
 
 # Create session factory with proper configuration
