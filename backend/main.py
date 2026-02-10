@@ -397,7 +397,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 if __name__ == "__main__":
     # Standardize on Railway/Render/Heroku port environment variable
     port = int(os.getenv("PORT", 8080))
-    host = "::" 
+    host = "0.0.0.0" 
     
     print(f"DEBUG: Startup PORT: {port}")
     print(f"DEBUG: Startup HOST: {host}")
