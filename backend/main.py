@@ -19,27 +19,14 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 
 # Set environment variables FIRST
-env_val = os.getenv("ENVIRONMENT", "production")
 os.environ.setdefault("DATABASE_URL", os.getenv("DATABASE_URL", "sqlite:///./proper29.db"))
-os.environ.setdefault("ENVIRONMENT", env_val)
-secret_val = os.getenv("SECRET_KEY")
+os.environ.setdefault("ENVIRONMENT", os.getenv("ENVIRONMENT", "production"))
 
-print(f"DEBUG: Startup Environment: {env_val}")
-print(f"DEBUG: Secret Key Detected: {'Yes' if secret_val else 'No'}")
-print(f"DEBUG: Current Env Keys: {sorted(os.environ.keys())}")
-
-if not secret_val:
-    if env_val == "development":
+if not os.getenv("SECRET_KEY"):
+    if os.getenv("ENVIRONMENT") == "development":
         os.environ["SECRET_KEY"] = "dev-only-secret-key-not-for-production"
     else:
-        # Check for case-insensitive matches or typos
-        alt_secret = next((v for k, v in os.environ.items() if k.upper() == "SECRET_KEY"), None)
-        if alt_secret:
-            print(f"DEBUG: Found secret key with alternative casing: {[k for k in os.environ.keys() if k.upper() == 'SECRET_KEY']}")
-            os.environ["SECRET_KEY"] = alt_secret
-        else:
-            print("CRITICAL: SECRET_KEY missing in production! Using emergency fallback.")
-            os.environ["SECRET_KEY"] = "emergency-fallback-change-this-immediately"
+        raise RuntimeError("SECRET_KEY environment variable is required in production")
 
 # Add current directory to Python path
 current_dir = Path(__file__).parent.absolute()
