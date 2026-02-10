@@ -119,10 +119,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"error": "Validation error", "detail": exc.errors()}
     )
 
-# Structured Logging Middleware
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    start_time = time.time()
+    # Structured Logging Middleware
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        # PROXY RADAR: Print directly to stdout for immediate visibility in Railway logs
+        print(f"DEBUG: PROXY RADAR -> {request.method} {request.url.path} | Host: {request.headers.get('host')} | IP: {request.client.host if request.client else 'unknown'}")
+        
+        start_time = time.time()
     
     # Extract client IP
     client_ip = request.client.host if request.client else "unknown"
@@ -394,9 +397,10 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 if __name__ == "__main__":
     # Standardize on Railway/Render/Heroku port environment variable
     port = int(os.getenv("PORT", 8080))
-    host = "0.0.0.0" 
+    host = "::" 
     
     print(f"DEBUG: Startup PORT: {port}")
+    print(f"DEBUG: Startup HOST: {host}")
     logger.info("🚀 Starting PROPER 2.9 Backend")
     logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'production')}")
     logger.info(f"Backend will be available at: http://{host}:{port}")
