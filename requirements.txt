@@ -199,3 +199,5 @@ typing-extensions==4.8.0
 
 # Dataclasses
 dataclasses-json==0.6.1
+
+setuptools
