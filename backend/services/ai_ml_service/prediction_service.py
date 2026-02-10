@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Optional, Any
 from datetime import datetime, timedelta
 import numpy as np
-import pandas as pd
+
 
 logger = logging.getLogger(__name__)
 
