@@ -119,13 +119,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"error": "Validation error", "detail": exc.errors()}
     )
 
-    # Structured Logging Middleware
-    @app.middleware("http")
-    async def log_requests(request: Request, call_next):
-        # PROXY RADAR: Print directly to stdout for immediate visibility in Railway logs
-        print(f"DEBUG: PROXY RADAR -> {request.method} {request.url.path} | Host: {request.headers.get('host')} | IP: {request.client.host if request.client else 'unknown'}")
-        
-        start_time = time.time()
+# Structured Logging Middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # PROXY RADAR: Print directly to stdout for immediate visibility in Railway logs
+    print(f"DEBUG: PROXY RADAR -> {request.method} {request.url.path} | Host: {request.headers.get('host')} | IP: {request.client.host if request.client else 'unknown'}")
+    
+    start_time = time.time()
     
     # Extract client IP
     client_ip = request.client.host if request.client else "unknown"
