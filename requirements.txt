@@ -1,5 +1,5 @@
 # PROPER 2.9 Backend Dependencies - Clean Version
-# Core Framework
+setuptools
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 pydantic>=2.7.0
@@ -145,7 +145,7 @@ babel==2.13.1
 # spacy==3.7.2 <-- Removed unused heavy lib causing build failure
 
 # Time Series Analysis
-statsmodels==0.14.0
+# statsmodels==0.14.0 (Removed: Unused and incompatible with Python 3.13 build env)
 
 # Data Visualization
 # Data Visualization
@@ -211,4 +211,4 @@ typing-extensions==4.8.0
 # Dataclasses
 dataclasses-json==0.6.1
 
-setuptools
+# setuptools (Moved to top)
