@@ -137,8 +137,8 @@ qrcode[pil]==7.4.2
 python-barcode==0.15.1
 
 # Natural Language Processing
-nltk==3.8.1
-spacy==3.7.2
+# nltk==3.8.1  <-- Removed unused heavy lib
+# spacy==3.7.2 <-- Removed unused heavy lib causing build failure
 
 # Time Series Analysis
 statsmodels==0.14.0
