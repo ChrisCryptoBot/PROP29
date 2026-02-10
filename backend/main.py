@@ -392,21 +392,23 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
         logger.warning("WebSocket error for user_id=%s: %s", user_id, e, exc_info=True)
 
 if __name__ == "__main__":
+    # Standardize on Railway/Render/Heroku port environment variable
+    port = int(os.getenv("PORT", 8080))
+    host = "0.0.0.0" 
+    
+    print(f"DEBUG: Startup PORT: {port}")
     logger.info("🚀 Starting PROPER 2.9 Backend")
-    logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
-    logger.info("Backend will be available at: http://127.0.0.1:8000")
-    logger.info("API docs will be available at: http://127.0.0.1:8000/docs")
-    # NOTE (Windows): Uvicorn reload/watch mode can trigger noisy WinError 5
-    # (named pipe PermissionError) in some restricted environments. Default to
-    # reload OFF on Windows unless explicitly forced.
-    reload_enabled = os.getenv("UVICORN_RELOAD", "true").strip().lower() in {"1", "true", "yes", "on"}
-    if os.name == "nt" and os.getenv("FORCE_UVICORN_RELOAD", "").strip().lower() not in {"1", "true", "yes", "on"}:
-        reload_enabled = False
+    logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'production')}")
+    logger.info(f"Backend will be available at: http://{host}:{port}")
+    
+    reload_enabled = os.getenv("UVICORN_RELOAD", "false").strip().lower() in {"1", "true", "yes", "on"}
     
     uvicorn.run(
         "main:app",
-        host="127.0.0.1", 
-        port=8000,
+        host=host, 
+        port=port,
         log_level="info",
-        reload=reload_enabled
+        reload=reload_enabled,
+        proxy_headers=True,
+        forwarded_allow_ips="*"
     )
