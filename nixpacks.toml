@@ -1,11 +1,2 @@
 [phases.setup]
 nixPkgs = ["python313"]
-
-[phases.install]
-cmds = ["python -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt"]
-
-[phases.build]
-cmds = ["chmod +x scripts/start_backend.sh"]
-
-[start]
-cmd = "sh scripts/start_backend.sh"
